@@ -1,7 +1,6 @@
 const path = require('path');
 const envPath = path.join(__dirname, './.env');
 require('dotenv').config({ path: envPath });
-// const HDWalletProvider = require("@truffle/hdwallet-provider");
 const HDWalletProvider = require("truffle-hdwallet-provider");
 
 
@@ -21,18 +20,11 @@ module.exports = {
   // for more details on how to specify configuration options!
   //
   networks: {
-    // development: {
-    // 	host: "127.0.0.1",
-    // 	port: 8545, // 7545
-    // 	network_id: "*",
-    // 	// gas: 0x1ffffffffffffe
-    // },
     development: {
       host: "127.0.0.1",
-      port: 8545,
+      port: 8545, // 7545
       network_id: "*",
       // gas: 0x1ffffffffffffe
-      // websockets: true,        // Enable EventEmitter interface for web3 (default: false)
     },
     mainnet: {
       provider: providerFactory(),
