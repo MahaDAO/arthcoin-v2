@@ -5,8 +5,5 @@ pragma solidity ^0.8.0;
 import "../ERC20.sol";
 
 contract FRAX3CRV_Mock is ERC20 {
-    constructor()
-        public
-        ERC20("Curve.fi Factory USD Metapool: Frax", "FRAX3CRV-f")
-    {}
+    constructor() ERC20("Curve.fi Factory USD Metapool: Frax", "FRAX3CRV-f") {}
 }

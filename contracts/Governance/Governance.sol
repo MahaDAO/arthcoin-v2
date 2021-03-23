@@ -299,9 +299,9 @@ contract GovernorAlpha {
     }
 
     function cancel(uint256 proposalId) public {
-        ProposalState state = state(proposalId);
+        ProposalState proposalState = state(proposalId);
         require(
-            state != ProposalState.Executed,
+            proposalState != ProposalState.Executed,
             "GovernorAlpha::cancel: cannot cancel executed proposal"
         );
 

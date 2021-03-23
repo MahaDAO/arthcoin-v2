@@ -144,7 +144,7 @@ contract FRAXStablecoin is ERC20Custom, AccessControl {
     // Choice = 'FRAX' or 'FXS' for now
     function oracle_price(PriceChoice choice) internal view returns (uint256) {
         // Get the ETH / USD price first, and cut it down to 1e6 precision
-        uint256 eth_usd_price =
+        uint256 eth_2_usd_price =
             uint256(eth_usd_pricer.getLatestPrice()).mul(PRICE_PRECISION).div(
                 uint256(10)**eth_usd_pricer_decimals
             );
@@ -164,7 +164,7 @@ contract FRAXStablecoin is ERC20Custom, AccessControl {
             );
 
         // Will be in 1e6 format
-        return eth_usd_price.mul(PRICE_PRECISION).div(price_vs_eth);
+        return eth_2_usd_price.mul(PRICE_PRECISION).div(price_vs_eth);
     }
 
     // Returns X FRAX = 1 USD

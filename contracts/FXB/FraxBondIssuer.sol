@@ -253,15 +253,15 @@ contract FraxBondIssuer is AccessControl {
     // FXB floor price for 1 FXB, in FRAX
     // Will be used to help prevent someone from doing a huge arb with cheap bonds right before they mature
     // Also allows the vAMM to buy back cheap FXB under the floor and retire it, meaning less to pay back later at face value
-    function floor_price() public view returns (uint256 floor_price) {
+    function floor_price() public view returns (uint256 floorPrice) {
         uint256 time_into_epoch = (block.timestamp).sub(epoch_start);
-        floor_price = (PRICE_PRECISION.sub(initial_discount)).add(
+        floorPrice = (PRICE_PRECISION.sub(initial_discount)).add(
             initial_discount.mul(time_into_epoch).div(epoch_length)
         );
     }
 
-    function initial_price() public view returns (uint256 initial_price) {
-        initial_price = (PRICE_PRECISION.sub(initial_discount));
+    function initial_price() public view returns (uint256 initialPrice) {
+        initialPrice = (PRICE_PRECISION.sub(initial_discount));
     }
 
     // How much FRAX is needed to buy out the remaining unissued FXB

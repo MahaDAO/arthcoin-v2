@@ -21,12 +21,12 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint256) public override nonces;
 
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 value
-    );
-    event Transfer(address indexed from, address indexed to, uint256 value);
+    // event Approval(
+    //     address indexed owner,
+    //     address indexed spender,
+    //     uint256 value
+    // );
+    // event Transfer(address indexed from, address indexed to, uint256 value);
 
     constructor() {
         uint256 chainId;
