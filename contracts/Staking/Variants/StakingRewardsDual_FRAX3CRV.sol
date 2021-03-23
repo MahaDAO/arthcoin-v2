@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "../StakingRewardsDual.sol";
@@ -14,7 +15,17 @@ contract StakingRewardsDual_FRAX3CRV is StakingRewardsDual {
         address _timelock_address,
         uint256 _pool_weight0,
         uint256 _pool_weight1
-    ) 
-    StakingRewardsDual(_owner, _rewardsToken0, _rewardsToken1, _stakingToken, _frax_address, _timelock_address, _pool_weight0, _pool_weight1)
-    public {}
+    )
+        public
+        StakingRewardsDual(
+            _owner,
+            _rewardsToken0,
+            _rewardsToken1,
+            _stakingToken,
+            _frax_address,
+            _timelock_address,
+            _pool_weight0,
+            _pool_weight1
+        )
+    {}
 }

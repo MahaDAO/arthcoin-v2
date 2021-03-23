@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "../ERC20/ERC20.sol";
 
-
 interface IStakingRewardsDualForMigrator {
-
     struct ILockedStake {
         bytes32 kek_id;
         uint256 start_timestamp;
@@ -18,7 +17,10 @@ interface IStakingRewardsDualForMigrator {
     // Views
     function stakingToken() external view returns (ERC20);
 
-    function lockedStakesOf(address account) external view returns (ILockedStake[] memory);
+    function lockedStakesOf(address account)
+        external
+        view
+        returns (ILockedStake[] memory);
 
     function lastTimeRewardApplicable() external view returns (uint256);
 
@@ -44,7 +46,7 @@ interface IStakingRewardsDualForMigrator {
 
     function getReward() external;
 
-    function unlockStakes() external; 
+    function unlockStakes() external;
 
     //function exit() external;
 }

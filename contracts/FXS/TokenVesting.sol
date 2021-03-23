@@ -10,7 +10,7 @@ import "../Math/SafeMath.sol";
  * @dev A token holder contract that can release its token balance gradually like a
  * typical vesting scheme, with a cliff and vesting period. Optionally revocable by the
  * owner.
- * 
+ *
  * Modified from OpenZeppelin's TokenVesting.sol draft
  */
 contract TokenVesting {
@@ -61,13 +61,22 @@ contract TokenVesting {
         uint256 cliffDuration,
         uint256 duration,
         bool revocable
-    ) public {
-        require(beneficiary != address(0), "TokenVesting: beneficiary is the zero address");
+    ) {
+        require(
+            beneficiary != address(0),
+            "TokenVesting: beneficiary is the zero address"
+        );
         // solhint-disable-next-line max-line-length
-        require(cliffDuration <= duration, "TokenVesting: cliff is longer than duration");
+        require(
+            cliffDuration <= duration,
+            "TokenVesting: cliff is longer than duration"
+        );
         require(duration > 0, "TokenVesting: duration is 0");
         // solhint-disable-next-line max-line-length
-        require(start.add(duration) > block.timestamp, "TokenVesting: final time is before current time");
+        require(
+            start.add(duration) > block.timestamp,
+            "TokenVesting: final time is before current time"
+        );
 
         _beneficiary = beneficiary;
         _revocable = revocable;
@@ -141,7 +150,10 @@ contract TokenVesting {
      * @notice Transfers vested tokens to beneficiary.
      */
     function release() public {
-        require(msg.sender == _beneficiary, "must be the beneficiary to release tokens");
+        require(
+            msg.sender == _beneficiary,
+            "must be the beneficiary to release tokens"
+        );
         uint256 unreleased = _releasableAmount();
 
         require(unreleased > 0, "TokenVesting: no tokens are due");
@@ -158,7 +170,10 @@ contract TokenVesting {
      * remain in the contract, the rest are returned to the owner.
      */
     function revoke() public {
-        require(msg.sender == _timelock_address, "Must be called by the timelock contract");
+        require(
+            msg.sender == _timelock_address,
+            "Must be called by the timelock contract"
+        );
         require(_revocable, "TokenVesting: cannot revoke");
         require(!_revoked, "TokenVesting: token already revoked");
 
@@ -176,13 +191,18 @@ contract TokenVesting {
 
     // Added to support recovering possible airdrops
     function recoverERC20(address tokenAddress, uint256 tokenAmount) external {
-        require(msg.sender == _beneficiary, "Must be called by the beneficiary");
+        require(
+            msg.sender == _beneficiary,
+            "Must be called by the beneficiary"
+        );
 
         // Cannot recover the staking token or the rewards token
-        require(tokenAddress != _FXS_contract_address, "Cannot withdraw the FXS through this function");
+        require(
+            tokenAddress != _FXS_contract_address,
+            "Cannot withdraw the FXS through this function"
+        );
         ERC20(tokenAddress).transfer(_beneficiary, tokenAmount);
     }
-
 
     /**
      * @dev Calculates the amount that has already vested but hasn't been released yet.

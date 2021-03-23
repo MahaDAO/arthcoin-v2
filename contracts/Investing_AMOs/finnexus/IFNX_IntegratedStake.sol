@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
-import '../../ERC20/IERC20.sol';
+import "../../ERC20/IERC20.sol";
 
 // Original at https://etherscan.io/address/0x23e54F9bBe26eD55F93F19541bC30AAc2D5569b2
 // Some functions were omitted for brevity. See the contract for details
 
 interface IFNX_IntegratedStake {
-    function stake(address[] memory fpta_tokens,uint256[] memory fpta_amounts,
-            address[] memory fptb_tokens, uint256[] memory fptb_amounts,uint256 lockedPeriod) external;
-
+    function stake(
+        address[] memory fpta_tokens,
+        uint256[] memory fpta_amounts,
+        address[] memory fptb_tokens,
+        uint256[] memory fptb_amounts,
+        uint256 lockedPeriod
+    ) external;
 }
-
 
 // contract integratedStake is Ownable{
 //     using SafeERC20 for IERC20;
@@ -22,7 +26,7 @@ interface IFNX_IntegratedStake {
 //     address public _minePool;    //the fixed minePool address
 //     mapping (address=>bool) approveMapA;
 //     mapping (address=>bool) approveMapB;
-//     uint256  constant internal MAX_UINT = (2**256 - 1); 
+//     uint256  constant internal MAX_UINT = (2**256 - 1);
 //     /**
 //      * @dev constructor.
 //      */

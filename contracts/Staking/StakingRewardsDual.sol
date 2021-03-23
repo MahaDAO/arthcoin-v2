@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 // ====================================================================
@@ -28,7 +29,7 @@ pragma experimental ABIEncoderV2;
 import "../Math/Math.sol";
 import "../Math/SafeMath.sol";
 import "../ERC20/ERC20.sol";
-import '../Uniswap/TransferHelper.sol';
+import "../Uniswap/TransferHelper.sol";
 import "../ERC20/SafeERC20.sol";
 import "../Frax/Frax.sol";
 import "../Utils/ReentrancyGuard.sol";
@@ -39,7 +40,12 @@ import "./IStakingRewardsDual.sol";
 import "./Owned.sol";
 import "./Pausable.sol";
 
-contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Pausable {
+contract StakingRewardsDual is
+    IStakingRewardsDual,
+    Owned,
+    ReentrancyGuard,
+    Pausable
+{
     using SafeMath for uint256;
     using SafeERC20 for ERC20;
 
@@ -116,7 +122,7 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         address _timelock_address,
         uint256 _pool_weight0,
         uint256 _pool_weight1
-    ) public Owned(_owner){
+    ) Owned(_owner) {
         owner_address = _owner;
         rewardsToken0 = ERC20(_rewardsToken0);
         rewardsToken1 = ERC20(_rewardsToken1);
@@ -128,18 +134,18 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         pool_weight1 = _pool_weight1;
 
         // 1000 FXS a day
-        rewardRate0 = (uint256(365000e18)).div(365 * 86400); 
+        rewardRate0 = (uint256(365000e18)).div(365 * 86400);
         rewardRate0 = rewardRate0.mul(pool_weight0).div(1e6);
 
         // ??? CRVDAO a day eventually
-        rewardRate1 = 0; 
+        rewardRate1 = 0;
         rewardRate1 = rewardRate1.mul(pool_weight1).div(1e6);
         unlockedStakes = false;
     }
 
     /* ========== VIEWS ========== */
 
-    function totalSupply() external override view returns (uint256) {
+    function totalSupply() external view override returns (uint256) {
         return _staking_token_supply;
     }
 
@@ -148,23 +154,43 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
     }
 
     function stakingMultiplier(uint256 secs) public view returns (uint256) {
-        uint256 multiplier = uint(MULTIPLIER_BASE).add(secs.mul(locked_stake_max_multiplier.sub(MULTIPLIER_BASE)).div(locked_stake_time_for_max_multiplier));
-        if (multiplier > locked_stake_max_multiplier) multiplier = locked_stake_max_multiplier;
+        uint256 multiplier =
+            uint256(MULTIPLIER_BASE).add(
+                secs.mul(locked_stake_max_multiplier.sub(MULTIPLIER_BASE)).div(
+                    locked_stake_time_for_max_multiplier
+                )
+            );
+        if (multiplier > locked_stake_max_multiplier)
+            multiplier = locked_stake_max_multiplier;
         return multiplier;
     }
 
     function crBoostMultiplier() public view returns (uint256) {
-        uint256 multiplier = uint(MULTIPLIER_BASE).add((uint(MULTIPLIER_BASE).sub(FRAX.global_collateral_ratio())).mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE)).div(MULTIPLIER_BASE) );
+        uint256 multiplier =
+            uint256(MULTIPLIER_BASE).add(
+                (uint256(MULTIPLIER_BASE).sub(FRAX.global_collateral_ratio()))
+                    .mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE))
+                    .div(MULTIPLIER_BASE)
+            );
         return multiplier;
     }
 
     // Total unlocked and locked liquidity tokens
-    function balanceOf(address account) external override view returns (uint256) {
+    function balanceOf(address account)
+        external
+        view
+        override
+        returns (uint256)
+    {
         return (_unlocked_balances[account]).add(_locked_balances[account]);
     }
 
     // Total unlocked liquidity tokens
-    function unlockedBalanceOf(address account) external view returns (uint256) {
+    function unlockedBalanceOf(address account)
+        external
+        view
+        returns (uint256)
+    {
         return _unlocked_balances[account];
     }
 
@@ -179,7 +205,11 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         return _boosted_balances[account];
     }
 
-    function lockedStakesOf(address account) external view returns (LockedStake[] memory) {
+    function lockedStakesOf(address account)
+        external
+        view
+        returns (LockedStake[] memory)
+    {
         return lockedStakes[account];
     }
 
@@ -187,140 +217,242 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         return stakingToken.decimals();
     }
 
-    function rewardsFor(address account) external view returns (uint256, uint256) {
-        // You may have use earned() instead, because of the order in which the contract executes 
+    function rewardsFor(address account)
+        external
+        view
+        returns (uint256, uint256)
+    {
+        // You may have use earned() instead, because of the order in which the contract executes
         return (rewards0[account], rewards1[account]);
     }
 
-    function lastTimeRewardApplicable() public override view returns (uint256) {
+    function lastTimeRewardApplicable() public view override returns (uint256) {
         return Math.min(block.timestamp, periodFinish);
     }
 
-    function rewardPerToken() public override view returns (uint256, uint256) {
+    function rewardPerToken() public view override returns (uint256, uint256) {
         if (_staking_token_supply == 0) {
             return (rewardPerTokenStored0, rewardPerTokenStored1);
-        }
-        else {
+        } else {
             return (
                 // Boosted emission
                 rewardPerTokenStored0.add(
-                    lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate0).mul(crBoostMultiplier()).mul(1e18).div(PRICE_PRECISION).div(_staking_token_boosted_supply)
+                    lastTimeRewardApplicable()
+                        .sub(lastUpdateTime)
+                        .mul(rewardRate0)
+                        .mul(crBoostMultiplier())
+                        .mul(1e18)
+                        .div(PRICE_PRECISION)
+                        .div(_staking_token_boosted_supply)
                 ),
                 // Flat emission
                 // Locked stakes will still get more weight with token1 rewards, but the CR boost will be canceled out for everyone
                 rewardPerTokenStored1.add(
-                    lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate1).mul(1e18).div(_staking_token_boosted_supply)
+                    lastTimeRewardApplicable()
+                        .sub(lastUpdateTime)
+                        .mul(rewardRate1)
+                        .mul(1e18)
+                        .div(_staking_token_boosted_supply)
                 )
             );
         }
     }
 
-    function earned(address account) public override view returns (uint256, uint256) {
+    function earned(address account)
+        public
+        view
+        override
+        returns (uint256, uint256)
+    {
         (uint256 reward0, uint256 reward1) = rewardPerToken();
         return (
-            _boosted_balances[account].mul(reward0.sub(userRewardPerTokenPaid0[account])).div(1e18).add(rewards0[account]),
-            _boosted_balances[account].mul(reward1.sub(userRewardPerTokenPaid1[account])).div(1e18).add(rewards1[account])
+            _boosted_balances[account]
+                .mul(reward0.sub(userRewardPerTokenPaid0[account]))
+                .div(1e18)
+                .add(rewards0[account]),
+            _boosted_balances[account]
+                .mul(reward1.sub(userRewardPerTokenPaid1[account]))
+                .div(1e18)
+                .add(rewards1[account])
         );
     }
 
-    function getRewardForDuration() external override view returns (uint256, uint256) {
+    function getRewardForDuration()
+        external
+        view
+        override
+        returns (uint256, uint256)
+    {
         return (
-            rewardRate0.mul(rewardsDuration).mul(crBoostMultiplier()).div(PRICE_PRECISION),
+            rewardRate0.mul(rewardsDuration).mul(crBoostMultiplier()).div(
+                PRICE_PRECISION
+            ),
             rewardRate1.mul(rewardsDuration)
         );
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function stake(uint256 amount) external override nonReentrant notPaused updateReward(msg.sender) {
+    function stake(uint256 amount)
+        external
+        override
+        nonReentrant
+        notPaused
+        updateReward(msg.sender)
+    {
         require(amount > 0, "Cannot stake 0");
         require(greylist[msg.sender] == false, "address has been greylisted");
 
         // Pull the tokens from the staker
-        TransferHelper.safeTransferFrom(address(stakingToken), msg.sender, address(this), amount);
+        TransferHelper.safeTransferFrom(
+            address(stakingToken),
+            msg.sender,
+            address(this),
+            amount
+        );
 
         // Staking token supply and boosted supply
         _staking_token_supply = _staking_token_supply.add(amount);
-        _staking_token_boosted_supply = _staking_token_boosted_supply.add(amount);
+        _staking_token_boosted_supply = _staking_token_boosted_supply.add(
+            amount
+        );
 
         // Staking token balance and boosted balance
-        _unlocked_balances[msg.sender] = _unlocked_balances[msg.sender].add(amount);
-        _boosted_balances[msg.sender] = _boosted_balances[msg.sender].add(amount);
+        _unlocked_balances[msg.sender] = _unlocked_balances[msg.sender].add(
+            amount
+        );
+        _boosted_balances[msg.sender] = _boosted_balances[msg.sender].add(
+            amount
+        );
 
         emit Staked(msg.sender, amount);
     }
 
-    function stakeLocked(uint256 amount, uint256 secs) external nonReentrant notPaused updateReward(msg.sender) {
+    function stakeLocked(uint256 amount, uint256 secs)
+        external
+        nonReentrant
+        notPaused
+        updateReward(msg.sender)
+    {
         require(amount > 0, "Cannot stake 0");
         require(secs > 0, "Cannot wait for a negative number");
         require(greylist[msg.sender] == false, "address has been greylisted");
-        require(secs >= locked_stake_min_time, StringHelpers.strConcat("Minimum stake time not met (", locked_stake_min_time_str, ")") );
-        require(secs <= locked_stake_time_for_max_multiplier, "You are trying to stake for too long");
+        require(
+            secs >= locked_stake_min_time,
+            StringHelpers.strConcat(
+                "Minimum stake time not met (",
+                locked_stake_min_time_str,
+                ")"
+            )
+        );
+        require(
+            secs <= locked_stake_time_for_max_multiplier,
+            "You are trying to stake for too long"
+        );
 
         uint256 multiplier = stakingMultiplier(secs);
         uint256 boostedAmount = amount.mul(multiplier).div(PRICE_PRECISION);
-        lockedStakes[msg.sender].push(LockedStake(
-            keccak256(abi.encodePacked(msg.sender, block.timestamp, amount)),
-            block.timestamp,
-            amount,
-            block.timestamp.add(secs),
-            multiplier
-        ));
+        lockedStakes[msg.sender].push(
+            LockedStake(
+                keccak256(
+                    abi.encodePacked(msg.sender, block.timestamp, amount)
+                ),
+                block.timestamp,
+                amount,
+                block.timestamp.add(secs),
+                multiplier
+            )
+        );
 
         // Pull the tokens from the staker
-        TransferHelper.safeTransferFrom(address(stakingToken), msg.sender, address(this), amount);
+        TransferHelper.safeTransferFrom(
+            address(stakingToken),
+            msg.sender,
+            address(this),
+            amount
+        );
 
         // Staking token supply and boosted supply
         _staking_token_supply = _staking_token_supply.add(amount);
-        _staking_token_boosted_supply = _staking_token_boosted_supply.add(boostedAmount);
+        _staking_token_boosted_supply = _staking_token_boosted_supply.add(
+            boostedAmount
+        );
 
         // Staking token balance and boosted balance
         _locked_balances[msg.sender] = _locked_balances[msg.sender].add(amount);
-        _boosted_balances[msg.sender] = _boosted_balances[msg.sender].add(boostedAmount);
+        _boosted_balances[msg.sender] = _boosted_balances[msg.sender].add(
+            boostedAmount
+        );
 
         emit StakeLocked(msg.sender, amount, secs);
     }
 
-    function withdraw(uint256 amount) public override nonReentrant updateReward(msg.sender) {
+    function withdraw(uint256 amount)
+        public
+        override
+        nonReentrant
+        updateReward(msg.sender)
+    {
         require(amount > 0, "Cannot withdraw 0");
 
         // Staking token balance and boosted balance
-        _unlocked_balances[msg.sender] = _unlocked_balances[msg.sender].sub(amount);
-        _boosted_balances[msg.sender] = _boosted_balances[msg.sender].sub(amount);
+        _unlocked_balances[msg.sender] = _unlocked_balances[msg.sender].sub(
+            amount
+        );
+        _boosted_balances[msg.sender] = _boosted_balances[msg.sender].sub(
+            amount
+        );
 
         // Staking token supply and boosted supply
         _staking_token_supply = _staking_token_supply.sub(amount);
-        _staking_token_boosted_supply = _staking_token_boosted_supply.sub(amount);
+        _staking_token_boosted_supply = _staking_token_boosted_supply.sub(
+            amount
+        );
 
         // Give the tokens to the withdrawer
         stakingToken.safeTransfer(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
     }
 
-    function withdrawLocked(bytes32 kek_id) public nonReentrant updateReward(msg.sender) {
+    function withdrawLocked(bytes32 kek_id)
+        public
+        nonReentrant
+        updateReward(msg.sender)
+    {
         LockedStake memory thisStake;
         thisStake.amount = 0;
-        uint theIndex;
-        for (uint i = 0; i < lockedStakes[msg.sender].length; i++){ 
-            if (kek_id == lockedStakes[msg.sender][i].kek_id){
+        uint256 theIndex;
+        for (uint256 i = 0; i < lockedStakes[msg.sender].length; i++) {
+            if (kek_id == lockedStakes[msg.sender][i].kek_id) {
                 thisStake = lockedStakes[msg.sender][i];
                 theIndex = i;
                 break;
             }
         }
         require(thisStake.kek_id == kek_id, "Stake not found");
-        require(block.timestamp >= thisStake.ending_timestamp || unlockedStakes == true, "Stake is still locked!");
+        require(
+            block.timestamp >= thisStake.ending_timestamp ||
+                unlockedStakes == true,
+            "Stake is still locked!"
+        );
 
         uint256 theAmount = thisStake.amount;
-        uint256 boostedAmount = theAmount.mul(thisStake.multiplier).div(PRICE_PRECISION);
-        if (theAmount > 0){
+        uint256 boostedAmount =
+            theAmount.mul(thisStake.multiplier).div(PRICE_PRECISION);
+        if (theAmount > 0) {
             // Staking token balance and boosted balance
-            _locked_balances[msg.sender] = _locked_balances[msg.sender].sub(theAmount);
-            _boosted_balances[msg.sender] = _boosted_balances[msg.sender].sub(boostedAmount);
+            _locked_balances[msg.sender] = _locked_balances[msg.sender].sub(
+                theAmount
+            );
+            _boosted_balances[msg.sender] = _boosted_balances[msg.sender].sub(
+                boostedAmount
+            );
 
             // Staking token supply and boosted supply
             _staking_token_supply = _staking_token_supply.sub(theAmount);
-            _staking_token_boosted_supply = _staking_token_boosted_supply.sub(boostedAmount);
+            _staking_token_boosted_supply = _staking_token_boosted_supply.sub(
+                boostedAmount
+            );
 
             // Remove the stake from the array
             delete lockedStakes[msg.sender][theIndex];
@@ -330,7 +462,6 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
 
             emit WithdrawnLocked(msg.sender, theAmount, kek_id);
         }
-
     }
 
     function getReward() public override nonReentrant updateReward(msg.sender) {
@@ -363,21 +494,34 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         // This keeps the reward rate in the right range, preventing overflows due to
         // very high values of rewardRate in the earned and rewardsPerToken functions;
         // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        uint256 num_periods_elapsed = uint256(block.timestamp.sub(periodFinish)) / rewardsDuration; // Floor division to the nearest period
-        uint balance0 = rewardsToken0.balanceOf(address(this));
-        uint balance1 = rewardsToken1.balanceOf(address(this));
-        require(rewardRate0.mul(rewardsDuration).mul(crBoostMultiplier()).mul(num_periods_elapsed + 1).div(PRICE_PRECISION) <= balance0, "Not enough FXS available for rewards!");
-        
-        
-        if (token1_rewards_on){
-            require(rewardRate1.mul(rewardsDuration).mul(num_periods_elapsed + 1) <= balance1, "Not enough token1 available for rewards!");
+        uint256 num_periods_elapsed =
+            uint256(block.timestamp.sub(periodFinish)) / rewardsDuration; // Floor division to the nearest period
+        uint256 balance0 = rewardsToken0.balanceOf(address(this));
+        uint256 balance1 = rewardsToken1.balanceOf(address(this));
+        require(
+            rewardRate0
+                .mul(rewardsDuration)
+                .mul(crBoostMultiplier())
+                .mul(num_periods_elapsed + 1)
+                .div(PRICE_PRECISION) <= balance0,
+            "Not enough FXS available for rewards!"
+        );
+
+        if (token1_rewards_on) {
+            require(
+                rewardRate1.mul(rewardsDuration).mul(num_periods_elapsed + 1) <=
+                    balance1,
+                "Not enough token1 available for rewards!"
+            );
         }
-        
+
         // uint256 old_lastUpdateTime = lastUpdateTime;
         // uint256 new_lastUpdateTime = block.timestamp;
 
         // lastUpdateTime = periodFinish;
-        periodFinish = periodFinish.add((num_periods_elapsed.add(1)).mul(rewardsDuration));
+        periodFinish = periodFinish.add(
+            (num_periods_elapsed.add(1)).mul(rewardsDuration)
+        );
 
         (uint256 reward0, uint256 reward1) = rewardPerToken();
         rewardPerTokenStored0 = reward0;
@@ -390,14 +534,20 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
     /* ========== RESTRICTED FUNCTIONS ========== */
 
     // Added to support recovering LP Rewards and other mistaken tokens from other systems to be distributed to holders
-    function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyByOwnerOrGovernance {
+    function recoverERC20(address tokenAddress, uint256 tokenAmount)
+        external
+        onlyByOwnerOrGovernance
+    {
         // Admin cannot withdraw the staking token from the contract
         require(tokenAddress != address(stakingToken));
         ERC20(tokenAddress).transfer(owner_address, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 
-    function setRewardsDuration(uint256 _rewardsDuration) external onlyByOwnerOrGovernance {
+    function setRewardsDuration(uint256 _rewardsDuration)
+        external
+        onlyByOwnerOrGovernance
+    {
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
             "Previous rewards period must be complete before changing the duration for the new period"
@@ -406,27 +556,49 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         emit RewardsDurationUpdated(rewardsDuration);
     }
 
-    function setMultipliers(uint256 _locked_stake_max_multiplier, uint256 _cr_boost_max_multiplier) external onlyByOwnerOrGovernance {
-        require(_locked_stake_max_multiplier >= 1, "Multiplier must be greater than or equal to 1");
-        require(_cr_boost_max_multiplier >= 1, "Max CR Boost must be greater than or equal to 1");
+    function setMultipliers(
+        uint256 _locked_stake_max_multiplier,
+        uint256 _cr_boost_max_multiplier
+    ) external onlyByOwnerOrGovernance {
+        require(
+            _locked_stake_max_multiplier >= 1,
+            "Multiplier must be greater than or equal to 1"
+        );
+        require(
+            _cr_boost_max_multiplier >= 1,
+            "Max CR Boost must be greater than or equal to 1"
+        );
 
         locked_stake_max_multiplier = _locked_stake_max_multiplier;
         cr_boost_max_multiplier = _cr_boost_max_multiplier;
-        
+
         emit MaxCRBoostMultiplier(cr_boost_max_multiplier);
         emit LockedStakeMaxMultiplierUpdated(locked_stake_max_multiplier);
     }
 
-    function setLockedStakeTimeForMinAndMaxMultiplier(uint256 _locked_stake_time_for_max_multiplier, uint256 _locked_stake_min_time) external onlyByOwnerOrGovernance {
-        require(_locked_stake_time_for_max_multiplier >= 1, "Multiplier Max Time must be greater than or equal to 1");
-        require(_locked_stake_min_time >= 1, "Multiplier Min Time must be greater than or equal to 1");
-        
+    function setLockedStakeTimeForMinAndMaxMultiplier(
+        uint256 _locked_stake_time_for_max_multiplier,
+        uint256 _locked_stake_min_time
+    ) external onlyByOwnerOrGovernance {
+        require(
+            _locked_stake_time_for_max_multiplier >= 1,
+            "Multiplier Max Time must be greater than or equal to 1"
+        );
+        require(
+            _locked_stake_min_time >= 1,
+            "Multiplier Min Time must be greater than or equal to 1"
+        );
+
         locked_stake_time_for_max_multiplier = _locked_stake_time_for_max_multiplier;
 
         locked_stake_min_time = _locked_stake_min_time;
-        locked_stake_min_time_str = StringHelpers.uint2str(_locked_stake_min_time);
+        locked_stake_min_time_str = StringHelpers.uint2str(
+            _locked_stake_min_time
+        );
 
-        emit LockedStakeTimeForMaxMultiplier(locked_stake_time_for_max_multiplier);
+        emit LockedStakeTimeForMaxMultiplier(
+            locked_stake_time_for_max_multiplier
+        );
         emit LockedStakeMinTime(_locked_stake_min_time);
     }
 
@@ -436,7 +608,10 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         emit DefaultInitialization();
     }
 
-    function greylistAddress(address _address) external onlyByOwnerOrGovernance {
+    function greylistAddress(address _address)
+        external
+        onlyByOwnerOrGovernance
+    {
         greylist[_address] = !(greylist[_address]);
     }
 
@@ -444,7 +619,10 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         unlockedStakes = !unlockedStakes;
     }
 
-    function setRewardRates(uint256 _new_rate0, uint256 _new_rate1) external onlyByOwnerOrGovernance {
+    function setRewardRates(uint256 _new_rate0, uint256 _new_rate1)
+        external
+        onlyByOwnerOrGovernance
+    {
         rewardRate0 = _new_rate0;
         rewardRate1 = _new_rate1;
     }
@@ -453,7 +631,10 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         token1_rewards_on = !token1_rewards_on;
     }
 
-    function setOwnerAndTimelock(address _new_owner, address _new_timelock) external onlyByOwnerOrGovernance {
+    function setOwnerAndTimelock(address _new_owner, address _new_timelock)
+        external
+        onlyByOwnerOrGovernance
+    {
         owner_address = _new_owner;
         timelock_address = _new_timelock;
     }
@@ -464,8 +645,7 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
         // Need to retro-adjust some things if the period hasn't been renewed, then start a new one
         if (block.timestamp > periodFinish) {
             retroCatchUp();
-        }
-        else {
+        } else {
             (uint256 reward0, uint256 reward1) = rewardPerToken();
             rewardPerTokenStored0 = reward0;
             rewardPerTokenStored1 = reward1;
@@ -482,7 +662,10 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
     }
 
     modifier onlyByOwnerOrGovernance() {
-        require(msg.sender == owner_address || msg.sender == timelock_address, "You are not the owner or the governance timelock");
+        require(
+            msg.sender == owner_address || msg.sender == timelock_address,
+            "You are not the owner or the governance timelock"
+        );
         _;
     }
 
@@ -493,7 +676,11 @@ contract StakingRewardsDual is IStakingRewardsDual, Owned, ReentrancyGuard, Paus
     event StakeLocked(address indexed user, uint256 amount, uint256 secs);
     event Withdrawn(address indexed user, uint256 amount);
     event WithdrawnLocked(address indexed user, uint256 amount, bytes32 kek_id);
-    event RewardPaid(address indexed user, uint256 reward, address token_address);
+    event RewardPaid(
+        address indexed user,
+        uint256 reward,
+        address token_address
+    );
     event RewardsDurationUpdated(uint256 newDuration);
     event Recovered(address token, uint256 amount);
     event RewardsPeriodRenewed(address token);

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
-import '../../ERC20/IERC20.sol';
+import "../../ERC20/IERC20.sol";
 
 // Original at https://etherscan.io/address/0x4e6005396F80a737cE80d50B2162C0a7296c9620
 // Some functions were omitted for brevity. See the contract for details
@@ -11,160 +12,249 @@ interface IFNX_MinePool {
      * @dev getting function. Retrieve FPT-A coin's address
      */
     function getFPTAAddress() external view returns (address);
+
     /**
      * @dev getting function. Retrieve FPT-B coin's address
      */
     function getFPTBAddress() external view returns (address);
+
     /**
      * @dev getting function. Retrieve mine pool's start time.
      */
     function getStartTime() external view returns (uint256);
+
     /**
      * @dev getting current mine period ID.
      */
     function getCurrentPeriodID() external view returns (uint256);
+
     /**
      * @dev getting user's staking FPT-A balance.
      * account user's account
      */
-    function getUserFPTABalance(address /*account*/) external view returns (uint256);
+    function getUserFPTABalance(
+        address /*account*/
+    ) external view returns (uint256);
+
     /**
      * @dev getting user's staking FPT-B balance.
      * account user's account
      */
-    function getUserFPTBBalance(address /*account*/) external view returns (uint256);
+    function getUserFPTBBalance(
+        address /*account*/
+    ) external view returns (uint256);
+
     /**
      * @dev getting user's maximium locked period ID.
      * account user's account
      */
-    function getUserMaxPeriodId(address /*account*/) external view returns (uint256);
+    function getUserMaxPeriodId(
+        address /*account*/
+    ) external view returns (uint256);
+
     /**
      * @dev getting user's locked expired time. After this time user can unstake FPTB coins.
      * account user's account
      */
-    function getUserExpired(address /*account*/) external view returns (uint256);
-    function getCurrentTotalAPY(address /*mineCoin*/) external view returns (uint256);
+    function getUserExpired(
+        address /*account*/
+    ) external view returns (uint256);
+
+    function getCurrentTotalAPY(
+        address /*mineCoin*/
+    ) external view returns (uint256);
+
     /**
      * @dev Calculate user's current APY.
      * account user's account.
      * mineCoin mine coin address
      */
-    function getUserCurrentAPY(address /*account*/,address /*mineCoin*/) external view returns (uint256);
+    function getUserCurrentAPY(
+        address, /*account*/
+        address /*mineCoin*/
+    ) external view returns (uint256);
+
     function getAverageLockedTime() external view returns (uint256);
+
     /**
      * @dev foundation redeem out mine coins.
      *  mineCoin mineCoin address
      *  amount redeem amount.
      */
-    function redeemOut(address /*mineCoin*/,uint256 /*amount*/) external;
+    function redeemOut(
+        address, /*mineCoin*/
+        uint256 /*amount*/
+    ) external;
+
     /**
      * @dev retrieve total distributed mine coins.
      *  mineCoin mineCoin address
      */
-    function getTotalMined(address /*mineCoin*/) external view returns(uint256);
+    function getTotalMined(
+        address /*mineCoin*/
+    ) external view returns (uint256);
+
     /**
      * @dev retrieve minecoin distributed informations.
      *  mineCoin mineCoin address
      * @return distributed amount and distributed time interval.
      */
-    function getMineInfo(address /*mineCoin*/) external view returns(uint256,uint256);
+    function getMineInfo(
+        address /*mineCoin*/
+    ) external view returns (uint256, uint256);
+
     /**
      * @dev retrieve user's mine balance.
      *  account user's account
      *  mineCoin mineCoin address
      */
-    function getMinerBalance(address /*account*/,address /*mineCoin*/) external view returns(uint256);
+    function getMinerBalance(
+        address, /*account*/
+        address /*mineCoin*/
+    ) external view returns (uint256);
+
     /**
      * @dev Set mineCoin mine info, only foundation owner can invoked.
      *  mineCoin mineCoin address
      *  _mineAmount mineCoin distributed amount
      *  _mineInterval mineCoin distributied time interval
      */
-    function setMineCoinInfo(address /*mineCoin*/,uint256 /*_mineAmount*/,uint256 /*_mineInterval*/) external ;
+    function setMineCoinInfo(
+        address, /*mineCoin*/
+        uint256, /*_mineAmount*/
+        uint256 /*_mineInterval*/
+    ) external;
 
     /**
      * @dev user redeem mine rewards.
      *  mineCoin mine coin address
      *  amount redeem amount.
      */
-    function redeemMinerCoin(address /*mineCoin*/,uint256 /*amount*/) external;
+    function redeemMinerCoin(
+        address, /*mineCoin*/
+        uint256 /*amount*/
+    ) external;
+
     /**
      * @dev getting whole pool's mine production weight ratio.
      *      Real mine production equals base mine production multiply weight ratio.
      */
     function getMineWeightRatio() external view returns (uint256);
+
     /**
      * @dev getting whole pool's mine shared distribution. All these distributions will share base mine production.
      */
     function getTotalDistribution() external view returns (uint256);
+
     /**
      * @dev convert timestamp to period ID.
-     * _time timestamp. 
-     */ 
-    function getPeriodIndex(uint256 /*_time*/) external view returns (uint256);
+     * _time timestamp.
+     */
+
+    function getPeriodIndex(
+        uint256 /*_time*/
+    ) external view returns (uint256);
+
     /**
      * @dev convert period ID to period's finish timestamp.
-     * periodID period ID. 
+     * periodID period ID.
      */
-    function getPeriodFinishTime(uint256 /*periodID*/) external view returns (uint256);
+    function getPeriodFinishTime(
+        uint256 /*periodID*/
+    ) external view returns (uint256);
+
     /**
      * @dev Stake FPT-A coin and get distribution for mining.
      * amount FPT-A amount that transfer into mine pool.
      */
-    function stakeFPTA(uint256 /*amount*/) external ;
+    function stakeFPTA(
+        uint256 /*amount*/
+    ) external;
+
     /**
      * @dev Air drop to user some FPT-B coin and lock one period and get distribution for mining.
      * user air drop's recieptor.
      * ftp_b_amount FPT-B amount that transfer into mine pool.
      */
-    function lockAirDrop(address /*user*/,uint256 /*ftp_b_amount*/) external;
+    function lockAirDrop(
+        address, /*user*/
+        uint256 /*ftp_b_amount*/
+    ) external;
+
     /**
      * @dev Stake FPT-B coin and lock locedPreiod and get distribution for mining.
      * amount FPT-B amount that transfer into mine pool.
      * lockedPeriod locked preiod number.
      */
-    function stakeFPTB(uint256 /*amount*/,uint256 /*lockedPeriod*/) external;
+    function stakeFPTB(
+        uint256, /*amount*/
+        uint256 /*lockedPeriod*/
+    ) external;
+
     /**
      * @dev withdraw FPT-A coin.
      * amount FPT-A amount that withdraw from mine pool.
      */
-    function unstakeFPTA(uint256 /*amount*/) external ;
+    function unstakeFPTA(
+        uint256 /*amount*/
+    ) external;
+
     /**
      * @dev withdraw FPT-B coin.
      * amount FPT-B amount that withdraw from mine pool.
      */
-    function unstakeFPTB(uint256 /*amount*/) external;
+    function unstakeFPTB(
+        uint256 /*amount*/
+    ) external;
+
     /**
      * @dev Add FPT-B locked period.
      * lockedPeriod FPT-B locked preiod number.
      */
-    function changeFPTBLockedPeriod(uint256 /*lockedPeriod*/) external;
+    function changeFPTBLockedPeriod(
+        uint256 /*lockedPeriod*/
+    ) external;
 
-       /**
+    /**
      * @dev retrieve total distributed premium coins.
      */
-    function getTotalPremium() external view returns(uint256);
+    function getTotalPremium() external view returns (uint256);
+
     /**
      * @dev user redeem his options premium rewards.
      */
     function redeemPremium() external;
+
     /**
      * @dev user redeem his options premium rewards.
      * amount redeem amount.
      */
-    function redeemPremiumCoin(address /*premiumCoin*/,uint256 /*amount*/) external;
+    function redeemPremiumCoin(
+        address, /*premiumCoin*/
+        uint256 /*amount*/
+    ) external;
+
     /**
      * @dev get user's premium balance.
      * account user's account
-     */ 
-    function getUserLatestPremium(address /*account*/,address /*premiumCoin*/) external view returns(uint256);
- 
+     */
+
+    function getUserLatestPremium(
+        address, /*account*/
+        address /*premiumCoin*/
+    ) external view returns (uint256);
+
     /**
      * @dev Distribute premium from foundation.
      * periodID period ID
      * amount premium amount.
-     */ 
-    function distributePremium(address /*premiumCoin*/,uint256 /*periodID*/,uint256 /*amount*/) external ;
+     */
+
+    function distributePremium(
+        address, /*premiumCoin*/
+        uint256, /*periodID*/
+        uint256 /*amount*/
+    ) external;
 }
 
 // /**
@@ -192,12 +282,12 @@ interface IFNX_MinePool {
 //      * @dev Allows the current owner to transfer ownership
 //      * @param _newOwner The address to transfer ownership to
 //      */
-//     function transferProxyOwnership(address _newOwner) public onlyProxyOwner 
+//     function transferProxyOwnership(address _newOwner) public onlyProxyOwner
 //     {
 //         require(_newOwner != address(0));
 //         _setProxyOwner(_newOwner);
 //     }
-//     function _setProxyOwner(address _newOwner) internal 
+//     function _setProxyOwner(address _newOwner) internal
 //     {
 //         bytes32 position = proxyOwnerPosition;
 //         assembly {
@@ -220,7 +310,7 @@ interface IFNX_MinePool {
 //             impl := sload(position)
 //         }
 //     }
-//     function _setImplementation(address _newImplementation) internal 
+//     function _setImplementation(address _newImplementation) internal
 //     {
 //         bytes32 position = implementPositon;
 //         assembly {
@@ -306,7 +396,6 @@ interface IFNX_MinePool {
 
 // pragma solidity =0.5.16;
 
-
 // /**
 //  * @title FNX period mine pool.
 //  * @dev A smart-contract which distribute some mine coins when user stake FPT-A and FPT-B coins.
@@ -337,13 +426,13 @@ interface IFNX_MinePool {
 //      * @dev Returns the address of the current owner.
 //      */
 //     function owner() public view returns (address) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev Returns true if the caller is the current owner.
 //      */
 //     function isOwner() public view returns (bool) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev Leaves the contract without owner. It will not be possible to call
@@ -384,7 +473,7 @@ interface IFNX_MinePool {
 //     /**
 //      * @dev Implementation of testing whether the input address is eligible.
 //      *  tmpAddress input address for testing.
-//      */    
+//      */
 //     function isEligibleAddress(address /*tmpAddress*/) public view returns (bool){
 //         delegateToViewAndReturn();
 //     }
@@ -392,62 +481,62 @@ interface IFNX_MinePool {
 //         delegateAndReturn();
 //     }
 //     function getOperator(uint256 /*index*/)public view returns (address) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting function. Retrieve FPT-A coin's address
 //      */
 //     function getFPTAAddress()public view returns (address) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting function. Retrieve FPT-B coin's address
 //      */
 //     function getFPTBAddress()public view returns (address) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting function. Retrieve mine pool's start time.
 //      */
 //     function getStartTime()public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting current mine period ID.
 //      */
 //     function getCurrentPeriodID()public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting user's staking FPT-A balance.
 //      * account user's account
 //      */
 //     function getUserFPTABalance(address /*account*/)public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting user's staking FPT-B balance.
 //      * account user's account
 //      */
 //     function getUserFPTBBalance(address /*account*/)public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting user's maximium locked period ID.
 //      * account user's account
 //      */
 //     function getUserMaxPeriodId(address /*account*/)public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting user's locked expired time. After this time user can unstake FPTB coins.
 //      * account user's account
 //      */
 //     function getUserExpired(address /*account*/)public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     function getCurrentTotalAPY(address /*mineCoin*/)public view returns (uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev Calculate user's current APY.
@@ -455,10 +544,10 @@ interface IFNX_MinePool {
 //      * mineCoin mine coin address
 //      */
 //     function getUserCurrentAPY(address /*account*/,address /*mineCoin*/)public view returns (uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     function getAverageLockedTime()public view returns (uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev foundation redeem out mine coins.
@@ -473,7 +562,7 @@ interface IFNX_MinePool {
 //      *  mineCoin mineCoin address
 //      */
 //     function getTotalMined(address /*mineCoin*/)public view returns(uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev retrieve minecoin distributed informations.
@@ -481,7 +570,7 @@ interface IFNX_MinePool {
 //      * @return distributed amount and distributed time interval.
 //      */
 //     function getMineInfo(address /*mineCoin*/)public view returns(uint256,uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev retrieve user's mine balance.
@@ -489,7 +578,7 @@ interface IFNX_MinePool {
 //      *  mineCoin mineCoin address
 //      */
 //     function getMinerBalance(address /*account*/,address /*mineCoin*/)public view returns(uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev Set mineCoin mine info, only foundation owner can invoked.
@@ -514,27 +603,27 @@ interface IFNX_MinePool {
 //      *      Real mine production equals base mine production multiply weight ratio.
 //      */
 //     function getMineWeightRatio()public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev getting whole pool's mine shared distribution. All these distributions will share base mine production.
 //      */
 //     function getTotalDistribution() public view returns (uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev convert timestamp to period ID.
-//      * _time timestamp. 
-//      */ 
+//      * _time timestamp.
+//      */
 //     function getPeriodIndex(uint256 /*_time*/) public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev convert period ID to period's finish timestamp.
-//      * periodID period ID. 
+//      * periodID period ID.
 //      */
 //     function getPeriodFinishTime(uint256 /*periodID*/)public view returns (uint256) {
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev Stake FPT-A coin and get distribution for mining.
@@ -585,7 +674,7 @@ interface IFNX_MinePool {
 //      * @dev retrieve total distributed premium coins.
 //      */
 //     function getTotalPremium()public view returns(uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
 //     /**
 //      * @dev user redeem his options premium rewards.
@@ -603,16 +692,16 @@ interface IFNX_MinePool {
 //     /**
 //      * @dev get user's premium balance.
 //      * account user's account
-//      */ 
+//      */
 //     function getUserLatestPremium(address /*account*/,address /*premiumCoin*/)public view returns(uint256){
-//         delegateToViewAndReturn(); 
+//         delegateToViewAndReturn();
 //     }
- 
+
 //     /**
 //      * @dev Distribute premium from foundation.
 //      * periodID period ID
 //      * amount premium amount.
-//      */ 
+//      */
 //     function distributePremium(address /*premiumCoin*/,uint256 /*periodID*/,uint256 /*amount*/)public {
 //         delegateAndReturn();
 //     }

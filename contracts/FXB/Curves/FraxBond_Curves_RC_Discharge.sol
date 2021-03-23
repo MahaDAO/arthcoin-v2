@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 // ====================================================================
@@ -36,14 +37,17 @@ contract FraxBond_Curves_RC_Discharge {
         else if (curve_choice == 3) return RC_EULER_CURVE.length;
         else if (curve_choice == 4) return RC_PI_CURVE.length;
     }
-    
-    function get_curve_point(uint8 curve_choice, uint8 index) public returns (uint256) {
+
+    function get_curve_point(uint8 curve_choice, uint8 index)
+        public
+        returns (uint256)
+    {
         if (curve_choice == 0) return RC_3ROOT_CURVE[index];
         else if (curve_choice == 1) return RC_4ROOT_CURVE[index];
         else if (curve_choice == 2) return RC_5ROOT_CURVE[index];
         else if (curve_choice == 3) return RC_EULER_CURVE[index];
         else if (curve_choice == 4) return RC_PI_CURVE[index];
-    } 
+    }
 
     // Square root of 3 curve
     // 1000000 * (1 - (1 / (1.73205807^(x / 20)))) from x = 0 to 100
@@ -462,7 +466,7 @@ contract FraxBond_Curves_RC_Discharge {
         992171,
         992553,
         992916,
-        993262  
+        993262
     ];
 
     // Pi
@@ -570,6 +574,5 @@ contract FraxBond_Curves_RC_Discharge {
         996732
     ];
 
-    constructor() public { }
-
-} 
+    constructor() {}
+}

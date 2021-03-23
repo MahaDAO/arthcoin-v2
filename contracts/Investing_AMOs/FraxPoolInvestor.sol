@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 // ====================================================================
@@ -12,7 +13,6 @@ pragma experimental ABIEncoderV2;
 // ====================================================================
 // ========================= FraxPoolInvestor =========================
 // ====================================================================
-
 
 import "../Math/SafeMath.sol";
 import "../FXS/FXS.sol";
@@ -55,9 +55,9 @@ import "../Frax/Pools/FraxPoolvAMM.sol";
 //         require(msg.sender == pool_address, "You are not the FraxPool");
 //         _;
 //     }
- 
+
 //     /* ========== CONSTRUCTOR ========== */
-    
+
 //     constructor(
 //         address _pool_address,
 //         address _collateral_address,
@@ -82,7 +82,6 @@ import "../Frax/Pools/FraxPoolvAMM.sol";
 //     // BuyAndBurnFXS
 
 //     /* ========== PUBLIC FUNCTIONS ========== */
-    
 
 //     /* ========== RESTRICTED FUNCTIONS ========== */
 

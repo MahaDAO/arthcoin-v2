@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import "../StakingRewards.sol";
@@ -13,7 +14,16 @@ contract Stake_FRAX_USDC is StakingRewards {
         address _frax_address,
         address _timelock_address,
         uint256 _pool_weight
-    ) 
-    StakingRewards(_owner, _rewardsDistribution, _rewardsToken, _stakingToken, _frax_address, _timelock_address, _pool_weight)
-    public {}
+    )
+        public
+        StakingRewards(
+            _owner,
+            _rewardsDistribution,
+            _rewardsToken,
+            _stakingToken,
+            _frax_address,
+            _timelock_address,
+            _pool_weight
+        )
+    {}
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 // ====================================================================
@@ -39,7 +40,6 @@ import "./finnexus/IFNX_TokenConverter.sol";
 import "./finnexus/IFNX_ManagerProxy.sol";
 import "./finnexus/IFNX_Oracle.sol";
 
-
 contract FraxLendingAMO is AccessControl {
     using SafeMath for uint256;
 
@@ -51,20 +51,29 @@ contract FraxLendingAMO is AccessControl {
     FraxPool private pool;
 
     // Cream
-    ICREAM_crFRAX private crFRAX = ICREAM_crFRAX(0xb092b4601850E23903A42EaCBc9D8A0EeC26A4d5);
+    ICREAM_crFRAX private crFRAX =
+        ICREAM_crFRAX(0xb092b4601850E23903A42EaCBc9D8A0EeC26A4d5);
 
     // FinNexus
     // More addresses: https://github.com/FinNexus/FinNexus-Documentation/blob/master/content/developers/smart-contracts.md
-    IFNX_FPT_FRAX private fnxFPT_FRAX = IFNX_FPT_FRAX(0x39ad661bA8a7C9D3A7E4808fb9f9D5223E22F763);
-    IFNX_FPT_B private fnxFPT_B = IFNX_FPT_B(0x7E605Fb638983A448096D82fFD2958ba012F30Cd);
-    IFNX_IntegratedStake private fnxIntegratedStake = IFNX_IntegratedStake(0x23e54F9bBe26eD55F93F19541bC30AAc2D5569b2);
-    IFNX_MinePool private fnxMinePool = IFNX_MinePool(0x4e6005396F80a737cE80d50B2162C0a7296c9620);
-    IFNX_TokenConverter private fnxTokenConverter = IFNX_TokenConverter(0x955282b82440F8F69E901380BeF2b603Fba96F3b);
-    IFNX_ManagerProxy private fnxManagerProxy = IFNX_ManagerProxy(0xa2904Fd151C9d9D634dFA8ECd856E6B9517F9785);
-    IFNX_Oracle private fnxOracle = IFNX_Oracle(0x43BD92bF3Bb25EBB3BdC2524CBd6156E3Fdd41F3);
+    IFNX_FPT_FRAX private fnxFPT_FRAX =
+        IFNX_FPT_FRAX(0x39ad661bA8a7C9D3A7E4808fb9f9D5223E22F763);
+    IFNX_FPT_B private fnxFPT_B =
+        IFNX_FPT_B(0x7E605Fb638983A448096D82fFD2958ba012F30Cd);
+    IFNX_IntegratedStake private fnxIntegratedStake =
+        IFNX_IntegratedStake(0x23e54F9bBe26eD55F93F19541bC30AAc2D5569b2);
+    IFNX_MinePool private fnxMinePool =
+        IFNX_MinePool(0x4e6005396F80a737cE80d50B2162C0a7296c9620);
+    IFNX_TokenConverter private fnxTokenConverter =
+        IFNX_TokenConverter(0x955282b82440F8F69E901380BeF2b603Fba96F3b);
+    IFNX_ManagerProxy private fnxManagerProxy =
+        IFNX_ManagerProxy(0xa2904Fd151C9d9D634dFA8ECd856E6B9517F9785);
+    IFNX_Oracle private fnxOracle =
+        IFNX_Oracle(0x43BD92bF3Bb25EBB3BdC2524CBd6156E3Fdd41F3);
 
     // Reward Tokens
-    IFNX_CFNX private CFNX = IFNX_CFNX(0x9d7beb4265817a4923FAD9Ca9EF8af138499615d);
+    IFNX_CFNX private CFNX =
+        IFNX_CFNX(0x9d7beb4265817a4923FAD9Ca9EF8af138499615d);
     ERC20 private FNX = ERC20(0xeF9Cd7882c067686691B6fF49e650b43AFBBCC6B);
 
     address public collateral_address;
@@ -91,7 +100,7 @@ contract FraxLendingAMO is AccessControl {
     bool public allow_finnexus = true;
 
     /* ========== CONSTRUCTOR ========== */
-    
+
     constructor(
         address _frax_contract_address,
         address _fxs_contract_address,
@@ -100,7 +109,7 @@ contract FraxLendingAMO is AccessControl {
         address _owner_address,
         address _custodian_address,
         address _timelock_address
-    ) public {
+    ) {
         FRAX = FRAXStablecoin(_frax_contract_address);
         FXS = FRAXShares(_fxs_contract_address);
         pool_address = _pool_address;
@@ -110,34 +119,53 @@ contract FraxLendingAMO is AccessControl {
         timelock_address = _timelock_address;
         owner_address = _owner_address;
         custodian_address = _custodian_address;
-        missing_decimals = uint(18).sub(collateral_token.decimals());
-        
+        missing_decimals = uint256(18).sub(collateral_token.decimals());
+
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /* ========== MODIFIERS ========== */
 
     modifier onlyByOwnerOrGovernance() {
-        require(msg.sender == timelock_address || msg.sender == owner_address, "You are not the owner or the governance timelock");
+        require(
+            msg.sender == timelock_address || msg.sender == owner_address,
+            "You are not the owner or the governance timelock"
+        );
         _;
     }
 
     modifier onlyCustodian() {
-        require(msg.sender == custodian_address, "You are not the rewards custodian");
+        require(
+            msg.sender == custodian_address,
+            "You are not the rewards custodian"
+        );
         _;
     }
 
     /* ========== VIEWS ========== */
 
-    function showAllocations() external view returns (uint256[9] memory allocations) {
+    function showAllocations()
+        external
+        view
+        returns (uint256[9] memory allocations)
+    {
         // IMPORTANT
         // Should ONLY be used externally, because it may fail if any one of the functions below fail
 
         // All numbers given are in FRAX unless otherwise stated
         allocations[0] = FRAX.balanceOf(address(this)); // Unallocated FRAX
-        allocations[1] = (crFRAX.balanceOf(address(this)).mul(crFRAX.exchangeRateStored()).div(1e18)); // Cream
-        allocations[2] = (fnxMinePool.getUserFPTABalance(address(this))).mul(1e8).div(fnxManagerProxy.getTokenNetworth()); // Staked FPT-FRAX
-        allocations[3] = (fnxFPT_FRAX.balanceOf(address(this))).mul(1e8).div(fnxManagerProxy.getTokenNetworth()); // Free FPT-FRAX
+        allocations[1] = (
+            crFRAX
+                .balanceOf(address(this))
+                .mul(crFRAX.exchangeRateStored())
+                .div(1e18)
+        ); // Cream
+        allocations[2] = (fnxMinePool.getUserFPTABalance(address(this)))
+            .mul(1e8)
+            .div(fnxManagerProxy.getTokenNetworth()); // Staked FPT-FRAX
+        allocations[3] = (fnxFPT_FRAX.balanceOf(address(this))).mul(1e8).div(
+            fnxManagerProxy.getTokenNetworth()
+        ); // Free FPT-FRAX
         allocations[4] = fnxTokenConverter.lockedBalanceOf(address(this)); // Unwinding CFNX
         allocations[5] = fnxTokenConverter.getClaimAbleBalance(address(this)); // Claimable Unwound FNX
         allocations[6] = FNX.balanceOf(address(this)); // Free FNX
@@ -161,8 +189,9 @@ contract FraxLendingAMO is AccessControl {
     }
 
     // In FRAX
-    function mintedBalance() public view returns (uint256){
-        if (minted_sum_historical >= burned_sum_historical) return minted_sum_historical.sub(burned_sum_historical);
+    function mintedBalance() public view returns (uint256) {
+        if (minted_sum_historical >= burned_sum_historical)
+            return minted_sum_historical.sub(burned_sum_historical);
         else return 0;
     }
 
@@ -177,24 +206,38 @@ contract FraxLendingAMO is AccessControl {
 
     // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like pool_mint and pool_burn_from
     // on the main FRAX contract
-    function mintFRAXForInvestments(uint256 frax_amount) public onlyByOwnerOrGovernance {
+    function mintFRAXForInvestments(uint256 frax_amount)
+        public
+        onlyByOwnerOrGovernance
+    {
         uint256 borrowed_balance = mintedBalance();
 
         // Make sure you aren't minting more than the mint cap
-        require(borrowed_balance.add(frax_amount) <= mint_cap, "Borrow cap reached");
+        require(
+            borrowed_balance.add(frax_amount) <= mint_cap,
+            "Borrow cap reached"
+        );
         minted_sum_historical = minted_sum_historical.add(frax_amount);
 
         // Make sure the current CR isn't already too low
-        require (FRAX.global_collateral_ratio() > min_cr, "Collateral ratio is already too low");
+        require(
+            FRAX.global_collateral_ratio() > min_cr,
+            "Collateral ratio is already too low"
+        );
 
         // Make sure the FRAX minting wouldn't push the CR down too much
-        uint256 current_collateral_E18 = (FRAX.globalCollateralValue()).mul(10 ** missing_decimals);
+        uint256 current_collateral_E18 =
+            (FRAX.globalCollateralValue()).mul(10**missing_decimals);
         uint256 cur_frax_supply = FRAX.totalSupply();
         uint256 new_frax_supply = cur_frax_supply.add(frax_amount);
-        uint256 new_cr = (current_collateral_E18.mul(PRICE_PRECISION)).div(new_frax_supply);
-        require (new_cr > min_cr, "Minting would cause collateral ratio to be too low");
+        uint256 new_cr =
+            (current_collateral_E18.mul(PRICE_PRECISION)).div(new_frax_supply);
+        require(
+            new_cr > min_cr,
+            "Minting would cause collateral ratio to be too low"
+        );
 
-        // Mint the frax 
+        // Mint the frax
         FRAX.pool_mint(address(this), frax_amount);
     }
 
@@ -202,7 +245,7 @@ contract FraxLendingAMO is AccessControl {
     function giveCollatBack(uint256 amount) public onlyByOwnerOrGovernance {
         collateral_token.transfer(address(pool), amount);
     }
-   
+
     // Burn unneeded or excess FRAX
     function burnFRAX(uint256 frax_amount) public onlyByOwnerOrGovernance {
         FRAX.burn(frax_amount);
@@ -218,31 +261,47 @@ contract FraxLendingAMO is AccessControl {
     /* ==================== CREAM ==================== */
 
     // E18
-    function creamDeposit_FRAX(uint256 FRAX_amount) public onlyByOwnerOrGovernance {
-        require(allow_cream, 'Cream strategy is disabled');
+    function creamDeposit_FRAX(uint256 FRAX_amount)
+        public
+        onlyByOwnerOrGovernance
+    {
+        require(allow_cream, "Cream strategy is disabled");
         FRAX.approve(address(crFRAX), FRAX_amount);
-        require(crFRAX.mint(FRAX_amount) == 0, 'Mint failed');
+        require(crFRAX.mint(FRAX_amount) == 0, "Mint failed");
     }
 
     // E18
-    function creamWithdraw_FRAX(uint256 FRAX_amount) public onlyByOwnerOrGovernance {
-        require(crFRAX.redeemUnderlying(FRAX_amount) == 0, 'RedeemUnderlying failed');
+    function creamWithdraw_FRAX(uint256 FRAX_amount)
+        public
+        onlyByOwnerOrGovernance
+    {
+        require(
+            crFRAX.redeemUnderlying(FRAX_amount) == 0,
+            "RedeemUnderlying failed"
+        );
     }
 
     // E8
-    function creamWithdraw_crFRAX(uint256 crFRAX_amount) public onlyByOwnerOrGovernance {
-        require(crFRAX.redeem(crFRAX_amount) == 0, 'Redeem failed');
+    function creamWithdraw_crFRAX(uint256 crFRAX_amount)
+        public
+        onlyByOwnerOrGovernance
+    {
+        require(crFRAX.redeem(crFRAX_amount) == 0, "Redeem failed");
     }
 
     /* ==================== FinNexus ==================== */
-    
+
     /* --== Staking ==-- */
 
-    function fnxIntegratedStakeFPTs_FRAX_FNX(uint256 FRAX_amount, uint256 FNX_amount, uint256 lock_period) public onlyByOwnerOrGovernance {
-        require(allow_finnexus, 'FinNexus strategy is disabled');
+    function fnxIntegratedStakeFPTs_FRAX_FNX(
+        uint256 FRAX_amount,
+        uint256 FNX_amount,
+        uint256 lock_period
+    ) public onlyByOwnerOrGovernance {
+        require(allow_finnexus, "FinNexus strategy is disabled");
         FRAX.approve(address(fnxIntegratedStake), FRAX_amount);
         FNX.approve(address(fnxIntegratedStake), FNX_amount);
-        
+
         address[] memory fpta_tokens = new address[](1);
         uint256[] memory fpta_amounts = new uint256[](1);
         address[] memory fptb_tokens = new address[](1);
@@ -253,12 +312,21 @@ contract FraxLendingAMO is AccessControl {
         fptb_tokens[0] = address(FNX);
         fptb_amounts[0] = FNX_amount;
 
-        fnxIntegratedStake.stake(fpta_tokens, fpta_amounts, fptb_tokens, fptb_amounts, lock_period);
+        fnxIntegratedStake.stake(
+            fpta_tokens,
+            fpta_amounts,
+            fptb_tokens,
+            fptb_amounts,
+            lock_period
+        );
     }
 
     // FPT-FRAX : FPT-B = 10:1 is the best ratio for staking. You can get it using the prices.
-    function fnxStakeFRAXForFPT_FRAX(uint256 FRAX_amount, uint256 lock_period) public onlyByOwnerOrGovernance {
-        require(allow_finnexus, 'FinNexus strategy is disabled');
+    function fnxStakeFRAXForFPT_FRAX(uint256 FRAX_amount, uint256 lock_period)
+        public
+        onlyByOwnerOrGovernance
+    {
+        require(allow_finnexus, "FinNexus strategy is disabled");
         FRAX.approve(address(fnxIntegratedStake), FRAX_amount);
 
         address[] memory fpta_tokens = new address[](1);
@@ -269,44 +337,63 @@ contract FraxLendingAMO is AccessControl {
         fpta_tokens[0] = address(FRAX);
         fpta_amounts[0] = FRAX_amount;
 
-        fnxIntegratedStake.stake(fpta_tokens, fpta_amounts, fptb_tokens, fptb_amounts, lock_period);
+        fnxIntegratedStake.stake(
+            fpta_tokens,
+            fpta_amounts,
+            fptb_tokens,
+            fptb_amounts,
+            lock_period
+        );
     }
 
     /* --== Collect CFNX ==-- */
 
     function fnxCollectCFNX() public onlyByOwnerOrGovernance {
-        uint256 claimable_cfnx = fnxMinePool.getMinerBalance(address(this), address(CFNX));
+        uint256 claimable_cfnx =
+            fnxMinePool.getMinerBalance(address(this), address(CFNX));
         fnxMinePool.redeemMinerCoin(address(CFNX), claimable_cfnx);
     }
 
     /* --== UnStaking ==-- */
 
     // FPT-FRAX = Staked FRAX
-    function fnxUnStakeFPT_FRAX(uint256 FPT_FRAX_amount) public onlyByOwnerOrGovernance {
+    function fnxUnStakeFPT_FRAX(uint256 FPT_FRAX_amount)
+        public
+        onlyByOwnerOrGovernance
+    {
         fnxMinePool.unstakeFPTA(FPT_FRAX_amount);
     }
 
     // FPT-B = Staked FNX
-    function fnxUnStakeFPT_B(uint256 FPT_B_amount) public onlyByOwnerOrGovernance {
+    function fnxUnStakeFPT_B(uint256 FPT_B_amount)
+        public
+        onlyByOwnerOrGovernance
+    {
         fnxMinePool.unstakeFPTB(FPT_B_amount);
     }
 
     /* --== Unwrapping LP Tokens ==-- */
 
     // FPT-FRAX = Staked FRAX
-    function fnxUnRedeemFPT_FRAXForFRAX(uint256 FPT_FRAX_amount) public onlyByOwnerOrGovernance {
+    function fnxUnRedeemFPT_FRAXForFRAX(uint256 FPT_FRAX_amount)
+        public
+        onlyByOwnerOrGovernance
+    {
         fnxFPT_FRAX.approve(address(fnxManagerProxy), FPT_FRAX_amount);
         fnxManagerProxy.redeemCollateral(FPT_FRAX_amount, address(FRAX));
     }
 
     // FPT-B = Staked FNX
-    function fnxUnStakeFPT_BForFNX(uint256 FPT_B_amount) public onlyByOwnerOrGovernance {
+    function fnxUnStakeFPT_BForFNX(uint256 FPT_B_amount)
+        public
+        onlyByOwnerOrGovernance
+    {
         fnxFPT_B.approve(address(fnxManagerProxy), FPT_B_amount);
         fnxManagerProxy.redeemCollateral(FPT_B_amount, address(FNX));
     }
 
     /* --== Convert CFNX to FNX ==-- */
-    
+
     // Has to be done in batches, since it unlocks over several months
     function fnxInputCFNXForUnwinding() public onlyByOwnerOrGovernance {
         uint256 cfnx_amount = CFNX.balanceOf(address(this));
@@ -319,7 +406,7 @@ contract FraxLendingAMO is AccessControl {
     }
 
     /* --== Combination Functions ==-- */
-    
+
     function fnxCFNXCollectConvertUnwind() public onlyByOwnerOrGovernance {
         fnxCollectCFNX();
         fnxInputCFNXForUnwinding();
@@ -334,7 +421,10 @@ contract FraxLendingAMO is AccessControl {
 
     /* ========== RESTRICTED GOVERNANCE FUNCTIONS ========== */
 
-    function setTimelock(address new_timelock) external onlyByOwnerOrGovernance {
+    function setTimelock(address new_timelock)
+        external
+        onlyByOwnerOrGovernance
+    {
         timelock_address = new_timelock;
     }
 
@@ -342,7 +432,10 @@ contract FraxLendingAMO is AccessControl {
         owner_address = _owner_address;
     }
 
-    function setMiscRewardsCustodian(address _custodian_address) external onlyByOwnerOrGovernance {
+    function setMiscRewardsCustodian(address _custodian_address)
+        external
+        onlyByOwnerOrGovernance
+    {
         custodian_address = _custodian_address;
     }
 
@@ -355,16 +448,25 @@ contract FraxLendingAMO is AccessControl {
         mint_cap = _mint_cap;
     }
 
-    function setMinimumCollateralRatio(uint256 _min_cr) external onlyByOwnerOrGovernance {
+    function setMinimumCollateralRatio(uint256 _min_cr)
+        external
+        onlyByOwnerOrGovernance
+    {
         min_cr = _min_cr;
     }
 
-    function setAllowedStrategies(bool _cream, bool _finnexus) external onlyByOwnerOrGovernance {
+    function setAllowedStrategies(bool _cream, bool _finnexus)
+        external
+        onlyByOwnerOrGovernance
+    {
         allow_cream = _cream;
         allow_finnexus = _finnexus;
     }
 
-    function recoverERC20(address tokenAddress, uint256 tokenAmount) external onlyByOwnerOrGovernance {
+    function recoverERC20(address tokenAddress, uint256 tokenAmount)
+        external
+        onlyByOwnerOrGovernance
+    {
         // Can only be triggered by owner or governance, not custodian
         // Tokens are sent to the custodian, as a sort of safeguard
 
@@ -372,9 +474,7 @@ contract FraxLendingAMO is AccessControl {
         emit Recovered(tokenAddress, tokenAmount);
     }
 
-
     /* ========== EVENTS ========== */
 
     event Recovered(address token, uint256 amount);
-
 }

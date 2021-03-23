@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 
 // Inheritance
 import "./Owned.sol";
 
 // https://docs.synthetix.io/contracts/Pausable
 abstract contract Pausable is Owned {
-    uint public lastPauseTime;
+    uint256 public lastPauseTime;
     bool public paused;
 
     constructor() internal {
@@ -40,7 +41,10 @@ abstract contract Pausable is Owned {
     event PauseChanged(bool isPaused);
 
     modifier notPaused {
-        require(!paused, "This action cannot be performed while the contract is paused");
+        require(
+            !paused,
+            "This action cannot be performed while the contract is paused"
+        );
         _;
     }
 }

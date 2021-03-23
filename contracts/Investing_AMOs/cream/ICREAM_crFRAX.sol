@@ -1,27 +1,58 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
-import '../../ERC20/IERC20.sol';
+import "../../ERC20/IERC20.sol";
 
 // Original at https://etherscan.io/address/0xb092b4601850E23903A42EaCBc9D8A0EeC26A4d5
 // Some functions were omitted for brevity. See the contract for details
 
-interface ICREAM_crFRAX is IERC20  {
-    function getAccountSnapshot(address account) external view returns (uint, uint, uint, uint);
-    function borrowRatePerBlock() external view returns (uint);
-    function supplyRatePerBlock() external view returns (uint);
-    function totalBorrowsCurrent() external view returns (uint);
-    function borrowBalanceCurrent(address account) external view returns (uint);
-    function borrowBalanceStored(address account) external view returns (uint);
-    function exchangeRateCurrent() external view returns (uint);
-    function exchangeRateStored() external view returns (uint);
-    function getCash() external view returns (uint);
-    function accrueInterest() external returns (uint);
-    function seize(address liquidator, address borrower, uint seizeTokens) external returns (uint);
+interface ICREAM_crFRAX is IERC20 {
+    function getAccountSnapshot(address account)
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        );
 
-    function mint(uint mintAmount) external returns (uint);
-    function redeem(uint redeemTokens) external returns (uint);
-    function redeemUnderlying(uint redeemAmount) external returns (uint);
+    function borrowRatePerBlock() external view returns (uint256);
+
+    function supplyRatePerBlock() external view returns (uint256);
+
+    function totalBorrowsCurrent() external view returns (uint256);
+
+    function borrowBalanceCurrent(address account)
+        external
+        view
+        returns (uint256);
+
+    function borrowBalanceStored(address account)
+        external
+        view
+        returns (uint256);
+
+    function exchangeRateCurrent() external view returns (uint256);
+
+    function exchangeRateStored() external view returns (uint256);
+
+    function getCash() external view returns (uint256);
+
+    function accrueInterest() external returns (uint256);
+
+    function seize(
+        address liquidator,
+        address borrower,
+        uint256 seizeTokens
+    ) external returns (uint256);
+
+    function mint(uint256 mintAmount) external returns (uint256);
+
+    function redeem(uint256 redeemTokens) external returns (uint256);
+
+    function redeemUnderlying(uint256 redeemAmount) external returns (uint256);
 }
 
 // pragma solidity ^0.5.16;
@@ -1007,7 +1038,6 @@ interface ICREAM_crFRAX is IERC20  {
 //             return (fail(Error.INVALID_CLOSE_AMOUNT_REQUESTED, FailureInfo.LIQUIDATE_CLOSE_AMOUNT_IS_UINT_MAX), 0);
 //         }
 
-
 //         /* Fail if repayBorrow fails */
 //         (uint repayBorrowError, uint actualRepayAmount) = repayBorrowFresh(liquidator, borrower, repayAmount);
 //         if (repayBorrowError != uint(Error.NO_ERROR)) {
@@ -1115,7 +1145,6 @@ interface ICREAM_crFRAX is IERC20  {
 
 //         return uint(Error.NO_ERROR);
 //     }
-
 
 //     /*** Admin Functions ***/
 
@@ -1300,7 +1329,6 @@ interface ICREAM_crFRAX is IERC20  {
 //         return (uint(Error.NO_ERROR), actualAddAmount);
 //     }
 
-
 //     /**
 //      * @notice Accrues interest and reduces reserves by transferring to admin
 //      * @param reduceAmount Amount of reduction to reserves
@@ -1438,7 +1466,6 @@ interface ICREAM_crFRAX is IERC20  {
 //      *  If caller has checked protocol's balance, and verified it is >= amount, this should not revert in normal conditions.
 //      */
 //     function doTransferOut(address payable to, uint amount) internal;
-
 
 //     /*** Reentrancy Guard ***/
 

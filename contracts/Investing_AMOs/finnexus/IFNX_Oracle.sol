@@ -1,23 +1,35 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.6.11;
+
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
-import '../../ERC20/IERC20.sol';
+import "../../ERC20/IERC20.sol";
 
 // Original at https://etherscan.io/address/0x43BD92bF3Bb25EBB3BdC2524CBd6156E3Fdd41F3
 // Some functions were omitted for brevity. See the contract for details
 
 interface IFNX_Oracle {
-    function getAssetAndUnderlyingPrice(address asset,uint256 underlying) external view returns (uint256,uint256);
-    function getPrices(uint256[]memory assets) external view returns (uint256[]memory);
+    function getAssetAndUnderlyingPrice(address asset, uint256 underlying)
+        external
+        view
+        returns (uint256, uint256);
+
+    function getPrices(uint256[] memory assets)
+        external
+        view
+        returns (uint256[] memory);
 
     /**
-    * @notice retrieves price of an asset
-    * @dev function to get price for an asset
-    * @param asset Asset for which to get the price
-    * @return uint mantissa of asset price (scaled by 1e8) or zero if unset or contract paused
-    */
+     * @notice retrieves price of an asset
+     * @dev function to get price for an asset
+     * @param asset Asset for which to get the price
+     * @return uint mantissa of asset price (scaled by 1e8) or zero if unset or contract paused
+     */
     function getPrice(address asset) external view returns (uint256);
-    function getUnderlyingPrice(uint256 underlying) external view returns (uint256);
+
+    function getUnderlyingPrice(uint256 underlying)
+        external
+        view
+        returns (uint256);
 }
 
 // /**
@@ -250,7 +262,6 @@ interface IFNX_Oracle {
 
 // pragma solidity >=0.6.0;
 
-
 // /**
 //  * @dev Contract module which provides a basic access control mechanism, where
 //  * each operator can be granted exclusive access to specific functions.
@@ -260,7 +271,7 @@ interface IFNX_Oracle {
 //     using whiteListAddress for address[];
 //     address[] private _operatorList;
 //     /**
-//      * @dev modifier, every operator can be granted exclusive access to specific functions. 
+//      * @dev modifier, every operator can be granted exclusive access to specific functions.
 //      *
 //      */
 //     modifier onlyOperator() {
@@ -268,7 +279,7 @@ interface IFNX_Oracle {
 //         _;
 //     }
 //     /**
-//      * @dev modifier, Only indexed operator can be granted exclusive access to specific functions. 
+//      * @dev modifier, Only indexed operator can be granted exclusive access to specific functions.
 //      *
 //      */
 //     modifier onlyOperatorIndex(uint256 index) {
@@ -276,35 +287,35 @@ interface IFNX_Oracle {
 //         _;
 //     }
 //     /**
-//      * @dev add a new operator by owner. 
+//      * @dev add a new operator by owner.
 //      *
 //      */
 //     function addOperator(address addAddress)public onlyOwner{
 //         _operatorList.addWhiteListAddress(addAddress);
 //     }
 //     /**
-//      * @dev modify indexed operator by owner. 
+//      * @dev modify indexed operator by owner.
 //      *
 //      */
 //     function setOperator(uint256 index,address addAddress)public onlyOwner{
 //         _operatorList[index] = addAddress;
 //     }
 //     /**
-//      * @dev remove operator by owner. 
+//      * @dev remove operator by owner.
 //      *
 //      */
 //     function removeOperator(address removeAddress)public onlyOwner returns (bool){
 //         return _operatorList.removeWhiteListAddress(removeAddress);
 //     }
 //     /**
-//      * @dev get all operators. 
+//      * @dev get all operators.
 //      *
 //      */
 //     function getOperator()public view returns (address[] memory) {
 //         return _operatorList;
 //     }
 //     /**
-//      * @dev set all operators by owner. 
+//      * @dev set all operators by owner.
 //      *
 //      */
 //     function setOperators(address[] memory operators)public onlyOwner {
@@ -431,9 +442,6 @@ interface IFNX_Oracle {
 
 // pragma solidity ^0.6.7;
 
-
-
-
 // contract FNXOracle is Operator {
 //     mapping(uint256 => AggregatorV3Interface) private assetsMap;
 //     mapping(uint256 => uint256) private decimalsMap;
@@ -483,7 +491,6 @@ interface IFNX_Oracle {
 //         decimalsMap[uint256(0xD12BC93Ac5eA2b4Ba99e0ffEd053a53B6d18C7a3)] = 6;
 //         */
 
-
 //     }
 //     function setDecimals(uint256 newDecimals) public onlyOwner{
 //         decimals = newDecimals;
@@ -524,9 +531,9 @@ interface IFNX_Oracle {
 //             (, int price,,,) = assetsPrice.latestRoundData();
 //             uint256 tokenDecimals = decimalsMap[underlying];
 //             if (tokenDecimals < 18){
-//                 return uint256(price)/decimals*(10**(18-tokenDecimals));  
+//                 return uint256(price)/decimals*(10**(18-tokenDecimals));
 //             }else if (tokenDecimals > 18){
-//                 return uint256(price)/decimals/(10**(18-tokenDecimals)); 
+//                 return uint256(price)/decimals/(10**(18-tokenDecimals));
 //             }else{
 //                 return uint256(price)/decimals;
 //             }
@@ -543,9 +550,9 @@ interface IFNX_Oracle {
 //             uint256 tokenDecimals = decimalsMap[3];
 //             uint256 mkrPrice = uint256(price*ethPrice)/decimals/1e18;
 //             if (tokenDecimals < 18){
-//                 return mkrPrice/decimals*(10**(18-tokenDecimals));  
+//                 return mkrPrice/decimals*(10**(18-tokenDecimals));
 //             }else if (tokenDecimals > 18){
-//                 return mkrPrice/decimals/(10**(18-tokenDecimals)); 
+//                 return mkrPrice/decimals/(10**(18-tokenDecimals));
 //             }else{
 //                 return mkrPrice/decimals;
 //             }
@@ -558,7 +565,7 @@ interface IFNX_Oracle {
 //       * @dev function to set price for an asset
 //       * @param asset Asset for which to set the price
 //       * @param price the Asset's price
-//       */    
+//       */
 //     function setPrice(address asset,uint256 price) public onlyOperatorIndex(0) {
 //         priceMap[uint256(asset)] = price;
 
@@ -568,7 +575,7 @@ interface IFNX_Oracle {
 //       * @dev function to set price for an underlying
 //       * @param underlying underlying for which to set the price
 //       * @param price the underlying's price
-//       */  
+//       */
 //     function setUnderlyingPrice(uint256 underlying,uint256 price) public onlyOperatorIndex(0) {
 //         require(underlying>0 , "underlying cannot be zero");
 //         priceMap[underlying] = price;
@@ -578,7 +585,7 @@ interface IFNX_Oracle {
 //       * @dev function to set price for an asset
 //       * @param asset Asset for which to set the price
 //       * @param aggergator the Asset's aggergator
-//       */    
+//       */
 //     function setAssetsAggregator(address asset,address aggergator,uint256 _decimals) public onlyOwner {
 //         assetsMap[uint256(asset)] = AggregatorV3Interface(aggergator);
 //         decimalsMap[uint256(asset)] = _decimals;
@@ -588,7 +595,7 @@ interface IFNX_Oracle {
 //       * @dev function to set price for an underlying
 //       * @param underlying underlying for which to set the price
 //       * @param aggergator the underlying's aggergator
-//       */  
+//       */
 //     function setUnderlyingAggregator(uint256 underlying,address aggergator,uint256 _decimals) public onlyOwner {
 //         require(underlying>0 , "underlying cannot be zero");
 //         assetsMap[underlying] = AggregatorV3Interface(aggergator);

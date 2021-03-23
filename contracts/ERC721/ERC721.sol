@@ -56,7 +56,7 @@ contract ERC721 is
     /**
      * @dev Initializes the contract by setting a `name` and a `symbol` to the token collection.
      */
-    constructor(string memory name_, string memory symbol_) public {
+    constructor(string memory name_, string memory symbol_) {
         _name = name_;
         _symbol = symbol_;
 

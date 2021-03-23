@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.6.11;
 
-import './IWETH.sol';
+import "./IWETH.sol";
 
 // Copyright (C) 2015, 2016, 2017 Dapphub
 
@@ -19,63 +19,62 @@ import './IWETH.sol';
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 contract WETH is IWETH {
-    string public name     = "Wrapped Ether";
-    string public symbol   = "WETH";
-    uint8  public decimals = 18;
+    string public name = "Wrapped Ether";
+    string public symbol = "WETH";
+    uint8 public decimals = 18;
 
-    event  Approval(address indexed src, address indexed guy, uint wad);
-    event  Transfer(address indexed src, address indexed dst, uint wad);
-    event  Deposit(address indexed dst, uint wad);
-    event  Withdrawal(address indexed src, uint wad);
+    event Approval(address indexed src, address indexed guy, uint256 wad);
+    event Transfer(address indexed src, address indexed dst, uint256 wad);
+    event Deposit(address indexed dst, uint256 wad);
+    event Withdrawal(address indexed src, uint256 wad);
 
-    mapping (address => uint)                       public  balanceOf;
-    mapping (address => mapping (address => uint))  public  allowance;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
 
     fallback() external payable {
         deposit();
     }
 
-    receive() external payable { }
+    receive() external payable {}
 
-    constructor (address _creator_address ) public 
-    {
+    constructor(address _creator_address) {
         balanceOf[_creator_address] = 1000000e18; // this is for testing only
     }
 
-
-    function deposit() public override payable {
+    function deposit() public payable override {
         balanceOf[msg.sender] += msg.value;
         emit Deposit(msg.sender, msg.value);
     }
-    function withdraw(uint wad) override public {
+
+    function withdraw(uint256 wad) public override {
         require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
         msg.sender.transfer(wad);
         emit Withdrawal(msg.sender, wad);
     }
 
-    function totalSupply() public view returns (uint) {
+    function totalSupply() public view returns (uint256) {
         return address(this).balance;
     }
 
-    function approve(address guy, uint wad) public returns (bool) {
+    function approve(address guy, uint256 wad) public returns (bool) {
         allowance[msg.sender][guy] = wad;
         emit Approval(msg.sender, guy, wad);
         return true;
     }
 
-    function transfer(address dst, uint wad) public override returns (bool) {
+    function transfer(address dst, uint256 wad) public override returns (bool) {
         return transferFrom(msg.sender, dst, wad);
     }
 
-    function transferFrom(address src, address dst, uint wad)
-        public
-        override
-        returns (bool)
-    {
+    function transferFrom(
+        address src,
+        address dst,
+        uint256 wad
+    ) public override returns (bool) {
         require(balanceOf[src] >= wad);
 
-        if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
+        if (src != msg.sender && allowance[src][msg.sender] != uint256(-1)) {
             require(allowance[src][msg.sender] >= wad);
             allowance[src][msg.sender] -= wad;
         }
@@ -88,7 +87,6 @@ contract WETH is IWETH {
         return true;
     }
 }
-
 
 /*
                     GNU GENERAL PUBLIC LICENSE
