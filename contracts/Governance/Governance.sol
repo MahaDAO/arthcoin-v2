@@ -207,26 +207,23 @@ contract GovernorAlpha {
         uint256 endBlock = add256(startBlock, votingPeriod);
 
         proposalCount++;
-        Proposal memory newProposal =
-            Proposal({
-                id: proposalCount,
-                proposer: msg.sender,
-                eta: 0,
-                targets: targets,
-                values: values,
-                signatures: signatures,
-                calldatas: calldatas,
-                startBlock: startBlock,
-                endBlock: endBlock,
-                forVotes: 0,
-                againstVotes: 0,
-                canceled: false,
-                executed: false,
-                title: title,
-                description: description
-            });
+        Proposal storage newProposal = proposals[proposalCount];
+        newProposal.id = proposalCount;
+        newProposal.proposer = msg.sender;
+        newProposal.eta = 0;
+        newProposal.targets = targets;
+        newProposal.values = values;
+        newProposal.signatures = signatures;
+        newProposal.calldatas = calldatas;
+        newProposal.startBlock = startBlock;
+        newProposal.endBlock = endBlock;
+        newProposal.forVotes = 0;
+        newProposal.againstVotes = 0;
+        newProposal.canceled = false;
+        newProposal.executed = false;
+        newProposal.title = title;
+        newProposal.description = description;
 
-        proposals[newProposal.id] = newProposal;
         latestProposalIds[newProposal.proposer] = newProposal.id;
 
         emit ProposalCreated(
