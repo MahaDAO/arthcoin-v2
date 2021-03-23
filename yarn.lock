@@ -1060,6 +1060,10 @@
     find-up "^4.1.0"
     fs-extra "^8.1.0"
 
+"@openzeppelin/contracts@git://github.com/OpenZeppelin/openzeppelin-contracts.git#ee6348a7a0b08f82344f2b61e903788aa9dcf36c":
+  version "3.4.0"
+  resolved "git://github.com/OpenZeppelin/openzeppelin-contracts.git#ee6348a7a0b08f82344f2b61e903788aa9dcf36c"
+
 "@openzeppelin/test-helpers@^0.5.6":
   version "0.5.10"
   resolved "https://registry.yarnpkg.com/@openzeppelin/test-helpers/-/test-helpers-0.5.10.tgz#0a6ab9fd0810085e8114f9f33aed4102e848f27f"
