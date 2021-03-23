@@ -17,7 +17,6 @@ contract PoolvAMM_USDC is FraxPoolvAMM {
         address _fxs_usdc_oracle_addr,
         uint256 _pool_ceiling
     )
-        public
         FraxPoolvAMM(
             _frax_contract_address,
             _fxs_contract_address,

@@ -116,7 +116,6 @@ contract FraxBond_NFT is ERC721, AccessControl {
         uint256 _min_early_redeem_secs,
         uint256 _max_early_redemption_penalty_pct
     )
-        public
         ERC721(
             FraxBond_NFT_Library.fxb_namer(
                 _series,

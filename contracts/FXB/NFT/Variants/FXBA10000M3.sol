@@ -27,7 +27,6 @@ contract FXBA10000M3 is FraxBond_NFT {
         uint256 _min_early_redeem_secs,
         uint256 _max_early_redemption_penalty_pct
     )
-        public
         FraxBond_NFT(
             _controller_address,
             _timelock_address,

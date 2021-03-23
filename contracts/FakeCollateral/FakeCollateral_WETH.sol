@@ -10,8 +10,5 @@ contract FakeCollateral_WETH is FakeCollateral {
         uint256 _genesis_supply,
         string memory _symbol,
         uint8 _decimals
-    )
-        public
-        FakeCollateral(_creator_address, _genesis_supply, _symbol, _decimals)
-    {}
+    ) FakeCollateral(_creator_address, _genesis_supply, _symbol, _decimals) {}
 }

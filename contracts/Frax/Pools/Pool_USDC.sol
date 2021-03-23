@@ -15,7 +15,6 @@ contract Pool_USDC is FraxPool {
         address _timelock_address,
         uint256 _pool_ceiling
     )
-        public
         FraxPool(
             _frax_contract_address,
             _fxs_contract_address,

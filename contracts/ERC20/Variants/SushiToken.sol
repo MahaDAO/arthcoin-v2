@@ -3,10 +3,13 @@
 pragma solidity ^0.8.0;
 
 import "../ERC20.sol";
+import "../../Math/SafeMath.sol";
 import "../../Common/Ownable.sol";
 
 // SushiToken with Governance.
 contract SushiToken is ERC20("SushiToken", "SUSHI"), Ownable {
+    using SafeMath for uint256;
+
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
     function mint(address _to, uint256 _amount) public onlyOwner {
         _mint(_to, _amount);
@@ -123,7 +126,10 @@ contract SushiToken is ERC20("SushiToken", "SUSHI"), Ownable {
             nonce == nonces[signatory]++,
             "SUSHI::delegateBySig: invalid nonce"
         );
-        require(now <= expiry, "SUSHI::delegateBySig: signature expired");
+        require(
+            block.timestamp <= expiry,
+            "SUSHI::delegateBySig: signature expired"
+        );
         return _delegate(signatory, delegatee);
     }
 
