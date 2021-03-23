@@ -2,7 +2,7 @@
 /**
  *Submitted for verification at Etherscan.io on 2020-03-04
  */
-pragma solidity 0.6.11;
+pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 contract Comp {

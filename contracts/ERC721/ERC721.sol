@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.6.11;
+pragma solidity ^0.8.0;
 
 import "./V8_0_0/Common/Context.sol";
 import "./IERC721.sol";
