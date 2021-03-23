@@ -32,7 +32,7 @@ module.exports = {
       port: 8545,
       network_id: "*",
       // gas: 0x1ffffffffffffe
-      websockets: true,        // Enable EventEmitter interface for web3 (default: false)
+      // websockets: true,        // Enable EventEmitter interface for web3 (default: false)
     },
     mainnet: {
       provider: providerFactory(),
