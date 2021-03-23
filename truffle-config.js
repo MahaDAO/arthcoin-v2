@@ -1,7 +1,7 @@
-const path = require('path');
-const envPath = path.join(__dirname, './.env');
-require('dotenv').config({ path: envPath });
-const HDWalletProvider = require("truffle-hdwallet-provider");
+const path = require('path')
+const envPath = path.join(__dirname, './.env')
+require('dotenv').config({ path: envPath })
+const HDWalletProvider = require("truffle-hdwallet-provider")
 
 
 const providerFactory = () => {
@@ -52,4 +52,4 @@ module.exports = {
     useColors: true
   },
   plugins: ["truffle-contract-size"]
-};
+}
