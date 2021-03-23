@@ -492,7 +492,7 @@ contract CurveAMO is AccessControl {
         // Convert collateral into 3pool
         uint256[3] memory three_pool_collaterals;
         three_pool_collaterals[
-            uint256(THREE_POOL_COIN_INDEX)
+            uint256(uint128(THREE_POOL_COIN_INDEX))
         ] = _collateral_amount;
         three_pool.add_liquidity(three_pool_collaterals, 0);
 

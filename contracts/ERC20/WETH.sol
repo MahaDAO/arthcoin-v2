@@ -78,7 +78,10 @@ contract WETH is IWETH {
     ) public override returns (bool) {
         require(balanceOf[src] >= wad);
 
-        if (src != msg.sender && allowance[src][msg.sender] != uint256(-1)) {
+        if (
+            src != msg.sender &&
+            allowance[src][msg.sender] != uint256(int256(-1))
+        ) {
             require(allowance[src][msg.sender] >= wad);
             allowance[src][msg.sender] -= wad;
         }

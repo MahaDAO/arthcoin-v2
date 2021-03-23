@@ -112,8 +112,8 @@ contract Comp {
         returns (bool)
     {
         uint96 amount;
-        if (rawAmount == uint256(-1)) {
-            amount = uint96(-1);
+        if (rawAmount == uint256(int256(-1))) {
+            amount = uint96(int96(-1));
         } else {
             amount = safe96(rawAmount, "Comp::approve: amount exceeds 96 bits");
         }
@@ -163,7 +163,7 @@ contract Comp {
         uint96 amount =
             safe96(rawAmount, "Comp::approve: amount exceeds 96 bits");
 
-        if (spender != src && spenderAllowance != uint96(-1)) {
+        if (spender != src && spenderAllowance != uint96(int96(-1))) {
             uint96 newAllowance =
                 sub96(
                     spenderAllowance,
