@@ -2,10 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "../Common/Context.sol";
 import "./IERC20.sol";
 import "../Math/SafeMath.sol";
 import "../Utils/Address.sol";
+import "../Common/Context.sol";
+import "../Staking/Pausable.sol";
 
 // Due to compiling issues, _name, _symbol, and _decimals were removed
 
@@ -33,7 +34,7 @@ import "../Utils/Address.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20Custom is Context, IERC20 {
+contract ERC20Custom is Context, Pausable, IERC20 {
     using SafeMath for uint256;
 
     uint256 private _totalSupply;
@@ -41,6 +42,11 @@ contract ERC20Custom is Context, IERC20 {
     mapping(address => uint256) internal _balances;
 
     mapping(address => mapping(address => uint256)) internal _allowances;
+
+    /**
+     * Constructor.
+     */
+    constructor() Owned(_msgSender()) {}
 
     /**
      * @dev See {IERC20-totalSupply}.
@@ -207,7 +213,7 @@ contract ERC20Custom is Context, IERC20 {
         address sender,
         address recipient,
         uint256 amount
-    ) internal virtual {
+    ) internal virtual notPaused {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 

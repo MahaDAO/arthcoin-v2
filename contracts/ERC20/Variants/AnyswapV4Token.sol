@@ -194,10 +194,10 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
             "AnyswapV3ERC20: transfer amount exceeds balance"
         );
 
-        _balances[msg.sender] = balance - value;
-        _balances[to] += value;
+        // _balances[msg.sender] = balance - value;
+        // _balances[to] += value;
+        _transfer(msg.sender, to, value);
 
-        emit Transfer(msg.sender, to, value);
         return ITransferReceiver(to).onTokenTransfer(msg.sender, value, data);
     }
 
@@ -229,18 +229,17 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
                 verifyPersonalSign(target, hashStruct, v, r, s)
         );
 
+        // NOTE: is this check needed, was there in the refered contract.
         require(to != address(0) || to != address(this));
-
-        uint256 balance = balanceOf(target);
         require(
-            balance >= value,
+            balanceOf(target) >= value,
             "AnyswapV3ERC20: transfer amount exceeds balance"
         );
 
-        _balances[target] = balance - value;
-        _balances[to] += value;
+        // _balances[target] = balance - value;
+        // _balances[to] += value;
 
-        emit Transfer(target, to, value);
+        _transfer(target, to, value);
         return true;
     }
 }
