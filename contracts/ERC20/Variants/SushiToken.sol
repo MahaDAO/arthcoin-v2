@@ -269,7 +269,7 @@ contract SushiToken is ERC20("SushiToken", "SUSHI"), Ownable {
         return uint32(n);
     }
 
-    function getChainId() internal pure returns (uint256) {
+    function getChainId() internal view returns (uint256) {
         uint256 chainId;
         assembly {
             chainId := chainid()

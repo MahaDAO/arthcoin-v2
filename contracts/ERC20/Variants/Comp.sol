@@ -438,7 +438,7 @@ contract Comp {
         return a - b;
     }
 
-    function getChainId() internal pure returns (uint256) {
+    function getChainId() internal view returns (uint256) {
         uint256 chainId;
         assembly {
             chainId := chainid()
