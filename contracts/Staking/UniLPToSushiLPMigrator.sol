@@ -107,9 +107,9 @@ contract UniLPToSushiLPMigrator is
     // address public owner_address;
     // address public timelock_address; // Governance timelock address
     address payable public constant UNISWAP_ROUTER_ADDRESS =
-        address(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+        payable(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     address payable public constant SUSHISWAP_ROUTER_ADDRESS =
-        address(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
+        payable(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
     address public source_staking_contract_addr;
     address public source_lp_pair_addr;
     address public dest_staking_contract_addr;
