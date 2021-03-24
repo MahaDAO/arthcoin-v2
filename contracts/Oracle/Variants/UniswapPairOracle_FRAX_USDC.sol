@@ -14,7 +14,6 @@ contract UniswapPairOracle_FRAX_USDC is UniswapPairOracle {
         address owner_address,
         address timelock_address
     )
-        public
         UniswapPairOracle(
             factory,
             tokenA,

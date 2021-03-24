@@ -16,7 +16,6 @@ contract StakingRewardsDual_FRAX_FXS_Sushi is StakingRewardsDual {
         uint256 _pool_weight0,
         uint256 _pool_weight1
     )
-        public
         StakingRewardsDual(
             _owner,
             _rewardsToken0,

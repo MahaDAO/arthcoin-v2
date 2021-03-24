@@ -114,7 +114,7 @@ contract UniswapV2Pair is IUniswapV2Pair {
         uint112 _reserve1
     ) private {
         require(
-            balance0 <= uint112(-1) && balance1 <= uint112(-1),
+            balance0 <= uint112(int112(-1)) && balance1 <= uint112(int112(-1)),
             "UniswapV2: OVERFLOW"
         );
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
@@ -370,7 +370,7 @@ contract UniswapV2Pair is IUniswapV2Pair {
         address to,
         uint256 value
     ) external override returns (bool) {
-        if (allowance[from][msg.sender] != uint256(-1)) {
+        if (allowance[from][msg.sender] != uint256(int256(-1))) {
             allowance[from][msg.sender] = allowance[from][msg.sender].sub(
                 value
             );

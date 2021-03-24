@@ -16,7 +16,6 @@ contract StakingRewardsDualV2_FRAX3CRV_V2 is StakingRewardsDualV2 {
         uint256 _pool_weight0,
         uint256 _pool_weight1
     )
-        public
         StakingRewardsDualV2(
             _owner,
             _rewardsToken0,

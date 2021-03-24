@@ -15,7 +15,6 @@ contract Stake_FRAX_USDC is StakingRewards {
         address _timelock_address,
         uint256 _pool_weight
     )
-        public
         StakingRewards(
             _owner,
             _rewardsDistribution,

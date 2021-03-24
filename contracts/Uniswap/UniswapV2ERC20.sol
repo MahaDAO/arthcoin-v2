@@ -100,7 +100,7 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         address to,
         uint256 value
     ) external override returns (bool) {
-        if (allowance[from][msg.sender] != uint256(-1)) {
+        if (allowance[from][msg.sender] != uint256(int256(-1))) {
             allowance[from][msg.sender] = allowance[from][msg.sender].sub(
                 value
             );
