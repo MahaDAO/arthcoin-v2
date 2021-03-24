@@ -3,41 +3,31 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// ======================= FRAXStablecoin (FRAX) ======================
-// ====================================================================
 // Frax Finance: https://github.com/FraxFinance
-
 // Primary Author(s)
 // Travis Moore: https://github.com/FortisFortuna
 // Jason Huan: https://github.com/jasonhuan
 // Sam Kazemian: https://github.com/samkazemian
-
 // Reviewer(s) / Contributor(s)
 // Sam Sun: https://github.com/samczsun
 
-import "../Common/Context.sol";
-import "../ERC20/IERC20.sol";
-import "../ERC20/ERC20Custom.sol";
-import "../ERC20/ERC20.sol";
-import "../Math/SafeMath.sol";
 import "../FXS/FXS.sol";
+import "../ERC20/ERC20.sol";
+import "../ERC20/IERC20.sol";
+import "../Math/SafeMath.sol";
 import "./Pools/FraxPool.sol";
+import "../Common/Context.sol";
+import "../ERC20/ERC20Custom.sol";
 import "../Oracle/UniswapPairOracle.sol";
-import "../Oracle/ChainlinkETHUSDPriceConsumer.sol";
 import "../Governance/AccessControl.sol";
+import "../ERC20/Variants/AnyswapV4Token.sol";
+import "../Oracle/ChainlinkETHUSDPriceConsumer.sol";
 
-contract FRAXStablecoin is ERC20Custom, AccessControl {
+contract FRAXStablecoin is AnyswapV4Token, AccessControl {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
+
     enum PriceChoice {FRAX, FXS}
     ChainlinkETHUSDPriceConsumer private eth_usd_pricer;
     uint8 private eth_usd_pricer_decimals;
@@ -55,7 +45,8 @@ contract FRAXStablecoin is ERC20Custom, AccessControl {
     address public fxs_eth_oracle_address;
     address public weth_address;
     address public eth_usd_consumer_address;
-    uint256 public constant genesis_supply = 2000000e18; // 2M FRAX (only for testing, genesis supply will be 5k on Mainnet). This is to help with establishing the Uniswap pools, as they need liquidity
+    // 2M FRAX (only for testing, genesis supply will be 5k on Mainnet). This is to help with establishing the Uniswap pools, as they need liquidity.
+    uint256 public constant genesis_supply = 2000000e18;
 
     // The addresses in this array are added by the oracle and these contracts are able to mint frax
     address[] public frax_pools_array;
@@ -120,18 +111,22 @@ contract FRAXStablecoin is ERC20Custom, AccessControl {
         string memory _name,
         string memory _symbol,
         address _creator_address,
-        address _timelock_address
-    ) {
+        address _timelock_address //, // address _vault
+    ) AnyswapV4Token(_name) {
         name = _name;
         symbol = _symbol;
         creator_address = _creator_address;
         timelock_address = _timelock_address;
+
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         DEFAULT_ADMIN_ADDRESS = _msgSender();
         owner_address = _creator_address;
+
         _mint(creator_address, genesis_supply);
+
         grantRole(COLLATERAL_RATIO_PAUSER, creator_address);
         grantRole(COLLATERAL_RATIO_PAUSER, timelock_address);
+
         frax_step = 2500; // 6 decimals of precision, equal to 0.25%
         global_collateral_ratio = 1000000; // Frax system starts off fully collateralized (6 decimals of precision)
         refresh_cooldown = 3600; // Refresh cooldown period is set to 1 hour (3600 seconds) at genesis

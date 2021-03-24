@@ -36,11 +36,11 @@ import "../Utils/Address.sol";
 contract ERC20Custom is Context, IERC20 {
     using SafeMath for uint256;
 
+    uint256 private _totalSupply;
+
     mapping(address => uint256) internal _balances;
 
     mapping(address => mapping(address => uint256)) internal _allowances;
-
-    uint256 private _totalSupply;
 
     /**
      * @dev See {IERC20-totalSupply}.
@@ -130,6 +130,7 @@ contract ERC20Custom is Context, IERC20 {
                 "ERC20: transfer amount exceeds allowance"
             )
         );
+
         return true;
     }
 
