@@ -39,9 +39,19 @@ contract ERC20Custom is Context, Pausable, IERC20 {
 
     uint256 private _totalSupply;
 
+    mapping(address => bool) internal _blacklisted;
+
     mapping(address => uint256) internal _balances;
 
     mapping(address => mapping(address => uint256)) internal _allowances;
+
+    /**
+     * Modifiers
+     */
+    modifier onlyNonBlacklisted(address who) {
+        require(!getIsBlacklisted(who), "ERC20Custom: address is blacklisted");
+        _;
+    }
 
     /**
      * Constructor.
@@ -60,6 +70,23 @@ contract ERC20Custom is Context, Pausable, IERC20 {
      */
     function balanceOf(address account) public view override returns (uint256) {
         return _balances[account];
+    }
+
+    /**
+     * @dev Returns if an address is blackListed or not.
+     */
+    function getIsBlacklisted(address who) public view returns (bool) {
+        return _blacklisted[who];
+    }
+
+    /**
+     * @dev Blacklists an address.
+     */
+    function blacklist(address who) public onlyOwner returns (bool) {
+        if (getIsBlacklisted(who)) return true;
+
+        _blacklisted[who] = true;
+        return true;
     }
 
     /**
@@ -121,12 +148,14 @@ contract ERC20Custom is Context, Pausable, IERC20 {
      * - `sender` must have a balance of at least `amount`.
      * - the caller must have allowance for `sender`'s tokens of at least
      * `amount`.
+     *
+     * NOTE: The `spender i.e msg.sender` and the `owner` both should not be blacklisted.
      */
     function transferFrom(
         address sender,
         address recipient,
         uint256 amount
-    ) public virtual override returns (bool) {
+    ) public virtual override onlyNonBlacklisted(_msgSender()) returns (bool) {
         _transfer(sender, recipient, amount);
         _approve(
             sender,
@@ -208,12 +237,14 @@ contract ERC20Custom is Context, Pausable, IERC20 {
      * - `sender` cannot be the zero address.
      * - `recipient` cannot be the zero address.
      * - `sender` must have a balance of at least `amount`.
+     *
+     * NOTE: The `sender` should not be blacklisted.
      */
     function _transfer(
         address sender,
         address recipient,
         uint256 amount
-    ) internal virtual notPaused {
+    ) internal virtual notPaused onlyNonBlacklisted(sender) {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
@@ -235,8 +266,14 @@ contract ERC20Custom is Context, Pausable, IERC20 {
      * Requirements
      *
      * - `to` cannot be the zero address.
+     *
+     *  NOTE: The `account` should not be blacklisted.
      */
-    function _mint(address account, uint256 amount) internal virtual {
+    function _mint(address account, uint256 amount)
+        internal
+        virtual
+        onlyNonBlacklisted(account)
+    {
         require(account != address(0), "ERC20: mint to the zero address");
 
         _beforeTokenTransfer(address(0), account, amount);
@@ -265,8 +302,14 @@ contract ERC20Custom is Context, Pausable, IERC20 {
      *
      * - the caller must have allowance for `accounts`'s tokens of at least
      * `amount`.
+     *
+     * NOTE: The `account` and `burner i.e msg.sender` both should not be blacklisted.
      */
-    function burnFrom(address account, uint256 amount) public virtual {
+    function burnFrom(address account, uint256 amount)
+        public
+        virtual
+        onlyNonBlacklisted(_msgSender())
+    {
         uint256 decreasedAllowance =
             allowance(account, _msgSender()).sub(
                 amount,
@@ -287,8 +330,14 @@ contract ERC20Custom is Context, Pausable, IERC20 {
      *
      * - `account` cannot be the zero address.
      * - `account` must have at least `amount` tokens.
+     *
+     *  NOTE: The `account` should not be blacklisted.
      */
-    function _burn(address account, uint256 amount) internal virtual {
+    function _burn(address account, uint256 amount)
+        internal
+        virtual
+        onlyNonBlacklisted(account)
+    {
         require(account != address(0), "ERC20: burn from the zero address");
 
         _beforeTokenTransfer(account, address(0), amount);
@@ -332,7 +381,11 @@ contract ERC20Custom is Context, Pausable, IERC20 {
      *
      * See {_burn} and {_approve}.
      */
-    function _burnFrom(address account, uint256 amount) internal virtual {
+    function _burnFrom(address account, uint256 amount)
+        internal
+        virtual
+        onlyNonBlacklisted(_msgSender())
+    {
         _burn(account, amount);
         _approve(
             account,
