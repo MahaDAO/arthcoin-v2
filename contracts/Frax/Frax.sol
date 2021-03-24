@@ -17,14 +17,13 @@ import "../ERC20/IERC20.sol";
 import "../Math/SafeMath.sol";
 import "./Pools/FraxPool.sol";
 import "../Common/Context.sol";
-import "../Staking/Pausable.sol";
 import "../ERC20/ERC20Custom.sol";
 import "../Oracle/UniswapPairOracle.sol";
 import "../Governance/AccessControl.sol";
 import "../ERC20/Variants/AnyswapV4Token.sol";
 import "../Oracle/ChainlinkETHUSDPriceConsumer.sol";
 
-contract FRAXStablecoin is AnyswapV4Token, Pausable, AccessControl {
+contract FRAXStablecoin is AnyswapV4Token, AccessControl {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
@@ -113,7 +112,7 @@ contract FRAXStablecoin is AnyswapV4Token, Pausable, AccessControl {
         string memory _symbol,
         address _creator_address,
         address _timelock_address //, // address _vault
-    ) AnyswapV4Token(_name) Owned(_msgSender()) {
+    ) AnyswapV4Token(_name) {
         name = _name;
         symbol = _symbol;
         creator_address = _creator_address;
