@@ -67,6 +67,7 @@ contract FraxPool is AccessControl {
     mapping(address => uint256) public redeemFXSBalances;
     mapping(address => uint256) public borrowedCollateral;
     mapping(address => uint256) public redeemCollateralBalances;
+    mapping(address => uint256) public mintAndStake;
 
     // Constants for various precisions
     uint256 private constant PRICE_PRECISION = 1e6;
@@ -294,6 +295,28 @@ contract FraxPool is AccessControl {
         );
 
         emit Repay(msg.sender, _amount);
+    }
+
+    function mintAndCall(uint256 _collateral_amount) public {
+        require(
+            _collateral_amount > 0,
+            'FraxPool: Collateral amount less then 0'
+        );
+
+        uint256 frax_amount =
+            FraxPoolLibrary.calcMint1t1FRAX(
+                getCollateralPrice(),
+                _collateral_amount
+            );
+
+        collateral_token.transferFrom(
+            msg.sender,
+            address(this),
+            _collateral_amount
+        );
+
+        mintAndStake[msg.sender] = mintAndStake[msg.sender].add(frax_amount);
+        //FRAX.pool_mint(address(this), frax_amount);
     }
 
     // We separate out the 1t1, fractional and algorithmic minting functions for gas efficiency
