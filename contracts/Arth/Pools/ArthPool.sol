@@ -23,7 +23,7 @@ pragma experimental ABIEncoderV2;
 // Reviewer(s) / Contributor(s)
 // Sam Sun: https://github.com/samczsun
 
-import '../../FXS/FXS.sol';
+import '../../ARTHS/ARTHS.sol';
 import '../../Arth/Arth.sol';
 import '../../ERC20/ERC20.sol';
 import './ArthPoolLibrary.sol';
@@ -45,10 +45,10 @@ contract ArthPool is AccessControl {
     address private owner_address;
     address private collateral_address;
 
-    ARTHShares private FXS;
+    ARTHShares private ARTHS;
     ARTHStablecoin private ARTH;
     address private timelock_address;
-    address private fxs_contract_address;
+    address private arths_contract_address;
     address private arth_contract_address;
 
     address private weth_address;
@@ -61,10 +61,10 @@ contract ArthPool is AccessControl {
     uint256 public redemption_fee;
     uint256 public stability_fee = 1; // In %.
 
-    uint256 public unclaimedPoolFXS;
+    uint256 public unclaimedPoolARTHS;
     uint256 public unclaimedPoolCollateral;
     mapping(address => uint256) public lastRedeemed;
-    mapping(address => uint256) public redeemFXSBalances;
+    mapping(address => uint256) public redeemARTHSBalances;
     mapping(address => uint256) public borrowedCollateral;
     mapping(address => uint256) public redeemCollateralBalances;
     mapping(address => uint256) public mintAndStake;
@@ -83,7 +83,7 @@ contract ArthPool is AccessControl {
     // Number of decimals needed to get to 18
     uint256 private immutable missing_decimals;
 
-    // Bonus rate on FXS minted during recollateralizeARTH(); 6 decimals of precision, set to 0.75% on genesis
+    // Bonus rate on ARTHS minted during recollateralizeARTH(); 6 decimals of precision, set to 0.75% on genesis
     uint256 public bonus_rate = 7500;
 
     // Number of blocks to wait before being able to collectRedemption()
@@ -149,7 +149,7 @@ contract ArthPool is AccessControl {
 
     constructor(
         address _arth_contract_address,
-        address _fxs_contract_address,
+        address _arths_contract_address,
         address _collateral_address,
         address _creator_address,
         address _timelock_address,
@@ -158,9 +158,9 @@ contract ArthPool is AccessControl {
         uint256 _pool_ceiling
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
-        FXS = ARTHShares(_fxs_contract_address);
+        ARTHS = ARTHShares(_arths_contract_address);
         arth_contract_address = _arth_contract_address;
-        fxs_contract_address = _fxs_contract_address;
+        arths_contract_address = _arths_contract_address;
         collateral_address = _collateral_address;
         timelock_address = _timelock_address;
         owner_address = _creator_address;
@@ -362,11 +362,11 @@ contract ArthPool is AccessControl {
     }
 
     // 0% collateral-backed
-    function mintAlgorithmicARTH(uint256 fxs_amount_d18, uint256 ARTH_out_min)
+    function mintAlgorithmicARTH(uint256 arths_amount_d18, uint256 ARTH_out_min)
         external
         notMintPaused
     {
-        uint256 fxs_price = ARTH.fxs_price();
+        uint256 arths_price = ARTH.arths_price();
         require(
             ARTH.global_collateral_ratio() == 0,
             'Collateral ratio must be 0'
@@ -374,15 +374,15 @@ contract ArthPool is AccessControl {
 
         uint256 arth_amount_d18 =
             ArthPoolLibrary.calcMintAlgorithmicARTH(
-                fxs_price, // X FXS / 1 USD
-                fxs_amount_d18
+                arths_price, // X ARTHS / 1 USD
+                arths_amount_d18
             );
 
         arth_amount_d18 = (arth_amount_d18.mul(uint256(1e6).sub(minting_fee)))
             .div(1e6);
         require(ARTH_out_min <= arth_amount_d18, 'Slippage limit reached');
 
-        FXS.pool_burn_from(msg.sender, fxs_amount_d18);
+        ARTHS.pool_burn_from(msg.sender, arths_amount_d18);
         ARTH.pool_mint(msg.sender, arth_amount_d18);
     }
 
@@ -390,10 +390,10 @@ contract ArthPool is AccessControl {
     // > 0% and < 100% collateral-backed
     function mintFractionalARTH(
         uint256 collateral_amount,
-        uint256 fxs_amount,
+        uint256 arths_amount,
         uint256 ARTH_out_min
     ) external notMintPaused {
-        uint256 fxs_price = ARTH.fxs_price();
+        uint256 arths_price = ARTH.arths_price();
         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
 
         require(
@@ -413,21 +413,21 @@ contract ArthPool is AccessControl {
             collateral_amount * (10**missing_decimals);
         ArthPoolLibrary.MintFF_Params memory input_params =
             ArthPoolLibrary.MintFF_Params(
-                fxs_price,
+                arths_price,
                 getCollateralPrice(),
-                fxs_amount,
+                arths_amount,
                 collateral_amount_d18,
                 global_collateral_ratio
             );
 
-        (uint256 mint_amount, uint256 fxs_needed) =
+        (uint256 mint_amount, uint256 arths_needed) =
             ArthPoolLibrary.calcMintFractionalARTH(input_params);
 
         mint_amount = (mint_amount.mul(uint256(1e6).sub(minting_fee))).div(1e6);
         require(ARTH_out_min <= mint_amount, 'Slippage limit reached');
-        require(fxs_needed <= fxs_amount, 'Not enough FXS inputted');
+        require(arths_needed <= arths_amount, 'Not enough ARTHS inputted');
 
-        FXS.pool_burn_from(msg.sender, fxs_needed);
+        ARTHS.pool_burn_from(msg.sender, arths_needed);
         collateral_token.transferFrom(
             msg.sender,
             address(this),
@@ -509,13 +509,13 @@ contract ArthPool is AccessControl {
     }
 
     // Will fail if fully collateralized or algorithmic
-    // Redeem ARTH for collateral and FXS. > 0% and < 100% collateral-backed
+    // Redeem ARTH for collateral and ARTHS. > 0% and < 100% collateral-backed
     function redeemFractionalARTH(
         uint256 ARTH_amount,
-        uint256 FXS_out_min,
+        uint256 ARTHS_out_min,
         uint256 COLLATERAL_out_min
     ) external notRedeemPaused {
-        uint256 fxs_price = ARTH.fxs_price();
+        uint256 arths_price = ARTH.arths_price();
         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
 
         require(
@@ -530,14 +530,14 @@ contract ArthPool is AccessControl {
                 PRICE_PRECISION
             );
 
-        uint256 fxs_dollar_value_d18 =
+        uint256 arths_dollar_value_d18 =
             ARTH_amount_post_fee.sub(
                 ARTH_amount_post_fee.mul(global_collateral_ratio).div(
                     PRICE_PRECISION
                 )
             );
-        uint256 fxs_amount =
-            fxs_dollar_value_d18.mul(PRICE_PRECISION).div(fxs_price);
+        uint256 arths_amount =
+            arths_dollar_value_d18.mul(PRICE_PRECISION).div(arths_price);
 
         // Need to adjust for decimals of collateral
         uint256 ARTH_amount_precision =
@@ -560,7 +560,10 @@ contract ArthPool is AccessControl {
             COLLATERAL_out_min <= collateral_amount,
             'Slippage limit reached [collateral]'
         );
-        require(FXS_out_min <= fxs_amount, 'Slippage limit reached [FXS]');
+        require(
+            ARTHS_out_min <= arths_amount,
+            'Slippage limit reached [ARTHS]'
+        );
 
         redeemCollateralBalances[msg.sender] = redeemCollateralBalances[
             msg.sender
@@ -570,10 +573,10 @@ contract ArthPool is AccessControl {
             collateral_amount
         );
 
-        redeemFXSBalances[msg.sender] = redeemFXSBalances[msg.sender].add(
-            fxs_amount
+        redeemARTHSBalances[msg.sender] = redeemARTHSBalances[msg.sender].add(
+            arths_amount
         );
-        unclaimedPoolFXS = unclaimedPoolFXS.add(fxs_amount);
+        unclaimedPoolARTHS = unclaimedPoolARTHS.add(arths_amount);
 
         lastRedeemed[msg.sender] = block.number;
 
@@ -581,45 +584,45 @@ contract ArthPool is AccessControl {
 
         // Move all external functions to the end
         ARTH.pool_burn_from(msg.sender, ARTH_amount);
-        FXS.pool_mint(address(this), fxs_amount);
+        ARTHS.pool_mint(address(this), arths_amount);
     }
 
-    // Redeem ARTH for FXS. 0% collateral-backed
-    function redeemAlgorithmicARTH(uint256 ARTH_amount, uint256 FXS_out_min)
+    // Redeem ARTH for ARTHS. 0% collateral-backed
+    function redeemAlgorithmicARTH(uint256 ARTH_amount, uint256 ARTHS_out_min)
         external
         notRedeemPaused
     {
-        uint256 fxs_price = ARTH.fxs_price();
+        uint256 arths_price = ARTH.arths_price();
         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
 
         require(global_collateral_ratio == 0, 'Collateral ratio must be 0');
-        uint256 fxs_dollar_value_d18 = ARTH_amount;
+        uint256 arths_dollar_value_d18 = ARTH_amount;
 
-        fxs_dollar_value_d18 = (
-            fxs_dollar_value_d18.mul(uint256(1e6).sub(redemption_fee))
+        arths_dollar_value_d18 = (
+            arths_dollar_value_d18.mul(uint256(1e6).sub(redemption_fee))
         )
             .div(PRICE_PRECISION); //apply fees
 
-        uint256 fxs_amount =
-            fxs_dollar_value_d18.mul(PRICE_PRECISION).div(fxs_price);
+        uint256 arths_amount =
+            arths_dollar_value_d18.mul(PRICE_PRECISION).div(arths_price);
 
-        redeemFXSBalances[msg.sender] = redeemFXSBalances[msg.sender].add(
-            fxs_amount
+        redeemARTHSBalances[msg.sender] = redeemARTHSBalances[msg.sender].add(
+            arths_amount
         );
-        unclaimedPoolFXS = unclaimedPoolFXS.add(fxs_amount);
+        unclaimedPoolARTHS = unclaimedPoolARTHS.add(arths_amount);
 
         lastRedeemed[msg.sender] = block.number;
 
-        require(FXS_out_min <= fxs_amount, 'Slippage limit reached');
+        require(ARTHS_out_min <= arths_amount, 'Slippage limit reached');
 
         _chargeStabilityFee(ARTH_amount);
 
         // Move all external functions to the end
         ARTH.pool_burn_from(msg.sender, ARTH_amount);
-        FXS.pool_mint(address(this), fxs_amount);
+        ARTHS.pool_mint(address(this), arths_amount);
     }
 
-    // After a redemption happens, transfer the newly minted FXS and owed collateral from this pool
+    // After a redemption happens, transfer the newly minted ARTHS and owed collateral from this pool
     // contract to the user. Redemption is split into two functions to prevent flash loans from being able
     // to take out ARTH/collateral from the system, use an AMM to trade the new price, and then mint back into the system.
     function collectRedemption() external {
@@ -627,18 +630,18 @@ contract ArthPool is AccessControl {
             (lastRedeemed[msg.sender].add(redemption_delay)) <= block.number,
             'Must wait for redemption_delay blocks before collecting redemption'
         );
-        bool sendFXS = false;
+        bool sendARTHS = false;
         bool sendCollateral = false;
-        uint256 FXSAmount;
+        uint256 ARTHSAmount;
         uint256 CollateralAmount;
 
         // Use Checks-Effects-Interactions pattern
-        if (redeemFXSBalances[msg.sender] > 0) {
-            FXSAmount = redeemFXSBalances[msg.sender];
-            redeemFXSBalances[msg.sender] = 0;
-            unclaimedPoolFXS = unclaimedPoolFXS.sub(FXSAmount);
+        if (redeemARTHSBalances[msg.sender] > 0) {
+            ARTHSAmount = redeemARTHSBalances[msg.sender];
+            redeemARTHSBalances[msg.sender] = 0;
+            unclaimedPoolARTHS = unclaimedPoolARTHS.sub(ARTHSAmount);
 
-            sendFXS = true;
+            sendARTHS = true;
         }
 
         if (redeemCollateralBalances[msg.sender] > 0) {
@@ -651,25 +654,26 @@ contract ArthPool is AccessControl {
             sendCollateral = true;
         }
 
-        if (sendFXS == true) {
-            FXS.transfer(msg.sender, FXSAmount);
+        if (sendARTHS == true) {
+            ARTHS.transfer(msg.sender, ARTHSAmount);
         }
         if (sendCollateral == true) {
             collateral_token.transfer(msg.sender, CollateralAmount);
         }
     }
 
-    // When the protocol is recollateralizing, we need to give a discount of FXS to hit the new CR target
-    // Thus, if the target collateral ratio is higher than the actual value of collateral, minters get FXS for adding collateral
-    // This function simply rewards anyone that sends collateral to a pool with the same amount of FXS + the bonus rate
-    // Anyone can call this function to recollateralize the protocol and take the extra FXS value from the bonus rate as an arb opportunity
-    function recollateralizeARTH(uint256 collateral_amount, uint256 FXS_out_min)
-        external
-    {
+    // When the protocol is recollateralizing, we need to give a discount of ARTHS to hit the new CR target
+    // Thus, if the target collateral ratio is higher than the actual value of collateral, minters get ARTHS for adding collateral
+    // This function simply rewards anyone that sends collateral to a pool with the same amount of ARTHS + the bonus rate
+    // Anyone can call this function to recollateralize the protocol and take the extra ARTHS value from the bonus rate as an arb opportunity
+    function recollateralizeARTH(
+        uint256 collateral_amount,
+        uint256 ARTHS_out_min
+    ) external {
         require(recollateralizePaused == false, 'Recollateralize is paused');
         uint256 collateral_amount_d18 =
             collateral_amount * (10**missing_decimals);
-        uint256 fxs_price = ARTH.fxs_price();
+        uint256 arths_price = ARTH.arths_price();
         uint256 arth_total_supply = ARTH.totalSupply();
         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
         uint256 global_collat_value = ARTH.globalCollateralValue();
@@ -686,38 +690,38 @@ contract ArthPool is AccessControl {
         uint256 collateral_units_precision =
             collateral_units.div(10**missing_decimals);
 
-        uint256 fxs_paid_back =
+        uint256 arths_paid_back =
             amount_to_recollat
                 .mul(uint256(1e6).add(bonus_rate).sub(recollat_fee))
-                .div(fxs_price);
+                .div(arths_price);
 
-        require(FXS_out_min <= fxs_paid_back, 'Slippage limit reached');
+        require(ARTHS_out_min <= arths_paid_back, 'Slippage limit reached');
         collateral_token.transferFrom(
             msg.sender,
             address(this),
             collateral_units_precision
         );
-        FXS.pool_mint(msg.sender, fxs_paid_back);
+        ARTHS.pool_mint(msg.sender, arths_paid_back);
     }
 
-    // Function can be called by an FXS holder to have the protocol buy back FXS with excess collateral value from a desired collateral pool
+    // Function can be called by an ARTHS holder to have the protocol buy back ARTHS with excess collateral value from a desired collateral pool
     // This can also happen if the collateral ratio > 1
-    function buyBackFXS(uint256 FXS_amount, uint256 COLLATERAL_out_min)
+    function buyBackARTHS(uint256 ARTHS_amount, uint256 COLLATERAL_out_min)
         external
     {
         require(buyBackPaused == false, 'Buyback is paused');
-        uint256 fxs_price = ARTH.fxs_price();
+        uint256 arths_price = ARTH.arths_price();
 
-        ArthPoolLibrary.BuybackFXS_Params memory input_params =
-            ArthPoolLibrary.BuybackFXS_Params(
+        ArthPoolLibrary.BuybackARTHS_Params memory input_params =
+            ArthPoolLibrary.BuybackARTHS_Params(
                 availableExcessCollatDV(),
-                fxs_price,
+                arths_price,
                 getCollateralPrice(),
-                FXS_amount
+                ARTHS_amount
             );
 
         uint256 collateral_equivalent_d18 =
-            (ArthPoolLibrary.calcBuyBackFXS(input_params))
+            (ArthPoolLibrary.calcBuyBackARTHS(input_params))
                 .mul(uint256(1e6).sub(buyback_fee))
                 .div(1e6);
         uint256 collateral_precision =
@@ -727,8 +731,8 @@ contract ArthPool is AccessControl {
             COLLATERAL_out_min <= collateral_precision,
             'Slippage limit reached'
         );
-        // Give the sender their desired collateral and burn the FXS
-        FXS.pool_burn_from(msg.sender, FXS_amount);
+        // Give the sender their desired collateral and burn the ARTHS
+        ARTHS.pool_burn_from(msg.sender, ARTHS_amount);
         collateral_token.transfer(msg.sender, collateral_precision);
     }
 

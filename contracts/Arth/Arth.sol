@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 // Reviewer(s) / Contributor(s)
 // Sam Sun: https://github.com/samczsun
 
-import '../FXS/FXS.sol';
+import '../ARTHS/ARTHS.sol';
 import '../ERC20/ERC20.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
@@ -27,11 +27,11 @@ contract ARTHStablecoin is AnyswapV4Token {
 
     /* ========== STATE VARIABLES ========== */
 
-    enum PriceChoice {ARTH, FXS}
+    enum PriceChoice {ARTH, ARTHS}
     ChainlinkETHUSDPriceConsumer private eth_usd_pricer;
     uint8 private eth_usd_pricer_decimals;
     UniswapPairOracle private arthEthOracle;
-    UniswapPairOracle private fxsEthOracle;
+    UniswapPairOracle private arthsEthOracle;
     string public symbol;
     string public name;
     uint8 public constant decimals = 18;
@@ -39,9 +39,9 @@ contract ARTHStablecoin is AnyswapV4Token {
     address public creator_address;
     address public timelock_address; // Governance timelock address
     address public controller_address; // Controller contract to dynamically adjust system parameters automatically
-    address public fxs_address;
+    address public arths_address;
     address public arth_eth_oracle_address;
-    address public fxs_eth_oracle_address;
+    address public arths_eth_oracle_address;
     address public weth_address;
     address public eth_usd_consumer_address;
     // 2M ARTH (only for testing, genesis supply will be 5k on Mainnet). This is to help with establishing the Uniswap pools, as they need liquidity.
@@ -135,7 +135,7 @@ contract ARTHStablecoin is AnyswapV4Token {
 
     /* ========== VIEWS ========== */
 
-    // Choice = 'ARTH' or 'FXS' for now
+    // Choice = 'ARTH' or 'ARTHS' for now
     function oracle_price(PriceChoice choice) internal view returns (uint256) {
         // Get the ETH / USD price first, and cut it down to 1e6 precision
         uint256 eth_2_usd_price =
@@ -148,13 +148,13 @@ contract ARTHStablecoin is AnyswapV4Token {
             price_vs_eth = uint256(
                 arthEthOracle.consult(weth_address, PRICE_PRECISION)
             ); // How much ARTH if you put in PRICE_PRECISION WETH
-        } else if (choice == PriceChoice.FXS) {
+        } else if (choice == PriceChoice.ARTHS) {
             price_vs_eth = uint256(
-                fxsEthOracle.consult(weth_address, PRICE_PRECISION)
-            ); // How much FXS if you put in PRICE_PRECISION WETH
+                arthsEthOracle.consult(weth_address, PRICE_PRECISION)
+            ); // How much ARTHS if you put in PRICE_PRECISION WETH
         } else
             revert(
-                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (FXS)'
+                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHS)'
             );
 
         // Will be in 1e6 format
@@ -166,9 +166,9 @@ contract ARTHStablecoin is AnyswapV4Token {
         return oracle_price(PriceChoice.ARTH);
     }
 
-    // Returns X FXS = 1 USD
-    function fxs_price() public view returns (uint256) {
-        return oracle_price(PriceChoice.FXS);
+    // Returns X ARTHS = 1 USD
+    function arths_price() public view returns (uint256) {
+        return oracle_price(PriceChoice.ARTHS);
     }
 
     function eth_usd_price() public view returns (uint256) {
@@ -196,7 +196,7 @@ contract ARTHStablecoin is AnyswapV4Token {
     {
         return (
             oracle_price(PriceChoice.ARTH), // arth_price()
-            oracle_price(PriceChoice.FXS), // fxs_price()
+            oracle_price(PriceChoice.ARTHS), // arths_price()
             totalSupply(), // totalSupply()
             global_collateral_ratio, // global_collateral_ratio()
             globalCollateralValue(), // globalCollateralValue
@@ -338,11 +338,11 @@ contract ARTHStablecoin is AnyswapV4Token {
         refresh_cooldown = _new_cooldown;
     }
 
-    function setFXSAddress(address _fxs_address)
+    function setARTHSAddress(address _arths_address)
         public
         onlyByOwnerOrGovernance
     {
-        fxs_address = _fxs_address;
+        arths_address = _arths_address;
     }
 
     function setETHUSDOracle(address _eth_usd_consumer_address)
@@ -385,13 +385,13 @@ contract ARTHStablecoin is AnyswapV4Token {
         weth_address = _weth_address;
     }
 
-    // Sets the FXS_ETH Uniswap oracle address
-    function setFXSEthOracle(address _fxs_oracle_addr, address _weth_address)
-        public
-        onlyByOwnerOrGovernance
-    {
-        fxs_eth_oracle_address = _fxs_oracle_addr;
-        fxsEthOracle = UniswapPairOracle(_fxs_oracle_addr);
+    // Sets the ARTHS_ETH Uniswap oracle address
+    function setARTHSEthOracle(
+        address _arths_oracle_addr,
+        address _weth_address
+    ) public onlyByOwnerOrGovernance {
+        arths_eth_oracle_address = _arths_oracle_addr;
+        arthsEthOracle = UniswapPairOracle(_arths_oracle_addr);
         weth_address = _weth_address;
     }
 

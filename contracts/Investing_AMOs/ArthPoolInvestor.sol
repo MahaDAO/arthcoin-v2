@@ -15,7 +15,7 @@ pragma experimental ABIEncoderV2;
 // ====================================================================
 
 import '../Math/SafeMath.sol';
-import '../FXS/FXS.sol';
+import '../ARTHS/ARTHS.sol';
 import '../Arth/Arth.sol';
 import '../ERC20/ERC20.sol';
 import '../Oracle/UniswapPairOracle.sol';
@@ -79,7 +79,7 @@ import '../Arth/Pools/ArthPoolvAMM.sol';
 
 //     /* ========== VIEWS ========== */
 
-//     // BuyAndBurnFXS
+//     // BuyAndBurnARTHS
 
 //     /* ========== PUBLIC FUNCTIONS ========== */
 

@@ -32,29 +32,29 @@ import '../Curve/IMetaImplementationUSD.sol';
 contract ReserveTracker {
     using SafeMath for uint256;
 
-    uint256 public CONSULT_FXS_DEC;
+    uint256 public CONSULT_ARTHS_DEC;
     uint256 public CONSULT_ARTH_DEC;
 
     address public arth_contract_address;
-    address public fxs_contract_address;
+    address public arths_contract_address;
     address public owner_address;
     address public timelock_address;
 
-    // The pair of which to get FXS price from
-    address public fxs_weth_oracle_address;
+    // The pair of which to get ARTHS price from
+    address public arths_weth_oracle_address;
     address public weth_collat_oracle_address;
     address public weth_address;
-    UniswapPairOracle public fxs_weth_oracle;
+    UniswapPairOracle public arths_weth_oracle;
     UniswapPairOracle public weth_collat_oracle;
     uint256 public weth_collat_decimals;
 
-    // Array of pairs for FXS
-    address[] public fxs_pairs_array;
+    // Array of pairs for ARTHS
+    address[] public arths_pairs_array;
 
     // Mapping is also used for faster verification
-    mapping(address => bool) public fxs_pairs;
+    mapping(address => bool) public arths_pairs;
 
-    uint256 public fxs_reserves;
+    uint256 public arths_reserves;
 
     // The pair of which to get ARTH price from
     address public arth_price_oracle_address;
@@ -78,12 +78,12 @@ contract ReserveTracker {
 
     constructor(
         address _arth_contract_address,
-        address _fxs_contract_address,
+        address _arths_contract_address,
         address _creator_address,
         address _timelock_address
     ) {
         arth_contract_address = _arth_contract_address;
-        fxs_contract_address = _fxs_contract_address;
+        arths_contract_address = _arths_contract_address;
         owner_address = _creator_address;
         timelock_address = _timelock_address;
     }
@@ -116,42 +116,42 @@ contract ReserveTracker {
         return twap_price;
     }
 
-    // Returns FXS price with 6 decimals of precision
-    function getFXSPrice() public view returns (uint256) {
-        uint256 fxs_weth_price =
-            fxs_weth_oracle.consult(fxs_contract_address, 1e6);
+    // Returns ARTHS price with 6 decimals of precision
+    function getARTHSPrice() public view returns (uint256) {
+        uint256 arths_weth_price =
+            arths_weth_oracle.consult(arths_contract_address, 1e6);
         return
             weth_collat_oracle
-                .consult(weth_address, CONSULT_FXS_DEC)
-                .mul(fxs_weth_price)
+                .consult(weth_address, CONSULT_ARTHS_DEC)
+                .mul(arths_weth_price)
                 .div(1e6);
     }
 
-    function getFXSReserves() public view returns (uint256) {
-        uint256 total_fxs_reserves = 0;
+    function getARTHSReserves() public view returns (uint256) {
+        uint256 total_arths_reserves = 0;
 
-        for (uint256 i = 0; i < fxs_pairs_array.length; i++) {
+        for (uint256 i = 0; i < arths_pairs_array.length; i++) {
             // Exclude null addresses
-            if (fxs_pairs_array[i] != address(0)) {
+            if (arths_pairs_array[i] != address(0)) {
                 if (
-                    IUniswapV2Pair(fxs_pairs_array[i]).token0() ==
-                    fxs_contract_address
+                    IUniswapV2Pair(arths_pairs_array[i]).token0() ==
+                    arths_contract_address
                 ) {
                     (uint256 reserves0, , ) =
-                        IUniswapV2Pair(fxs_pairs_array[i]).getReserves();
-                    total_fxs_reserves = total_fxs_reserves.add(reserves0);
+                        IUniswapV2Pair(arths_pairs_array[i]).getReserves();
+                    total_arths_reserves = total_arths_reserves.add(reserves0);
                 } else if (
-                    IUniswapV2Pair(fxs_pairs_array[i]).token1() ==
-                    fxs_contract_address
+                    IUniswapV2Pair(arths_pairs_array[i]).token1() ==
+                    arths_contract_address
                 ) {
                     (, uint256 reserves1, ) =
-                        IUniswapV2Pair(fxs_pairs_array[i]).getReserves();
-                    total_fxs_reserves = total_fxs_reserves.add(reserves1);
+                        IUniswapV2Pair(arths_pairs_array[i]).getReserves();
+                    total_arths_reserves = total_arths_reserves.add(reserves1);
                 }
             }
         }
 
-        return total_fxs_reserves;
+        return total_arths_reserves;
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
@@ -179,14 +179,14 @@ contract ReserveTracker {
         arth_metapool = IMetaImplementationUSD(_arth_metapool_address);
     }
 
-    // Get the pair of which to price FXS from (using FXS-WETH)
-    function setFXSETHOracle(
-        address _fxs_weth_oracle_address,
+    // Get the pair of which to price ARTHS from (using ARTHS-WETH)
+    function setARTHSETHOracle(
+        address _arths_weth_oracle_address,
         address _weth_address
     ) public onlyByOwnerOrGovernance {
-        fxs_weth_oracle_address = _fxs_weth_oracle_address;
+        arths_weth_oracle_address = _arths_weth_oracle_address;
         weth_address = _weth_address;
-        fxs_weth_oracle = UniswapPairOracle(fxs_weth_oracle_address);
+        arths_weth_oracle = UniswapPairOracle(arths_weth_oracle_address);
     }
 
     function setETHCollateralOracle(
@@ -196,33 +196,33 @@ contract ReserveTracker {
         weth_collat_oracle_address = _weth_collateral_oracle_address;
         weth_collat_decimals = _collateral_decimals;
         weth_collat_oracle = UniswapPairOracle(_weth_collateral_oracle_address);
-        CONSULT_FXS_DEC = 1e6 * (10**(uint256(18).sub(_collateral_decimals)));
+        CONSULT_ARTHS_DEC = 1e6 * (10**(uint256(18).sub(_collateral_decimals)));
     }
 
     // Adds collateral addresses supported, such as tether and busd, must be ERC20
-    function addFXSPair(address pair_address) public onlyByOwnerOrGovernance {
-        require(fxs_pairs[pair_address] == false, 'address already exists');
-        fxs_pairs[pair_address] = true;
-        fxs_pairs_array.push(pair_address);
+    function addARTHSPair(address pair_address) public onlyByOwnerOrGovernance {
+        require(arths_pairs[pair_address] == false, 'address already exists');
+        arths_pairs[pair_address] = true;
+        arths_pairs_array.push(pair_address);
     }
 
     // Remove a pool
-    function removeFXSPair(address pair_address)
+    function removeARTHSPair(address pair_address)
         public
         onlyByOwnerOrGovernance
     {
         require(
-            fxs_pairs[pair_address] == true,
+            arths_pairs[pair_address] == true,
             "address doesn't exist already"
         );
 
         // Delete from the mapping
-        delete fxs_pairs[pair_address];
+        delete arths_pairs[pair_address];
 
         // 'Delete' from the array by setting the address to 0x0
-        for (uint256 i = 0; i < fxs_pairs_array.length; i++) {
-            if (fxs_pairs_array[i] == pair_address) {
-                fxs_pairs_array[i] = address(0); // This will leave a null in the array and keep the indices the same
+        for (uint256 i = 0; i < arths_pairs_array.length; i++) {
+            if (arths_pairs_array[i] == pair_address) {
+                arths_pairs_array[i] = address(0); // This will leave a null in the array and keep the indices the same
                 break;
             }
         }

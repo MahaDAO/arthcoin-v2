@@ -6,7 +6,7 @@ import 'truffle/DeployedAddresses.sol';
 import '../contracts/FakeCollateral/FakeCollateral.sol';
 import '../contracts/Arth/Arth.sol';
 import '../contracts/Arth/Pools/ArthPool.sol';
-import '../contracts/FXS/FXS.sol';
+import '../contracts/ARTHS/ARTHS.sol';
 import '../contracts/Governance/Governance.sol';
 import '../contracts/Staking/StakingRewards.sol';
 
@@ -23,11 +23,11 @@ contract TestAll {
         ArthPool pool = ArthPool(DeployedAddresses.ArthPool());
     }
 
-    function testFXSDeployment() public {
-        ARTHShares fxs = ARTHShares(DeployedAddresses.ARTHShares());
+    function testARTHSDeployment() public {
+        ARTHShares arths = ARTHShares(DeployedAddresses.ARTHShares());
 
         // Check for 18 decimals
-        Assert.equal(fxs.decimals(), uint256(18), '18 decimals expected');
+        Assert.equal(arths.decimals(), uint256(18), '18 decimals expected');
     }
 
     function testGovernanceDeployment() public {

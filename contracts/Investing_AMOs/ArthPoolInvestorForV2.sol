@@ -23,7 +23,7 @@ pragma experimental ABIEncoderV2;
 // Sam Kazemian: https://github.com/samkazemian
 
 import '../Math/SafeMath.sol';
-import '../FXS/FXS.sol';
+import '../ARTHS/ARTHS.sol';
 import '../Arth/Arth.sol';
 import '../ERC20/ERC20.sol';
 import '../ERC20/Variants/Comp.sol';
@@ -45,7 +45,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
     /* ========== STATE VARIABLES ========== */
 
     ERC20 private collateral_token;
-    ARTHShares private FXS;
+    ARTHShares private ARTHS;
     ARTHStablecoin private ARTH;
     ArthPool private pool;
 
@@ -109,7 +109,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
 
     constructor(
         address _arth_contract_address,
-        address _fxs_contract_address,
+        address _arths_contract_address,
         address _pool_address,
         address _collateral_address,
         address _owner_address,
@@ -117,7 +117,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         address _timelock_address
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
-        FXS = ARTHShares(_fxs_contract_address);
+        ARTHS = ARTHShares(_arths_contract_address);
         pool_address = _pool_address;
         pool = ArthPool(_pool_address);
         collateral_address = _collateral_address;
@@ -201,7 +201,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
     // This is basically a workaround to transfer USDC from the ArthPool to this investor contract
     // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like pool_mint and pool_burn_from
     // on the main ARTH contract
-    // It mints ARTH from nothing, and redeems it on the target pool for collateral and FXS
+    // It mints ARTH from nothing, and redeems it on the target pool for collateral and ARTHS
     // The burn can be called separately later on
     function mintRedeemPart1(uint256 arth_amount)
         public
@@ -256,9 +256,9 @@ contract ArthPoolInvestorForV2 is AccessControl {
         collateral_token.transfer(address(pool), amount);
     }
 
-    function burnFXS(uint256 amount) public onlyByOwnerOrGovernance {
-        FXS.approve(address(this), amount);
-        FXS.pool_burn_from(address(this), amount);
+    function burnARTHS(uint256 amount) public onlyByOwnerOrGovernance {
+        ARTHS.approve(address(this), amount);
+        ARTHS.pool_burn_from(address(this), amount);
     }
 
     /* ========== yearn V2 ========== */

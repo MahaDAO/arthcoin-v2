@@ -28,7 +28,7 @@ import './ILiquidityGauge.sol';
 import './IMinter.sol';
 import '../ERC20/ERC20.sol';
 import '../Arth/Arth.sol';
-import '../FXS/FXS.sol';
+import '../ARTHS/ARTHS.sol';
 import '../Math/SafeMath.sol';
 
 contract CurveAMO is AccessControl {
@@ -43,7 +43,7 @@ contract CurveAMO is AccessControl {
     ERC20 private three_pool_erc20;
     ARTHStablecoin private ARTH;
     ArthPool private pool;
-    ARTHShares private FXS;
+    ARTHShares private ARTHS;
     ERC20 private collateral_token;
     ERC20 private CRV = ERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
 
@@ -53,7 +53,7 @@ contract CurveAMO is AccessControl {
     address public gauge_3crv_address;
     address public crv_minter_address;
     address public arth_contract_address;
-    address public fxs_contract_address;
+    address public arths_contract_address;
     address public collateral_token_address;
     address public timelock_address;
     address public owner_address;
@@ -96,16 +96,16 @@ contract CurveAMO is AccessControl {
 
     constructor(
         address _arth_contract_address,
-        address _fxs_contract_address,
+        address _arths_contract_address,
         address _collateral_address,
         address _creator_address,
         address _custodian_address,
         address _timelock_address
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
-        FXS = ARTHShares(_fxs_contract_address);
+        ARTHS = ARTHShares(_arths_contract_address);
         arth_contract_address = _arth_contract_address;
-        fxs_contract_address = _fxs_contract_address;
+        arths_contract_address = _arths_contract_address;
         collateral_token = ERC20(_collateral_address);
         missing_decimals = uint256(18).sub(collateral_token.decimals());
         timelock_address = _timelock_address;
@@ -415,7 +415,7 @@ contract CurveAMO is AccessControl {
     // This is basically a workaround to transfer USDC from the ArthPool to this investor contract
     // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like pool_mint and pool_burn_from
     // on the main ARTH contract
-    // It mints ARTH from nothing, and redeems it on the target pool for collateral and FXS
+    // It mints ARTH from nothing, and redeems it on the target pool for collateral and ARTHS
     // The burn can be called separately later on
     function mintRedeemPart1(uint256 arth_amount)
         public
@@ -468,9 +468,9 @@ contract CurveAMO is AccessControl {
         burned_arth_historical = burned_arth_historical.add(arth_amount);
     }
 
-    function burnFXS(uint256 amount) public onlyByOwnerOrGovernance {
-        FXS.approve(address(this), amount);
-        FXS.pool_burn_from(address(this), amount);
+    function burnARTHS(uint256 amount) public onlyByOwnerOrGovernance {
+        ARTHS.approve(address(this), amount);
+        ARTHS.pool_burn_from(address(this), amount);
     }
 
     function metapoolDeposit(uint256 _arth_amount, uint256 _collateral_amount)

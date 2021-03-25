@@ -3,23 +3,23 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../FXS/FXS.sol';
+import '../ARTHS/ARTHS.sol';
 
 // From https://compound.finance/docs/governance
 // and https://github.com/compound-finance/compound-protocol/tree/master/contracts/Governance
 contract GovernorAlpha {
     /// @notice The name of this contract
-    string public constant name = 'FXS Governor Alpha';
+    string public constant name = 'ARTHS Governor Alpha';
 
     /// @notice The number of votes in support of a proposal required in order for a quorum to be reached and for a vote to succeed
     function quorumVotes() public pure returns (uint256) {
         return 4000000e18;
-    } // 4,000,000 = 4% of FXS
+    } // 4,000,000 = 4% of ARTHS
 
     /// @notice The number of votes required in order for a voter to become a proposer
     function proposalThreshold() public pure returns (uint256) {
         return 1000000e18;
-    } // 1,000,000 = 1% of FXS
+    } // 1,000,000 = 1% of ARTHS
 
     /// @notice The maximum number of actions that can be included in a proposal
     function proposalMaxOperations() public pure returns (uint256) {
@@ -39,8 +39,8 @@ contract GovernorAlpha {
     /// @notice The address of the Timelock
     TimelockInterface public timelock;
 
-    // The address of the FXS token
-    ARTHShares public fxs;
+    // The address of the ARTHS token
+    ARTHShares public arths;
 
     /// @notice The address of the Governor Guardian
     address public guardian;
@@ -153,11 +153,11 @@ contract GovernorAlpha {
 
     constructor(
         address timelock_,
-        address fxs_,
+        address arths_,
         address guardian_
     ) {
         timelock = TimelockInterface(timelock_);
-        fxs = ARTHShares(fxs_);
+        arths = ARTHShares(arths_);
         guardian = guardian_;
     }
 
@@ -170,7 +170,7 @@ contract GovernorAlpha {
         string memory description
     ) public returns (uint256) {
         require(
-            fxs.getPriorVotes(msg.sender, sub256(block.number, 1)) >=
+            arths.getPriorVotes(msg.sender, sub256(block.number, 1)) >=
                 proposalThreshold(),
             'GovernorAlpha::propose: proposer votes below proposal threshold'
         );
@@ -305,7 +305,10 @@ contract GovernorAlpha {
         Proposal storage proposal = proposals[proposalId];
         require(
             msg.sender == guardian ||
-                fxs.getPriorVotes(proposal.proposer, sub256(block.number, 1)) <
+                arths.getPriorVotes(
+                    proposal.proposer,
+                    sub256(block.number, 1)
+                ) <
                 proposalThreshold(),
             'GovernorAlpha::cancel: proposer at or above threshold'
         );
@@ -425,7 +428,7 @@ contract GovernorAlpha {
             receipt.hasVoted == false,
             'GovernorAlpha::_castVote: voter already voted'
         );
-        uint96 votes = fxs.getPriorVotes(voter, proposal.startBlock);
+        uint96 votes = arths.getPriorVotes(voter, proposal.startBlock);
 
         if (support) {
             proposal.forVotes = add256(proposal.forVotes, votes);

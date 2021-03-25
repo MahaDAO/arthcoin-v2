@@ -53,10 +53,10 @@ const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC");
 const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT");
-const UniswapPairOracle_ARTH_FXS = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_FXS");
-const UniswapPairOracle_FXS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_FXS_WETH");
-const UniswapPairOracle_FXS_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_FXS_USDC");
-const UniswapPairOracle_FXS_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_FXS_USDT");
+const UniswapPairOracle_ARTH_ARTHS = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS");
+const UniswapPairOracle_ARTHS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_WETH");
+const UniswapPairOracle_ARTHS_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDC");
+const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDT");
 const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH");
 const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH");
 
@@ -66,8 +66,8 @@ const ChainlinkETHUSDPriceConsumerTest = artifacts.require("Oracle/ChainlinkETHU
 
 // ARTH core
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const ARTHShares = artifacts.require("FXS/ARTHShares");
-const TokenVesting = artifacts.require("FXS/TokenVesting");
+const ARTHShares = artifacts.require("ARTHS/ARTHShares");
+const TokenVesting = artifacts.require("ARTHS/TokenVesting");
 
 // Governance related
 const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
@@ -76,8 +76,8 @@ const Timelock = artifacts.require("Governance/Timelock");
 // Staking contracts
 const StakingRewards_ARTH_WETH = artifacts.require("Staking/Variants/Stake_ARTH_WETH.sol");
 const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_USDC.sol");
-const StakingRewards_ARTH_FXS = artifacts.require("Staking/Variants/Stake_ARTH_FXS.sol");
-const StakingRewards_FXS_WETH = artifacts.require("Staking/Variants/Stake_FXS_WETH.sol");
+const StakingRewards_ARTH_ARTHS = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS.sol");
+const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTHS_WETH.sol");
 
 const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666";
 
@@ -90,14 +90,14 @@ module.exports = async function (deployer, network, accounts) {
   // ======== Set the addresses ========
 
   const DEPLOYER_ADDRESS = accounts[0];
-  const COLLATERAL_ARTH_AND_FXS_OWNER = accounts[1];
+  const COLLATERAL_ARTH_AND_ARTHS_OWNER = accounts[1];
   const ORACLE_ADDRESS = accounts[2];
   const POOL_CREATOR = accounts[3];
   const TIMELOCK_ADMIN = accounts[4];
   const GOVERNOR_GUARDIAN_ADDRESS = accounts[5];
   const STAKING_OWNER = accounts[6];
   const STAKING_REWARDS_DISTRIBUTOR = accounts[7];
-  // const COLLATERAL_ARTH_AND_FXS_OWNER = accounts[8];
+  // const COLLATERAL_ARTH_AND_ARTHS_OWNER = accounts[8];
 
   // ======== Set other constants ========
 
@@ -111,7 +111,7 @@ module.exports = async function (deployer, network, accounts) {
 
   // Starting seed amounts
   const ARTH_SEED_AMOUNT_DEC18 = new BigNumber("10000e18");
-  const FXS_SEED_AMOUNT_DEC18 = new BigNumber("10000e18");
+  const ARTHS_SEED_AMOUNT_DEC18 = new BigNumber("10000e18");
 
   const REDEMPTION_FEE = 400; // 0.04%
   const MINTING_FEE = 300; // 0.03%
@@ -128,7 +128,7 @@ module.exports = async function (deployer, network, accounts) {
   let timelockInstance;
   let migrationHelperInstance;
   let arthInstance;
-  let fxsInstance;
+  let arthsInstance;
   let governanceInstance;
   let wethInstance;
   let col_instance_USDC;
@@ -139,7 +139,7 @@ module.exports = async function (deployer, network, accounts) {
     migrationHelperInstance = await MigrationHelper.deployed()
     governanceInstance = await GovernorAlpha.deployed();
     arthInstance = await ARTHStablecoin.deployed();
-    fxsInstance = await ARTHShares.deployed();
+    arthsInstance = await ARTHShares.deployed();
     wethInstance = await WETH.deployed();
     col_instance_USDC = await FakeCollateral_USDC.deployed();
     col_instance_USDT = await FakeCollateral_USDT.deployed();
@@ -150,7 +150,7 @@ module.exports = async function (deployer, network, accounts) {
     migrationHelperInstance = await MigrationHelper.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].misc.migration_helper);
     governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
     arthInstance = await ARTHStablecoin.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTH);
-    fxsInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.FXS);
+    arthsInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTHS);
     wethInstance = await WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].weth);
     col_instance_USDC = await FakeCollateral_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDC);
     col_instance_USDT = await FakeCollateral_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDT);
@@ -198,65 +198,65 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('===== SET UNISWAP PAIRS ====='));
   console.log(chalk.blue('=== ARTH / XXXX ==='));
   await Promise.all([
-    uniswapFactoryInstance.createPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDT.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    uniswapFactoryInstance.createPair(arthInstance.address, fxsInstance.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER })
+    uniswapFactoryInstance.createPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    uniswapFactoryInstance.createPair(arthInstance.address, arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
   ]);
 
-  console.log(chalk.blue('=== FXS / XXXX ==='));
+  console.log(chalk.blue('=== ARTHS / XXXX ==='));
   await Promise.all([
-    uniswapFactoryInstance.createPair(fxsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    uniswapFactoryInstance.createPair(fxsInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    uniswapFactoryInstance.createPair(fxsInstance.address, col_instance_USDT.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER })
+    uniswapFactoryInstance.createPair(arthsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    uniswapFactoryInstance.createPair(arthsInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    uniswapFactoryInstance.createPair(arthsInstance.address, col_instance_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
   ])
 
   if (!IS_MAINNET) {
     console.log(chalk.blue('=== XXXX / WETH ==='));
-    await uniswapFactoryInstance.createPair(col_instance_USDC.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER });
-    await uniswapFactoryInstance.createPair(col_instance_USDT.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER });
+    await uniswapFactoryInstance.createPair(col_instance_USDC.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await uniswapFactoryInstance.createPair(col_instance_USDT.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
   }
 
   // ======== Get the addresses of the pairs ========
   console.log(chalk.yellow('===== GET THE ADDRESSES OF THE PAIRS ====='));
-  const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER });
-  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER });
-  const pair_addr_ARTH_FXS = await uniswapFactoryInstance.getPair(arthInstance.address, fxsInstance.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER });
-  const pair_addr_FXS_WETH = await uniswapFactoryInstance.getPair(fxsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_FXS_OWNER });
+  const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
   // ======== Deploy the staking contracts ========
   console.log(chalk.yellow('===== DEPLOY THE STAKING CONTRACTS ====='));
-  await deployer.link(ARTHStablecoin, [StakingRewards_ARTH_WETH, StakingRewards_ARTH_USDC, StakingRewards_FXS_WETH, StakingRewards_ARTH_FXS]);
-  await deployer.link(StringHelpers, [StakingRewards_ARTH_WETH, StakingRewards_ARTH_USDC, StakingRewards_FXS_WETH, StakingRewards_ARTH_FXS]);
+  await deployer.link(ARTHStablecoin, [StakingRewards_ARTH_WETH, StakingRewards_ARTH_USDC, StakingRewards_ARTHS_WETH, StakingRewards_ARTH_ARTHS]);
+  await deployer.link(StringHelpers, [StakingRewards_ARTH_WETH, StakingRewards_ARTH_USDC, StakingRewards_ARTHS_WETH, StakingRewards_ARTH_ARTHS]);
   await Promise.all([
-    deployer.deploy(StakingRewards_ARTH_WETH, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, fxsInstance.address, pair_addr_ARTH_WETH, ARTHStablecoin.address, timelockInstance.address, 500000),
-    deployer.deploy(StakingRewards_ARTH_USDC, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, fxsInstance.address, pair_addr_ARTH_USDC, ARTHStablecoin.address, timelockInstance.address, 500000),
-    deployer.deploy(StakingRewards_ARTH_FXS, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, fxsInstance.address, pair_addr_ARTH_FXS, ARTHStablecoin.address, timelockInstance.address, 0),
-    deployer.deploy(StakingRewards_FXS_WETH, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, fxsInstance.address, pair_addr_FXS_WETH, ARTHStablecoin.address, timelockInstance.address, 0)
+    deployer.deploy(StakingRewards_ARTH_WETH, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_WETH, ARTHStablecoin.address, timelockInstance.address, 500000),
+    deployer.deploy(StakingRewards_ARTH_USDC, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_USDC, ARTHStablecoin.address, timelockInstance.address, 500000),
+    deployer.deploy(StakingRewards_ARTH_ARTHS, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_ARTHS, ARTHStablecoin.address, timelockInstance.address, 0),
+    deployer.deploy(StakingRewards_ARTHS_WETH, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTHS_WETH, ARTHStablecoin.address, timelockInstance.address, 0)
   ])
 
   // ======== Get various staking addresses ========
   console.log(chalk.yellow('===== GET VARIOUS STAKING ADDRESSES ====='));
   const stakingInstance_ARTH_WETH = await StakingRewards_ARTH_WETH.deployed();
   const stakingInstance_ARTH_USDC = await StakingRewards_ARTH_USDC.deployed();
-  const stakingInstance_ARTH_FXS = await StakingRewards_ARTH_FXS.deployed();
-  const stakingInstance_FXS_WETH = await StakingRewards_FXS_WETH.deployed();
+  const stakingInstance_ARTH_ARTHS = await StakingRewards_ARTH_ARTHS.deployed();
+  const stakingInstance_ARTHS_WETH = await StakingRewards_ARTHS_WETH.deployed();
 
   // ======== Get various pair instances ========
   console.log(chalk.yellow('===== GET VARIOUS PAIR INSTANCES ====='));
   const pair_instance_ARTH_WETH = await UniswapV2Pair.at(pair_addr_ARTH_WETH);
   const pair_instance_ARTH_USDC = await UniswapV2Pair.at(pair_addr_ARTH_USDC);
-  const pair_instance_ARTH_FXS = await UniswapV2Pair.at(pair_addr_ARTH_FXS);
-  const pair_instance_FXS_WETH = await UniswapV2Pair.at(pair_addr_FXS_WETH);
+  const pair_instance_ARTH_ARTHS = await UniswapV2Pair.at(pair_addr_ARTH_ARTHS);
+  const pair_instance_ARTHS_WETH = await UniswapV2Pair.at(pair_addr_ARTHS_WETH);
 
   // ======== Add allowances to the Uniswap Router ========
   console.log(chalk.yellow('===== ADD ALLOWANCES TO THE UNISWAP ROUTER ====='));
   await Promise.all([
-    wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e6), { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e6), { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_FXS_OWNER }),
-    fxsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_FXS_OWNER })
+    wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e6), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e6), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    arthsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
   ])
 
   // ======== Note the addresses ========
@@ -265,7 +265,7 @@ module.exports = async function (deployer, network, accounts) {
     [process.env.MIGRATION_MODE]: {
       main: {
         ARTH: arthInstance.address,
-        FXS: fxsInstance.address,
+        ARTHS: arthsInstance.address,
         vesting: "NOT_DEPLOYED_YET"
       },
       weth: wethInstance.address,
@@ -273,10 +273,10 @@ module.exports = async function (deployer, network, accounts) {
         ARTH_WETH: "NOT_DEPLOYED_YET",
         ARTH_USDC: "NOT_DEPLOYED_YET",
         ARTH_USDT: "NOT_DEPLOYED_YET",
-        ARTH_FXS: "NOT_DEPLOYED_YET",
-        FXS_WETH: "NOT_DEPLOYED_YET",
-        FXS_USDC: "NOT_DEPLOYED_YET",
-        FXS_USDT: "NOT_DEPLOYED_YET",
+        ARTH_ARTHS: "NOT_DEPLOYED_YET",
+        ARTHS_WETH: "NOT_DEPLOYED_YET",
+        ARTHS_USDC: "NOT_DEPLOYED_YET",
+        ARTHS_USDT: "NOT_DEPLOYED_YET",
         USDC_WETH: "NOT_DEPLOYED_YET",
         USDT_WETH: "NOT_DEPLOYED_YET",
       },
@@ -308,14 +308,14 @@ module.exports = async function (deployer, network, accounts) {
       pair_tokens: {
         'Uniswap ARTH/WETH': pair_instance_ARTH_WETH.address,
         'Uniswap ARTH/USDC': pair_instance_ARTH_USDC.address,
-        'Uniswap ARTH/FXS': pair_instance_ARTH_FXS.address,
-        'Uniswap FXS/WETH': pair_instance_FXS_WETH.address,
+        'Uniswap ARTH/ARTHS': pair_instance_ARTH_ARTHS.address,
+        'Uniswap ARTHS/WETH': pair_instance_ARTHS_WETH.address,
       },
       staking_contracts: {
         'Uniswap ARTH/WETH': stakingInstance_ARTH_WETH.address,
         'Uniswap ARTH/USDC': stakingInstance_ARTH_USDC.address,
-        'Uniswap ARTH/FXS': stakingInstance_ARTH_FXS.address,
-        'Uniswap FXS/WETH': stakingInstance_FXS_WETH.address,
+        'Uniswap ARTH/ARTHS': stakingInstance_ARTH_ARTHS.address,
+        'Uniswap ARTHS/WETH': stakingInstance_ARTHS_WETH.address,
       }
     }
   }

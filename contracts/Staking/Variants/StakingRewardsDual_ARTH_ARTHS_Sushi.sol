@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import '../StakingRewardsDual.sol';
 
-contract StakingRewardsDual_FXS_WETH_Sushi is StakingRewardsDual {
+contract StakingRewardsDual_ARTH_ARTHS_Sushi is StakingRewardsDual {
     constructor(
         address _owner,
         address _rewardsToken0,

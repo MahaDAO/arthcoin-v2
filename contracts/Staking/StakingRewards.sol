@@ -48,7 +48,7 @@ contract StakingRewards is
 
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored = 0;
-    uint256 public pool_weight; // This staking pool's percentage of the total FXS being distributed by all pools, 6 decimals of precision
+    uint256 public pool_weight; // This staking pool's percentage of the total ARTHS being distributed by all pools, 6 decimals of precision
 
     address public owner_address;
     address public timelock_address; // Governance timelock address
@@ -102,7 +102,7 @@ contract StakingRewards is
         lastUpdateTime = block.timestamp;
         timelock_address = _timelock_address;
         pool_weight = _pool_weight;
-        rewardRate = 380517503805175038; // (uint256(12000000e18)).div(365 * 86400); // Base emission rate of 12M FXS over the first year
+        rewardRate = 380517503805175038; // (uint256(12000000e18)).div(365 * 86400); // Base emission rate of 12M ARTHS over the first year
         rewardRate = rewardRate.mul(pool_weight).div(1e6);
         unlockedStakes = false;
     }
@@ -441,7 +441,7 @@ contract StakingRewards is
                 .mul(crBoostMultiplier())
                 .mul(num_periods_elapsed + 1)
                 .div(PRICE_PRECISION) <= balance,
-            'Not enough FXS available for rewards!'
+            'Not enough ARTHS available for rewards!'
         );
 
         // uint256 old_lastUpdateTime = lastUpdateTime;

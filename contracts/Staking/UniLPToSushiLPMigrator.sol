@@ -68,7 +68,7 @@ contract UniLPToSushiLPMigrator is
 
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored = 0;
-    uint256 public pool_weight; // This staking pool's percentage of the total FXS being distributed by all pools, 6 decimals of precision
+    uint256 public pool_weight; // This staking pool's percentage of the total ARTHS being distributed by all pools, 6 decimals of precision
 
     address public owner_address;
     address public timelock_address; // Governance timelock address
@@ -329,7 +329,10 @@ contract UniLPToSushiLPMigrator is
             // Add a locked stake [delegatecall]
             // ----------------------------------------------------------
             {
-                (bool success, bytes memory data) =
+                (
+                    bool success, /* bytes memory data */
+
+                ) =
                     address(DestStakingContract).delegatecall(
                         abi.encodeWithSignature(
                             'stakeLocked(uint,uint)',
@@ -377,32 +380,32 @@ contract UniLPToSushiLPMigrator is
 
     function lastTimeRewardApplicable()
         external
-        view
+        pure
         override
         returns (uint256)
     {
         return 0;
     }
 
-    function rewardPerToken() external view override returns (uint256) {
+    function rewardPerToken() external pure override returns (uint256) {
         return 0;
     }
 
-    function earned(address account) external view override returns (uint256) {
+    function earned(address account) external pure override returns (uint256) {
         return 0;
     }
 
-    function getRewardForDuration() external view override returns (uint256) {
+    function getRewardForDuration() external pure override returns (uint256) {
         return 0;
     }
 
-    function totalSupply() external view override returns (uint256) {
+    function totalSupply() external pure override returns (uint256) {
         return 0;
     }
 
     function balanceOf(address account)
         external
-        view
+        pure
         override
         returns (uint256)
     {

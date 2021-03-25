@@ -71,7 +71,7 @@ contract StakingRewardsDual is
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored0 = 0;
     uint256 public rewardPerTokenStored1 = 0;
-    uint256 public pool_weight0; // This staking pool's percentage of the total FXS being distributed by all pools, 6 decimals of precision
+    uint256 public pool_weight0; // This staking pool's percentage of the total ARTHS being distributed by all pools, 6 decimals of precision
     uint256 public pool_weight1; // This staking pool's percentage of the total TOKEN 2 being distributed by all pools, 6 decimals of precision
 
     address public owner_address;
@@ -133,7 +133,7 @@ contract StakingRewardsDual is
         pool_weight0 = _pool_weight0;
         pool_weight1 = _pool_weight1;
 
-        // 1000 FXS a day
+        // 1000 ARTHS a day
         rewardRate0 = (uint256(365000e18)).div(365 * 86400);
         rewardRate0 = rewardRate0.mul(pool_weight0).div(1e6);
 
@@ -504,7 +504,7 @@ contract StakingRewardsDual is
                 .mul(crBoostMultiplier())
                 .mul(num_periods_elapsed + 1)
                 .div(PRICE_PRECISION) <= balance0,
-            'Not enough FXS available for rewards!'
+            'Not enough ARTHS available for rewards!'
         );
 
         if (token1_rewards_on) {

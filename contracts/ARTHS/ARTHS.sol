@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 // | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
 // |                                                                  |
 // ====================================================================
-// ========================= ARTHShares (FXS) =========================
+// ========================= ARTHShares (ARTHS) =========================
 // ====================================================================
 // Arth Finance: https://github.com/ArthFinance
 
@@ -41,7 +41,7 @@ contract ARTHShares is ERC20Custom, AccessControl {
     address public ARTHStablecoinAdd;
 
     uint256 public constant genesis_supply = 100000000e18; // 100M is printed upon genesis
-    uint256 public FXS_DAO_min; // Minimum FXS required to join DAO groups
+    uint256 public ARTHS_DAO_min; // Minimum ARTHS required to join DAO groups
 
     address public owner_address;
     address public oracle_address;
@@ -121,8 +121,11 @@ contract ARTHShares is ERC20Custom, AccessControl {
         ARTH = ARTHStablecoin(arth_contract_address);
     }
 
-    function setFXSMinDAO(uint256 min_FXS) external onlyByOwnerOrGovernance {
-        FXS_DAO_min = min_FXS;
+    function setARTHSMinDAO(uint256 min_ARTHS)
+        external
+        onlyByOwnerOrGovernance
+    {
+        ARTHS_DAO_min = min_ARTHS;
     }
 
     function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
@@ -133,7 +136,7 @@ contract ARTHShares is ERC20Custom, AccessControl {
         _mint(to, amount);
     }
 
-    // This function is what other arth pools will call to mint new FXS (similar to the ARTH mint)
+    // This function is what other arth pools will call to mint new ARTHS (similar to the ARTH mint)
     function pool_mint(address m_address, uint256 m_amount) external onlyPools {
         if (trackingVotes) {
             uint32 srcRepNum = numCheckpoints[address(this)];
@@ -152,10 +155,10 @@ contract ARTHShares is ERC20Custom, AccessControl {
         }
 
         super._mint(m_address, m_amount);
-        emit FXSMinted(address(this), m_address, m_amount);
+        emit ARTHSMinted(address(this), m_address, m_amount);
     }
 
-    // This function is what other arth pools will call to burn FXS
+    // This function is what other arth pools will call to burn ARTHS
     function pool_burn_from(address b_address, uint256 b_amount)
         external
         onlyPools
@@ -177,7 +180,7 @@ contract ARTHShares is ERC20Custom, AccessControl {
         }
 
         super._burnFrom(b_address, b_amount);
-        emit FXSBurned(b_address, address(this), b_amount);
+        emit ARTHSBurned(b_address, address(this), b_amount);
     }
 
     function toggleVotes() external onlyByOwnerOrGovernance {
@@ -251,7 +254,7 @@ contract ARTHShares is ERC20Custom, AccessControl {
     {
         require(
             blockNumber < block.number,
-            'FXS::getPriorVotes: not yet determined'
+            'ARTHS::getPriorVotes: not yet determined'
         );
 
         uint32 nCheckpoints = numCheckpoints[account];
@@ -305,7 +308,7 @@ contract ARTHShares is ERC20Custom, AccessControl {
                     sub96(
                         srcRepOld,
                         amount,
-                        'FXS::_moveVotes: vote amount underflows'
+                        'ARTHS::_moveVotes: vote amount underflows'
                     );
                 _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
             }
@@ -320,7 +323,7 @@ contract ARTHShares is ERC20Custom, AccessControl {
                     add96(
                         dstRepOld,
                         amount,
-                        'FXS::_moveVotes: vote amount overflows'
+                        'ARTHS::_moveVotes: vote amount overflows'
                     );
                 _writeCheckpoint(dstRep, dstRepNum, dstRepOld, dstRepNew);
             }
@@ -336,7 +339,7 @@ contract ARTHShares is ERC20Custom, AccessControl {
         uint32 blockNumber =
             safe32(
                 block.number,
-                'FXS::_writeCheckpoint: block number exceeds 32 bits'
+                'ARTHS::_writeCheckpoint: block number exceeds 32 bits'
             );
 
         if (
@@ -409,9 +412,9 @@ contract ARTHShares is ERC20Custom, AccessControl {
         uint256 newBalance
     );
 
-    // Track FXS burned
-    event FXSBurned(address indexed from, address indexed to, uint256 amount);
+    // Track ARTHS burned
+    event ARTHSBurned(address indexed from, address indexed to, uint256 amount);
 
-    // Track FXS minted
-    event FXSMinted(address indexed from, address indexed to, uint256 amount);
+    // Track ARTHS minted
+    event ARTHSMinted(address indexed from, address indexed to, uint256 amount);
 }

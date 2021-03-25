@@ -23,7 +23,7 @@ pragma experimental ABIEncoderV2;
 // Sam Kazemian: https://github.com/samkazemian
 
 import '../Math/SafeMath.sol';
-import '../FXS/FXS.sol';
+import '../ARTHS/ARTHS.sol';
 import '../Arth/Arth.sol';
 import '../ERC20/ERC20.sol';
 import '../ERC20/Variants/Comp.sol';
@@ -46,7 +46,7 @@ contract ArthLendingAMO is AccessControl {
     /* ========== STATE VARIABLES ========== */
 
     ERC20 private collateral_token;
-    ARTHShares private FXS;
+    ARTHShares private ARTHS;
     ARTHStablecoin private ARTH;
     ArthPool private pool;
 
@@ -103,7 +103,7 @@ contract ArthLendingAMO is AccessControl {
 
     constructor(
         address _arth_contract_address,
-        address _fxs_contract_address,
+        address _arths_contract_address,
         address _pool_address,
         address _collateral_address,
         address _owner_address,
@@ -111,7 +111,7 @@ contract ArthLendingAMO is AccessControl {
         address _timelock_address
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
-        FXS = ARTHShares(_fxs_contract_address);
+        ARTHS = ARTHShares(_arths_contract_address);
         pool_address = _pool_address;
         pool = ArthPool(_pool_address);
         collateral_address = _collateral_address;
@@ -252,10 +252,10 @@ contract ArthLendingAMO is AccessControl {
         burned_sum_historical = burned_sum_historical.add(arth_amount);
     }
 
-    // Burn unneeded FXS
-    function burnFXS(uint256 amount) public onlyByOwnerOrGovernance {
-        FXS.approve(address(this), amount);
-        FXS.pool_burn_from(address(this), amount);
+    // Burn unneeded ARTHS
+    function burnARTHS(uint256 amount) public onlyByOwnerOrGovernance {
+        ARTHS.approve(address(this), amount);
+        ARTHS.pool_burn_from(address(this), amount);
     }
 
     /* ==================== CREAM ==================== */

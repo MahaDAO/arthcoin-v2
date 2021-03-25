@@ -31,11 +31,11 @@ interface IArthPartial {
 
     function controller_address() external returns (address);
 
-    function fxs_address() external returns (address);
+    function arths_address() external returns (address);
 
     function arth_eth_oracle_address() external returns (address);
 
-    function fxs_eth_oracle_address() external returns (address);
+    function arths_eth_oracle_address() external returns (address);
 
     function weth_address() external returns (address);
 
@@ -78,7 +78,7 @@ interface IArthPartial {
     /* ========== VIEWS ========== */
     function arth_price() external returns (uint256);
 
-    function fxs_price() external returns (uint256);
+    function arths_price() external returns (uint256);
 
     function eth_usd_price() external returns (uint256);
 
