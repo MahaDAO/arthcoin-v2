@@ -11,9 +11,9 @@ pragma experimental ABIEncoderV2;
 // | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
 // |                                                                  |
 // ====================================================================
-// ========================= FRAXShares (FXS) =========================
+// ========================= ARTHShares (FXS) =========================
 // ====================================================================
-// Frax Finance: https://github.com/FraxFinance
+// Arth Finance: https://github.com/ArthFinance
 
 // Primary Author(s)
 // Travis Moore: https://github.com/FortisFortuna
@@ -23,14 +23,14 @@ pragma experimental ABIEncoderV2;
 // Reviewer(s) / Contributor(s)
 // Sam Sun: https://github.com/samczsun
 
-import "../Common/Context.sol";
-import "../ERC20/ERC20Custom.sol";
-import "../ERC20/IERC20.sol";
-import "../Frax/Frax.sol";
-import "../Math/SafeMath.sol";
-import "../Governance/AccessControl.sol";
+import '../Common/Context.sol';
+import '../ERC20/ERC20Custom.sol';
+import '../ERC20/IERC20.sol';
+import '../Arth/Arth.sol';
+import '../Math/SafeMath.sol';
+import '../Governance/AccessControl.sol';
 
-contract FRAXShares is ERC20Custom, AccessControl {
+contract ARTHShares is ERC20Custom, AccessControl {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
@@ -38,7 +38,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
     string public symbol;
     string public name;
     uint8 public constant decimals = 18;
-    address public FRAXStablecoinAdd;
+    address public ARTHStablecoinAdd;
 
     uint256 public constant genesis_supply = 100000000e18; // 100M is printed upon genesis
     uint256 public FXS_DAO_min; // Minimum FXS required to join DAO groups
@@ -46,7 +46,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
     address public owner_address;
     address public oracle_address;
     address public timelock_address; // Governance timelock address
-    FRAXStablecoin private FRAX;
+    ARTHStablecoin private ARTH;
 
     bool public trackingVotes = true; // Tracking votes (only change if need to disable votes)
 
@@ -66,8 +66,8 @@ contract FRAXShares is ERC20Custom, AccessControl {
 
     modifier onlyPools() {
         require(
-            FRAX.frax_pools(msg.sender) == true,
-            "Only frax pools can mint new FRAX"
+            ARTH.arth_pools(msg.sender) == true,
+            'Only arth pools can mint new ARTH'
         );
         _;
     }
@@ -75,7 +75,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner_address || msg.sender == timelock_address,
-            "You are not an owner or the governance timelock"
+            'You are not an owner or the governance timelock'
         );
         _;
     }
@@ -114,11 +114,11 @@ contract FRAXShares is ERC20Custom, AccessControl {
         timelock_address = new_timelock;
     }
 
-    function setFRAXAddress(address frax_contract_address)
+    function setARTHAddress(address arth_contract_address)
         external
         onlyByOwnerOrGovernance
     {
-        FRAX = FRAXStablecoin(frax_contract_address);
+        ARTH = ARTHStablecoin(arth_contract_address);
     }
 
     function setFXSMinDAO(uint256 min_FXS) external onlyByOwnerOrGovernance {
@@ -133,7 +133,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
         _mint(to, amount);
     }
 
-    // This function is what other frax pools will call to mint new FXS (similar to the FRAX mint)
+    // This function is what other arth pools will call to mint new FXS (similar to the ARTH mint)
     function pool_mint(address m_address, uint256 m_amount) external onlyPools {
         if (trackingVotes) {
             uint32 srcRepNum = numCheckpoints[address(this)];
@@ -145,7 +145,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
                 add96(
                     srcRepOld,
                     uint96(m_amount),
-                    "pool_mint new votes overflows"
+                    'pool_mint new votes overflows'
                 );
             _writeCheckpoint(address(this), srcRepNum, srcRepOld, srcRepNew); // mint new votes
             trackVotes(address(this), m_address, uint96(m_amount));
@@ -155,7 +155,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
         emit FXSMinted(address(this), m_address, m_amount);
     }
 
-    // This function is what other frax pools will call to burn FXS
+    // This function is what other arth pools will call to burn FXS
     function pool_burn_from(address b_address, uint256 b_amount)
         external
         onlyPools
@@ -171,7 +171,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
                 sub96(
                     srcRepOld,
                     uint96(b_amount),
-                    "pool_burn_from new votes underflows"
+                    'pool_burn_from new votes underflows'
                 );
             _writeCheckpoint(address(this), srcRepNum, srcRepOld, srcRepNew); // burn votes
         }
@@ -217,7 +217,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
             _msgSender(),
             _allowances[sender][_msgSender()].sub(
                 amount,
-                "ERC20: transfer amount exceeds allowance"
+                'ERC20: transfer amount exceeds allowance'
             )
         );
 
@@ -251,7 +251,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
     {
         require(
             blockNumber < block.number,
-            "FXS::getPriorVotes: not yet determined"
+            'FXS::getPriorVotes: not yet determined'
         );
 
         uint32 nCheckpoints = numCheckpoints[account];
@@ -305,7 +305,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
                     sub96(
                         srcRepOld,
                         amount,
-                        "FXS::_moveVotes: vote amount underflows"
+                        'FXS::_moveVotes: vote amount underflows'
                     );
                 _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
             }
@@ -320,7 +320,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
                     add96(
                         dstRepOld,
                         amount,
-                        "FXS::_moveVotes: vote amount overflows"
+                        'FXS::_moveVotes: vote amount overflows'
                     );
                 _writeCheckpoint(dstRep, dstRepNum, dstRepOld, dstRepNew);
             }
@@ -336,7 +336,7 @@ contract FRAXShares is ERC20Custom, AccessControl {
         uint32 blockNumber =
             safe32(
                 block.number,
-                "FXS::_writeCheckpoint: block number exceeds 32 bits"
+                'FXS::_writeCheckpoint: block number exceeds 32 bits'
             );
 
         if (

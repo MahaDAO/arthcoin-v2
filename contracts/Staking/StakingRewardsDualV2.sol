@@ -13,7 +13,7 @@ pragma experimental ABIEncoderV2;
 // ====================================================================
 // ======================= StakingRewardsDualV2 =======================
 // ====================================================================
-// Frax Finance: https://github.com/FraxFinance
+// Arth Finance: https://github.com/ArthFinance
 
 // Primary Author(s)
 // Travis Moore: https://github.com/FortisFortuna
@@ -26,19 +26,19 @@ pragma experimental ABIEncoderV2;
 // Modified originally from Synthetixio
 // https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
 
-import "../Math/Math.sol";
-import "../Math/SafeMath.sol";
-import "../ERC20/ERC20.sol";
-import "../Uniswap/TransferHelper.sol";
-import "../ERC20/SafeERC20.sol";
-import "../Frax/Frax.sol";
-import "../Utils/ReentrancyGuard.sol";
-import "../Utils/StringHelpers.sol";
+import '../Math/Math.sol';
+import '../Math/SafeMath.sol';
+import '../ERC20/ERC20.sol';
+import '../Uniswap/TransferHelper.sol';
+import '../ERC20/SafeERC20.sol';
+import '../Arth/Arth.sol';
+import '../Utils/ReentrancyGuard.sol';
+import '../Utils/StringHelpers.sol';
 
 // Inheritance
-import "./IStakingRewardsDual.sol";
-import "./Owned.sol";
-import "./Pausable.sol";
+import './IStakingRewardsDual.sol';
+import './Owned.sol';
+import './Pausable.sol';
 
 contract StakingRewardsDualV2 is
     IStakingRewardsDual,
@@ -51,7 +51,7 @@ contract StakingRewardsDualV2 is
 
     /* ========== STATE VARIABLES ========== */
 
-    FRAXStablecoin private FRAX;
+    ARTHStablecoin private ARTH;
     ERC20 public rewardsToken0;
     ERC20 public rewardsToken1;
     ERC20 public stakingToken;
@@ -80,7 +80,7 @@ contract StakingRewardsDualV2 is
     uint256 public locked_stake_max_multiplier = 2000000; // 6 decimals of precision. 1x = 1000000
     uint256 public locked_stake_time_for_max_multiplier = 3 * 365 * 86400; // 3 years
     uint256 public locked_stake_min_time = 604800; // 7 * 86400  (7 days)
-    string private locked_stake_min_time_str = "604800"; // 7 days on genesis
+    string private locked_stake_min_time_str = '604800'; // 7 days on genesis
 
     uint256 public cr_boost_max_multiplier = 1000000; // 6 decimals of precision. 1x = 1000000
 
@@ -127,7 +127,7 @@ contract StakingRewardsDualV2 is
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner_address || msg.sender == timelock_address,
-            "You are not the owner or the governance timelock"
+            'You are not the owner or the governance timelock'
         );
         _;
     }
@@ -137,25 +137,25 @@ contract StakingRewardsDualV2 is
             msg.sender == owner_address ||
                 msg.sender == timelock_address ||
                 valid_migrators[msg.sender] == true,
-            "You are not the owner, governance timelock, or a migrator"
+            'You are not the owner, governance timelock, or a migrator'
         );
         _;
     }
 
     modifier isMigrating() {
-        require(migrationsOn == true, "Contract is not in migration");
+        require(migrationsOn == true, 'Contract is not in migration');
         _;
     }
 
     modifier notWithdrawalsPaused() {
-        require(withdrawalsPaused == false, "Withdrawals are paused");
+        require(withdrawalsPaused == false, 'Withdrawals are paused');
         _;
     }
 
     modifier notRewardsCollectionPaused() {
         require(
             rewardsCollectionPaused == false,
-            "Rewards collection is paused"
+            'Rewards collection is paused'
         );
         _;
     }
@@ -181,7 +181,7 @@ contract StakingRewardsDualV2 is
         address _rewardsToken0,
         address _rewardsToken1,
         address _stakingToken,
-        address _frax_address,
+        address _arth_address,
         address _timelock_address,
         uint256 _pool_weight0,
         uint256 _pool_weight1
@@ -190,7 +190,7 @@ contract StakingRewardsDualV2 is
         rewardsToken0 = ERC20(_rewardsToken0);
         rewardsToken1 = ERC20(_rewardsToken1);
         stakingToken = ERC20(_stakingToken);
-        FRAX = FRAXStablecoin(_frax_address);
+        ARTH = ARTHStablecoin(_arth_address);
         lastUpdateTime = block.timestamp;
         timelock_address = _timelock_address;
         pool_weight0 = _pool_weight0;
@@ -232,7 +232,7 @@ contract StakingRewardsDualV2 is
     function crBoostMultiplier() public view returns (uint256) {
         uint256 multiplier =
             uint256(MULTIPLIER_BASE).add(
-                (uint256(MULTIPLIER_BASE).sub(FRAX.global_collateral_ratio()))
+                (uint256(MULTIPLIER_BASE).sub(ARTH.global_collateral_ratio()))
                     .mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE))
                     .div(MULTIPLIER_BASE)
             );
@@ -376,9 +376,9 @@ contract StakingRewardsDualV2 is
     function stakerAllowMigrator(address migrator_address) public {
         require(
             staker_allowed_migrators[msg.sender][migrator_address] == false,
-            "Address already exists"
+            'Address already exists'
         );
-        require(valid_migrators[migrator_address], "Invalid migrator address");
+        require(valid_migrators[migrator_address], 'Invalid migrator address');
         staker_allowed_migrators[msg.sender][migrator_address] = true;
     }
 
@@ -411,12 +411,12 @@ contract StakingRewardsDualV2 is
         require(
             (paused == false && migrationsOn == false) ||
                 valid_migrators[msg.sender] == true,
-            "Staking is paused, or migration is happening"
+            'Staking is paused, or migration is happening'
         );
-        require(amount > 0, "Cannot stake 0");
+        require(amount > 0, 'Cannot stake 0');
         require(
             greylist[staker_address] == false,
-            "address has been greylisted"
+            'address has been greylisted'
         );
 
         // Pull the tokens from the source_address
@@ -458,25 +458,25 @@ contract StakingRewardsDualV2 is
         require(
             (paused == false && migrationsOn == false) ||
                 valid_migrators[msg.sender] == true,
-            "Staking is paused, or migration is happening"
+            'Staking is paused, or migration is happening'
         );
-        require(amount > 0, "Cannot stake 0");
-        require(secs > 0, "Cannot wait for a negative number");
+        require(amount > 0, 'Cannot stake 0');
+        require(secs > 0, 'Cannot wait for a negative number');
         require(
             greylist[staker_address] == false,
-            "address has been greylisted"
+            'address has been greylisted'
         );
         require(
             secs >= locked_stake_min_time,
             StringHelpers.strConcat(
-                "Minimum stake time not met (",
+                'Minimum stake time not met (',
                 locked_stake_min_time_str,
-                ")"
+                ')'
             )
         );
         require(
             secs <= locked_stake_time_for_max_multiplier,
-            "You are trying to stake for too long"
+            'You are trying to stake for too long'
         );
 
         uint256 multiplier = stakingMultiplier(secs);
@@ -529,7 +529,7 @@ contract StakingRewardsDualV2 is
         address destination_address,
         uint256 amount
     ) internal nonReentrant notWithdrawalsPaused updateReward(staker_address) {
-        require(amount > 0, "Cannot withdraw 0");
+        require(amount > 0, 'Cannot withdraw 0');
 
         // Staking token balance and boosted balance
         _unlocked_balances[staker_address] = _unlocked_balances[staker_address]
@@ -570,12 +570,12 @@ contract StakingRewardsDualV2 is
                 break;
             }
         }
-        require(thisStake.kek_id == kek_id, "Stake not found");
+        require(thisStake.kek_id == kek_id, 'Stake not found');
         require(
             block.timestamp >= thisStake.ending_timestamp ||
                 stakesUnlocked == true ||
                 valid_migrators[msg.sender] == true,
-            "Stake is still locked!"
+            'Stake is still locked!'
         );
 
         uint256 theAmount = thisStake.amount;
@@ -659,7 +659,7 @@ contract StakingRewardsDualV2 is
     // If the period expired, renew it
     function retroCatchUp() internal {
         // Failsafe check
-        require(block.timestamp > periodFinish, "Period has not expired yet!");
+        require(block.timestamp > periodFinish, 'Period has not expired yet!');
 
         // Ensure the provided reward amount is not more than the balance in the contract.
         // This keeps the reward rate in the right range, preventing overflows due to
@@ -675,14 +675,14 @@ contract StakingRewardsDualV2 is
                 .mul(crBoostMultiplier())
                 .mul(num_periods_elapsed + 1)
                 .div(PRICE_PRECISION) <= balance0,
-            "Not enough FXS available for rewards!"
+            'Not enough FXS available for rewards!'
         );
 
         if (token1_rewards_on) {
             require(
                 rewardRate1.mul(rewardsDuration).mul(num_periods_elapsed + 1) <=
                     balance1,
-                "Not enough token1 available for rewards!"
+                'Not enough token1 available for rewards!'
             );
         }
 
@@ -722,7 +722,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             migratorApprovedForStaker(staker_address, msg.sender),
-            "msg.sender is either an invalid migrator or the staker has not approved them"
+            'msg.sender is either an invalid migrator or the staker has not approved them'
         );
         _stake(staker_address, msg.sender, amount);
     }
@@ -735,7 +735,7 @@ contract StakingRewardsDualV2 is
     ) external isMigrating {
         require(
             migratorApprovedForStaker(staker_address, msg.sender),
-            "msg.sender is either an invalid migrator or the staker has not approved them"
+            'msg.sender is either an invalid migrator or the staker has not approved them'
         );
         _stakeLocked(staker_address, msg.sender, amount, secs);
     }
@@ -747,7 +747,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             migratorApprovedForStaker(staker_address, msg.sender),
-            "msg.sender is either an invalid migrator or the staker has not approved them"
+            'msg.sender is either an invalid migrator or the staker has not approved them'
         );
         _withdraw(
             staker_address,
@@ -763,7 +763,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             migratorApprovedForStaker(staker_address, msg.sender),
-            "msg.sender is either an invalid migrator or the staker has not approved them"
+            'msg.sender is either an invalid migrator or the staker has not approved them'
         );
         _withdrawLocked(staker_address, msg.sender, kek_id);
     }
@@ -775,7 +775,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             valid_migrators[migrator_address] == false,
-            "address already exists"
+            'address already exists'
         );
         valid_migrators[migrator_address] = true;
         valid_migrators_array.push(migrator_address);
@@ -812,7 +812,7 @@ contract StakingRewardsDualV2 is
         if (!migrationsOn) {
             require(
                 tokenAddress != address(stakingToken),
-                "Cannot withdraw staking tokens unless migration is on"
+                'Cannot withdraw staking tokens unless migration is on'
             ); // Only Governance / Timelock can trigger a migration
         }
         // Only the owner address can ever receive the recovery withdrawal
@@ -826,7 +826,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
-            "Previous rewards period must be complete before changing the duration for the new period"
+            'Previous rewards period must be complete before changing the duration for the new period'
         );
         rewardsDuration = _rewardsDuration;
         emit RewardsDurationUpdated(rewardsDuration);
@@ -838,11 +838,11 @@ contract StakingRewardsDualV2 is
     ) external onlyByOwnerOrGovernance {
         require(
             _locked_stake_max_multiplier >= 1,
-            "Multiplier must be greater than or equal to 1"
+            'Multiplier must be greater than or equal to 1'
         );
         require(
             _cr_boost_max_multiplier >= 1,
-            "Max CR Boost must be greater than or equal to 1"
+            'Max CR Boost must be greater than or equal to 1'
         );
 
         locked_stake_max_multiplier = _locked_stake_max_multiplier;
@@ -858,11 +858,11 @@ contract StakingRewardsDualV2 is
     ) external onlyByOwnerOrGovernance {
         require(
             _locked_stake_time_for_max_multiplier >= 1,
-            "Multiplier Max Time must be greater than or equal to 1"
+            'Multiplier Max Time must be greater than or equal to 1'
         );
         require(
             _locked_stake_min_time >= 1,
-            "Multiplier Min Time must be greater than or equal to 1"
+            'Multiplier Min Time must be greater than or equal to 1'
         );
 
         locked_stake_time_for_max_multiplier = _locked_stake_time_for_max_multiplier;

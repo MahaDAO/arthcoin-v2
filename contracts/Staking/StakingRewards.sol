@@ -6,19 +6,19 @@ pragma experimental ABIEncoderV2;
 // Modified from Synthetixio
 // https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
 
-import "../Math/Math.sol";
-import "../Math/SafeMath.sol";
-import "../ERC20/ERC20.sol";
-import "../Uniswap/TransferHelper.sol";
-import "../ERC20/SafeERC20.sol";
-import "../Frax/Frax.sol";
-import "../Utils/ReentrancyGuard.sol";
-import "../Utils/StringHelpers.sol";
+import '../Math/Math.sol';
+import '../Math/SafeMath.sol';
+import '../ERC20/ERC20.sol';
+import '../Uniswap/TransferHelper.sol';
+import '../ERC20/SafeERC20.sol';
+import '../Arth/Arth.sol';
+import '../Utils/ReentrancyGuard.sol';
+import '../Utils/StringHelpers.sol';
 
 // Inheritance
-import "./IStakingRewards.sol";
-import "./RewardsDistributionRecipient.sol";
-import "./Pausable.sol";
+import './IStakingRewards.sol';
+import './RewardsDistributionRecipient.sol';
+import './Pausable.sol';
 
 contract StakingRewards is
     IStakingRewards,
@@ -31,7 +31,7 @@ contract StakingRewards is
 
     /* ========== STATE VARIABLES ========== */
 
-    FRAXStablecoin private FRAX;
+    ARTHStablecoin private ARTH;
     ERC20 public rewardsToken;
     ERC20 public stakingToken;
     uint256 public periodFinish;
@@ -56,7 +56,7 @@ contract StakingRewards is
     uint256 public locked_stake_max_multiplier = 3000000; // 6 decimals of precision. 1x = 1000000
     uint256 public locked_stake_time_for_max_multiplier = 3 * 365 * 86400; // 3 years
     uint256 public locked_stake_min_time = 604800; // 7 * 86400  (7 days)
-    string private locked_stake_min_time_str = "604800"; // 7 days on genesis
+    string private locked_stake_min_time_str = '604800'; // 7 days on genesis
 
     uint256 public cr_boost_max_multiplier = 3000000; // 6 decimals of precision. 1x = 1000000
 
@@ -90,14 +90,14 @@ contract StakingRewards is
         address _rewardsDistribution,
         address _rewardsToken,
         address _stakingToken,
-        address _frax_address,
+        address _arth_address,
         address _timelock_address,
         uint256 _pool_weight
     ) Owned(_owner) {
         owner_address = _owner;
         rewardsToken = ERC20(_rewardsToken);
         stakingToken = ERC20(_stakingToken);
-        FRAX = FRAXStablecoin(_frax_address);
+        ARTH = ARTHStablecoin(_arth_address);
         rewardsDistribution = _rewardsDistribution;
         lastUpdateTime = block.timestamp;
         timelock_address = _timelock_address;
@@ -132,7 +132,7 @@ contract StakingRewards is
     function crBoostMultiplier() public view returns (uint256) {
         uint256 multiplier =
             uint256(MULTIPLIER_BASE).add(
-                (uint256(MULTIPLIER_BASE).sub(FRAX.global_collateral_ratio()))
+                (uint256(MULTIPLIER_BASE).sub(ARTH.global_collateral_ratio()))
                     .mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE))
                     .div(MULTIPLIER_BASE)
             );
@@ -235,8 +235,8 @@ contract StakingRewards is
         notPaused
         updateReward(msg.sender)
     {
-        require(amount > 0, "Cannot stake 0");
-        require(greylist[msg.sender] == false, "address has been greylisted");
+        require(amount > 0, 'Cannot stake 0');
+        require(greylist[msg.sender] == false, 'address has been greylisted');
 
         // Pull the tokens from the staker
         TransferHelper.safeTransferFrom(
@@ -269,20 +269,20 @@ contract StakingRewards is
         notPaused
         updateReward(msg.sender)
     {
-        require(amount > 0, "Cannot stake 0");
-        require(secs > 0, "Cannot wait for a negative number");
-        require(greylist[msg.sender] == false, "address has been greylisted");
+        require(amount > 0, 'Cannot stake 0');
+        require(secs > 0, 'Cannot wait for a negative number');
+        require(greylist[msg.sender] == false, 'address has been greylisted');
         require(
             secs >= locked_stake_min_time,
             StringHelpers.strConcat(
-                "Minimum stake time not met (",
+                'Minimum stake time not met (',
                 locked_stake_min_time_str,
-                ")"
+                ')'
             )
         );
         require(
             secs <= locked_stake_time_for_max_multiplier,
-            "You are trying to stake for too long"
+            'You are trying to stake for too long'
         );
 
         uint256 multiplier = stakingMultiplier(secs);
@@ -328,7 +328,7 @@ contract StakingRewards is
         nonReentrant
         updateReward(msg.sender)
     {
-        require(amount > 0, "Cannot withdraw 0");
+        require(amount > 0, 'Cannot withdraw 0');
 
         // Staking token balance and boosted balance
         _unlocked_balances[msg.sender] = _unlocked_balances[msg.sender].sub(
@@ -364,11 +364,11 @@ contract StakingRewards is
                 break;
             }
         }
-        require(thisStake.kek_id == kek_id, "Stake not found");
+        require(thisStake.kek_id == kek_id, 'Stake not found');
         require(
             block.timestamp >= thisStake.ending_timestamp ||
                 unlockedStakes == true,
-            "Stake is still locked!"
+            'Stake is still locked!'
         );
 
         uint256 theAmount = thisStake.amount;
@@ -426,7 +426,7 @@ contract StakingRewards is
     // If the period expired, renew it
     function retroCatchUp() internal {
         // Failsafe check
-        require(block.timestamp > periodFinish, "Period has not expired yet!");
+        require(block.timestamp > periodFinish, 'Period has not expired yet!');
 
         // Ensure the provided reward amount is not more than the balance in the contract.
         // This keeps the reward rate in the right range, preventing overflows due to
@@ -441,7 +441,7 @@ contract StakingRewards is
                 .mul(crBoostMultiplier())
                 .mul(num_periods_elapsed + 1)
                 .div(PRICE_PRECISION) <= balance,
-            "Not enough FXS available for rewards!"
+            'Not enough FXS available for rewards!'
         );
 
         // uint256 old_lastUpdateTime = lastUpdateTime;
@@ -502,7 +502,7 @@ contract StakingRewards is
     {
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
-            "Previous rewards period must be complete before changing the duration for the new period"
+            'Previous rewards period must be complete before changing the duration for the new period'
         );
         rewardsDuration = _rewardsDuration;
         emit RewardsDurationUpdated(rewardsDuration);
@@ -514,11 +514,11 @@ contract StakingRewards is
     ) external onlyByOwnerOrGovernance {
         require(
             _locked_stake_max_multiplier >= 1,
-            "Multiplier must be greater than or equal to 1"
+            'Multiplier must be greater than or equal to 1'
         );
         require(
             _cr_boost_max_multiplier >= 1,
-            "Max CR Boost must be greater than or equal to 1"
+            'Max CR Boost must be greater than or equal to 1'
         );
 
         locked_stake_max_multiplier = _locked_stake_max_multiplier;
@@ -534,11 +534,11 @@ contract StakingRewards is
     ) external onlyByOwnerOrGovernance {
         require(
             _locked_stake_time_for_max_multiplier >= 1,
-            "Multiplier Max Time must be greater than or equal to 1"
+            'Multiplier Max Time must be greater than or equal to 1'
         );
         require(
             _locked_stake_min_time >= 1,
-            "Multiplier Min Time must be greater than or equal to 1"
+            'Multiplier Min Time must be greater than or equal to 1'
         );
 
         locked_stake_time_for_max_multiplier = _locked_stake_time_for_max_multiplier;
@@ -603,7 +603,7 @@ contract StakingRewards is
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner_address || msg.sender == timelock_address,
-            "You are not the owner or the governance timelock"
+            'You are not the owner or the governance timelock'
         );
         _;
     }

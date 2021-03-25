@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "../ERC20/ERC20Custom.sol";
-import "../ERC20/ERC20.sol";
-import "../Math/SafeMath.sol";
+import '../ERC20/ERC20Custom.sol';
+import '../ERC20/ERC20.sol';
+import '../Math/SafeMath.sol';
 
 /**
  * @title TokenVesting
@@ -65,18 +65,18 @@ contract TokenVesting {
     ) {
         require(
             beneficiary != address(0),
-            "TokenVesting: beneficiary is the zero address"
+            'TokenVesting: beneficiary is the zero address'
         );
         // solhint-disable-next-line max-line-length
         require(
             cliffDuration <= duration,
-            "TokenVesting: cliff is longer than duration"
+            'TokenVesting: cliff is longer than duration'
         );
-        require(duration > 0, "TokenVesting: duration is 0");
+        require(duration > 0, 'TokenVesting: duration is 0');
         // solhint-disable-next-line max-line-length
         require(
             start.add(duration) > block.timestamp,
-            "TokenVesting: final time is before current time"
+            'TokenVesting: final time is before current time'
         );
 
         _beneficiary = beneficiary;
@@ -88,13 +88,13 @@ contract TokenVesting {
     }
 
     function setFXSAddress(address FXS_address) public {
-        require(msg.sender == _owner, "must be set by the owner");
+        require(msg.sender == _owner, 'must be set by the owner');
         _FXS_contract_address = FXS_address;
         FXS = ERC20(FXS_address);
     }
 
     function setTimelockAddress(address timelock_address) public {
-        require(msg.sender == _owner, "must be set by the owner");
+        require(msg.sender == _owner, 'must be set by the owner');
         _timelock_address = timelock_address;
     }
 
@@ -153,11 +153,11 @@ contract TokenVesting {
     function release() public {
         require(
             msg.sender == _beneficiary,
-            "must be the beneficiary to release tokens"
+            'must be the beneficiary to release tokens'
         );
         uint256 unreleased = _releasableAmount();
 
-        require(unreleased > 0, "TokenVesting: no tokens are due");
+        require(unreleased > 0, 'TokenVesting: no tokens are due');
 
         _released = _released.add(unreleased);
 
@@ -173,10 +173,10 @@ contract TokenVesting {
     function revoke() public {
         require(
             msg.sender == _timelock_address,
-            "Must be called by the timelock contract"
+            'Must be called by the timelock contract'
         );
-        require(_revocable, "TokenVesting: cannot revoke");
-        require(!_revoked, "TokenVesting: token already revoked");
+        require(_revocable, 'TokenVesting: cannot revoke');
+        require(!_revoked, 'TokenVesting: token already revoked');
 
         uint256 balance = FXS.balanceOf(address(this));
 
@@ -194,13 +194,13 @@ contract TokenVesting {
     function recoverERC20(address tokenAddress, uint256 tokenAmount) external {
         require(
             msg.sender == _beneficiary,
-            "Must be called by the beneficiary"
+            'Must be called by the beneficiary'
         );
 
         // Cannot recover the staking token or the rewards token
         require(
             tokenAddress != _FXS_contract_address,
-            "Cannot withdraw the FXS through this function"
+            'Cannot withdraw the FXS through this function'
         );
         ERC20(tokenAddress).transfer(_beneficiary, tokenAmount);
     }

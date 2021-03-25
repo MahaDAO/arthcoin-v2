@@ -3,7 +3,7 @@
 
     // Address for the pre-calculated release curve points
     address public release_curve_contract_address;
-    IFraxBond_Curve private RELEASE_CURVE;
+    IArthBond_Curve private RELEASE_CURVE;
     uint8 release_curve_choice;
 
 
@@ -44,7 +44,7 @@
     function setReleaseCurveContractAndChoice(address _release_curve_contract_address, uint8 _release_curve_choice) external onlyByOwnerOrGovernance {
         release_curve_contract_address = _release_curve_contract_address;
         release_curve_choice = _release_curve_choice;
-        RELEASE_CURVE = IFraxBond_Curve(_release_curve_contract_address);
+        RELEASE_CURVE = IArthBond_Curve(_release_curve_contract_address);
         require(RELEASE_CURVE.get_total_points(release_curve_choice) != 0, "Invalid curve address or choice");
         require(RELEASE_CURVE.get_curve_point(release_curve_choice, 1) != 0, "Invalid curve point");
     }
@@ -63,7 +63,7 @@
     // ========================================================================================
 
 
-    function sellFXBintoAMM(uint256 fxb_amount, uint256 frax_out_min) external notSellingPaused returns (uint256 fxb_sold_under_floor, uint256 frax_out, uint256 frax_fee_amt) {
+    function sellFXBintoAMM(uint256 fxb_amount, uint256 arth_out_min) external notSellingPaused returns (uint256 fxb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
         require(isInEpoch(), 'Not in an epoch');
 
         uint256 the_floor_price = floor_price();
@@ -81,19 +81,19 @@
             fxb_sold_under_floor = 0;
         }
 
-        // Get the expected amount of FRAX via the AMM from the market-priced portion
-        frax_out = getAmountOutNoFee(fxb_amount, FXB.balanceOf(address(this)), FRAX.balanceOf(address(this)));
+        // Get the expected amount of ARTH via the AMM from the market-priced portion
+        arth_out = getAmountOutNoFee(fxb_amount, FXB.balanceOf(address(this)), ARTH.balanceOf(address(this)));
 
         // Apply the normal selling fee
-        frax_fee_amt = frax_out.mul(selling_fee).div(PRICE_PRECISION);
-        frax_out = frax_out.sub(frax_fee_amt);
+        arth_fee_amt = arth_out.mul(selling_fee).div(PRICE_PRECISION);
+        arth_out = arth_out.sub(arth_fee_amt);
 
-        // Check frax_out_min
-        require(frax_out >= frax_out_min, "[sellFXBintoAMM frax_out_min]: Slippage limit reached");
+        // Check arth_out_min
+        require(arth_out >= arth_out_min, "[sellFXBintoAMM arth_out_min]: Slippage limit reached");
 
         // AMM will never allow an effective sale price above 1
         {
-            uint256 effective_sale_price = frax_out.mul(PRICE_PRECISION).div(fxb_amount);
+            uint256 effective_sale_price = arth_out.mul(PRICE_PRECISION).div(fxb_amount);
             require(effective_sale_price <= PRICE_PRECISION, "[sellFXBintoAMM]: Effective sale price is above 1");
         }
 
@@ -106,8 +106,8 @@
             FXB.burn(fxb_sold_under_floor);
         }
 
-        // Give FRAX to sender
-        FRAX.transfer(msg.sender, frax_out);
+        // Give ARTH to sender
+        ARTH.transfer(msg.sender, arth_out);
 
         // Safety checks (must be done after the transfers in this case)
         // Tx will still revert if not true

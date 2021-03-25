@@ -13,7 +13,7 @@ pragma experimental ABIEncoderV2;
 // ====================================================================
 // ====================== UniLPToSushiLPMigrator ======================
 // ====================================================================
-// Frax Finance: https://github.com/FraxFinance
+// Arth Finance: https://github.com/ArthFinance
 
 // Primary Author(s)
 // Travis Moore: https://github.com/FortisFortuna
@@ -22,23 +22,23 @@ pragma experimental ABIEncoderV2;
 // Jason Huan: https://github.com/jasonhuan
 // Sam Kazemian: https://github.com/samkazemian
 
-import "../Math/Math.sol";
-import "../Math/SafeMath.sol";
-import "../ERC20/ERC20.sol";
-import "../Uniswap/TransferHelper.sol";
-import "../ERC20/SafeERC20.sol";
-import "../Frax/Frax.sol";
-import "../Utils/ReentrancyGuard.sol";
-import "../Utils/StringHelpers.sol";
-import "../Uniswap/UniswapV2Pair.sol";
-import "../Uniswap/Interfaces/IUniswapV2Router02.sol";
+import '../Math/Math.sol';
+import '../Math/SafeMath.sol';
+import '../ERC20/ERC20.sol';
+import '../Uniswap/TransferHelper.sol';
+import '../ERC20/SafeERC20.sol';
+import '../Arth/Arth.sol';
+import '../Utils/ReentrancyGuard.sol';
+import '../Utils/StringHelpers.sol';
+import '../Uniswap/UniswapV2Pair.sol';
+import '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
 // Inheritance
-import "./IStakingRewards.sol";
-import "./IStakingRewardsDualForMigrator.sol";
-import "./RewardsDistributionRecipient.sol";
-import "./Owned.sol";
-import "./Pausable.sol";
+import './IStakingRewards.sol';
+import './IStakingRewardsDualForMigrator.sol';
+import './RewardsDistributionRecipient.sol';
+import './Owned.sol';
+import './Pausable.sol';
 
 contract UniLPToSushiLPMigrator is
     IStakingRewards,
@@ -51,7 +51,7 @@ contract UniLPToSushiLPMigrator is
 
     /* ========== DUPLICATE VARIABLES (NEEDED FOR DELEGATECALL) ========== */
 
-    FRAXStablecoin private FRAX;
+    ARTHStablecoin private ARTH;
     ERC20 public rewardsToken;
     ERC20 public stakingToken;
     uint256 public periodFinish;
@@ -76,7 +76,7 @@ contract UniLPToSushiLPMigrator is
     uint256 public locked_stake_max_multiplier = 3000000; // 6 decimals of precision. 1x = 1000000
     uint256 public locked_stake_time_for_max_multiplier = 3 * 365 * 86400; // 3 years
     uint256 public locked_stake_min_time = 604800; // 7 * 86400  (7 days)
-    string private locked_stake_min_time_str = "604800"; // 7 days on genesis
+    string private locked_stake_min_time_str = '604800'; // 7 days on genesis
 
     uint256 public cr_boost_max_multiplier = 3000000; // 6 decimals of precision. 1x = 1000000
 
@@ -98,7 +98,7 @@ contract UniLPToSushiLPMigrator is
 
     /* ========== STATE VARIABLES ========== */
 
-    // FRAXStablecoin private FRAX;
+    // ARTHStablecoin private ARTH;
     IStakingRewardsDualForMigrator public SourceStakingContract;
     IStakingRewardsDualForMigrator public DestStakingContract;
     UniswapV2Pair public SourceLPPair;
@@ -158,7 +158,7 @@ contract UniLPToSushiLPMigrator is
         (bool success, bytes memory result) =
             address(SourceStakingContract).delegatecall(
                 abi.encode(
-                    bytes4(keccak256("stake(uint256)")),
+                    bytes4(keccak256('stake(uint256)')),
                     1000000000000000000
                 )
             );
@@ -170,13 +170,13 @@ contract UniLPToSushiLPMigrator is
                 revert();
             }
         }
-        require(success, "delegatecall_stake failed");
+        require(success, 'delegatecall_stake failed');
     }
 
     function delegatecall_getReward() external {
         (bool success, bytes memory result) =
             address(SourceStakingContract).delegatecall(
-                abi.encodeWithSignature("getReward()")
+                abi.encodeWithSignature('getReward()')
             );
         if (!success) {
             if (result.length > 0) {
@@ -185,7 +185,7 @@ contract UniLPToSushiLPMigrator is
                 revert();
             }
         }
-        require(success, "delegatecall_getReward failed");
+        require(success, 'delegatecall_getReward failed');
     }
 
     function normal_getReward() external {
@@ -210,7 +210,7 @@ contract UniLPToSushiLPMigrator is
                 (bool success, bytes memory result) =
                     address(SourceStakingContract).delegatecall(
                         abi.encodeWithSignature(
-                            "withdrawLocked(bytes32)",
+                            'withdrawLocked(bytes32)',
                             locked_stakes[i].kek_id
                         )
                     );
@@ -221,7 +221,7 @@ contract UniLPToSushiLPMigrator is
                         revert();
                     }
                 }
-                require(success, "Uni withdrawLocked failed");
+                require(success, 'Uni withdrawLocked failed');
             }
 
             // Approve Uni LP for Uniswap removeLiquidity [delegatecall]
@@ -230,12 +230,12 @@ contract UniLPToSushiLPMigrator is
                 (bool success, ) =
                     address(SourceLPPair).delegatecall(
                         abi.encodeWithSignature(
-                            "approve(address,uint256)",
+                            'approve(address,uint256)',
                             UNISWAP_ROUTER_ADDRESS,
                             locked_stakes[i].amount
                         )
                     );
-                require(success, "Approve Uni LP for Uniswap failed");
+                require(success, 'Approve Uni LP for Uniswap failed');
             }
 
             // Remove the liquidity from Uni [delegatecall]
@@ -246,7 +246,7 @@ contract UniLPToSushiLPMigrator is
                 (bool success, bytes memory data) =
                     address(UniswapRouter).delegatecall(
                         abi.encodeWithSignature(
-                            "removeLiquidity(address,address,uint,uint,uint,address,uint)",
+                            'removeLiquidity(address,address,uint,uint,uint,address,uint)',
                             SourceLPPair.token0(),
                             SourceLPPair.token1(),
                             locked_stakes[i].amount,
@@ -256,7 +256,7 @@ contract UniLPToSushiLPMigrator is
                             2105300114
                         )
                     );
-                require(success, "UniswapRouter removeLiquidity failed");
+                require(success, 'UniswapRouter removeLiquidity failed');
                 (token0_returned, token1_returned) = abi.decode(
                     data,
                     (uint256, uint256)
@@ -269,14 +269,14 @@ contract UniLPToSushiLPMigrator is
                 (bool success, ) =
                     address(SourceLPPair.token0()).delegatecall(
                         abi.encodeWithSignature(
-                            "approve(address,uint256)",
+                            'approve(address,uint256)',
                             SUSHISWAP_ROUTER_ADDRESS,
                             token0_returned
                         )
                     );
                 require(
                     success,
-                    "Approve token0 for Sushi addLiquidity failed"
+                    'Approve token0 for Sushi addLiquidity failed'
                 );
             }
 
@@ -286,14 +286,14 @@ contract UniLPToSushiLPMigrator is
                 (bool success, ) =
                     address(SourceLPPair.token1()).delegatecall(
                         abi.encodeWithSignature(
-                            "approve(address,uint256)",
+                            'approve(address,uint256)',
                             SUSHISWAP_ROUTER_ADDRESS,
                             token1_returned
                         )
                     );
                 require(
                     success,
-                    "Approve token1 for Sushi addLiquidity failed"
+                    'Approve token1 for Sushi addLiquidity failed'
                 );
             }
 
@@ -304,7 +304,7 @@ contract UniLPToSushiLPMigrator is
                 (bool success, bytes memory data) =
                     address(SushiSwapRouter).delegatecall(
                         abi.encodeWithSignature(
-                            "addLiquidity(address,address,uint,uint,uint,uint,address,uint)",
+                            'addLiquidity(address,address,uint,uint,uint,uint,address,uint)',
                             SourceLPPair.token0(),
                             SourceLPPair.token1(),
                             token0_returned,
@@ -319,7 +319,7 @@ contract UniLPToSushiLPMigrator is
                             2105300114 // A long time from now
                         )
                     );
-                require(success, "SushiSwapRouter addLiquidity failed");
+                require(success, 'SushiSwapRouter addLiquidity failed');
                 (, , slp_returned) = abi.decode(
                     data,
                     (uint256, uint256, uint256)
@@ -332,14 +332,14 @@ contract UniLPToSushiLPMigrator is
                 (bool success, bytes memory data) =
                     address(DestStakingContract).delegatecall(
                         abi.encodeWithSignature(
-                            "stakeLocked(uint,uint)",
+                            'stakeLocked(uint,uint)',
                             slp_returned,
                             (locked_stakes[i].ending_timestamp).sub(
                                 block.timestamp
                             )
                         )
                     );
-                require(success, "Sushi stakeLocked failed");
+                require(success, 'Sushi stakeLocked failed');
             }
         }
 
@@ -422,7 +422,7 @@ contract UniLPToSushiLPMigrator is
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner_address || msg.sender == timelock_address,
-            "You are not the owner or the governance timelock"
+            'You are not the owner or the governance timelock'
         );
         _;
     }

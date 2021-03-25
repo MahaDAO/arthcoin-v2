@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "../StakingRewardsDual.sol";
+import '../StakingRewardsDual.sol';
 
 contract StakingRewardsDual_FXS_WETH_Sushi is StakingRewardsDual {
     constructor(
@@ -11,7 +11,7 @@ contract StakingRewardsDual_FXS_WETH_Sushi is StakingRewardsDual {
         address _rewardsToken0,
         address _rewardsToken1,
         address _stakingToken,
-        address _frax_address,
+        address _arth_address,
         address _timelock_address,
         uint256 _pool_weight0,
         uint256 _pool_weight1
@@ -21,7 +21,7 @@ contract StakingRewardsDual_FXS_WETH_Sushi is StakingRewardsDual {
             _rewardsToken0,
             _rewardsToken1,
             _stakingToken,
-            _frax_address,
+            _arth_address,
             _timelock_address,
             _pool_weight0,
             _pool_weight1

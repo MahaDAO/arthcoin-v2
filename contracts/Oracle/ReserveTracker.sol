@@ -12,7 +12,7 @@ pragma solidity ^0.8.0;
 // ====================================================================
 // =========================== ReserveTracker =========================
 // ====================================================================
-// Frax Finance: https://github.com/FraxFinance
+// Arth Finance: https://github.com/ArthFinance
 
 // Primary Author(s)
 // Jason Huan: https://github.com/jasonhuan
@@ -21,21 +21,21 @@ pragma solidity ^0.8.0;
 // Reviewer(s) / Contributor(s)
 // Travis Moore: https://github.com/FortisFortuna
 
-import "../Math/SafeMath.sol";
-import "../Math/Math.sol";
-import "../Uniswap/Interfaces/IUniswapV2Pair.sol";
-import "./UniswapPairOracle.sol";
-import "./ChainlinkETHUSDPriceConsumer.sol";
+import '../Math/SafeMath.sol';
+import '../Math/Math.sol';
+import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import './UniswapPairOracle.sol';
+import './ChainlinkETHUSDPriceConsumer.sol';
 //import "../Curve/MetaImplementationUSD.vy";
-import "../Curve/IMetaImplementationUSD.sol";
+import '../Curve/IMetaImplementationUSD.sol';
 
 contract ReserveTracker {
     using SafeMath for uint256;
 
     uint256 public CONSULT_FXS_DEC;
-    uint256 public CONSULT_FRAX_DEC;
+    uint256 public CONSULT_ARTH_DEC;
 
-    address public frax_contract_address;
+    address public arth_contract_address;
     address public fxs_contract_address;
     address public owner_address;
     address public timelock_address;
@@ -56,20 +56,20 @@ contract ReserveTracker {
 
     uint256 public fxs_reserves;
 
-    // The pair of which to get FRAX price from
-    address public frax_price_oracle_address;
-    address public frax_pair_collateral_address;
-    uint256 public frax_pair_collateral_decimals;
-    UniswapPairOracle public frax_price_oracle;
-    address public frax_metapool_address;
-    IMetaImplementationUSD public frax_metapool;
+    // The pair of which to get ARTH price from
+    address public arth_price_oracle_address;
+    address public arth_pair_collateral_address;
+    uint256 public arth_pair_collateral_decimals;
+    UniswapPairOracle public arth_price_oracle;
+    address public arth_metapool_address;
+    IMetaImplementationUSD public arth_metapool;
 
     /* ========== MODIFIERS ========== */
 
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner_address || msg.sender == timelock_address,
-            "You are not the owner or the governance timelock"
+            'You are not the owner or the governance timelock'
         );
         _;
     }
@@ -77,12 +77,12 @@ contract ReserveTracker {
     /* ========== CONSTRUCTOR ========== */
 
     constructor(
-        address _frax_contract_address,
+        address _arth_contract_address,
         address _fxs_contract_address,
         address _creator_address,
         address _timelock_address
     ) {
-        frax_contract_address = _frax_contract_address;
+        arth_contract_address = _arth_contract_address;
         fxs_contract_address = _fxs_contract_address;
         owner_address = _creator_address;
         timelock_address = _timelock_address;
@@ -90,19 +90,19 @@ contract ReserveTracker {
 
     /* ========== VIEWS ========== */
 
-    // Returns FRAX price with 6 decimals of precision
-    function getFRAXPrice() public view returns (uint256) {
+    // Returns ARTH price with 6 decimals of precision
+    function getARTHPrice() public view returns (uint256) {
         return
-            frax_price_oracle.consult(frax_contract_address, CONSULT_FRAX_DEC);
+            arth_price_oracle.consult(arth_contract_address, CONSULT_ARTH_DEC);
     }
 
     uint256 public last_timestamp;
     uint256[2] public old_twap;
 
-    function getFRAXCurvePrice() public returns (uint256) {
-        uint256[2] memory new_twap = frax_metapool.get_price_cumulative_last();
+    function getARTHCurvePrice() public returns (uint256) {
+        uint256[2] memory new_twap = arth_metapool.get_price_cumulative_last();
         uint256[2] memory balances =
-            frax_metapool.get_twap_balances(
+            arth_metapool.get_twap_balances(
                 old_twap,
                 new_twap,
                 block.timestamp - last_timestamp
@@ -110,8 +110,8 @@ contract ReserveTracker {
         last_timestamp = block.timestamp;
         old_twap = new_twap;
         uint256 twap_price =
-            frax_metapool.get_dy(1, 0, 1e18, balances).mul(1e6).div(
-                frax_metapool.get_virtual_price()
+            arth_metapool.get_dy(1, 0, 1e18, balances).mul(1e6).div(
+                arth_metapool.get_virtual_price()
             );
         return twap_price;
     }
@@ -156,27 +156,27 @@ contract ReserveTracker {
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    // Get the pair of which to price FRAX from
-    function setFRAXPriceOracle(
-        address _frax_price_oracle_address,
-        address _frax_pair_collateral_address,
-        uint256 _frax_pair_collateral_decimals
+    // Get the pair of which to price ARTH from
+    function setARTHPriceOracle(
+        address _arth_price_oracle_address,
+        address _arth_pair_collateral_address,
+        uint256 _arth_pair_collateral_decimals
     ) public onlyByOwnerOrGovernance {
-        frax_price_oracle_address = _frax_price_oracle_address;
-        frax_pair_collateral_address = _frax_pair_collateral_address;
-        frax_pair_collateral_decimals = _frax_pair_collateral_decimals;
-        frax_price_oracle = UniswapPairOracle(frax_price_oracle_address);
-        CONSULT_FRAX_DEC =
+        arth_price_oracle_address = _arth_price_oracle_address;
+        arth_pair_collateral_address = _arth_pair_collateral_address;
+        arth_pair_collateral_decimals = _arth_pair_collateral_decimals;
+        arth_price_oracle = UniswapPairOracle(arth_price_oracle_address);
+        CONSULT_ARTH_DEC =
             1e6 *
-            (10**(uint256(18).sub(frax_pair_collateral_decimals)));
+            (10**(uint256(18).sub(arth_pair_collateral_decimals)));
     }
 
-    function setMetapool(address _frax_metapool_address)
+    function setMetapool(address _arth_metapool_address)
         public
         onlyByOwnerOrGovernance
     {
-        frax_metapool_address = _frax_metapool_address;
-        frax_metapool = IMetaImplementationUSD(_frax_metapool_address);
+        arth_metapool_address = _arth_metapool_address;
+        arth_metapool = IMetaImplementationUSD(_arth_metapool_address);
     }
 
     // Get the pair of which to price FXS from (using FXS-WETH)
@@ -201,7 +201,7 @@ contract ReserveTracker {
 
     // Adds collateral addresses supported, such as tether and busd, must be ERC20
     function addFXSPair(address pair_address) public onlyByOwnerOrGovernance {
-        require(fxs_pairs[pair_address] == false, "address already exists");
+        require(fxs_pairs[pair_address] == false, 'address already exists');
         fxs_pairs[pair_address] = true;
         fxs_pairs_array.push(pair_address);
     }

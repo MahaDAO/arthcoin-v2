@@ -11,12 +11,12 @@ pragma experimental ABIEncoderV2;
 // | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
 // |                                                                  |
 // ====================================================================
-// ================= Frax Bond Series A ¤10000 3 Month ================
+// ================= Arth Bond Series A ¤10000 3 Month ================
 // ====================================================================
 
-import "../FraxBond_NFT.sol";
+import '../ArthBond_NFT.sol';
 
-contract FXBA10000M3 is FraxBond_NFT {
+contract FXBA10000M3 is ArthBond_NFT {
     constructor(
         address _controller_address,
         address _timelock_address,
@@ -27,7 +27,7 @@ contract FXBA10000M3 is FraxBond_NFT {
         uint256 _min_early_redeem_secs,
         uint256 _max_early_redemption_penalty_pct
     )
-        FraxBond_NFT(
+        ArthBond_NFT(
             _controller_address,
             _timelock_address,
             _series,

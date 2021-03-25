@@ -11,9 +11,9 @@ pragma experimental ABIEncoderV2;
 // | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
 // |                                                                  |
 // ====================================================================
-// ========================== FRAXBond (FXB) ==========================
+// ========================== ARTHBond (FXB) ==========================
 // ====================================================================
-// Frax Finance: https://github.com/FraxFinance
+// Arth Finance: https://github.com/ArthFinance
 
 // Primary Author(s)
 // Travis Moore: https://github.com/FortisFortuna
@@ -22,15 +22,15 @@ pragma experimental ABIEncoderV2;
 // Jason Huan: https://github.com/jasonhuan
 // Sam Kazemian: https://github.com/samkazemian
 
-import "../Common/Context.sol";
-import "../ERC20/IERC20.sol";
-import "../ERC20/ERC20Custom.sol";
-import "../ERC20/ERC20.sol";
-import "../Math/SafeMath.sol";
-import "./FraxBondIssuer.sol";
-import "../Governance/AccessControl.sol";
+import '../Common/Context.sol';
+import '../ERC20/IERC20.sol';
+import '../ERC20/ERC20Custom.sol';
+import '../ERC20/ERC20.sol';
+import '../Math/SafeMath.sol';
+import './ArthBondIssuer.sol';
+import '../Governance/AccessControl.sol';
 
-contract FraxBond is ERC20Custom, AccessControl {
+contract ArthBond is ERC20Custom, AccessControl {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
@@ -42,9 +42,9 @@ contract FraxBond is ERC20Custom, AccessControl {
     address public timelock_address; // Governance timelock address
     address public controller_address; // Controller contract to dynamically adjust system parameters automatically
 
-    uint256 public constant genesis_supply = 100e18; // 2M FRAX (only for testing, genesis supply will be 5k on Mainnet). This is to help with establishing the Uniswap pools, as they need liquidity
+    uint256 public constant genesis_supply = 100e18; // 2M ARTH (only for testing, genesis supply will be 5k on Mainnet). This is to help with establishing the Uniswap pools, as they need liquidity
 
-    // The addresses in this array are added by the oracle and these contracts are able to mint frax
+    // The addresses in this array are added by the oracle and these contracts are able to mint arth
     address[] public bond_issuers_array;
 
     // Mapping is also used for faster verification
@@ -61,7 +61,7 @@ contract FraxBond is ERC20Custom, AccessControl {
     modifier onlyIssuers() {
         require(
             bond_issuers[msg.sender] == true,
-            "Only bond issuers can call this function"
+            'Only bond issuers can call this function'
         );
         _;
     }
@@ -71,7 +71,7 @@ contract FraxBond is ERC20Custom, AccessControl {
             msg.sender == owner_address ||
                 msg.sender == timelock_address ||
                 msg.sender == controller_address,
-            "You are not the owner, controller, or the governance timelock"
+            'You are not the owner, controller, or the governance timelock'
         );
         _;
     }
@@ -79,7 +79,7 @@ contract FraxBond is ERC20Custom, AccessControl {
     modifier onlyByOwnerOrTimelock() {
         require(
             msg.sender == owner_address || msg.sender == timelock_address,
-            "You are not the owner or the governance timelock"
+            'You are not the owner or the governance timelock'
         );
         _;
     }
@@ -134,7 +134,7 @@ contract FraxBond is ERC20Custom, AccessControl {
     {
         require(
             bond_issuers[issuer_address] == false,
-            "address already exists"
+            'address already exists'
         );
         bond_issuers[issuer_address] = true;
         bond_issuers_array.push(issuer_address);

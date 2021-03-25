@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "../StakingRewards.sol";
+import '../StakingRewards.sol';
 
 contract Stake_FXS_WETH is StakingRewards {
     constructor(
@@ -11,7 +11,7 @@ contract Stake_FXS_WETH is StakingRewards {
         address _rewardsDistribution,
         address _rewardsToken,
         address _stakingToken,
-        address _frax_address,
+        address _arth_address,
         address _timelock_address,
         uint256 _pool_weight
     )
@@ -20,7 +20,7 @@ contract Stake_FXS_WETH is StakingRewards {
             _rewardsDistribution,
             _rewardsToken,
             _stakingToken,
-            _frax_address,
+            _arth_address,
             _timelock_address,
             _pool_weight
         )

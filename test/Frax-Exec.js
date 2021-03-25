@@ -1,7 +1,7 @@
 const BigNumber = require('bignumber.js');
 require('@openzeppelin/test-helpers/configure')({
-	provider: 'http://127.0.0.1:7545',
-  });
+  provider: 'http://127.0.0.1:7545',
+});
 const { expectEvent, send, shouldFail, time } = require('@openzeppelin/test-helpers');
 global.artifacts = artifacts;
 global.web3 = web3;
@@ -35,15 +35,15 @@ const FakeCollateral_USDT = artifacts.require("FakeCollateral/FakeCollateral_USD
 const FakeCollateral_yUSD = artifacts.require("FakeCollateral/FakeCollateral_yUSD");
 
 // Collateral Pools
-const Pool_USDC = artifacts.require("Frax/Pools/Pool_USDC");
-const Pool_USDT = artifacts.require("Frax/Pools/Pool_USDT");
-const Pool_yUSD = artifacts.require("Frax/Pools/Pool_yUSD");
+const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
+const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
+const Pool_yUSD = artifacts.require("Arth/Pools/Pool_yUSD");
 
 // Oracles
-const UniswapPairOracle_FRAX_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_FRAX_WETH");
-const UniswapPairOracle_FRAX_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_FRAX_USDT");
-const UniswapPairOracle_FRAX_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_FRAX_USDC");
-const UniswapPairOracle_FRAX_yUSD = artifacts.require("Oracle/Variants/UniswapPairOracle_FRAX_yUSD");
+const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
+const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT");
+const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC");
+const UniswapPairOracle_ARTH_yUSD = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_yUSD");
 const UniswapPairOracle_FXS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_FXS_WETH");
 const UniswapPairOracle_FXS_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_FXS_USDT");
 const UniswapPairOracle_FXS_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_FXS_USDC");
@@ -52,9 +52,9 @@ const UniswapPairOracle_FXS_yUSD = artifacts.require("Oracle/Variants/UniswapPai
 // Chainlink Price Consumer
 const ChainlinkETHUSDPriceConsumer = artifacts.require("Oracle/ChainlinkETHUSDPriceConsumer");
 
-// FRAX core
-const FRAXStablecoin = artifacts.require("Frax/FRAXStablecoin");
-const FRAXShares = artifacts.require("FXS/FRAXShares");
+// ARTH core
+const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+const ARTHShares = artifacts.require("FXS/ARTHShares");
 const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
 const StakingRewards = artifacts.require("Staking/StakingRewards");
 
@@ -67,16 +67,16 @@ const METAMASK_ADDRESS = "0x6A24A4EcA5Ed225CeaE6895e071a74344E2853F5";
 // Good examples
 // https://github.com/KyberNetwork/workshop/tree/master/examples/truffle
 
-module.exports = async function(done) {
-	// Get the accounts
-	const accounts = await web3.eth.getAccounts();
+module.exports = async function (done) {
+  // Get the accounts
+  const accounts = await web3.eth.getAccounts();
 
-	
-	// Advance 24 hrs to catch things up
-	await time.increase(86400 + 1);
-	await time.advanceBlock();
 
-	// call this to signal truffle that your script is done
-	console.log("DONE");
-    done();
+  // Advance 24 hrs to catch things up
+  await time.increase(86400 + 1);
+  await time.advanceBlock();
+
+  // call this to signal truffle that your script is done
+  console.log("DONE");
+  done();
 }

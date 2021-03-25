@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "./AggregatorV3Interface.sol";
+import './AggregatorV3Interface.sol';
 
 // VERY IMPORTANT: UNCOMMENT THIS LATER
 // VERY IMPORTANT: UNCOMMENT THIS LATER
@@ -97,7 +97,7 @@ contract ChainlinkETHUSDPriceConsumerTest {
 
         // This will return something like 32063000000
         // Divide this by getDecimals to get the "true" price
-        // You can can multiply the "true" price by 1e6 to get the frax ecosystem 'price'
+        // You can can multiply the "true" price by 1e6 to get the arth ecosystem 'price'
         // return price;
 
         return 59000000000;

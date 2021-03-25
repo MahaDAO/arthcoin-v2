@@ -56,17 +56,17 @@ exports.CollateralDetailsPack = {
 };
 exports.COLLATERAL_TYPES = Object.keys(exports.CollateralDetailsPack);
 exports.StakeChoices = {
-    'Uniswap FRAX/WETH': {
-        name: 'Uniswap FRAX/WETH',
-        label: 'Uniswap FRAX/WETH'
+    'Uniswap ARTH/WETH': {
+        name: 'Uniswap ARTH/WETH',
+        label: 'Uniswap ARTH/WETH'
     },
-    'Uniswap FRAX/USDC': {
-        name: 'Uniswap FRAX/USDC',
-        label: 'Uniswap FRAX/USDC'
+    'Uniswap ARTH/USDC': {
+        name: 'Uniswap ARTH/USDC',
+        label: 'Uniswap ARTH/USDC'
     },
-    'Uniswap FRAX/USDT': {
-        name: 'Uniswap FRAX/USDT',
-        label: 'Uniswap FRAX/USDT'
+    'Uniswap ARTH/USDT': {
+        name: 'Uniswap ARTH/USDT',
+        label: 'Uniswap ARTH/USDT'
     },
     'Uniswap FXS/WETH': {
         name: 'Uniswap FXS/WETH',
@@ -102,16 +102,16 @@ exports.govHistStringFromCode = govHistStringFromCode;
 exports.CONTRACT_ADDRESSES = {
     ropsten: {
         main: {
-            FRAX: '0x868034EF400b0950F3B1921a6d33D6d9c35634D2',
+            ARTH: '0x868034EF400b0950F3B1921a6d33D6d9c35634D2',
             FXS: '0xBA1C7EC75BfBe1EAD2E570D0B4F32fdc7A73dF27',
             vesting: '0x2fA7A5B9593D46C7F9edBa3bD063a97166497285'
         },
         weth: '0xB749a51eD46C69154B4c7986AFd81A147F80990b',
         oracles: {
-            FRAX_WETH: '0xC05DE1CB258bAdc152d8EAd3F573CA9A2E812B2a',
-            FRAX_USDC: '0x128E530Ad258742C25E536eb8EB53dC79B5EcbBF',
-            FRAX_USDT: '0x4C05334Ad0745e5b63497ab1c57780A3f368629f',
-            FRAX_FXS: '0x244f5da28e6b669a7e0A69D3CBd44fc5D8f8a1C7',
+            ARTH_WETH: '0xC05DE1CB258bAdc152d8EAd3F573CA9A2E812B2a',
+            ARTH_USDC: '0x128E530Ad258742C25E536eb8EB53dC79B5EcbBF',
+            ARTH_USDT: '0x4C05334Ad0745e5b63497ab1c57780A3f368629f',
+            ARTH_FXS: '0x244f5da28e6b669a7e0A69D3CBd44fc5D8f8a1C7',
             FXS_WETH: '0x7C1EcB2Ac0f77936Db770067A170ADfFb5176817',
             FXS_USDC: '0x8Bf7Af56bB721BC3d015111508593Fcb301546F0',
             FXS_USDT: '0x8fE4C7F2eF79AEDd8A6e40398a17ed4DaE18Ee25',
@@ -139,33 +139,33 @@ exports.CONTRACT_ADDRESSES = {
         libraries: {
             UniswapV2OracleLibrary: '',
             UniswapV2Library: '',
-            FraxPoolLibrary: ''
+            ArthPoolLibrary: ''
         },
         stake_tokens: {
-            'Uniswap FRAX/WETH': '0x22517075D1C195b4DFc5fCFdF8A8DfF9f7243820',
-            'Uniswap FRAX/USDC': '0x12E4Db0A8A0b6eFaDf7396D9912022992811DC66',
-            'Uniswap FRAX/FXS': '0x9364b7d063027FFD1527e5790baDddc09dac5d96',
+            'Uniswap ARTH/WETH': '0x22517075D1C195b4DFc5fCFdF8A8DfF9f7243820',
+            'Uniswap ARTH/USDC': '0x12E4Db0A8A0b6eFaDf7396D9912022992811DC66',
+            'Uniswap ARTH/FXS': '0x9364b7d063027FFD1527e5790baDddc09dac5d96',
             'Uniswap FXS/WETH': '0xde6cAC598e7C91Fdd77E744feCCf9aDFefE0a7d0'
         },
         staking_contracts_for_tokens: {
-            'Uniswap FRAX/WETH': '0x1279B47f6be95Df8BA7Ac61C1f1DFce3Ad9e51FB',
-            'Uniswap FRAX/USDC': '0xe4D0b8a29F4b76843fAFBa44F3AaE15136Ea51A3',
-            'Uniswap FRAX/FXS': '0xBe6b91F0dC951C143dc592709B18159988e6397F',
+            'Uniswap ARTH/WETH': '0x1279B47f6be95Df8BA7Ac61C1f1DFce3Ad9e51FB',
+            'Uniswap ARTH/USDC': '0xe4D0b8a29F4b76843fAFBa44F3AaE15136Ea51A3',
+            'Uniswap ARTH/FXS': '0xBe6b91F0dC951C143dc592709B18159988e6397F',
             'Uniswap FXS/WETH': '0x08Be8BaAb62fB0A363f38C82Ee2320A36b72f2DB'
         }
     },
     ganache: {
         main: {
-            FRAX: '0x4c2a7b591668988C6db9184d9df9394846Bc492d',
+            ARTH: '0x4c2a7b591668988C6db9184d9df9394846Bc492d',
             FXS: '0xc2Bb9a3ae435AC36cC1eD2c4F64910B0CF8d8ec6',
             vesting: '0x12711D46063C413dA53d079e88c757b003b3513e'
         },
         weth: '0x9970c452f919b117b9A5dDa473Cf205B6446f104',
         oracles: {
-            FRAX_WETH: '0xd4119c5057237373c629eD9F83B79635a3e2e90b',
-            FRAX_USDC: '0x8f2A143304FA40E99cE8B79Eaf7e045898ebe4E4',
-            FRAX_USDT: '0xB6F388B031C74936c53d51Cd850b0a8A8879c136',
-            FRAX_FXS: '0x3013CeBaF374D838426bb2f3EEF6DA86D2552c27',
+            ARTH_WETH: '0xd4119c5057237373c629eD9F83B79635a3e2e90b',
+            ARTH_USDC: '0x8f2A143304FA40E99cE8B79Eaf7e045898ebe4E4',
+            ARTH_USDT: '0xB6F388B031C74936c53d51Cd850b0a8A8879c136',
+            ARTH_FXS: '0x3013CeBaF374D838426bb2f3EEF6DA86D2552c27',
             FXS_WETH: '0x1a6B2699FE1E833C28C1c9CF69bc55b2aa4a821B',
             FXS_USDC: '0x0037b9708901674243F823bbCE425b455e1C7825',
             FXS_USDT: '0xeb3d1033E0B1ADE4f122A0174142dD2827A29eFd',
@@ -196,18 +196,18 @@ exports.CONTRACT_ADDRESSES = {
         libraries: {
             UniswapV2OracleLibrary: '',
             UniswapV2Library: '',
-            FraxPoolLibrary: ''
+            ArthPoolLibrary: ''
         },
         stake_tokens: {
-            'Uniswap FRAX/WETH': '0x3483F272aba04b5dd819A4CdB3c4007dF909913c',
-            'Uniswap FRAX/USDC': '0xfBf1D205ADC586ad469A5a1a2a9451B2b4Bf1243',
-            'Uniswap FRAX/FXS': '0x7D6AD49359D3f9d0DCd7482FfD86B9C3b5a5a12D',
+            'Uniswap ARTH/WETH': '0x3483F272aba04b5dd819A4CdB3c4007dF909913c',
+            'Uniswap ARTH/USDC': '0xfBf1D205ADC586ad469A5a1a2a9451B2b4Bf1243',
+            'Uniswap ARTH/FXS': '0x7D6AD49359D3f9d0DCd7482FfD86B9C3b5a5a12D',
             'Uniswap FXS/WETH': '0x185c0F6A6e1D0998A22f3DA95BCc1F74b0A08Dd2'
         },
         staking_contracts_for_tokens: {
-            'Uniswap FRAX/WETH': '0xeF2c3d7D30d2893b787c0546f9A97084b4A8F10b',
-            'Uniswap FRAX/USDC': '0x13c9aE42c43DF2FB46218DF80b6Abad7D52a82C5',
-            'Uniswap FRAX/FXS': '0x6135f354e143fbEB5fB159A76EB2590cf4f086b6',
+            'Uniswap ARTH/WETH': '0xeF2c3d7D30d2893b787c0546f9A97084b4A8F10b',
+            'Uniswap ARTH/USDC': '0x13c9aE42c43DF2FB46218DF80b6Abad7D52a82C5',
+            'Uniswap ARTH/FXS': '0x6135f354e143fbEB5fB159A76EB2590cf4f086b6',
             'Uniswap FXS/WETH': '0x3b9c2b598589578e640627d8975De51ea7928918'
         }
     }
