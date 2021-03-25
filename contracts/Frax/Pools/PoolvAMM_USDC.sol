@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./FraxPoolvAMM.sol";
+import './FraxPoolvAMM.sol';
 
 contract PoolvAMM_USDC is FraxPoolvAMM {
     address public USDC_address;

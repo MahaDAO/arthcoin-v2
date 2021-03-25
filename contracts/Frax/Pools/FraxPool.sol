@@ -146,6 +146,8 @@ contract FraxPool is AccessControl {
         address _collateral_address,
         address _creator_address,
         address _timelock_address,
+        address _stability_fee_token,
+        address _arth_stability_token_oracle,
         uint256 _pool_ceiling
     ) {
         FRAX = FRAXStablecoin(_frax_contract_address);
@@ -158,6 +160,11 @@ contract FraxPool is AccessControl {
         collateral_token = ERC20(_collateral_address);
         pool_ceiling = _pool_ceiling;
         missing_decimals = uint256(18).sub(collateral_token.decimals());
+
+        stability_fee_token = ERC20(_stability_fee_token);
+        arth_stability_token_oracle = ISimpleOracle(
+            _arth_stability_token_oracle
+        );
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         grantRole(MINT_PAUSER, timelock_address);

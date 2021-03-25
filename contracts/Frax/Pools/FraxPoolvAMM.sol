@@ -27,14 +27,14 @@ pragma experimental ABIEncoderV2;
 // TODO
 // 1) Have to call getVirtualReserves() on every update of the reserve, such that we can call _update with the averages of the reserve
 
-import "../../Math/Math.sol";
-import "../../Math/SafeMath.sol";
-import "../../FXS/FXS.sol";
-import "../../Frax/Frax.sol";
-import "../../ERC20/ERC20.sol";
-import "../../Uniswap/UniswapV2Library.sol";
-import "../../Oracle/UniswapPairOracle.sol";
-import "../../Governance/AccessControl.sol";
+import '../../Math/Math.sol';
+import '../../Math/SafeMath.sol';
+import '../../FXS/FXS.sol';
+import '../../Frax/Frax.sol';
+import '../../ERC20/ERC20.sol';
+import '../../Uniswap/UniswapV2Library.sol';
+import '../../Oracle/UniswapPairOracle.sol';
+import '../../Governance/AccessControl.sol';
 
 contract FraxPoolvAMM is AccessControl {
     using SafeMath for uint256;
@@ -93,13 +93,13 @@ contract FraxPoolvAMM is AccessControl {
     address public investor_contract_address; // All of the investing code logic will be offloaded to the investor contract
 
     // AccessControl Roles
-    bytes32 private constant MINT_PAUSER = keccak256("MINT_PAUSER");
-    bytes32 private constant REDEEM_PAUSER = keccak256("REDEEM_PAUSER");
-    bytes32 private constant BUYBACK_PAUSER = keccak256("BUYBACK_PAUSER");
+    bytes32 private constant MINT_PAUSER = keccak256('MINT_PAUSER');
+    bytes32 private constant REDEEM_PAUSER = keccak256('REDEEM_PAUSER');
+    bytes32 private constant BUYBACK_PAUSER = keccak256('BUYBACK_PAUSER');
     bytes32 private constant RECOLLATERALIZE_PAUSER =
-        keccak256("RECOLLATERALIZE_PAUSER");
+        keccak256('RECOLLATERALIZE_PAUSER');
     bytes32 private constant COLLATERAL_PRICE_PAUSER =
-        keccak256("COLLATERAL_PRICE_PAUSER");
+        keccak256('COLLATERAL_PRICE_PAUSER');
 
     // AccessControl state variables
     bool public mintPaused = false;
@@ -128,7 +128,7 @@ contract FraxPoolvAMM is AccessControl {
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == timelock_address || msg.sender == owner_address,
-            "You are not the owner or the governance timelock"
+            'You are not the owner or the governance timelock'
         );
         _;
     }
@@ -136,18 +136,18 @@ contract FraxPoolvAMM is AccessControl {
     modifier onlyInvestor() {
         require(
             msg.sender == investor_contract_address,
-            "You are not the investor"
+            'You are not the investor'
         );
         _;
     }
 
     modifier notMintPaused() {
-        require(mintPaused == false, "Minting is paused");
+        require(mintPaused == false, 'Minting is paused');
         _;
     }
 
     modifier notRedeemPaused() {
-        require(redeemPaused == false, "Redeeming is paused");
+        require(redeemPaused == false, 'Redeeming is paused');
         _;
     }
 
@@ -222,10 +222,10 @@ contract FraxPoolvAMM is AccessControl {
         uint256 reserveOut,
         uint256 the_fee
     ) public view returns (uint256 amountOut) {
-        require(amountIn > 0, "FRAX_vAMM: INSUFFICIENT_INPUT_AMOUNT");
+        require(amountIn > 0, 'FRAX_vAMM: INSUFFICIENT_INPUT_AMOUNT');
         require(
             reserveIn > 0 && reserveOut > 0,
-            "FRAX_vAMM: INSUFFICIENT_LIQUIDITY"
+            'FRAX_vAMM: INSUFFICIENT_LIQUIDITY'
         );
         uint256 amountInWithFee = amountIn.mul(uint256(1e6).sub(the_fee));
         uint256 numerator = amountInWithFee.mul(reserveOut);
@@ -299,7 +299,7 @@ contract FraxPoolvAMM is AccessControl {
     function refreshDrift() external {
         require(
             block.timestamp >= drift_end_time,
-            "Drift refresh is cooling down"
+            'Drift refresh is cooling down'
         );
 
         // First apply the drift of the previous period
@@ -512,7 +512,7 @@ contract FraxPoolvAMM is AccessControl {
             ); // find collat needed at collateral ratio
             require(
                 collat_needed <= collateral_amount,
-                "Not enough collateral inputted"
+                'Not enough collateral inputted'
             );
 
             uint256 frax_mint_from_collat =
@@ -522,14 +522,14 @@ contract FraxPoolvAMM is AccessControl {
             fxs_needed = fxs_amount;
         }
 
-        require(total_frax_mint >= FRAX_out_min, "Slippage limit reached");
+        require(total_frax_mint >= FRAX_out_min, 'Slippage limit reached');
         require(
             collateral_token
                 .balanceOf(address(this))
                 .add(collateral_invested)
                 .sub(unclaimedPoolCollateral)
                 .add(collat_needed) <= pool_ceiling,
-            "Pool ceiling reached, no more FRAX can be minted with this collateral"
+            'Pool ceiling reached, no more FRAX can be minted with this collateral'
         );
 
         FXS.pool_burn_from(msg.sender, fxs_needed);
@@ -545,7 +545,7 @@ contract FraxPoolvAMM is AccessControl {
                     .mul(10**missing_decimals)
                     .mul(uint256(1e6).add(max_drift_band))
                     .div(global_collateral_ratio),
-            "[max_drift_band] Too much FRAX being minted"
+            '[max_drift_band] Too much FRAX being minted'
         );
         FRAX.pool_mint(msg.sender, total_frax_mint);
 
@@ -623,13 +623,13 @@ contract FraxPoolvAMM is AccessControl {
                 collateral_token.balanceOf(address(this)).sub(
                     unclaimedPoolCollateral
                 ),
-            "Not enough collateral in pool"
+            'Not enough collateral in pool'
         );
         require(
             collat_out >= collateral_out_min,
-            "Slippage limit reached [collateral]"
+            'Slippage limit reached [collateral]'
         );
-        require(fxs_out >= fxs_out_min, "Slippage limit reached [FXS]");
+        require(fxs_out >= fxs_out_min, 'Slippage limit reached [FXS]');
 
         // Sanity check to make sure the collat amount is close to the expected amount from the FRAX input
         // This check is redundant since collat_out is essentially supplied by the user
@@ -645,7 +645,7 @@ contract FraxPoolvAMM is AccessControl {
                     .mul(global_collateral_ratio)
                     .mul(uint256(1e6).add(max_drift_band))
                     .div(1e12),
-            "[max_drift_band] Too much collateral being released"
+            '[max_drift_band] Too much collateral being released'
         );
 
         redeemCollateralBalances[msg.sender] = redeemCollateralBalances[
@@ -673,7 +673,7 @@ contract FraxPoolvAMM is AccessControl {
     function collectRedemption() external returns (uint256, uint256) {
         require(
             (lastRedeemed[msg.sender].add(redemption_delay)) <= block.number,
-            "Must wait for redemption_delay blocks before collecting redemption"
+            'Must wait for redemption_delay blocks before collecting redemption'
         );
         bool sendFXS = false;
         bool sendCollateral = false;
@@ -713,7 +713,7 @@ contract FraxPoolvAMM is AccessControl {
         external
         returns (uint256, uint256)
     {
-        require(recollateralizePaused == false, "Recollateralize is paused");
+        require(recollateralizePaused == false, 'Recollateralize is paused');
         uint256 fxs_out =
             getAmountOut(
                 collateral_amount,
@@ -728,7 +728,7 @@ contract FraxPoolvAMM is AccessControl {
             fxs_virtual_reserves,
             collat_virtual_reserves
         );
-        require(fxs_out >= FXS_out_min, "Slippage limit reached");
+        require(fxs_out >= FXS_out_min, 'Slippage limit reached');
 
         uint256 total_supply = FRAX.totalSupply();
         uint256 global_collateral_ratio = FRAX.global_collateral_ratio();
@@ -739,7 +739,7 @@ contract FraxPoolvAMM is AccessControl {
             target_collat_value >=
                 global_collat_value +
                     collateral_amount.mul(10**missing_decimals),
-            "Too much recollateralize inputted"
+            'Too much recollateralize inputted'
         );
 
         collateral_token.transferFrom(
@@ -759,7 +759,7 @@ contract FraxPoolvAMM is AccessControl {
                     .mul(10**missing_decimals)
                     .mul(uint256(1e6).add(max_drift_band))
                     .div(1e6),
-            "[max_drift_band] Too much FXS being released"
+            '[max_drift_band] Too much FXS being released'
         );
 
         // Add in the bonus
@@ -774,7 +774,7 @@ contract FraxPoolvAMM is AccessControl {
         external
         returns (uint256, uint256)
     {
-        require(buyBackPaused == false, "Buyback is paused");
+        require(buyBackPaused == false, 'Buyback is paused');
         uint256 buyback_available =
             availableExcessCollatDV().div(10**missing_decimals);
         uint256 collat_out =
@@ -785,12 +785,12 @@ contract FraxPoolvAMM is AccessControl {
                 buyback_fee
             );
 
-        require(buyback_available > 0, "Zero buyback available");
+        require(buyback_available > 0, 'Zero buyback available');
         require(
             collat_out <= buyback_available,
-            "Not enough buyback available"
+            'Not enough buyback available'
         );
-        require(collat_out >= COLLATERAL_out_min, "Slippage limit reached");
+        require(collat_out >= COLLATERAL_out_min, 'Slippage limit reached');
         _update(
             fxs_virtual_reserves.sub(FXS_amount),
             collat_virtual_reserves.add(collat_out),
@@ -810,7 +810,7 @@ contract FraxPoolvAMM is AccessControl {
                     .mul(fxs_price)
                     .mul(uint256(1e6).add(max_drift_band))
                     .div(1e12),
-            "[max_drift_band] Too much collateral being released"
+            '[max_drift_band] Too much collateral being released'
         );
 
         collateral_token.transfer(msg.sender, collat_out);
@@ -823,7 +823,7 @@ contract FraxPoolvAMM is AccessControl {
     function takeOutCollat_Inv(uint256 amount) external onlyInvestor {
         require(
             collateral_invested.add(amount) <= availableForInvestment(),
-            "Investment cap reached"
+            'Investment cap reached'
         );
         collateral_invested = collateral_invested.add(amount);
         collateral_token.transfer(investor_contract_address, amount);

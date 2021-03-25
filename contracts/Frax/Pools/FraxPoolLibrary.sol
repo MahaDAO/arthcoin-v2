@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "../../Math/SafeMath.sol";
+import '../../Math/SafeMath.sol';
 
 library FraxPoolLibrary {
     using SafeMath for uint256;
@@ -98,7 +98,7 @@ library FraxPoolLibrary {
         // If the total collateral value is higher than the amount required at the current collateral ratio then buy back up to the possible FXS with the desired collateral
         require(
             params.excess_collateral_dollar_value_d18 > 0,
-            "No excess collateral to buy back!"
+            'No excess collateral to buy back!'
         );
 
         // Make sure not to take more than is available
@@ -106,7 +106,7 @@ library FraxPoolLibrary {
             params.FXS_amount.mul(params.fxs_price_usd).div(1e6);
         require(
             fxs_dollar_value_d18 <= params.excess_collateral_dollar_value_d18,
-            "You are trying to buy back more than the excess!"
+            'You are trying to buy back more than the excess!'
         );
 
         // Get the equivalent amount of collateral based on the market value of FXS provided
