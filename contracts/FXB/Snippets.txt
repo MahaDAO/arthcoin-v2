@@ -7,9 +7,9 @@
     uint8 release_curve_choice;
 
 
-    // Maximum number of FXB tokens that should be floating outside the contract
+    // Maximum number of ARTHB tokens that should be floating outside the contract
     // The goal is to do a smooth release so price spikes don't happen
-    function max_fxb_releaseable() public view returns (uint256 max_fxb_releaseable) {
+    function max_arthb_releaseable() public view returns (uint256 max_arthb_releaseable) {
         if (isInEpoch()) {
             uint256 time_into_epoch = (block.timestamp).sub(epoch_start);
             if(useCurve) {
@@ -23,19 +23,19 @@
 
                 // Failsafe to avoid out-of-bounds array
                 // Otherwise proceed normally
-                if (nearest_curve_index == release_curve_total_points) max_fxb_releaseable = max_fxb_outstanding;
+                if (nearest_curve_index == release_curve_total_points) max_arthb_releaseable = max_arthb_outstanding;
                 else {
-                    uint256 max_fxb_releaseable = max_fxb_outstanding.mul(RELEASE_CURVE.get_curve_point(release_curve_choice, uint8(nearest_curve_index))).div(PRICE_PRECISION);
+                    uint256 max_arthb_releaseable = max_arthb_outstanding.mul(RELEASE_CURVE.get_curve_point(release_curve_choice, uint8(nearest_curve_index))).div(PRICE_PRECISION);
                 }
             }
             else {
                 // Use linear
-                max_fxb_releaseable = max_fxb_outstanding.mul(time_into_epoch).div(epoch_length);
+                max_arthb_releaseable = max_arthb_outstanding.mul(time_into_epoch).div(epoch_length);
             }
         }
         else {
             // No selling outside of an epoch
-            max_fxb_releaseable = 0;
+            max_arthb_releaseable = 0;
         }
 
     }
@@ -63,47 +63,47 @@
     // ========================================================================================
 
 
-    function sellFXBintoAMM(uint256 fxb_amount, uint256 arth_out_min) external notSellingPaused returns (uint256 fxb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
+    function sellARTHBintoAMM(uint256 arthb_amount, uint256 arth_out_min) external notSellingPaused returns (uint256 arthb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
         require(isInEpoch(), 'Not in an epoch');
 
         uint256 the_floor_price = floor_price();
         uint256 amm_price = amm_spot_price();
 
-        fxb_sold_under_floor = 0;
+        arthb_sold_under_floor = 0;
 
-        // The AMM will buy back FXB at market rates in all cases
-        // However, any FXB bought back under the floor price will be burned
-        uint256 max_market_sellable_fxb = maximum_fxb_AMM_sellable_above_floor();
-        if(fxb_amount > max_market_sellable_fxb){
-            fxb_sold_under_floor = fxb_amount.sub(max_market_sellable_fxb);
+        // The AMM will buy back ARTHB at market rates in all cases
+        // However, any ARTHB bought back under the floor price will be burned
+        uint256 max_market_sellable_arthb = maximum_arthb_AMM_sellable_above_floor();
+        if(arthb_amount > max_market_sellable_arthb){
+            arthb_sold_under_floor = arthb_amount.sub(max_market_sellable_arthb);
         }
         else {
-            fxb_sold_under_floor = 0;
+            arthb_sold_under_floor = 0;
         }
 
         // Get the expected amount of ARTH via the AMM from the market-priced portion
-        arth_out = getAmountOutNoFee(fxb_amount, FXB.balanceOf(address(this)), ARTH.balanceOf(address(this)));
+        arth_out = getAmountOutNoFee(arthb_amount, ARTHB.balanceOf(address(this)), ARTH.balanceOf(address(this)));
 
         // Apply the normal selling fee
         arth_fee_amt = arth_out.mul(selling_fee).div(PRICE_PRECISION);
         arth_out = arth_out.sub(arth_fee_amt);
 
         // Check arth_out_min
-        require(arth_out >= arth_out_min, "[sellFXBintoAMM arth_out_min]: Slippage limit reached");
+        require(arth_out >= arth_out_min, "[sellARTHBintoAMM arth_out_min]: Slippage limit reached");
 
         // AMM will never allow an effective sale price above 1
         {
-            uint256 effective_sale_price = arth_out.mul(PRICE_PRECISION).div(fxb_amount);
-            require(effective_sale_price <= PRICE_PRECISION, "[sellFXBintoAMM]: Effective sale price is above 1");
+            uint256 effective_sale_price = arth_out.mul(PRICE_PRECISION).div(arthb_amount);
+            require(effective_sale_price <= PRICE_PRECISION, "[sellARTHBintoAMM]: Effective sale price is above 1");
         }
 
-        // Take FXB from the sender
-        FXB.transferFrom(msg.sender, address(this), fxb_amount);
+        // Take ARTHB from the sender
+        ARTHB.transferFrom(msg.sender, address(this), arthb_amount);
 
-        // If any FXB was sold under the floor price, retire / burn it
-        // This is less FXB that will have to be redeemed at full value later and is essentially a protocol-level profit
-        if (fxb_sold_under_floor > 0){
-            FXB.burn(fxb_sold_under_floor);
+        // If any ARTHB was sold under the floor price, retire / burn it
+        // This is less ARTHB that will have to be redeemed at full value later and is essentially a protocol-level profit
+        if (arthb_sold_under_floor > 0){
+            ARTHB.burn(arthb_sold_under_floor);
         }
 
         // Give ARTH to sender
@@ -115,9 +115,9 @@
             uint256 amm_price = amm_spot_price();
 
             // The spot price should not land above 1 after a sale
-            require(amm_price <= PRICE_PRECISION, "[sellFXBintoAMM]: Spot price is above 1");
+            require(amm_price <= PRICE_PRECISION, "[sellARTHBintoAMM]: Spot price is above 1");
 
-            // It is ok for the AMM to buy back FXB below the floor price and retire it, as this is basically a discount
+            // It is ok for the AMM to buy back ARTHB below the floor price and retire it, as this is basically a discount
             // and less money it will have to pay back later
         }
     }

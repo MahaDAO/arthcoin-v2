@@ -16,7 +16,7 @@ pragma experimental ABIEncoderV2;
 
 import '../ArthBond_NFT.sol';
 
-contract FXBA10000M3 is ArthBond_NFT {
+contract ARTHBA10000M3 is ArthBond_NFT {
     constructor(
         address _controller_address,
         address _timelock_address,

@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 // | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
 // |                                                                  |
 // ====================================================================
-// ========= Bond Issuer with virtual AMM for ArthBonds (FXB) =========
+// ========= Bond Issuer with virtual AMM for ArthBonds (ARTHB) =========
 // ====================================================================
 // Arth Finance: https://github.com/ArthFinance
 
@@ -24,7 +24,7 @@ pragma experimental ABIEncoderV2;
 // Dennis: github.com/denett
 
 import '../Math/SafeMath.sol';
-import './FXB.sol';
+import './ARTHB.sol';
 import '../Arth/Arth.sol';
 import '../ERC20/ERC20.sol';
 import '../Governance/AccessControl.sol';
@@ -36,7 +36,7 @@ contract ArthBondIssuer is AccessControl {
     enum DirectionChoice {BELOW_TO_PRICE_ARTH_IN, ABOVE_TO_PRICE}
 
     ARTHStablecoin private ARTH;
-    ArthBond private FXB;
+    ArthBond private ARTHB;
 
     address public owner_address;
     address public timelock_address;
@@ -50,15 +50,15 @@ contract ArthBondIssuer is AccessControl {
     // Bonds should be redeemed during this time, or they risk being rebalanced with a new epoch
     uint256 public cooldown_period = 864000; // 10 days
 
-    // Max FXB outstanding
-    uint256 public max_fxb_outstanding = 1000000e18;
+    // Max ARTHB outstanding
+    uint256 public max_arthb_outstanding = 1000000e18;
 
-    // Target liquidity of FXB for the vAMM
-    uint256 public target_liquidity_fxb = 500000e18;
+    // Target liquidity of ARTHB for the vAMM
+    uint256 public target_liquidity_arthb = 500000e18;
 
-    // Issuable FXB
+    // Issuable ARTHB
     // This will be sold at the floor price until depleted, and bypass the vAMM
-    uint256 public issuable_fxb = 80000e18;
+    uint256 public issuable_arthb = 80000e18;
     uint256 public issue_price = 750000;
 
     // Set fees, E6
@@ -93,7 +93,7 @@ contract ArthBondIssuer is AccessControl {
 
     // Virtual balances
     uint256 public vBal_ARTH;
-    uint256 public vBal_FXB;
+    uint256 public vBal_ARTHB;
 
     /* ========== MODIFIERS ========== */
 
@@ -139,13 +139,13 @@ contract ArthBondIssuer is AccessControl {
 
     constructor(
         address _arth_contract_address,
-        address _fxb_contract_address,
+        address _arthb_contract_address,
         address _owner_address,
         address _timelock_address,
         address _controller_address
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
-        FXB = ArthBond(_fxb_contract_address);
+        ARTHB = ArthBond(_arthb_contract_address);
         owner_address = _owner_address;
         timelock_address = _timelock_address;
         controller_address = _controller_address;
@@ -198,10 +198,10 @@ contract ArthBondIssuer is AccessControl {
             buying_fee,
             selling_fee,
             redemption_fee,
-            issuable_fxb,
+            issuable_arthb,
             epoch_start,
             epoch_end,
-            maximum_fxb_AMM_sellable_above_floor(),
+            maximum_arthb_AMM_sellable_above_floor(),
             amm_spot_price(),
             floor_price(),
             isInEpoch(),
@@ -236,23 +236,23 @@ contract ArthBondIssuer is AccessControl {
     function getVirtualFloorLiquidityBalances()
         public
         view
-        returns (uint256 arth_balance, uint256 fxb_balance)
+        returns (uint256 arth_balance, uint256 arthb_balance)
     {
-        arth_balance = target_liquidity_fxb.mul(floor_price()).div(
+        arth_balance = target_liquidity_arthb.mul(floor_price()).div(
             PRICE_PRECISION
         );
-        fxb_balance = target_liquidity_fxb;
+        arthb_balance = target_liquidity_arthb;
     }
 
-    // vAMM price for 1 FXB, in ARTH
+    // vAMM price for 1 ARTHB, in ARTH
     // The contract won't necessarily sell or buy at this price
-    function amm_spot_price() public view returns (uint256 fxb_price) {
-        fxb_price = vBal_ARTH.mul(PRICE_PRECISION).div(vBal_FXB);
+    function amm_spot_price() public view returns (uint256 arthb_price) {
+        arthb_price = vBal_ARTH.mul(PRICE_PRECISION).div(vBal_ARTHB);
     }
 
-    // FXB floor price for 1 FXB, in ARTH
+    // ARTHB floor price for 1 ARTHB, in ARTH
     // Will be used to help prevent someone from doing a huge arb with cheap bonds right before they mature
-    // Also allows the vAMM to buy back cheap FXB under the floor and retire it, meaning less to pay back later at face value
+    // Also allows the vAMM to buy back cheap ARTHB under the floor and retire it, meaning less to pay back later at face value
     function floor_price() public view returns (uint256 floorPrice) {
         uint256 time_into_epoch = (block.timestamp).sub(epoch_start);
         floorPrice = (PRICE_PRECISION.sub(initial_discount)).add(
@@ -264,32 +264,33 @@ contract ArthBondIssuer is AccessControl {
         initialPrice = (PRICE_PRECISION.sub(initial_discount));
     }
 
-    // How much ARTH is needed to buy out the remaining unissued FXB
+    // How much ARTH is needed to buy out the remaining unissued ARTHB
     function arth_to_buy_out_issue() public view returns (uint256 arth_value) {
-        uint256 fxb_fee_amt = issuable_fxb.mul(issue_fee).div(PRICE_PRECISION);
-        arth_value = (issuable_fxb.add(fxb_fee_amt)).mul(issue_price).div(
+        uint256 arthb_fee_amt =
+            issuable_arthb.mul(issue_fee).div(PRICE_PRECISION);
+        arth_value = (issuable_arthb.add(arthb_fee_amt)).mul(issue_price).div(
             PRICE_PRECISION
         );
     }
 
-    // Maximum amount of FXB you can sell into the vAMM at market prices before it hits the floor price and either cuts off
-    // or sells at the floor price, dependingon how sellFXBintoAMM is called
-    // If the vAMM price is above the floor, you may sell FXB until doing so would push the price down to the floor
+    // Maximum amount of ARTHB you can sell into the vAMM at market prices before it hits the floor price and either cuts off
+    // or sells at the floor price, dependingon how sellARTHBintoAMM is called
+    // If the vAMM price is above the floor, you may sell ARTHB until doing so would push the price down to the floor
     // Will be 0 if the vAMM price is at or below the floor price
-    function maximum_fxb_AMM_sellable_above_floor()
+    function maximum_arthb_AMM_sellable_above_floor()
         public
         view
-        returns (uint256 maximum_fxb_for_sell)
+        returns (uint256 maximum_arthb_for_sell)
     {
         uint256 the_floor_price = floor_price();
 
         if (amm_spot_price() > the_floor_price) {
-            maximum_fxb_for_sell = getBoundedIn(
+            maximum_arthb_for_sell = getBoundedIn(
                 DirectionChoice.ABOVE_TO_PRICE,
                 the_floor_price
             );
         } else {
-            maximum_fxb_for_sell = 0;
+            maximum_arthb_for_sell = 0;
         }
     }
 
@@ -340,13 +341,13 @@ contract ArthBondIssuer is AccessControl {
         amountOut = getAmountOut(amountIn, reserveIn, reserveOut, 0);
     }
 
-    function buyUnissuedFXB(uint256 arth_in, uint256 fxb_out_min)
+    function buyUnissuedARTHB(uint256 arth_in, uint256 arthb_out_min)
         public
         notIssuingPaused
-        returns (uint256 fxb_out, uint256 fxb_fee_amt)
+        returns (uint256 arthb_out, uint256 arthb_fee_amt)
     {
         require(isInEpoch(), 'Not in an epoch');
-        require(issuable_fxb > 0, 'No new FXB to issue');
+        require(issuable_arthb > 0, 'No new ARTHB to issue');
         require(
             ARTH.arth_price() < PRICE_PRECISION,
             'ARTH price must be less than $1'
@@ -365,52 +366,52 @@ contract ArthBondIssuer is AccessControl {
             }
         }
 
-        // Get the expected amount of FXB from the floor-priced portion
-        fxb_out = arth_in.mul(PRICE_PRECISION).div(price_to_use);
+        // Get the expected amount of ARTHB from the floor-priced portion
+        arthb_out = arth_in.mul(PRICE_PRECISION).div(price_to_use);
 
         // Calculate and apply the normal buying fee
-        fxb_fee_amt = fxb_out.mul(issue_fee).div(PRICE_PRECISION);
+        arthb_fee_amt = arthb_out.mul(issue_fee).div(PRICE_PRECISION);
 
         // Apply the fee
-        fxb_out = fxb_out.sub(fxb_fee_amt);
+        arthb_out = arthb_out.sub(arthb_fee_amt);
 
-        // Check fxb_out_min
+        // Check arthb_out_min
         require(
-            fxb_out >= fxb_out_min,
-            '[buyUnissuedFXB fxb_out_min]: Slippage limit reached'
+            arthb_out >= arthb_out_min,
+            '[buyUnissuedARTHB arthb_out_min]: Slippage limit reached'
         );
 
         // Check the limit
         require(
-            fxb_out <= issuable_fxb,
+            arthb_out <= issuable_arthb,
             'Trying to buy too many unissued bonds'
         );
 
         // Safety check
         require(
-            ((FXB.totalSupply()).add(fxb_out)) <= max_fxb_outstanding,
-            'New issue would exceed max_fxb_outstanding'
+            ((ARTHB.totalSupply()).add(arthb_out)) <= max_arthb_outstanding,
+            'New issue would exceed max_arthb_outstanding'
         );
 
         // Decrement the unissued amount
-        issuable_fxb = issuable_fxb.sub(fxb_out);
+        issuable_arthb = issuable_arthb.sub(arthb_out);
 
-        // Zero out precision-related crumbs if less than 1 FXB left
-        if (issuable_fxb < uint256(1e18)) {
-            issuable_fxb = 0;
+        // Zero out precision-related crumbs if less than 1 ARTHB left
+        if (issuable_arthb < uint256(1e18)) {
+            issuable_arthb = 0;
         }
 
         // Burn ARTH from the sender. No vAMM balance change here
         ARTH.pool_burn_from(msg.sender, arth_in);
 
-        // Mint FXB to the sender. No vAMM balance change here
-        FXB.issuer_mint(msg.sender, fxb_out);
+        // Mint ARTHB to the sender. No vAMM balance change here
+        ARTHB.issuer_mint(msg.sender, arthb_out);
     }
 
-    function buyFXBfromAMM(uint256 arth_in, uint256 fxb_out_min)
+    function buyARTHBfromAMM(uint256 arth_in, uint256 arthb_out_min)
         external
         notBuyingPaused
-        returns (uint256 fxb_out, uint256 fxb_fee_amt)
+        returns (uint256 arthb_out, uint256 arthb_fee_amt)
     {
         require(isInEpoch(), 'Not in an epoch');
 
@@ -421,85 +422,87 @@ contract ArthBondIssuer is AccessControl {
         // This may be the case if the floor price moved up slowly and nobody made any purchases for a while
         {
             if (spot_price < floor_price()) {
-                _rebalance_AMM_FXB();
+                _rebalance_AMM_ARTHB();
                 _rebalance_AMM_ARTH_to_price(floor_price());
             }
         }
 
-        // Calculate the FXB output
-        fxb_out = getAmountOutNoFee(arth_in, vBal_ARTH, vBal_FXB);
+        // Calculate the ARTHB output
+        arthb_out = getAmountOutNoFee(arth_in, vBal_ARTH, vBal_ARTHB);
 
         // Calculate and apply the normal buying fee
-        fxb_fee_amt = fxb_out.mul(buying_fee).div(PRICE_PRECISION);
+        arthb_fee_amt = arthb_out.mul(buying_fee).div(PRICE_PRECISION);
 
         // Apply the fee
-        fxb_out = fxb_out.sub(fxb_fee_amt);
+        arthb_out = arthb_out.sub(arthb_fee_amt);
 
-        // Check fxb_out_min
+        // Check arthb_out_min
         require(
-            fxb_out >= fxb_out_min,
-            '[buyFXBfromAMM fxb_out_min]: Slippage limit reached'
+            arthb_out >= arthb_out_min,
+            '[buyARTHBfromAMM arthb_out_min]: Slippage limit reached'
         );
 
         // Safety check
         require(
-            ((FXB.totalSupply()).add(fxb_out)) <= max_fxb_outstanding,
-            'New issue would exceed max_fxb_outstanding'
+            ((ARTHB.totalSupply()).add(arthb_out)) <= max_arthb_outstanding,
+            'New issue would exceed max_arthb_outstanding'
         );
 
         // Burn ARTH from the sender and increase the virtual balance
         ARTH.burnFrom(msg.sender, arth_in);
         vBal_ARTH = vBal_ARTH.add(arth_in);
 
-        // Mint FXB to the sender and decrease the virtual balance
-        FXB.issuer_mint(msg.sender, fxb_out);
-        vBal_FXB = vBal_FXB.sub(fxb_out);
+        // Mint ARTHB to the sender and decrease the virtual balance
+        ARTHB.issuer_mint(msg.sender, arthb_out);
+        vBal_ARTHB = vBal_ARTHB.sub(arthb_out);
 
         // vAMM will burn ARTH if the effective sale price is above 1. It is essentially free ARTH and a protocol-level profit
         {
             uint256 effective_sale_price =
-                arth_in.mul(PRICE_PRECISION).div(fxb_out);
+                arth_in.mul(PRICE_PRECISION).div(arthb_out);
             if (effective_sale_price > PRICE_PRECISION) {
                 // Rebalance to $1
-                _rebalance_AMM_FXB();
+                _rebalance_AMM_ARTHB();
                 _rebalance_AMM_ARTH_to_price(PRICE_PRECISION);
             }
         }
     }
 
-    function sellFXBintoAMM(uint256 fxb_in, uint256 arth_out_min)
+    function sellARTHBintoAMM(uint256 arthb_in, uint256 arth_out_min)
         external
         notSellingPaused
         returns (
-            uint256 fxb_bought_above_floor,
-            uint256 fxb_sold_under_floor,
+            uint256 arthb_bought_above_floor,
+            uint256 arthb_sold_under_floor,
             uint256 arth_out,
             uint256 arth_fee_amt
         )
     {
         require(isInEpoch(), 'Not in an epoch');
 
-        fxb_bought_above_floor = fxb_in;
-        fxb_sold_under_floor = 0;
+        arthb_bought_above_floor = arthb_in;
+        arthb_sold_under_floor = 0;
 
-        // The vAMM will buy back FXB at market rates in all cases
-        // However, any FXB bought back under the floor price will be burned
-        uint256 max_above_floor_sellable_fxb =
-            maximum_fxb_AMM_sellable_above_floor();
-        if (fxb_in >= max_above_floor_sellable_fxb) {
-            fxb_bought_above_floor = max_above_floor_sellable_fxb;
-            fxb_sold_under_floor = fxb_in.sub(max_above_floor_sellable_fxb);
+        // The vAMM will buy back ARTHB at market rates in all cases
+        // However, any ARTHB bought back under the floor price will be burned
+        uint256 max_above_floor_sellable_arthb =
+            maximum_arthb_AMM_sellable_above_floor();
+        if (arthb_in >= max_above_floor_sellable_arthb) {
+            arthb_bought_above_floor = max_above_floor_sellable_arthb;
+            arthb_sold_under_floor = arthb_in.sub(
+                max_above_floor_sellable_arthb
+            );
         } else {
-            // no change to fxb_bought_above_floor
-            fxb_sold_under_floor = 0;
+            // no change to arthb_bought_above_floor
+            arthb_sold_under_floor = 0;
         }
 
         // Get the expected amount of ARTH from above the floor
         uint256 arth_out_above_floor = 0;
-        if (fxb_bought_above_floor > 0) {
+        if (arthb_bought_above_floor > 0) {
             arth_out_above_floor = getAmountOutNoFee(
-                fxb_bought_above_floor,
-                vBal_FXB,
+                arthb_bought_above_floor,
+                vBal_ARTHB,
                 vBal_ARTH
             );
 
@@ -516,15 +519,15 @@ contract ArthBondIssuer is AccessControl {
         // Get the expected amount of ARTH from below the floor
         // Need to adjust the balances virtually for this
         uint256 arth_out_under_floor = 0;
-        if (fxb_sold_under_floor > 0) {
+        if (arthb_sold_under_floor > 0) {
             // Get the virtual amount under the floor
             (
                 uint256 arth_floor_balance_virtual,
-                uint256 fxb_floor_balance_virtual
+                uint256 arthb_floor_balance_virtual
             ) = getVirtualFloorLiquidityBalances();
             arth_out_under_floor = getAmountOutNoFee(
-                fxb_sold_under_floor,
-                fxb_floor_balance_virtual.add(fxb_bought_above_floor),
+                arthb_sold_under_floor,
+                arthb_floor_balance_virtual.add(arthb_bought_above_floor),
                 arth_floor_balance_virtual.sub(arth_out_above_floor)
             );
 
@@ -541,44 +544,44 @@ contract ArthBondIssuer is AccessControl {
         // Check arth_out_min
         require(
             arth_out >= arth_out_min,
-            '[sellFXBintoAMM arth_out_min]: Slippage limit reached'
+            '[sellARTHBintoAMM arth_out_min]: Slippage limit reached'
         );
 
-        // Take FXB from the sender and increase the virtual balance
-        FXB.burnFrom(msg.sender, fxb_in);
-        vBal_FXB = vBal_FXB.add(fxb_in);
+        // Take ARTHB from the sender and increase the virtual balance
+        ARTHB.burnFrom(msg.sender, arthb_in);
+        vBal_ARTHB = vBal_ARTHB.add(arthb_in);
 
         // Give ARTH to sender from the vAMM and decrease the virtual balance
         ARTH.pool_mint(msg.sender, arth_out);
         vBal_ARTH = vBal_ARTH.sub(arth_out);
 
-        // If any FXB was sold under the floor price, retire / burn it and rebalance the pool
-        // This is less FXB that will have to be redeemed at full value later and is essentially a protocol-level profit
-        if (fxb_sold_under_floor > 0) {
+        // If any ARTHB was sold under the floor price, retire / burn it and rebalance the pool
+        // This is less ARTHB that will have to be redeemed at full value later and is essentially a protocol-level profit
+        if (arthb_sold_under_floor > 0) {
             // Rebalance to the floor
-            _rebalance_AMM_FXB();
+            _rebalance_AMM_ARTHB();
             _rebalance_AMM_ARTH_to_price(floor_price());
         }
     }
 
-    function redeemFXB(uint256 fxb_in)
+    function redeemARTHB(uint256 arthb_in)
         external
         notRedeemingPaused
         returns (uint256 arth_out, uint256 arth_fee)
     {
         require(!isInEpoch(), 'Not in the cooldown period or outside an epoch');
 
-        // Burn FXB from the sender
-        FXB.burnFrom(msg.sender, fxb_in);
+        // Burn ARTHB from the sender
+        ARTHB.burnFrom(msg.sender, arthb_in);
 
-        // Give 1 ARTH per 1 FXB, minus the redemption fee
-        arth_fee = fxb_in.mul(redemption_fee).div(PRICE_PRECISION);
-        arth_out = fxb_in.sub(arth_fee);
+        // Give 1 ARTH per 1 ARTHB, minus the redemption fee
+        arth_fee = arthb_in.mul(redemption_fee).div(PRICE_PRECISION);
+        arth_out = arthb_in.sub(arth_fee);
 
         // Give the ARTH to the redeemer
         ARTH.pool_mint(msg.sender, arth_out);
 
-        emit FXB_Redeemed(msg.sender, fxb_in, arth_out);
+        emit ARTHB_Redeemed(msg.sender, arthb_in, arth_out);
     }
 
     /* ========== RESTRICTED INTERNAL FUNCTIONS ========== */
@@ -592,7 +595,7 @@ contract ArthBondIssuer is AccessControl {
         );
 
         uint256 arth_required =
-            target_liquidity_fxb.mul(rebalance_price).div(PRICE_PRECISION);
+            target_liquidity_arthb.mul(rebalance_price).div(PRICE_PRECISION);
         if (arth_required > vBal_ARTH) {
             // Virtually add the deficiency
             vBal_ARTH = vBal_ARTH.add(arth_required.sub(vBal_ARTH));
@@ -604,22 +607,23 @@ contract ArthBondIssuer is AccessControl {
         }
     }
 
-    function _rebalance_AMM_FXB() internal {
-        uint256 fxb_required = target_liquidity_fxb;
-        if (fxb_required > vBal_FXB) {
+    function _rebalance_AMM_ARTHB() internal {
+        uint256 arthb_required = target_liquidity_arthb;
+        if (arthb_required > vBal_ARTHB) {
             // Virtually add the deficiency
-            vBal_FXB = vBal_FXB.add(fxb_required.sub(vBal_FXB));
-        } else if (fxb_required < vBal_FXB) {
+            vBal_ARTHB = vBal_ARTHB.add(arthb_required.sub(vBal_ARTHB));
+        } else if (arthb_required < vBal_ARTHB) {
             // Virtually subtract the excess
-            vBal_FXB = vBal_FXB.sub(vBal_FXB.sub(fxb_required));
-        } else if (fxb_required == vBal_FXB) {
+            vBal_ARTHB = vBal_ARTHB.sub(vBal_ARTHB.sub(arthb_required));
+        } else if (arthb_required == vBal_ARTHB) {
             // Do nothing
         }
 
         // Quick safety check
         require(
-            ((FXB.totalSupply()).add(issuable_fxb)) <= max_fxb_outstanding,
-            'Rebalance would exceed max_fxb_outstanding'
+            ((ARTHB.totalSupply()).add(issuable_arthb)) <=
+                max_arthb_outstanding,
+            'Rebalance would exceed max_arthb_outstanding'
         );
     }
 
@@ -630,16 +634,16 @@ contract ArthBondIssuer is AccessControl {
     {
         if (choice == DirectionChoice.BELOW_TO_PRICE_ARTH_IN) {
             uint256 numerator =
-                sqrt(vBal_ARTH).mul(sqrt(vBal_FXB)).mul(PRICE_PRECISION_SQRT);
+                sqrt(vBal_ARTH).mul(sqrt(vBal_ARTHB)).mul(PRICE_PRECISION_SQRT);
             // The "price" here needs to be inverted
             uint256 denominator =
                 sqrt((PRICE_PRECISION_SQUARED).div(the_price));
             bounded_amount = numerator.div(denominator).sub(vBal_ARTH);
         } else if (choice == DirectionChoice.ABOVE_TO_PRICE) {
             uint256 numerator =
-                sqrt(vBal_ARTH).mul(sqrt(vBal_FXB)).mul(PRICE_PRECISION_SQRT);
+                sqrt(vBal_ARTH).mul(sqrt(vBal_ARTHB)).mul(PRICE_PRECISION_SQRT);
             uint256 denominator = sqrt(the_price);
-            bounded_amount = numerator.div(denominator).sub(vBal_FXB);
+            bounded_amount = numerator.div(denominator).sub(vBal_ARTHB);
         }
     }
 
@@ -648,7 +652,7 @@ contract ArthBondIssuer is AccessControl {
     // Allows for expanding the liquidity mid-epoch
     // The expansion must occur at the current vAMM price
     function expand_AMM_liquidity(
-        uint256 fxb_expansion_amount,
+        uint256 arthb_expansion_amount,
         bool do_rebalance
     ) external onlyByOwnerControllerOrGovernance {
         require(isInEpoch(), 'Not in an epoch');
@@ -657,8 +661,10 @@ contract ArthBondIssuer is AccessControl {
             'ARTH is already too undercollateralized'
         );
 
-        // Expand the FXB target liquidity
-        target_liquidity_fxb = target_liquidity_fxb.add(fxb_expansion_amount);
+        // Expand the ARTHB target liquidity
+        target_liquidity_arthb = target_liquidity_arthb.add(
+            arthb_expansion_amount
+        );
 
         // Optionally do the rebalance. If not, it will be done at an applicable time in one of the buy / sell functions
         if (do_rebalance) {
@@ -669,7 +675,7 @@ contract ArthBondIssuer is AccessControl {
     // Allows for contracting the liquidity mid-epoch
     // The expansion must occur at the current vAMM price
     function contract_AMM_liquidity(
-        uint256 fxb_contraction_amount,
+        uint256 arthb_contraction_amount,
         bool do_rebalance
     ) external onlyByOwnerControllerOrGovernance {
         require(isInEpoch(), 'Not in an epoch');
@@ -678,8 +684,10 @@ contract ArthBondIssuer is AccessControl {
             'ARTH is already too undercollateralized'
         );
 
-        // Expand the FXB target liquidity
-        target_liquidity_fxb = target_liquidity_fxb.sub(fxb_contraction_amount);
+        // Expand the ARTHB target liquidity
+        target_liquidity_arthb = target_liquidity_arthb.sub(
+            arthb_contraction_amount
+        );
 
         // Optionally do the rebalance. If not, it will be done at an applicable time in one of the buy / sell functions
         if (do_rebalance) {
@@ -692,8 +700,8 @@ contract ArthBondIssuer is AccessControl {
         public
         onlyByOwnerControllerOrGovernance
     {
-        // Rebalance the FXB
-        _rebalance_AMM_FXB();
+        // Rebalance the ARTHB
+        _rebalance_AMM_ARTHB();
 
         // Rebalance the ARTH
         _rebalance_AMM_ARTH_to_price(rebalance_price);
@@ -714,13 +722,13 @@ contract ArthBondIssuer is AccessControl {
         epoch_start = block.timestamp;
         epoch_end = epoch_start.add(epoch_length);
 
-        emit FXB_EpochStarted(
+        emit ARTHB_EpochStarted(
             msg.sender,
             epoch_start,
             epoch_end,
             epoch_length,
             initial_discount,
-            max_fxb_outstanding
+            max_arthb_outstanding
         );
     }
 
@@ -744,39 +752,40 @@ contract ArthBondIssuer is AccessControl {
         redeemingPaused = !redeemingPaused;
     }
 
-    function setMaxFXBOutstanding(uint256 _max_fxb_outstanding)
+    function setMaxARTHBOutstanding(uint256 _max_arthb_outstanding)
         external
         onlyByOwnerControllerOrGovernance
     {
-        max_fxb_outstanding = _max_fxb_outstanding;
+        max_arthb_outstanding = _max_arthb_outstanding;
     }
 
     function setTargetLiquidity(
-        uint256 _target_liquidity_fxb,
+        uint256 _target_liquidity_arthb,
         bool _rebalance_vAMM
     ) external onlyByOwnerControllerOrGovernance {
-        target_liquidity_fxb = _target_liquidity_fxb;
+        target_liquidity_arthb = _target_liquidity_arthb;
         if (_rebalance_vAMM) {
             rebalance_AMM_liquidity_to_price(amm_spot_price());
         }
     }
 
-    function clearIssuableFXB() external onlyByOwnerControllerOrGovernance {
-        issuable_fxb = 0;
+    function clearIssuableARTHB() external onlyByOwnerControllerOrGovernance {
+        issuable_arthb = 0;
         issue_price = PRICE_PRECISION;
     }
 
-    function setIssuableFXB(uint256 _issuable_fxb, uint256 _issue_price)
+    function setIssuableARTHB(uint256 _issuable_arthb, uint256 _issue_price)
         external
         onlyByOwnerControllerOrGovernance
     {
-        if (_issuable_fxb > issuable_fxb) {
+        if (_issuable_arthb > issuable_arthb) {
             require(
-                ((FXB.totalSupply()).add(_issuable_fxb)) <= max_fxb_outstanding,
-                'New issue would exceed max_fxb_outstanding'
+                ((ARTHB.totalSupply()).add(_issuable_arthb)) <=
+                    max_arthb_outstanding,
+                'New issue would exceed max_arthb_outstanding'
             );
         }
-        issuable_fxb = _issuable_fxb;
+        issuable_arthb = _issuable_arthb;
         issue_price = _issue_price;
     }
 
@@ -873,17 +882,17 @@ contract ArthBondIssuer is AccessControl {
     event Recovered(address token, address to, uint256 amount);
 
     // Track bond redeeming
-    event FXB_Redeemed(
+    event ARTHB_Redeemed(
         address indexed from,
-        uint256 fxb_amount,
+        uint256 arthb_amount,
         uint256 arth_out
     );
-    event FXB_EpochStarted(
+    event ARTHB_EpochStarted(
         address indexed from,
         uint256 _epoch_start,
         uint256 _epoch_end,
         uint256 _epoch_length,
         uint256 _initial_discount,
-        uint256 _max_fxb_amount
+        uint256 _max_arthb_amount
     );
 }

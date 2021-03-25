@@ -117,12 +117,12 @@ contract ArthBond_NFT is ERC721, AccessControl {
         uint256 _max_early_redemption_penalty_pct
     )
         ERC721(
-            ArthBond_NFT_Library.fxb_namer(
+            ArthBond_NFT_Library.arthb_namer(
                 _series,
                 _face_value,
                 _maturity_months
             ),
-            ArthBond_NFT_Library.fxb_symboler(
+            ArthBond_NFT_Library.arthb_symboler(
                 _series,
                 _face_value,
                 _maturity_months
@@ -151,7 +151,7 @@ contract ArthBond_NFT is ERC721, AccessControl {
         super._setBaseURI(
             ArthBond_NFT_Library.concatenate3(
                 'https://api.arth.finance/nft/arth-bonds/',
-                ArthBond_NFT_Library.fxb_symboler(
+                ArthBond_NFT_Library.arthb_symboler(
                     _series,
                     _face_value,
                     _maturity_months
@@ -306,7 +306,7 @@ contract ArthBond_NFT is ERC721, AccessControl {
         emit BondRedeemed(msg.sender, symbol(), serial_number);
     }
 
-    function burn(uint256 serial_number) external {
+    function burn(uint256 serial_number) external pure {
         // Allowing bonds to be burned would disrupt the issuance of token_ids
         revert('Bonds can never be burned');
     }

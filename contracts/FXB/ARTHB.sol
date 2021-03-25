@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 // | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
 // |                                                                  |
 // ====================================================================
-// ========================== ARTHBond (FXB) ==========================
+// ========================== ARTHBond (ARTHB) ==========================
 // ====================================================================
 // Arth Finance: https://github.com/ArthFinance
 
@@ -115,7 +115,7 @@ contract ArthBond is ERC20Custom, AccessControl {
         onlyIssuers
     {
         super._mint(m_address, m_amount);
-        emit FXBMinted(msg.sender, m_address, m_amount);
+        emit ARTHBMinted(msg.sender, m_address, m_amount);
     }
 
     // Used by issuers when user redeems
@@ -124,7 +124,7 @@ contract ArthBond is ERC20Custom, AccessControl {
         onlyIssuers
     {
         super._burnFrom(b_address, b_amount);
-        emit FXBBurned(b_address, msg.sender, b_amount);
+        emit ARTHBBurned(b_address, msg.sender, b_amount);
     }
 
     // Adds an issuer
@@ -181,9 +181,9 @@ contract ArthBond is ERC20Custom, AccessControl {
 
     /* ========== EVENTS ========== */
 
-    // Track FXB burned
-    event FXBBurned(address indexed from, address indexed to, uint256 amount);
+    // Track ARTHB burned
+    event ARTHBBurned(address indexed from, address indexed to, uint256 amount);
 
-    // Track FXB minted
-    event FXBMinted(address indexed from, address indexed to, uint256 amount);
+    // Track ARTHB minted
+    event ARTHBMinted(address indexed from, address indexed to, uint256 amount);
 }

@@ -11,7 +11,7 @@ pragma experimental ABIEncoderV2;
 // | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
 // |                                                                  |
 // ====================================================================
-// ============= Curves For Arth Bonds (FXB): RC Charging =============
+// ============= Curves For Arth Bonds (ARTHB): RC Charging =============
 // ====================================================================
 // Arth Finance: https://github.com/ArthFinance
 // Travis Moore: https://github.com/FortisFortuna

@@ -70,7 +70,7 @@ library ArthBond_NFT_Library {
         return string(abi.encodePacked(s1, s2, s3));
     }
 
-    function fxb_namer(
+    function arthb_namer(
         string memory series,
         uint256 face_value_e18,
         uint256 maturity_months
@@ -90,16 +90,16 @@ library ArthBond_NFT_Library {
             );
     }
 
-    function fxb_symboler(
+    function arthb_symboler(
         string memory series,
         uint256 face_value_e18,
         uint256 maturity_months
     ) public pure returns (string memory) {
-        // Example: FXBA100000M3
+        // Example: ARTHBA100000M3
         return
             string(
                 abi.encodePacked(
-                    'FXB',
+                    'ARTHB',
                     series,
                     uint2str(face_value_e18.div(1e18)),
                     'M',
