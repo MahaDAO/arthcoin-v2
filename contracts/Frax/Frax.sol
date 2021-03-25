@@ -11,19 +11,18 @@ pragma experimental ABIEncoderV2;
 // Reviewer(s) / Contributor(s)
 // Sam Sun: https://github.com/samczsun
 
-import "../FXS/FXS.sol";
-import "../ERC20/ERC20.sol";
-import "../ERC20/IERC20.sol";
-import "../Math/SafeMath.sol";
-import "./Pools/FraxPool.sol";
-import "../Common/Context.sol";
-import "../ERC20/ERC20Custom.sol";
-import "../Oracle/UniswapPairOracle.sol";
-import "../Governance/AccessControl.sol";
-import "../ERC20/Variants/AnyswapV4Token.sol";
-import "../Oracle/ChainlinkETHUSDPriceConsumer.sol";
+import '../FXS/FXS.sol';
+import '../ERC20/ERC20.sol';
+import '../ERC20/IERC20.sol';
+import '../Math/SafeMath.sol';
+import './Pools/FraxPool.sol';
+import '../Common/Context.sol';
+import '../ERC20/ERC20Custom.sol';
+import '../Oracle/UniswapPairOracle.sol';
+import '../ERC20/Variants/AnyswapV4Token.sol';
+import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
 
-contract FRAXStablecoin is AnyswapV4Token, AccessControl {
+contract FRAXStablecoin is AnyswapV4Token {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
@@ -67,7 +66,7 @@ contract FRAXStablecoin is AnyswapV4Token, AccessControl {
 
     address public DEFAULT_ADMIN_ADDRESS;
     bytes32 public constant COLLATERAL_RATIO_PAUSER =
-        keccak256("COLLATERAL_RATIO_PAUSER");
+        keccak256('COLLATERAL_RATIO_PAUSER');
     bool public collateral_ratio_paused = false;
 
     /* ========== MODIFIERS ========== */
@@ -80,7 +79,7 @@ contract FRAXStablecoin is AnyswapV4Token, AccessControl {
     modifier onlyPools() {
         require(
             frax_pools[msg.sender] == true,
-            "Only frax pools can call this function"
+            'Only frax pools can call this function'
         );
         _;
     }
@@ -90,7 +89,7 @@ contract FRAXStablecoin is AnyswapV4Token, AccessControl {
             msg.sender == owner_address ||
                 msg.sender == timelock_address ||
                 msg.sender == controller_address,
-            "You are not the owner, controller, or the governance timelock"
+            'You are not the owner, controller, or the governance timelock'
         );
         _;
     }
@@ -100,7 +99,7 @@ contract FRAXStablecoin is AnyswapV4Token, AccessControl {
             msg.sender == owner_address ||
                 msg.sender == timelock_address ||
                 frax_pools[msg.sender] == true,
-            "You are not the owner, the governance timelock, or a pool"
+            'You are not the owner, the governance timelock, or a pool'
         );
         _;
     }
@@ -155,7 +154,7 @@ contract FRAXStablecoin is AnyswapV4Token, AccessControl {
             ); // How much FXS if you put in PRICE_PRECISION WETH
         } else
             revert(
-                "INVALID PRICE CHOICE. Needs to be either 0 (FRAX) or 1 (FXS)"
+                'INVALID PRICE CHOICE. Needs to be either 0 (FRAX) or 1 (FXS)'
             );
 
         // Will be in 1e6 format
@@ -232,12 +231,12 @@ contract FRAXStablecoin is AnyswapV4Token, AccessControl {
     function refreshCollateralRatio() public {
         require(
             collateral_ratio_paused == false,
-            "Collateral Ratio has been paused"
+            'Collateral Ratio has been paused'
         );
         uint256 frax_price_cur = frax_price();
         require(
             block.timestamp - last_call_time >= refresh_cooldown,
-            "Must wait for the refresh cooldown since last refresh"
+            'Must wait for the refresh cooldown since last refresh'
         );
 
         // Step increments are 0.25% (upon genesis, changable by setFraxStep())
@@ -285,7 +284,7 @@ contract FRAXStablecoin is AnyswapV4Token, AccessControl {
 
     // Adds collateral addresses supported, such as tether and busd, must be ERC20
     function addPool(address pool_address) public onlyByOwnerOrGovernance {
-        require(frax_pools[pool_address] == false, "address already exists");
+        require(frax_pools[pool_address] == false, 'address already exists');
         frax_pools[pool_address] = true;
         frax_pools_array.push(pool_address);
     }

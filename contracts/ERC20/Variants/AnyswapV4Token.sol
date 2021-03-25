@@ -3,8 +3,9 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "../ERC20Custom.sol";
-import "./IAnyswapV4Token.sol";
+import '../ERC20Custom.sol';
+import './IAnyswapV4Token.sol';
+import '../../Governance/AccessControl.sol';
 
 interface IApprovalReceiver {
     function onTokenApproval(
@@ -22,24 +23,37 @@ interface ITransferReceiver {
     ) external returns (bool);
 }
 
-contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
+contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
     /**
      * State variables.
      */
 
+    bytes32 public constant BRIDGE_ROLE = keccak256('BRIDGE_ROLE');
+
     bytes32 public constant PERMIT_TYPEHASH =
         keccak256(
-            "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
+            'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
         );
     bytes32 public constant TRANSFER_TYPEHASH =
         keccak256(
-            "Transfer(address owner,address to,uint256 value,uint256 nonce,uint256 deadline)"
+            'Transfer(address owner,address to,uint256 value,uint256 nonce,uint256 deadline)'
         );
     bytes32 public immutable DOMAIN_SEPARATOR;
 
     bool private _vaultOnly = false;
 
     mapping(address => uint256) public override nonces;
+
+    /**
+     * Modifier.
+     */
+    modifier onlyBridge {
+        require(
+            hasRole(BRIDGE_ROLE, _msgSender()),
+            'AnyswapV4Token: forbidden'
+        );
+        _;
+    }
 
     /**
      * Constructor.
@@ -57,10 +71,10 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256(
-                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+                    'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
                 ),
                 keccak256(bytes(name)),
-                keccak256(bytes("2")),
+                keccak256(bytes('2')),
                 chainId,
                 address(this)
             )
@@ -80,7 +94,7 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
     ) internal view returns (bool) {
         bytes32 hash =
             keccak256(
-                abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, hashStruct)
+                abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashStruct)
             );
         address signer = ecrecover(hash, v, r, s);
 
@@ -91,7 +105,7 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
     function prefixed(bytes32 hash) internal pure returns (bytes32) {
         return
             keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
+                abi.encodePacked('\x19Ethereum Signed Message:\n32', hash)
             );
     }
 
@@ -117,7 +131,7 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
         bytes32 r,
         bytes32 s
     ) public {
-        require(block.timestamp <= deadline, "AnyswapV3ERC20: Expired permit");
+        require(block.timestamp <= deadline, 'AnyswapV3ERC20: Expired permit');
 
         bytes32 hashStruct =
             keccak256(
@@ -147,7 +161,7 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
         bytes32 txhash,
         address account,
         uint256 amount
-    ) public override returns (bool) {
+    ) public override onlyBridge returns (bool) {
         _mint(account, amount);
 
         emit LogSwapin(txhash, account, amount);
@@ -157,10 +171,12 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
     function Swapout(uint256 amount, address bindaddr)
         public
         override
+        onlyBridge
         returns (bool)
     {
-        require(!_vaultOnly, "AnyswapV4ERC20: onlyAuth");
-        require(bindaddr != address(0), "AnyswapV3ERC20: address(0x0)");
+        // @Sagar: is the below two require necessary?
+        // require(!_vaultOnly, 'AnyswapV4ERC20: onlyAuth');
+        require(bindaddr != address(0), 'AnyswapV4ERC20: address(0x0)');
 
         _burn(msg.sender, amount);
 
@@ -191,7 +207,7 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
         uint256 balance = balanceOf(msg.sender);
         require(
             balance >= value,
-            "AnyswapV3ERC20: transfer amount exceeds balance"
+            'AnyswapV3ERC20: transfer amount exceeds balance'
         );
 
         // _balances[msg.sender] = balance - value;
@@ -210,7 +226,7 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
         bytes32 r,
         bytes32 s
     ) external override returns (bool) {
-        require(block.timestamp <= deadline, "AnyswapV3ERC20: Expired permit");
+        require(block.timestamp <= deadline, 'AnyswapV3ERC20: Expired permit');
 
         bytes32 hashStruct =
             keccak256(
@@ -233,7 +249,7 @@ contract AnyswapV4Token is ERC20Custom, IAnyswapV4Token {
         require(to != address(0) || to != address(this));
         require(
             balanceOf(target) >= value,
-            "AnyswapV3ERC20: transfer amount exceeds balance"
+            'AnyswapV3ERC20: transfer amount exceeds balance'
         );
 
         // _balances[target] = balance - value;
