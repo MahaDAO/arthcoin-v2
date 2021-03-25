@@ -97,6 +97,7 @@ contract FraxPool is AccessControl {
         keccak256('RECOLLATERALIZE_PAUSER');
     bytes32 private constant COLLATERAL_PRICE_PAUSER =
         keccak256('COLLATERAL_PRICE_PAUSER');
+    bytes32 private constant AMO_ROLE = keccak256('AMO_ROLE');
 
     // AccessControl state variables
     bool public mintPaused = false;
@@ -126,6 +127,11 @@ contract FraxPool is AccessControl {
                 msg.sender == owner_address,
             'FraxPool: forbidden'
         );
+        _;
+    }
+
+    modifier onlyAMOS {
+        require(hasRole(AMO_ROLE, _msgSender()), 'FraxPool: forbidden');
         _;
     }
 
@@ -264,7 +270,7 @@ contract FraxPool is AccessControl {
         weth_address = _weth_address;
     }
 
-    function borrow(uint256 _amount) external {
+    function borrow(uint256 _amount) external onlyAMOS {
         require(_amount > 0, 'FraxPool: Borrow amount less then 0');
         require(
             collateral_token.balanceOf(address(this)) > _amount,
@@ -278,10 +284,9 @@ contract FraxPool is AccessControl {
         );
 
         emit Borrow(msg.sender, _amount);
-        //FRAX.pool_mint(msg.sender, );
     }
 
-    function repay(uint256 _amount) external {
+    function repay(uint256 _amount) external onlyAMOS {
         require(_amount > 0, 'FraxPool: Repay amount less then 0');
         require(
             borrowedCollateral[msg.sender] > 0,
