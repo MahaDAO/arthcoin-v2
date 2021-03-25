@@ -449,7 +449,7 @@ contract FraxPool is AccessControl {
             uint256 stability_fee_to_charge =
                 getARTHStabilityTokenOraclePrice()
                     .mul(stability_fee_in_ARTH)
-                    .div(1e18);
+                    .div(1e18); // NOTE: this is might change asper FRAX's decimals and price precision.
 
             stability_fee_token.burnFrom(msg.sender, stability_fee_to_charge);
 
