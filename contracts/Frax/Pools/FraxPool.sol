@@ -23,13 +23,14 @@ pragma experimental ABIEncoderV2;
 // Reviewer(s) / Contributor(s)
 // Sam Sun: https://github.com/samczsun
 
-import '../../Math/SafeMath.sol';
 import '../../FXS/FXS.sol';
 import '../../Frax/Frax.sol';
 import '../../ERC20/ERC20.sol';
+import './FraxPoolLibrary.sol';
+import '../../Math/SafeMath.sol';
+import '../../Oracle/ISimpleOracle.sol';
 import '../../Oracle/UniswapPairOracle.sol';
 import '../../Governance/AccessControl.sol';
-import './FraxPoolLibrary.sol';
 
 contract FraxPool is AccessControl {
     using SafeMath for uint256;
@@ -37,44 +38,49 @@ contract FraxPool is AccessControl {
     /* ========== STATE VARIABLES ========== */
 
     ERC20 private collateral_token;
-    address private collateral_address;
-    address private owner_address;
+    ERC20 private stability_fee_token;
+    // TODO: replace this oracle with chainlink oracle.
+    ISimpleOracle public arth_stability_token_oracle;
 
-    address private frax_contract_address;
-    address private fxs_contract_address;
-    address private timelock_address;
+    address private owner_address;
+    address private collateral_address;
+
     FRAXShares private FXS;
     FRAXStablecoin private FRAX;
+    address private timelock_address;
+    address private fxs_contract_address;
+    address private frax_contract_address;
 
-    UniswapPairOracle private collatEthOracle;
-    address public collat_eth_oracle_address;
     address private weth_address;
+    address public collat_eth_oracle_address;
+    UniswapPairOracle private collatEthOracle;
 
-    uint256 public minting_fee;
-    uint256 public redemption_fee;
     uint256 public buyback_fee;
+    uint256 public minting_fee;
     uint256 public recollat_fee;
+    uint256 public redemption_fee;
+    uint256 public stability_fee = 1; // In %.
 
-    mapping(address => uint256) public redeemFXSBalances;
-    mapping(address => uint256) public redeemCollateralBalances;
-    uint256 public unclaimedPoolCollateral;
     uint256 public unclaimedPoolFXS;
+    uint256 public unclaimedPoolCollateral;
     mapping(address => uint256) public lastRedeemed;
+    mapping(address => uint256) public redeemFXSBalances;
     mapping(address => uint256) public borrowedCollateral;
+    mapping(address => uint256) public redeemCollateralBalances;
 
     // Constants for various precisions
     uint256 private constant PRICE_PRECISION = 1e6;
-    uint256 private constant COLLATERAL_RATIO_PRECISION = 1e6;
     uint256 private constant COLLATERAL_RATIO_MAX = 1e6;
+    uint256 private constant COLLATERAL_RATIO_PRECISION = 1e6;
 
-    // Number of decimals needed to get to 18
-    uint256 private immutable missing_decimals;
+    // Stores price of the collateral, if price is paused
+    uint256 public pausedPrice = 0;
 
     // Pool_ceiling is the total units of collateral that a pool contract can hold
     uint256 public pool_ceiling = 0;
 
-    // Stores price of the collateral, if price is paused
-    uint256 public pausedPrice = 0;
+    // Number of decimals needed to get to 18
+    uint256 private immutable missing_decimals;
 
     // Bonus rate on FXS minted during recollateralizeFRAX(); 6 decimals of precision, set to 0.75% on genesis
     uint256 public bonus_rate = 7500;
@@ -98,8 +104,9 @@ contract FraxPool is AccessControl {
     bool public buyBackPaused = false;
     bool public collateralPricePaused = false;
 
-    event Borrow(address indexed from, uint256 amount);
     event Repay(address indexed from, uint256 amount);
+    event Borrow(address indexed from, uint256 amount);
+    event StabilityFeesCharged(address indexed from, uint256 amount);
 
     /* ========== MODIFIERS ========== */
 
@@ -107,6 +114,16 @@ contract FraxPool is AccessControl {
         require(
             msg.sender == timelock_address || msg.sender == owner_address,
             'You are not the owner or the governance timelock'
+        );
+        _;
+    }
+
+    modifier onlyAdminOrOwnerOrGovernance() {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) ||
+                msg.sender == timelock_address ||
+                msg.sender == owner_address,
+            'FraxPool: forbidden'
         );
         _;
     }
@@ -148,6 +165,15 @@ contract FraxPool is AccessControl {
         grantRole(RECOLLATERALIZE_PAUSER, timelock_address);
         grantRole(BUYBACK_PAUSER, timelock_address);
         grantRole(COLLATERAL_PRICE_PAUSER, timelock_address);
+    }
+
+    function setStabilityFee(uint256 percent)
+        public
+        onlyAdminOrOwnerOrGovernance
+    {
+        require(percent <= 100, 'FraxPool: percent > 100');
+
+        stability_fee = percent;
     }
 
     /* ========== VIEWS ========== */
@@ -375,6 +401,29 @@ contract FraxPool is AccessControl {
         FRAX.pool_mint(msg.sender, mint_amount);
     }
 
+    function getARTHStabilityTokenOraclePrice() public view returns (uint256) {
+        return arth_stability_token_oracle.getPrice();
+    }
+
+    function _chargeStabilityFee(uint256 amount) internal {
+        require(amount > 0, 'FraxPool: amount = 0');
+
+        if (stability_fee > 0) {
+            uint256 stability_fee_in_ARTH = amount.mul(stability_fee).div(100);
+
+            uint256 stability_fee_to_charge =
+                getARTHStabilityTokenOraclePrice()
+                    .mul(stability_fee_in_ARTH)
+                    .div(1e18);
+
+            stability_fee_token.burnFrom(msg.sender, stability_fee_to_charge);
+
+            emit StabilityFeesCharged(msg.sender, stability_fee_to_charge);
+        }
+
+        return;
+    }
+
     // Redeem collateral. 100% collateral-backed
     function redeem1t1FRAX(uint256 FRAX_amount, uint256 COLLATERAL_out_min)
         external
@@ -417,6 +466,8 @@ contract FraxPool is AccessControl {
             collateral_needed
         );
         lastRedeemed[msg.sender] = block.number;
+
+        _chargeStabilityFee(FRAX_amount);
 
         // Move all external functions to the end
         FRAX.pool_burn_from(msg.sender, FRAX_amount);
@@ -491,6 +542,8 @@ contract FraxPool is AccessControl {
 
         lastRedeemed[msg.sender] = block.number;
 
+        _chargeStabilityFee(FRAX_amount);
+
         // Move all external functions to the end
         FRAX.pool_burn_from(msg.sender, FRAX_amount);
         FXS.pool_mint(address(this), fxs_amount);
@@ -523,6 +576,9 @@ contract FraxPool is AccessControl {
         lastRedeemed[msg.sender] = block.number;
 
         require(FXS_out_min <= fxs_amount, 'Slippage limit reached');
+
+        _chargeStabilityFee(FRAX_amount);
+
         // Move all external functions to the end
         FRAX.pool_burn_from(msg.sender, FRAX_amount);
         FXS.pool_mint(address(this), fxs_amount);
