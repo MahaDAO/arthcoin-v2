@@ -3,34 +3,20 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// ============================= CurveAMO =============================
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Jason Huan: https://github.com/jasonhuan
-// Travis Moore: https://github.com/FortisFortuna
-
-// Reviewer(s) / Contributor(s)
-// Sam Kazemian: https://github.com/samkazemian
-
-import './IStableSwap3Pool.sol';
-import './IMetaImplementationUSD.sol';
-import './ILiquidityGauge.sol';
 import './IMinter.sol';
-import '../ERC20/ERC20.sol';
 import '../Arth/Arth.sol';
+import '../ERC20/ERC20.sol';
 import '../ARTHS/ARTHS.sol';
 import '../Math/SafeMath.sol';
+import '../Math/SafeMath.sol';
+import './ILiquidityGauge.sol';
+import './IStableSwap3Pool.sol';
+import './IMetaImplementationUSD.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ */
 contract CurveAMO is AccessControl {
     using SafeMath for uint256;
 

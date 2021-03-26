@@ -42,7 +42,7 @@ contract ArthBridge is AccessControl {
     /* ========== VIEWS ========== */
 
     // Needed for compatibility to use pool_mint()
-    function collatDollarBalance() public view returns (uint256) {
+    function collatDollarBalance() public pure returns (uint256) {
         return 0;
     }
 

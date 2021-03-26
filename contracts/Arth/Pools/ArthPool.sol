@@ -3,28 +3,8 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// ============================= ArthPool =============================
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Travis Moore: https://github.com/FortisFortuna
-// Jason Huan: https://github.com/jasonhuan
-// Sam Kazemian: https://github.com/samkazemian
-
-// Reviewer(s) / Contributor(s)
-// Sam Sun: https://github.com/samczsun
-
-import '../../ARTHS/ARTHS.sol';
 import '../../Arth/Arth.sol';
+import '../../ARTHS/ARTHS.sol';
 import '../../ERC20/ERC20.sol';
 import './ArthPoolLibrary.sol';
 import '../../Math/SafeMath.sol';
@@ -32,6 +12,12 @@ import '../../Oracle/ISimpleOracle.sol';
 import '../../Oracle/UniswapPairOracle.sol';
 import '../../Governance/AccessControl.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *  Code modified by:
+ *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ */
 contract ArthPool is AccessControl {
     using SafeMath for uint256;
 

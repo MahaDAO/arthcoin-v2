@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import '../ERC20/ERC20Custom.sol';
 import '../ERC20/ERC20.sol';
 import '../Math/SafeMath.sol';
+import '../ERC20/ERC20Custom.sol';
 
 /**
  * @title TokenVesting

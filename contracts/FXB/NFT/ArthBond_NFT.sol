@@ -2,31 +2,16 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// =========================== ArthBond_NFT ===========================
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Travis Moore: https://github.com/FortisFortuna
-
-// Reviewer(s) / Contributor(s)
-// Jason Huan: https://github.com/jasonhuan
-// Sam Kazemian: https://github.com/samkazemian
-
 import '../../ERC721/ERC721.sol';
-import '../../ERC721/V8_0_0/Governance/AccessControl.sol';
+import './ArthBond_NFT_Library.sol';
 import '../../ERC721/V8_0_0/Math/SafeMath.sol';
 import '../../Arth/V8_0_0/IArthPartial.sol';
-import './ArthBond_NFT_Library.sol';
+import '../../ERC721/V8_0_0/Governance/AccessControl.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian.
+ */
 contract ArthBond_NFT is ERC721, AccessControl {
     using SafeMath for uint256;
 

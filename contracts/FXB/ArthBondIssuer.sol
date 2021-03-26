@@ -3,32 +3,16 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// ========= Bond Issuer with virtual AMM for ArthBonds (ARTHB) =========
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Travis Moore: https://github.com/FortisFortuna
-
-// Reviewer(s) / Contributor(s)
-// Jason Huan: https://github.com/jasonhuan
-// Sam Kazemian: https://github.com/samkazemian
-// Dennis: github.com/denett
-
-import '../Math/SafeMath.sol';
 import './ARTHB.sol';
 import '../Arth/Arth.sol';
 import '../ERC20/ERC20.sol';
+import '../Math/SafeMath.sol';
 import '../Governance/AccessControl.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun, Dennis.
+ */
 contract ArthBondIssuer is AccessControl {
     using SafeMath for uint256;
 
@@ -214,7 +198,7 @@ contract ArthBondIssuer is AccessControl {
     // Needed for the Arth contract to function without bricking
     function collatDollarBalance()
         external
-        view
+        pure
         returns (uint256 dummy_dollar_balance)
     {
         dummy_dollar_balance = uint256(1e18); // 1 nonexistant USDC
@@ -319,7 +303,7 @@ contract ArthBondIssuer is AccessControl {
         uint256 reserveIn,
         uint256 reserveOut,
         uint256 the_fee
-    ) public view returns (uint256 amountOut) {
+    ) public pure returns (uint256 amountOut) {
         require(amountIn > 0, 'ArthBondIssuer: INSUFFICIENT_INPUT_AMOUNT');
         require(
             reserveIn > 0 && reserveOut > 0,
@@ -337,7 +321,7 @@ contract ArthBondIssuer is AccessControl {
         uint256 amountIn,
         uint256 reserveIn,
         uint256 reserveOut
-    ) public view returns (uint256 amountOut) {
+    ) public pure returns (uint256 amountOut) {
         amountOut = getAmountOut(amountIn, reserveIn, reserveOut, 0);
     }
 

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./IERC165.sol";
+import './IERC165.sol';
 
 /**
  * @dev Implementation of the {IERC165} interface.
@@ -49,7 +49,7 @@ abstract contract ERC165 is IERC165 {
      * - `interfaceId` cannot be the ERC165 invalid interface (`0xffffffff`).
      */
     function _registerInterface(bytes4 interfaceId) internal virtual {
-        require(interfaceId != 0xffffffff, "ERC165: invalid interface id");
+        require(interfaceId != 0xffffffff, 'ERC165: invalid interface id');
         _supportedInterfaces[interfaceId] = true;
     }
 }

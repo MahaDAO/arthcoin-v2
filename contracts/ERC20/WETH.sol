@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./IWETH.sol";
+import './IWETH.sol';
 
 // Copyright (C) 2015, 2016, 2017 Dapphub
 
@@ -20,8 +20,8 @@ import "./IWETH.sol";
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 contract WETH is IWETH {
-    string public name = "Wrapped Ether";
-    string public symbol = "WETH";
+    string public name = 'Wrapped Ether';
+    string public symbol = 'WETH';
     uint8 public decimals = 18;
 
     event Approval(address indexed src, address indexed guy, uint256 wad);
@@ -51,8 +51,8 @@ contract WETH is IWETH {
         require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
 
-        (bool success, ) = msg.sender.call{value: wad}("");
-        require(success, "Withdraw failed");
+        (bool success, ) = msg.sender.call{value: wad}('');
+        require(success, 'Withdraw failed');
 
         emit Withdrawal(msg.sender, wad);
     }

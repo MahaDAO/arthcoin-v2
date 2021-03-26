@@ -3,22 +3,13 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// ============= Curves For Arth Bonds (ARTHB): RC Charging =============
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-// Travis Moore: https://github.com/FortisFortuna
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian.
+ * NOTE: Slide rulers on the blockchain
+ * Good stuff here too https://forum.openzeppelin.com/t/list-of-solidity-libraries-in-the-wild/2250
+ */
 
-// Good stuff here too https://forum.openzeppelin.com/t/list-of-solidity-libraries-in-the-wild/2250
-
-// Slide rulers on the blockchain
 contract ArthBond_Curves_RC_Discharge {
     // The RC Charging Formula is a nice curve
     // http://hyperphysics.phy-astr.gsu.edu/hbase/electric/capchg.html#c2
@@ -30,7 +21,11 @@ contract ArthBond_Curves_RC_Discharge {
     // plot 1000000 * (1 - (1 / (1.7320^(x/20)))) from x = 0 to 100
     // Each epoch can be broken down into 100 discrete points
 
-    function get_total_points(uint8 curve_choice) public returns (uint256) {
+    function get_total_points(uint8 curve_choice)
+        public
+        view
+        returns (uint256)
+    {
         if (curve_choice == 0) return RC_3ROOT_CURVE.length;
         else if (curve_choice == 1) return RC_4ROOT_CURVE.length;
         else if (curve_choice == 2) return RC_5ROOT_CURVE.length;
@@ -40,6 +35,7 @@ contract ArthBond_Curves_RC_Discharge {
 
     function get_curve_point(uint8 curve_choice, uint8 index)
         public
+        view
         returns (uint256)
     {
         if (curve_choice == 0) return RC_3ROOT_CURVE[index];

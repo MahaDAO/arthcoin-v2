@@ -3,14 +3,6 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// Arth Finance: https://github.com/ArthFinance
-// Primary Author(s)
-// Travis Moore: https://github.com/FortisFortuna
-// Jason Huan: https://github.com/jasonhuan
-// Sam Kazemian: https://github.com/samkazemian
-// Reviewer(s) / Contributor(s)
-// Sam Sun: https://github.com/samczsun
-
 import '../ARTHS/ARTHS.sol';
 import '../ERC20/ERC20.sol';
 import '../ERC20/IERC20.sol';
@@ -22,6 +14,12 @@ import '../Oracle/UniswapPairOracle.sol';
 import '../ERC20/Variants/AnyswapV4Token.sol';
 import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *  Code modified by:
+ *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ */
 contract ARTHStablecoin is AnyswapV4Token {
     using SafeMath for uint256;
 

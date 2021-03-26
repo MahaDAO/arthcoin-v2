@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "../Common/Context.sol";
-import "../Math/SafeMath.sol";
+import '../Common/Context.sol';
+import '../Math/SafeMath.sol';
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP. Does not include

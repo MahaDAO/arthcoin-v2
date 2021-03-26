@@ -7,10 +7,10 @@ pragma experimental ABIEncoderV2;
 
 contract Comp {
     /// @notice EIP-20 token name for this token
-    string public constant name = "Compound";
+    string public constant name = 'Compound';
 
     /// @notice EIP-20 token symbol for this token
-    string public constant symbol = "COMP";
+    string public constant symbol = 'COMP';
 
     /// @notice EIP-20 token decimals for this token
     uint8 public constant decimals = 18;
@@ -42,12 +42,12 @@ contract Comp {
     /// @notice The EIP-712 typehash for the contract's domain
     bytes32 public constant DOMAIN_TYPEHASH =
         keccak256(
-            "EIP712Domain(string name,uint256 chainId,address verifyingContract)"
+            'EIP712Domain(string name,uint256 chainId,address verifyingContract)'
         );
 
     /// @notice The EIP-712 typehash for the delegation struct used by the contract
     bytes32 public constant DELEGATION_TYPEHASH =
-        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
+        keccak256('Delegation(address delegatee,uint256 nonce,uint256 expiry)');
 
     /// @notice A record of states for signing / validating signatures
     mapping(address => uint256) public nonces;
@@ -115,7 +115,7 @@ contract Comp {
         if (rawAmount == uint256(int256(-1))) {
             amount = uint96(int96(-1));
         } else {
-            amount = safe96(rawAmount, "Comp::approve: amount exceeds 96 bits");
+            amount = safe96(rawAmount, 'Comp::approve: amount exceeds 96 bits');
         }
 
         allowances[msg.sender][spender] = amount;
@@ -141,7 +141,7 @@ contract Comp {
      */
     function transfer(address dst, uint256 rawAmount) external returns (bool) {
         uint96 amount =
-            safe96(rawAmount, "Comp::transfer: amount exceeds 96 bits");
+            safe96(rawAmount, 'Comp::transfer: amount exceeds 96 bits');
         _transferTokens(msg.sender, dst, amount);
         return true;
     }
@@ -161,14 +161,14 @@ contract Comp {
         address spender = msg.sender;
         uint96 spenderAllowance = allowances[src][spender];
         uint96 amount =
-            safe96(rawAmount, "Comp::approve: amount exceeds 96 bits");
+            safe96(rawAmount, 'Comp::approve: amount exceeds 96 bits');
 
         if (spender != src && spenderAllowance != uint96(int96(-1))) {
             uint96 newAllowance =
                 sub96(
                     spenderAllowance,
                     amount,
-                    "Comp::transferFrom: transfer amount exceeds spender allowance"
+                    'Comp::transferFrom: transfer amount exceeds spender allowance'
                 );
             allowances[src][spender] = newAllowance;
 
@@ -219,20 +219,20 @@ contract Comp {
             );
         bytes32 digest =
             keccak256(
-                abi.encodePacked("\x19\x01", domainSeparator, structHash)
+                abi.encodePacked('\x19\x01', domainSeparator, structHash)
             );
         address signatory = ecrecover(digest, v, r, s);
         require(
             signatory != address(0),
-            "Comp::delegateBySig: invalid signature"
+            'Comp::delegateBySig: invalid signature'
         );
         require(
             nonce == nonces[signatory]++,
-            "Comp::delegateBySig: invalid nonce"
+            'Comp::delegateBySig: invalid nonce'
         );
         require(
             block.timestamp <= expiry,
-            "Comp::delegateBySig: signature expired"
+            'Comp::delegateBySig: signature expired'
         );
         return _delegate(signatory, delegatee);
     }
@@ -262,7 +262,7 @@ contract Comp {
     {
         require(
             blockNumber < block.number,
-            "Comp::getPriorVotes: not yet determined"
+            'Comp::getPriorVotes: not yet determined'
         );
 
         uint32 nCheckpoints = numCheckpoints[account];
@@ -313,22 +313,22 @@ contract Comp {
     ) internal {
         require(
             src != address(0),
-            "Comp::_transferTokens: cannot transfer from the zero address"
+            'Comp::_transferTokens: cannot transfer from the zero address'
         );
         require(
             dst != address(0),
-            "Comp::_transferTokens: cannot transfer to the zero address"
+            'Comp::_transferTokens: cannot transfer to the zero address'
         );
 
         balances[src] = sub96(
             balances[src],
             amount,
-            "Comp::_transferTokens: transfer amount exceeds balance"
+            'Comp::_transferTokens: transfer amount exceeds balance'
         );
         balances[dst] = add96(
             balances[dst],
             amount,
-            "Comp::_transferTokens: transfer amount overflows"
+            'Comp::_transferTokens: transfer amount overflows'
         );
         emit Transfer(src, dst, amount);
 
@@ -351,7 +351,7 @@ contract Comp {
                     sub96(
                         srcRepOld,
                         amount,
-                        "Comp::_moveVotes: vote amount underflows"
+                        'Comp::_moveVotes: vote amount underflows'
                     );
                 _writeCheckpoint(srcRep, srcRepNum, srcRepOld, srcRepNew);
             }
@@ -366,7 +366,7 @@ contract Comp {
                     add96(
                         dstRepOld,
                         amount,
-                        "Comp::_moveVotes: vote amount overflows"
+                        'Comp::_moveVotes: vote amount overflows'
                     );
                 _writeCheckpoint(dstRep, dstRepNum, dstRepOld, dstRepNew);
             }
@@ -382,7 +382,7 @@ contract Comp {
         uint32 blockNumber =
             safe32(
                 block.number,
-                "Comp::_writeCheckpoint: block number exceeds 32 bits"
+                'Comp::_writeCheckpoint: block number exceeds 32 bits'
             );
 
         if (

@@ -3,39 +3,24 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// =========================== ArthPoolvAMM ===========================
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Jason Huan: https://github.com/jasonhuan
-// Travis Moore: https://github.com/FortisFortuna
-// Sam Kazemian: https://github.com/samkazemian
-
-// Reviewer(s) / Contributor(s)
-// github.com/denett
-// github.com/realisation
-
-// TODO
-// 1) Have to call getVirtualReserves() on every update of the reserve, such that we can call _update with the averages of the reserve
-
-import '../../Math/Math.sol';
-import '../../Math/SafeMath.sol';
-import '../../ARTHS/ARTHS.sol';
 import '../../Arth/Arth.sol';
+import '../../Math/Math.sol';
 import '../../ERC20/ERC20.sol';
+import '../../ARTHS/ARTHS.sol';
+import '../../Math/SafeMath.sol';
 import '../../Uniswap/UniswapV2Library.sol';
 import '../../Oracle/UniswapPairOracle.sol';
 import '../../Governance/AccessControl.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun,
+ *  - github.com/denett
+ *  - github.com/realisation
+ *  Code modified by:
+ *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ * TODO: 1) Have to call getVirtualReserves() on every update of the reserve, such that we can call _update with the averages of the reserve
+ */
 contract ArthPoolvAMM is AccessControl {
     using SafeMath for uint256;
 
