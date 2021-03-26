@@ -2,19 +2,22 @@
 
 pragma solidity ^0.8.0;
 
-import "../Uniswap/Interfaces/IUniswapV2Pair.sol";
-import "../Math/FixedPoint.sol";
+import '../Math/FixedPoint.sol';
+import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 
-// library with helper methods for oracles that are concerned with computing average prices
+/// @dev Library with helper methods for oracles that are concerned
+/// with computing average prices.
 library UniswapV2OracleLibrary {
     using FixedPoint for *;
 
-    // helper function that returns the current block timestamp within the range of uint32, i.e. [0, 2**32 - 1]
+    /// @dev Helper function that returns the current block timestamp
+    /// within the range of uint32, i.e. [0, 2**32 - 1]
     function currentBlockTimestamp() internal view returns (uint32) {
         return uint32(block.timestamp % 2**32);
     }
 
-    // produces the cumulative price using counterfactuals to save gas and avoid a call to sync.
+    /// @dev Produces the cumulative price using counterfactuals to save gas
+    /// and avoid a call to sync.
     function currentCumulativePrices(address pair)
         internal
         view

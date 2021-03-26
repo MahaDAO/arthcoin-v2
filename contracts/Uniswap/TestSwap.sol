@@ -2,12 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "../FakeCollateral/FakeCollateral_USDT.sol";
-import "../FakeCollateral/FakeCollateral_WETH.sol";
-import "./UniswapV2Router02_Modified.sol";
+import './UniswapV2Router02_Modified.sol';
+import '../FakeCollateral/FakeCollateral_USDT.sol';
+import '../FakeCollateral/FakeCollateral_WETH.sol';
 
-/* IGNORE THIS CONTRACT, ONLY USED FOR TESTING PURPOSES */
-
+/**
+ * @dev IGNORE THIS CONTRACT, ONLY USED FOR TESTING PURPOSES
+ */
 contract TestSwap {
     address public USDT_address;
     address public WETH_address;
@@ -25,7 +26,7 @@ contract TestSwap {
         router = UniswapV2Router02_Modified(_router_address);
     }
 
-    function getPath() public returns (address[] memory) {
+    function getPath() public returns (address[] memory) view {
         address[] memory path = new address[](2);
         path[0] = USDT_address;
         path[1] = WETH_address;
@@ -38,9 +39,9 @@ contract TestSwap {
     {
         require(
             USDT.transferFrom(msg.sender, address(this), amountIn),
-            "transferFrom failed."
+            'transferFrom failed.'
         );
-        require(USDT.approve(address(router), amountIn), "approve failed.");
+        require(USDT.approve(address(router), amountIn), 'approve failed.');
 
         address[] memory path = new address[](2);
         path[0] = USDT_address;

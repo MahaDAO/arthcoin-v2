@@ -99,7 +99,7 @@ library StringHelpers {
         pure
         returns (string memory _concatenatedString)
     {
-        return strConcat(_a, _b, "", "", "");
+        return strConcat(_a, _b, '', '', '');
     }
 
     function strConcat(
@@ -107,7 +107,7 @@ library StringHelpers {
         string memory _b,
         string memory _c
     ) internal pure returns (string memory _concatenatedString) {
-        return strConcat(_a, _b, _c, "", "");
+        return strConcat(_a, _b, _c, '', '');
     }
 
     function strConcat(
@@ -116,7 +116,7 @@ library StringHelpers {
         string memory _c,
         string memory _d
     ) internal pure returns (string memory _concatenatedString) {
-        return strConcat(_a, _b, _c, _d, "");
+        return strConcat(_a, _b, _c, _d, '');
     }
 
     function strConcat(
@@ -186,11 +186,11 @@ library StringHelpers {
             } else if (uint256(uint8(bresult[i])) == 46) {
                 require(
                     !decimals,
-                    "More than one decimal encountered in string!"
+                    'More than one decimal encountered in string!'
                 );
                 decimals = true;
             } else {
-                revert("Non-numeral character encountered in string!");
+                revert('Non-numeral character encountered in string!');
             }
         }
         if (_b > 0) {
@@ -245,7 +245,7 @@ library StringHelpers {
         returns (string memory _uintAsString)
     {
         if (_i == 0) {
-            return "0";
+            return '0';
         }
         uint256 j = _i;
         uint256 len;

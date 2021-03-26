@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "./Interfaces/IUniswapV2Pair.sol";
-import "../Math/Babylonian.sol";
-import "../Math/SafeMath.sol";
-import "./TransferHelper.sol";
-import "../ERC20/IERC20.sol";
-import "./Interfaces/IUniswapV2Router01.sol";
-import "./UniswapV2Library.sol";
+import '../ERC20/IERC20.sol';
+import '../Math/SafeMath.sol';
+import './TransferHelper.sol';
+import '../Math/Babylonian.sol';
+import './UniswapV2Library.sol';
+import './Interfaces/IUniswapV2Pair.sol';
+import './Interfaces/IUniswapV2Router01.sol';
 
 contract SwapToPrice {
     using SafeMath for uint256;
@@ -21,7 +21,7 @@ contract SwapToPrice {
         router = router_;
     }
 
-    // computes the direction and magnitude of the profit-maximizing trade
+    /// @dev Computes the direction and magnitude of the profit-maximizing trade
     function computeProfitMaximizingTrade(
         uint256 truePriceTokenA,
         uint256 truePriceTokenB,
@@ -45,9 +45,10 @@ contract SwapToPrice {
         amountIn = leftSide.sub(rightSide);
     }
 
-    // swaps an amount of either token such that the trade is profit-maximizing, given an external true price
-    // true price is expressed in the ratio of token A to token B
-    // caller must approve this contract to spend whichever token is intended to be swapped
+    /** @dev Swaps an amount of either token such that the trade is profit-maximizing, given an external true price
+     * true price is expressed in the ratio of token A to token B
+     * caller must approve this contract to spend whichever token is intended to be swapped
+     */
     function swapToPrice(
         address tokenA,
         address tokenB,
@@ -61,12 +62,12 @@ contract SwapToPrice {
         // true price is expressed as a ratio, so both values must be non-zero
         require(
             truePriceTokenA != 0 && truePriceTokenB != 0,
-            "ExampleSwapToPrice: ZERO_PRICE"
+            'ExampleSwapToPrice: ZERO_PRICE'
         );
         // caller can specify 0 for either if they wish to swap in only one direction, but not both
         require(
             maxSpendTokenA != 0 || maxSpendTokenB != 0,
-            "ExampleSwapToPrice: ZERO_SPEND"
+            'ExampleSwapToPrice: ZERO_SPEND'
         );
 
         bool aToB;

@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import "./Interfaces/IUniswapV2ERC20.sol";
-import "../Math/SafeMath.sol";
+import '../Math/SafeMath.sol';
+import './Interfaces/IUniswapV2ERC20.sol';
 
 contract UniswapV2ERC20 is IUniswapV2ERC20 {
     using SafeMath for uint256;
 
-    string public constant override name = "Uniswap V2";
-    string public constant override symbol = "UNI-V2";
+    string public constant override name = 'Uniswap V2';
+    string public constant override symbol = 'UNI-V2';
     uint8 public constant override decimals = 18;
     uint256 public override totalSupply;
     mapping(address => uint256) public override balanceOf;
@@ -21,13 +21,6 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint256) public override nonces;
 
-    // event Approval(
-    //     address indexed owner,
-    //     address indexed spender,
-    //     uint256 value
-    // );
-    // event Transfer(address indexed from, address indexed to, uint256 value);
-
     constructor() {
         uint256 chainId;
         assembly {
@@ -36,10 +29,10 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256(
-                    "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+                    'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
                 ),
                 keccak256(bytes(name)),
-                keccak256(bytes("1")),
+                keccak256(bytes('1')),
                 chainId,
                 address(this)
             )
@@ -118,11 +111,11 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         bytes32 r,
         bytes32 s
     ) external override {
-        require(deadline >= block.timestamp, "UniswapV2: EXPIRED");
+        require(deadline >= block.timestamp, 'UniswapV2: EXPIRED');
         bytes32 digest =
             keccak256(
                 abi.encodePacked(
-                    "\x19\x01",
+                    '\x19\x01',
                     DOMAIN_SEPARATOR,
                     keccak256(
                         abi.encode(
@@ -139,7 +132,7 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         address recoveredAddress = ecrecover(digest, v, r, s);
         require(
             recoveredAddress != address(0) && recoveredAddress == owner,
-            "UniswapV2: INVALID_SIGNATURE"
+            'UniswapV2: INVALID_SIGNATURE'
         );
         _approve(owner, spender, value);
     }
