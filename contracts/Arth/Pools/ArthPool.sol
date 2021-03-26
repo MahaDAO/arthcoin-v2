@@ -384,11 +384,11 @@ contract ArthPool is AccessControl {
 
     // Will fail if fully collateralized or fully algorithmic
     // > 0% and < 100% collateral-backed
-    function mintFractionalARTH(
+    function _mintFractionalARTH(
         uint256 collateral_amount,
         uint256 arths_amount,
         uint256 ARTH_out_min
-    ) external notMintPaused {
+    ) private notMintPaused {
         uint256 arths_price = ARTH.arths_price();
         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
 
@@ -430,6 +430,30 @@ contract ArthPool is AccessControl {
             collateral_amount
         );
         ARTH.pool_mint(msg.sender, mint_amount);
+    }
+
+    // Will fail if fully collateralized or fully algorithmic
+    // > 0% and < 100% collateral-backed
+    function mintFractionalARTH(
+        uint256 collateral_amount,
+        uint256 arths_amount,
+        uint256 ARTH_out_min
+    ) external notMintPaused {
+        _mintFractionalARTH(collateral_amount, arths_amount, ARTH_out_min);
+    }
+
+    function mintFractionalARTHAndCall(
+        uint256 collateral_amount,
+        uint256 arths_amount,
+        uint256 ARTH_out_min
+    ) external notMintPaused {
+        _mintFractionalARTH(collateral_amount, arths_amount, ARTH_out_min);
+
+        staking_pool.stake(collateral_amount);
+
+        mintedAndStaked[msg.sender] = mintedAndStaked[msg.sender].add(
+            collateral_amount
+        );
     }
 
     function getARTHStabilityTokenOraclePrice() public view returns (uint256) {
@@ -519,19 +543,18 @@ contract ArthPool is AccessControl {
         _redeem1t1ARTH(ARTH_amount, COLLATERAL_out_min);
 
         staking_pool.getReward();
+        // Get all the collateral that was staked via msg.sender's minting or recollateralizing.
         staking_pool.withdraw(mintedAndStaked[msg.sender]);
         staking_pool.getReward(); // Just to get any left over rewards in case there are any.
 
         mintedAndStaked[msg.sender] = 0;
     }
 
-    // Will fail if fully collateralized or algorithmic
-    // Redeem ARTH for collateral and ARTHS. > 0% and < 100% collateral-backed
-    function redeemFractionalARTH(
+    function _redeemFractionalARTH(
         uint256 ARTH_amount,
         uint256 ARTHS_out_min,
         uint256 COLLATERAL_out_min
-    ) external notRedeemPaused {
+    ) private notRedeemPaused {
         uint256 arths_price = ARTH.arths_price();
         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
 
@@ -602,6 +625,23 @@ contract ArthPool is AccessControl {
         // Move all external functions to the end
         ARTH.pool_burn_from(msg.sender, ARTH_amount);
         ARTHS.pool_mint(address(this), arths_amount);
+    }
+
+    // Will fail if fully collateralized or algorithmic
+    // Redeem ARTH for collateral and ARTHS. > 0% and < 100% collateral-backed
+    function redeemFractionalARTH(
+        uint256 ARTH_amount,
+        uint256 ARTHS_out_min,
+        uint256 COLLATERAL_out_min
+    ) external notRedeemPaused {
+        _redeemFractionalARTH(ARTH_amount, ARTHS_out_min, COLLATERAL_out_min);
+
+        staking_pool.getReward();
+        // Get all the collateral that was staked via msg.sender's minting or recollateralizing.
+        staking_pool.withdraw(mintedAndStaked[msg.sender]);
+        staking_pool.getReward(); // Just to get any left over rewards in case there are any.
+
+        mintedAndStaked[msg.sender] = 0;
     }
 
     // Redeem ARTH for ARTHS. 0% collateral-backed
