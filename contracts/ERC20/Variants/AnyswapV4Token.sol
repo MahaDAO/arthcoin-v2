@@ -174,6 +174,7 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
         onlyBridge
         returns (bool)
     {
+        // Refer: https://github.com/connext/chaindata/blob/main/AnyswapV4ERC20.sol#L258
         // @Sagar: is the below two require necessary?
         // require(!_vaultOnly, 'AnyswapV4ERC20: onlyAuth');
         require(bindaddr != address(0), 'AnyswapV4ERC20: address(0x0)');
