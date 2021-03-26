@@ -109,6 +109,14 @@ contract ArthPool is AccessControl {
         _;
     }
 
+    modifier onlyAdmin() {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            'You are not the owner or the governance timelock'
+        );
+        _;
+    }
+
     modifier onlyAdminOrOwnerOrGovernance() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) ||
@@ -253,10 +261,8 @@ contract ArthPool is AccessControl {
         }
     }
 
-    function redeemFromStakingPool(uint256 amount)
-        public
-        onlyAdminOrOwnerOrGovernance
-    {
+    // Fail safe to redeem amount from staking pool.
+    function redeemFromStakingPool(uint256 amount) public onlyAdmin {
         staking_pool.withdraw(amount);
     }
 
@@ -536,7 +542,7 @@ contract ArthPool is AccessControl {
         _redeem1t1ARTH(ARTH_amount, COLLATERAL_out_min);
     }
 
-    function redeem1t1ARTHAndcall(
+    function redeem1t1ARTHAndCall(
         uint256 ARTH_amount,
         uint256 COLLATERAL_out_min
     ) external notRedeemPaused {
