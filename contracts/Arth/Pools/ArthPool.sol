@@ -9,6 +9,7 @@ import '../../ERC20/ERC20.sol';
 import './ArthPoolLibrary.sol';
 import '../../Math/SafeMath.sol';
 import '../../Oracle/ISimpleOracle.sol';
+import '../../Staking/ICommonStaking.sol';
 import '../../Oracle/UniswapPairOracle.sol';
 import '../../Governance/AccessControl.sol';
 
@@ -25,6 +26,8 @@ contract ArthPool is AccessControl {
 
     ERC20 private collateral_token;
     ERC20 private stability_fee_token;
+    ICommonStaking private staking_pool;
+
     // TODO: replace this oracle with chainlink oracle.
     ISimpleOracle public arth_stability_token_oracle;
 
@@ -53,7 +56,7 @@ contract ArthPool is AccessControl {
     mapping(address => uint256) public redeemARTHSBalances;
     mapping(address => uint256) public borrowedCollateral;
     mapping(address => uint256) public redeemCollateralBalances;
-    mapping(address => uint256) public mintAndStake;
+    mapping(address => uint256) public mintedAndStaked;
 
     // Constants for various precisions
     uint256 private constant PRICE_PRECISION = 1e6;
@@ -141,6 +144,7 @@ contract ArthPool is AccessControl {
         address _timelock_address,
         address _stability_fee_token,
         address _arth_stability_token_oracle,
+        address _staking_pool,
         uint256 _pool_ceiling
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
@@ -158,6 +162,8 @@ contract ArthPool is AccessControl {
         arth_stability_token_oracle = ISimpleOracle(
             _arth_stability_token_oracle
         );
+
+        staking_pool = ICommonStaking(_staking_pool);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         grantRole(MINT_PAUSER, timelock_address);
@@ -247,6 +253,13 @@ contract ArthPool is AccessControl {
         }
     }
 
+    function redeemFromStakingPool(uint256 amount)
+        public
+        onlyAdminOrOwnerOrGovernance
+    {
+        staking_pool.withdraw(amount);
+    }
+
     function setCollatETHOracle(
         address _collateral_weth_oracle_address,
         address _weth_address
@@ -288,31 +301,9 @@ contract ArthPool is AccessControl {
         emit Repay(msg.sender, _amount);
     }
 
-    function mintAndCall(uint256 _collateral_amount) public {
-        require(
-            _collateral_amount > 0,
-            'ArthPool: Collateral amount less then 0'
-        );
-
-        uint256 arth_amount =
-            ArthPoolLibrary.calcMint1t1ARTH(
-                getCollateralPrice(),
-                _collateral_amount
-            );
-
-        collateral_token.transferFrom(
-            msg.sender,
-            address(this),
-            _collateral_amount
-        );
-
-        mintAndStake[msg.sender] = mintAndStake[msg.sender].add(arth_amount);
-        //ARTH.pool_mint(address(this), arth_amount);
-    }
-
     // We separate out the 1t1, fractional and algorithmic minting functions for gas efficiency
-    function mint1t1ARTH(uint256 collateral_amount, uint256 ARTH_out_min)
-        external
+    function _mint1t1ARTH(uint256 collateral_amount, uint256 ARTH_out_min)
+        private
         notMintPaused
     {
         uint256 collateral_amount_d18 =
@@ -345,6 +336,25 @@ contract ArthPool is AccessControl {
             collateral_amount
         );
         ARTH.pool_mint(msg.sender, arth_amount_d18);
+    }
+
+    function mint1t1ARTH(uint256 collateral_amount, uint256 ARTH_out_min)
+        external
+        notMintPaused
+    {
+        _mint1t1ARTH(collateral_amount, ARTH_out_min);
+    }
+
+    function mint1t1ARTHAndCall(uint256 collateral_amount, uint256 ARTH_out_min)
+        external
+        notMintPaused
+    {
+        _mint1t1ARTH(collateral_amount, ARTH_out_min);
+
+        staking_pool.stake(collateral_amount);
+        mintedAndStaked[msg.sender] = mintedAndStaked[msg.sender].add(
+            collateral_amount
+        );
     }
 
     // 0% collateral-backed
@@ -446,8 +456,8 @@ contract ArthPool is AccessControl {
     }
 
     // Redeem collateral. 100% collateral-backed
-    function redeem1t1ARTH(uint256 ARTH_amount, uint256 COLLATERAL_out_min)
-        external
+    function _redeem1t1ARTH(uint256 ARTH_amount, uint256 COLLATERAL_out_min)
+        private
         notRedeemPaused
     {
         require(
@@ -492,6 +502,27 @@ contract ArthPool is AccessControl {
 
         // Move all external functions to the end
         ARTH.pool_burn_from(msg.sender, ARTH_amount);
+    }
+
+    // Redeem collateral. 100% collateral-backed
+    function redeem1t1ARTH(uint256 ARTH_amount, uint256 COLLATERAL_out_min)
+        external
+        notRedeemPaused
+    {
+        _redeem1t1ARTH(ARTH_amount, COLLATERAL_out_min);
+    }
+
+    function redeem1t1ARTHAndcall(
+        uint256 ARTH_amount,
+        uint256 COLLATERAL_out_min
+    ) external notRedeemPaused {
+        _redeem1t1ARTH(ARTH_amount, COLLATERAL_out_min);
+
+        staking_pool.getReward();
+        staking_pool.withdraw(mintedAndStaked[msg.sender]);
+        staking_pool.getReward(); // Just to get any left over rewards in case there are any.
+
+        mintedAndStaked[msg.sender] = 0;
     }
 
     // Will fail if fully collateralized or algorithmic
@@ -652,10 +683,10 @@ contract ArthPool is AccessControl {
     // Thus, if the target collateral ratio is higher than the actual value of collateral, minters get ARTHS for adding collateral
     // This function simply rewards anyone that sends collateral to a pool with the same amount of ARTHS + the bonus rate
     // Anyone can call this function to recollateralize the protocol and take the extra ARTHS value from the bonus rate as an arb opportunity
-    function recollateralizeARTH(
+    function _recollateralizeARTH(
         uint256 collateral_amount,
         uint256 ARTHS_out_min
-    ) external {
+    ) private returns (uint256) {
         require(recollateralizePaused == false, 'Recollateralize is paused');
         uint256 collateral_amount_d18 =
             collateral_amount * (10**missing_decimals);
@@ -688,6 +719,28 @@ contract ArthPool is AccessControl {
             collateral_units_precision
         );
         ARTHS.pool_mint(msg.sender, arths_paid_back);
+
+        return collateral_units_precision;
+    }
+
+    function recollateralizeARTH(
+        uint256 collateral_amount,
+        uint256 ARTHS_out_min
+    ) external {
+        _recollateralizeARTH(collateral_amount, ARTHS_out_min);
+    }
+
+    function recollateralizeARTHAndCall(
+        uint256 collateral_amount,
+        uint256 ARTHS_out_min
+    ) external {
+        uint256 collateral_taken =
+            _recollateralizeARTH(collateral_amount, ARTHS_out_min);
+
+        staking_pool.stake(collateral_taken);
+        mintedAndStaked[msg.sender] = mintedAndStaked[msg.sender].add(
+            collateral_taken
+        );
     }
 
     // Function can be called by an ARTHS holder to have the protocol buy back ARTHS with excess collateral value from a desired collateral pool
