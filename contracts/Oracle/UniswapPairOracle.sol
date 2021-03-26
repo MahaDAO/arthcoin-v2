@@ -2,15 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import "../Uniswap/Interfaces/IUniswapV2Factory.sol";
-import "../Uniswap/Interfaces/IUniswapV2Pair.sol";
-import "../Math/FixedPoint.sol";
+import '../Math/FixedPoint.sol';
+import '../Uniswap/UniswapV2Library.sol';
+import '../Uniswap/UniswapV2OracleLibrary.sol';
+import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 
-import "../Uniswap/UniswapV2OracleLibrary.sol";
-import "../Uniswap/UniswapV2Library.sol";
-
-// Fixed window oracle that recomputes the average price for the entire period once every period
-// Note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
+/// @dev Fixed window oracle that recomputes the average price for the entire period once every period
+///  Note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
 contract UniswapPairOracle {
     using FixedPoint for *;
 
@@ -34,7 +33,7 @@ contract UniswapPairOracle {
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner_address || msg.sender == timelock_address,
-            "You are not an owner or the governance timelock"
+            'You are not an owner or the governance timelock'
         );
         _;
     }
@@ -58,7 +57,7 @@ contract UniswapPairOracle {
         (reserve0, reserve1, blockTimestampLast) = _pair.getReserves();
         require(
             reserve0 != 0 && reserve1 != 0,
-            "UniswapPairOracle: NO_RESERVES"
+            'UniswapPairOracle: NO_RESERVES'
         ); // Ensure that there's liquidity in the pair
 
         owner_address = _owner_address;
@@ -110,7 +109,7 @@ contract UniswapPairOracle {
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
 
         // Ensure that at least one full period has passed since the last update
-        require(timeElapsed >= PERIOD, "UniswapPairOracle: PERIOD_NOT_ELAPSED");
+        require(timeElapsed >= PERIOD, 'UniswapPairOracle: PERIOD_NOT_ELAPSED');
 
         // Overflow is desired, casting never truncates
         // Cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
@@ -138,13 +137,13 @@ contract UniswapPairOracle {
         // Ensure that the price is not stale
         require(
             (timeElapsed < (PERIOD + CONSULT_LENIENCY)) || ALLOW_STALE_CONSULTS,
-            "UniswapPairOracle: PRICE_IS_STALE_NEED_TO_CALL_UPDATE"
+            'UniswapPairOracle: PRICE_IS_STALE_NEED_TO_CALL_UPDATE'
         );
 
         if (token == token0) {
             amountOut = price0Average.mul(amountIn).decode144();
         } else {
-            require(token == token1, "UniswapPairOracle: INVALID_TOKEN");
+            require(token == token1, 'UniswapPairOracle: INVALID_TOKEN');
             amountOut = price1Average.mul(amountIn).decode144();
         }
     }

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
-import "../../ERC20/IERC20.sol";
+import '../../ERC20/IERC20.sol';
 
 // Original at https://etherscan.io/address/0x955282b82440F8F69E901380BeF2b603Fba96F3b
 // Some functions were omitted for brevity. See the contract for details

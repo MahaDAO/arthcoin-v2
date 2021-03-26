@@ -3,43 +3,26 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// ======================== StakingRewardsDual ========================
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Travis Moore: https://github.com/FortisFortuna
-
-// Reviewer(s) / Contributor(s)
-// Jason Huan: https://github.com/jasonhuan
-// Sam Kazemian: https://github.com/samkazemian
-// Sam Sun: https://github.com/samczsun
-
-// Modified originally from Synthetixio
-// https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
-
-import '../Math/Math.sol';
-import '../Math/SafeMath.sol';
-import '../ERC20/ERC20.sol';
-import '../Uniswap/TransferHelper.sol';
-import '../ERC20/SafeERC20.sol';
-import '../Arth/Arth.sol';
-import '../Utils/ReentrancyGuard.sol';
-import '../Utils/StringHelpers.sol';
-
-// Inheritance
-import './IStakingRewardsDual.sol';
 import './Owned.sol';
 import './Pausable.sol';
+import '../Arth/Arth.sol';
+import '../Math/Math.sol';
+import '../ERC20/ERC20.sol';
+import '../Math/SafeMath.sol';
+import '../ERC20/SafeERC20.sol';
+import './IStakingRewardsDual.sol';
+import '../Utils/StringHelpers.sol';
+import '../Utils/ReentrancyGuard.sol';
+import '../Uniswap/TransferHelper.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *  Code modified by:
+ *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ *  Modified originally from Synthetixio
+ *  https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
+ */
 contract StakingRewardsDual is
     IStakingRewardsDual,
     Owned,

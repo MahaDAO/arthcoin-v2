@@ -2,33 +2,21 @@
 
 pragma solidity ^0.8.0;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// =========================== ReserveTracker =========================
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Jason Huan: https://github.com/jasonhuan
-// Sam Kazemian: https://github.com/samkazemian
-
-// Reviewer(s) / Contributor(s)
-// Travis Moore: https://github.com/FortisFortuna
-
-import '../Math/SafeMath.sol';
 import '../Math/Math.sol';
-import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import '../Math/SafeMath.sol';
 import './UniswapPairOracle.sol';
 import './ChainlinkETHUSDPriceConsumer.sol';
-//import "../Curve/MetaImplementationUSD.vy";
 import '../Curve/IMetaImplementationUSD.sol';
+import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *  Code modified by:
+ *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ *  Modified originally from Synthetixio
+ *  https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
+ */
 contract ReserveTracker {
     using SafeMath for uint256;
 

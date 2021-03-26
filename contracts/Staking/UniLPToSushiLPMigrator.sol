@@ -3,43 +3,28 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// ====================== UniLPToSushiLPMigrator ======================
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Travis Moore: https://github.com/FortisFortuna
-
-// Reviewer(s) / Contributor(s)
-// Jason Huan: https://github.com/jasonhuan
-// Sam Kazemian: https://github.com/samkazemian
-
-import '../Math/Math.sol';
-import '../Math/SafeMath.sol';
-import '../ERC20/ERC20.sol';
-import '../Uniswap/TransferHelper.sol';
-import '../ERC20/SafeERC20.sol';
-import '../Arth/Arth.sol';
-import '../Utils/ReentrancyGuard.sol';
-import '../Utils/StringHelpers.sol';
-import '../Uniswap/UniswapV2Pair.sol';
-import '../Uniswap/Interfaces/IUniswapV2Router02.sol';
-
-// Inheritance
-import './IStakingRewards.sol';
-import './IStakingRewardsDualForMigrator.sol';
-import './RewardsDistributionRecipient.sol';
 import './Owned.sol';
 import './Pausable.sol';
+import '../Arth/Arth.sol';
+import '../Math/Math.sol';
+import '../ERC20/ERC20.sol';
+import '../Math/SafeMath.sol';
+import './IStakingRewards.sol';
+import '../ERC20/SafeERC20.sol';
+import '../Utils/StringHelpers.sol';
+import '../Uniswap/UniswapV2Pair.sol';
+import '../Utils/ReentrancyGuard.sol';
+import '../Uniswap/TransferHelper.sol';
+import './RewardsDistributionRecipient.sol';
+import './IStakingRewardsDualForMigrator.sol';
+import '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *  Code modified by:
+ *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ */
 contract UniLPToSushiLPMigrator is
     IStakingRewards,
     RewardsDistributionRecipient,

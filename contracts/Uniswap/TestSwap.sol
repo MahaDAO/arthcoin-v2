@@ -26,7 +26,7 @@ contract TestSwap {
         router = UniswapV2Router02_Modified(_router_address);
     }
 
-    function getPath() public returns (address[] memory) view {
+    function getPath() public view returns (address[] memory) {
         address[] memory path = new address[](2);
         path[0] = USDT_address;
         path[1] = WETH_address;

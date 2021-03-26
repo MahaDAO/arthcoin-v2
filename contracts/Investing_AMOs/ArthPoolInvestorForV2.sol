@@ -3,42 +3,28 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// ====================================================================
-// |     ______                   _______                             |
-// |    / _____________ __  __   / ____(_____  ____ _____  ________   |
-// |   / /_  / ___/ __ `| |/_/  / /_  / / __ \/ __ `/ __ \/ ___/ _ \  |
-// |  / __/ / /  / /_/ _>  <   / __/ / / / / / /_/ / / / / /__/  __/  |
-// | /_/   /_/   \__,_/_/|_|  /_/   /_/_/ /_/\__,_/_/ /_/\___/\___/   |
-// |                                                                  |
-// ====================================================================
-// ======================= ArthPoolInvestorForV2 ======================
-// ====================================================================
-// Arth Finance: https://github.com/ArthFinance
-
-// Primary Author(s)
-// Travis Moore: https://github.com/FortisFortuna
-
-// Reviewer(s) / Contributor(s)
-// Jason Huan: https://github.com/jasonhuan
-// Sam Kazemian: https://github.com/samkazemian
-
-import '../Math/SafeMath.sol';
-import '../ARTHS/ARTHS.sol';
 import '../Arth/Arth.sol';
+import '../ARTHS/ARTHS.sol';
 import '../ERC20/ERC20.sol';
+import '../Math/SafeMath.sol';
+import '../Arth/Pools/ArthPool.sol';
 import '../ERC20/Variants/Comp.sol';
+import './compound/IcUSDC_Partial.sol';
+import './yearn/IyUSDC_V2_Partial.sol';
+import './aave/IAAVE_aUSDC_Partial.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../Governance/AccessControl.sol';
-import '../Arth/Pools/ArthPool.sol';
-import './yearn/IyUSDC_V2_Partial.sol';
 import './aave/IAAVELendingPool_Partial.sol';
-import './aave/IAAVE_aUSDC_Partial.sol';
 import './compound/ICompComptrollerPartial.sol';
-import './compound/IcUSDC_Partial.sol';
 
-// Lower APY: yearn, AAVE, Compound
-// Higher APY: KeeperDAO, BZX, Harvest
-
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *  Code modified by:
+ *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ *  Lower APY: yearn, AAVE, Compound
+ *  Higher APY: KeeperDAO, BZX, Harvest
+ */
 contract ArthPoolInvestorForV2 is AccessControl {
     using SafeMath for uint256;
 

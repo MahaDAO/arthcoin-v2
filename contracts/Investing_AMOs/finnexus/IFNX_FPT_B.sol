@@ -2,10 +2,9 @@
 
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
+
 import '../../ERC20/IERC20.sol';
 
-// FPT-ARTH: Original at https://etherscan.io/address/0x39ad661bA8a7C9D3A7E4808fb9f9D5223E22F763
-// FPT-B (FNX): Original at https://etherscan.io/address/0x7E605Fb638983A448096D82fFD2958ba012F30Cd
 // Some functions were omitted for brevity. See the contract for details
 
 interface IFNX_FPT_B is IERC20 {

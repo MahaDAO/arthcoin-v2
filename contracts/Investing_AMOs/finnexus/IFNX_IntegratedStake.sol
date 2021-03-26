@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
-import "../../ERC20/IERC20.sol";
 
-// Original at https://etherscan.io/address/0x23e54F9bBe26eD55F93F19541bC30AAc2D5569b2
+import '../../ERC20/IERC20.sol';
+
 // Some functions were omitted for brevity. See the contract for details
 
 interface IFNX_IntegratedStake {

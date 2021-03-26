@@ -3,9 +3,6 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-// Modified from Synthetixio
-// https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
-
 import './Pausable.sol';
 import '../Arth/Arth.sol';
 import '../Math/Math.sol';
@@ -18,6 +15,14 @@ import '../Utils/ReentrancyGuard.sol';
 import '../Uniswap/TransferHelper.sol';
 import './RewardsDistributionRecipient.sol';
 
+/**
+ *  Original code written by:
+ *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *  Code modified by:
+ *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ *  Modified originally from Synthetixio
+ *  https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
+ */
 contract StakingRewards is
     IStakingRewards,
     RewardsDistributionRecipient,

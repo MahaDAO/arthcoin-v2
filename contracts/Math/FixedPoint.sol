@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "./Babylonian.sol";
+import './Babylonian.sol';
 
-// a library for handling binary fixed point numbers (https://en.wikipedia.org/wiki/Q_(number_format))
+/// @dev A library for handling binary fixed point numbers (https://en.wikipedia.org/wiki/Q_(number_format))
 library FixedPoint {
     // range: [0, 2**112 - 1]
     // resolution: 1 / 2**112
@@ -38,7 +38,7 @@ library FixedPoint {
         pure
         returns (uq112x112 memory)
     {
-        require(x != 0, "FixedPoint: DIV_BY_ZERO");
+        require(x != 0, 'FixedPoint: DIV_BY_ZERO');
         return uq112x112(self._x / uint224(x));
     }
 
@@ -52,7 +52,7 @@ library FixedPoint {
         uint256 z;
         require(
             y == 0 || (z = uint256(self._x) * y) / y == uint256(self._x),
-            "FixedPoint: MULTIPLICATION_OVERFLOW"
+            'FixedPoint: MULTIPLICATION_OVERFLOW'
         );
         return uq144x112(z);
     }
@@ -64,7 +64,7 @@ library FixedPoint {
         pure
         returns (uq112x112 memory)
     {
-        require(denominator > 0, "FixedPoint: DIV_BY_ZERO");
+        require(denominator > 0, 'FixedPoint: DIV_BY_ZERO');
         return uq112x112((uint224(numerator) << RESOLUTION) / denominator);
     }
 
@@ -84,7 +84,7 @@ library FixedPoint {
         pure
         returns (uq112x112 memory)
     {
-        require(self._x != 0, "FixedPoint: ZERO_RECIPROCAL");
+        require(self._x != 0, 'FixedPoint: ZERO_RECIPROCAL');
         return uq112x112(uint224(Q224 / self._x));
     }
 

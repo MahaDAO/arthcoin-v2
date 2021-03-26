@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "../Utils/EnumerableSet.sol";
-import "../Utils/Address.sol";
-import "../Common/Context.sol";
+import '../Utils/EnumerableSet.sol';
+import '../Utils/Address.sol';
+import '../Common/Context.sol';
 
 /**
  * @dev Contract module that allows children to implement role-based access
@@ -151,7 +151,7 @@ abstract contract AccessControl is Context {
     function grantRole(bytes32 role, address account) public virtual {
         require(
             hasRole(_roles[role].adminRole, _msgSender()),
-            "AccessControl: sender must be an admin to grant"
+            'AccessControl: sender must be an admin to grant'
         );
 
         _grantRole(role, account);
@@ -169,7 +169,7 @@ abstract contract AccessControl is Context {
     function revokeRole(bytes32 role, address account) public virtual {
         require(
             hasRole(_roles[role].adminRole, _msgSender()),
-            "AccessControl: sender must be an admin to revoke"
+            'AccessControl: sender must be an admin to revoke'
         );
 
         _revokeRole(role, account);
@@ -192,7 +192,7 @@ abstract contract AccessControl is Context {
     function renounceRole(bytes32 role, address account) public virtual {
         require(
             account == _msgSender(),
-            "AccessControl: can only renounce roles for self"
+            'AccessControl: can only renounce roles for self'
         );
 
         _revokeRole(role, account);
