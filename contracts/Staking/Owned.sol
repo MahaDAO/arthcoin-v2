@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-// https://docs.synthetix.io/contracts/Owned
+/// Refer: https://docs.synthetix.io/contracts/Owned
 contract Owned {
     address public owner;
     address public nominatedOwner;
 
     constructor(address _owner) {
-        require(_owner != address(0), "Owner address cannot be 0");
+        require(_owner != address(0), 'Owner address cannot be 0');
         owner = _owner;
         emit OwnerChanged(address(0), _owner);
     }
@@ -21,7 +21,7 @@ contract Owned {
     function acceptOwnership() external {
         require(
             msg.sender == nominatedOwner,
-            "You must be nominated before you can accept ownership"
+            'You must be nominated before you can accept ownership'
         );
         emit OwnerChanged(owner, nominatedOwner);
         owner = nominatedOwner;
@@ -31,7 +31,7 @@ contract Owned {
     modifier onlyOwner {
         require(
             msg.sender == owner,
-            "Only the contract owner may perform this action"
+            'Only the contract owner may perform this action'
         );
         _;
     }

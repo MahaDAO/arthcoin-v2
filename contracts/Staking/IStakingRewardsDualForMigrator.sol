@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import "../ERC20/ERC20.sol";
+import '../ERC20/ERC20.sol';
 
 interface IStakingRewardsDualForMigrator {
     struct ILockedStake {

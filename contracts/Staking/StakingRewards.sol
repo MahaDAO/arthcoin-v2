@@ -6,19 +6,17 @@ pragma experimental ABIEncoderV2;
 // Modified from Synthetixio
 // https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
 
-import '../Math/Math.sol';
-import '../Math/SafeMath.sol';
-import '../ERC20/ERC20.sol';
-import '../Uniswap/TransferHelper.sol';
-import '../ERC20/SafeERC20.sol';
-import '../Arth/Arth.sol';
-import '../Utils/ReentrancyGuard.sol';
-import '../Utils/StringHelpers.sol';
-
-// Inheritance
-import './IStakingRewards.sol';
-import './RewardsDistributionRecipient.sol';
 import './Pausable.sol';
+import '../Arth/Arth.sol';
+import '../Math/Math.sol';
+import '../ERC20/ERC20.sol';
+import '../Math/SafeMath.sol';
+import './IStakingRewards.sol';
+import '../ERC20/SafeERC20.sol';
+import '../Utils/StringHelpers.sol';
+import '../Utils/ReentrancyGuard.sol';
+import '../Uniswap/TransferHelper.sol';
+import './RewardsDistributionRecipient.sol';
 
 contract StakingRewards is
     IStakingRewards,

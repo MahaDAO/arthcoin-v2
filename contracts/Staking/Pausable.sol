@@ -2,17 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-// Inheritance
-import "./Owned.sol";
+import './Owned.sol';
 
-// https://docs.synthetix.io/contracts/Pausable
+/// Refer: https://docs.synthetix.io/contracts/Pausable
 abstract contract Pausable is Owned {
     uint256 public lastPauseTime;
     bool public paused;
 
     constructor() {
         // This contract is abstract, and thus cannot be instantiated directly
-        require(owner != address(0), "Owner must be set");
+        require(owner != address(0), 'Owner must be set');
         // Paused will be false, and lastPauseTime will be 0 upon initialisation
     }
 
@@ -43,7 +42,7 @@ abstract contract Pausable is Owned {
     modifier notPaused {
         require(
             !paused,
-            "This action cannot be performed while the contract is paused"
+            'This action cannot be performed while the contract is paused'
         );
         _;
     }

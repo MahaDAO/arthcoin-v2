@@ -2,10 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-// Inheritance
-import "./Owned.sol";
+import './Owned.sol';
 
-// https://docs.synthetix.io/contracts/RewardsDistributionRecipient
+/// Refer: https://docs.synthetix.io/contracts/RewardsDistributionRecipient
 abstract contract RewardsDistributionRecipient is Owned {
     address public rewardsDistribution;
 
@@ -14,7 +13,7 @@ abstract contract RewardsDistributionRecipient is Owned {
     modifier onlyRewardsDistribution() {
         require(
             msg.sender == rewardsDistribution,
-            "Caller is not RewardsDistribution contract"
+            'Caller is not RewardsDistribution contract'
         );
         _;
     }
