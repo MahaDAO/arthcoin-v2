@@ -11,5 +11,7 @@ interface ICommonStaking {
 
     function withdrawLocked(bytes32 kek_id) external;
 
+    function stakeFor(address who, uint256 amount) external;
+
     function stakeLocked(uint256 amount, uint256 secs) external;
 }

@@ -231,6 +231,40 @@ contract StakingRewards is
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
+    function stakeFor(address who, uint256 amount)
+        external
+        override
+        nonReentrant
+        notPaused
+        updateReward(who)
+    {
+        require(amount > 0, 'Cannot stake 0');
+        require(
+            greylist[who] == false && greylist[msg.sender] == false,
+            'addresses has been greylisted'
+        );
+
+        // Pull the tokens from the staker.
+        TransferHelper.safeTransferFrom(
+            address(stakingToken),
+            msg.sender, // Should be ArthPool contract(via. mintAndCall, recollateralizeAndCall etc)
+            address(this),
+            amount
+        );
+
+        // Staking token supply and boosted supply
+        _staking_token_supply = _staking_token_supply.add(amount);
+        _staking_token_boosted_supply = _staking_token_boosted_supply.add(
+            amount
+        );
+
+        // Staking token balance and boosted balance
+        _unlocked_balances[who] = _unlocked_balances[who].add(amount);
+        _boosted_balances[who] = _boosted_balances[who].add(amount);
+
+        emit Staked(who, amount);
+    }
+
     function stake(uint256 amount)
         external
         override

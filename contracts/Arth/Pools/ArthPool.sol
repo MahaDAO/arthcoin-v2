@@ -183,6 +183,14 @@ contract ArthPool is AccessControl {
         grantRole(COLLATERAL_PRICE_PAUSER, timelock_address);
     }
 
+    function setStakingPools(
+        ICommonStaking _arth_staking_pool,
+        ICommonStaking _arths_staking_pool
+    ) public onlyAdmin {
+        arth_staking_pool = _arth_staking_pool;
+        arths_staking_pool = _arths_staking_pool;
+    }
+
     function setStabilityFee(uint256 percent)
         public
         onlyAdminOrOwnerOrGovernance
@@ -339,7 +347,6 @@ contract ArthPool is AccessControl {
             address(this),
             collateral_amount
         );
-        ARTH.pool_mint(msg.sender, arth_amount_d18);
 
         return arth_amount_d18;
     }
@@ -348,16 +355,25 @@ contract ArthPool is AccessControl {
         external
         notMintPaused
     {
-        _mint1t1ARTH(collateral_amount, ARTH_out_min);
+        uint256 amountToMint = _mint1t1ARTH(collateral_amount, ARTH_out_min);
+
+        ARTH.pool_mint(msg.sender, amountToMint);
     }
 
     function mint1t1ARTHAndCall(uint256 collateral_amount, uint256 ARTH_out_min)
         external
         notMintPaused
     {
-        uint256 minted = _mint1t1ARTH(collateral_amount, ARTH_out_min);
+        require(
+            address(arth_staking_pool) != address(0),
+            'ArthPool: pools not set yet'
+        );
 
-        arth_staking_pool.stake(minted);
+        uint256 amountToMint = _mint1t1ARTH(collateral_amount, ARTH_out_min);
+
+        ARTH.pool_mint(address(this), amountToMint);
+        ARTH.approve(address(arth_staking_pool), amountToMint);
+        arth_staking_pool.stakeFor(msg.sender, amountToMint);
     }
 
     // 0% collateral-backed
@@ -382,7 +398,6 @@ contract ArthPool is AccessControl {
         require(ARTH_out_min <= arth_amount_d18, 'Slippage limit reached');
 
         ARTHS.pool_burn_from(msg.sender, arths_amount_d18);
-        ARTH.pool_mint(msg.sender, arth_amount_d18);
 
         return arth_amount_d18;
     }
@@ -392,7 +407,10 @@ contract ArthPool is AccessControl {
         external
         notMintPaused
     {
-        _mintAlgorithmicARTH(arths_amount_d18, ARTH_out_min);
+        uint256 amountToMint =
+            _mintAlgorithmicARTH(arths_amount_d18, ARTH_out_min);
+
+        ARTH.pool_mint(msg.sender, amountToMint);
     }
 
     // 0% collateral-backed
@@ -400,8 +418,17 @@ contract ArthPool is AccessControl {
         uint256 arths_amount_d18,
         uint256 ARTH_out_min
     ) external notMintPaused {
-        uint256 minted = _mintAlgorithmicARTH(arths_amount_d18, ARTH_out_min);
-        arth_staking_pool.stake(minted);
+        require(
+            address(arth_staking_pool) != address(0),
+            'ArthPool: pools not set yet'
+        );
+
+        uint256 amountToMint =
+            _mintAlgorithmicARTH(arths_amount_d18, ARTH_out_min);
+
+        ARTH.pool_mint(address(this), amountToMint);
+        ARTH.approve(address(arth_staking_pool), amountToMint);
+        arth_staking_pool.stakeFor(msg.sender, amountToMint);
     }
 
     // Will fail if fully collateralized or fully algorithmic
@@ -451,7 +478,6 @@ contract ArthPool is AccessControl {
             address(this),
             collateral_amount
         );
-        ARTH.pool_mint(msg.sender, mint_amount);
 
         return mint_amount;
     }
@@ -463,7 +489,10 @@ contract ArthPool is AccessControl {
         uint256 arths_amount,
         uint256 ARTH_out_min
     ) external notMintPaused {
-        _mintFractionalARTH(collateral_amount, arths_amount, ARTH_out_min);
+        uint256 amountToMint =
+            _mintFractionalARTH(collateral_amount, arths_amount, ARTH_out_min);
+
+        ARTH.pool_mint(msg.sender, amountToMint);
     }
 
     function mintFractionalARTHAndCall(
@@ -471,10 +500,17 @@ contract ArthPool is AccessControl {
         uint256 arths_amount,
         uint256 ARTH_out_min
     ) external notMintPaused {
-        uint256 minted =
+        require(
+            address(arth_staking_pool) != address(0),
+            'ArthPool: pools not set yet'
+        );
+
+        uint256 amountToMint =
             _mintFractionalARTH(collateral_amount, arths_amount, ARTH_out_min);
 
-        arth_staking_pool.stake(minted);
+        ARTH.pool_mint(address(this), amountToMint);
+        ARTH.approve(address(arth_staking_pool), amountToMint);
+        arth_staking_pool.stakeFor(msg.sender, amountToMint);
     }
 
     function getARTHStabilityTokenOraclePrice() public view returns (uint256) {
@@ -742,7 +778,6 @@ contract ArthPool is AccessControl {
             address(this),
             collateral_units_precision
         );
-        ARTHS.pool_mint(msg.sender, arths_paid_back);
 
         return arths_paid_back;
     }
@@ -751,16 +786,27 @@ contract ArthPool is AccessControl {
         uint256 collateral_amount,
         uint256 ARTHS_out_min
     ) external {
-        _recollateralizeARTH(collateral_amount, ARTHS_out_min);
+        uint256 amountToMint =
+            _recollateralizeARTH(collateral_amount, ARTHS_out_min);
+
+        ARTHS.pool_mint(msg.sender, amountToMint);
     }
 
     function recollateralizeARTHAndCall(
         uint256 collateral_amount,
         uint256 ARTHS_out_min
     ) external {
-        uint256 minted = _recollateralizeARTH(collateral_amount, ARTHS_out_min);
+        require(
+            address(arths_staking_pool) != address(0),
+            'ArthPool: pools not set yet'
+        );
 
-        arths_staking_pool.stake(minted);
+        uint256 amountToMint =
+            _recollateralizeARTH(collateral_amount, ARTHS_out_min);
+
+        ARTHS.pool_mint(address(this), amountToMint);
+        ARTHS.approve(address(arths_staking_pool), amountToMint);
+        arths_staking_pool.stakeFor(msg.sender, amountToMint);
     }
 
     // Function can be called by an ARTHS holder to have the protocol buy back ARTHS with excess collateral value from a desired collateral pool
