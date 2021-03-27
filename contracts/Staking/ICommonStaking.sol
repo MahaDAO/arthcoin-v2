@@ -14,4 +14,6 @@ interface ICommonStaking {
     function stakeFor(address who, uint256 amount) external;
 
     function stakeLocked(uint256 amount, uint256 secs) external;
+
+    function onTokenMint(address who, uint256 amount) external returns (bool);
 }

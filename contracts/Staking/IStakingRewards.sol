@@ -26,5 +26,7 @@ interface IStakingRewards {
 
     function getReward() external;
 
+    function onTokenMint(address who, uint256 amount) external returns (bool);
+
     //function exit() external;
 }

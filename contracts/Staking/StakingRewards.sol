@@ -231,8 +231,9 @@ contract StakingRewards is
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
+    // NOTE: should this be made private or internal?
     function stakeFor(address who, uint256 amount)
-        external
+        public
         override
         nonReentrant
         notPaused
@@ -298,6 +299,18 @@ contract StakingRewards is
         );
 
         emit Staked(msg.sender, amount);
+    }
+
+    function onTokenMint(address who, uint256 amount)
+        external
+        override
+        nonReentrant
+        notPaused
+        returns (bool)
+    {
+        stakeFor(who, amount);
+
+        return true;
     }
 
     function stakeLocked(uint256 amount, uint256 secs)

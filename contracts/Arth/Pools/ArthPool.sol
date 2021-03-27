@@ -373,6 +373,10 @@ contract ArthPool is AccessControl {
 
         ARTH.pool_mint(address(this), amountToMint);
         ARTH.approve(address(arth_staking_pool), amountToMint);
+        // require(
+        //     arth_staking_pool.onTokenMint(msg.sender, amountToMint),
+        //     'ArthPool: staking failed'
+        // );
         arth_staking_pool.stakeFor(msg.sender, amountToMint);
     }
 
@@ -428,6 +432,10 @@ contract ArthPool is AccessControl {
 
         ARTH.pool_mint(address(this), amountToMint);
         ARTH.approve(address(arth_staking_pool), amountToMint);
+        // require(
+        //     arth_staking_pool.onTokenMint(msg.sender, amountToMint),
+        //     'ArthPool: staking failed'
+        // );
         arth_staking_pool.stakeFor(msg.sender, amountToMint);
     }
 
@@ -504,12 +512,15 @@ contract ArthPool is AccessControl {
             address(arth_staking_pool) != address(0),
             'ArthPool: pools not set yet'
         );
-
         uint256 amountToMint =
             _mintFractionalARTH(collateral_amount, arths_amount, ARTH_out_min);
 
         ARTH.pool_mint(address(this), amountToMint);
         ARTH.approve(address(arth_staking_pool), amountToMint);
+        // require(
+        //     arth_staking_pool.onTokenMint(msg.sender, amountToMint),
+        //     'ArthPool: staking failed'
+        // );
         arth_staking_pool.stakeFor(msg.sender, amountToMint);
     }
 
@@ -806,6 +817,10 @@ contract ArthPool is AccessControl {
 
         ARTHS.pool_mint(address(this), amountToMint);
         ARTHS.approve(address(arths_staking_pool), amountToMint);
+        // require(
+        //     arths_staking_pool.onTokenMint(msg.sender, amountToMint),
+        //     'ArthPool: staking failed'
+        // );
         arths_staking_pool.stakeFor(msg.sender, amountToMint);
     }
 
