@@ -9,22 +9,9 @@ import {IERC20} from './IERC20.sol';
 import {Math} from '../Math/Math.sol';
 
 contract PoolToken is AccessControl, ERC20 {
-    bytes32 public constant MINTER_ROLE = keccak256('MINTER_ROLE');
-    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
-
     using SafeMath for uint256;
 
-    /**
-     * State variables.
-     */
-
     IERC20[] public poolTokens;
-    // uint256 MINIMUM_LIQUIDITY = 10**3;
-    // bool public enableDeposits = true;
-
-    /**
-     * Modifiers.
-     */
 
     modifier onlyAdmin {
         require(
@@ -34,12 +21,6 @@ contract PoolToken is AccessControl, ERC20 {
         _;
     }
 
-    // event Deposit(address indexed who, uint256 amount);
-    event Withdraw(address indexed who, uint256 liquidity);
-
-    /**
-     * Constructor.
-     */
     constructor(
         string memory tokenName,
         string memory tokenSymbol,
@@ -47,18 +28,13 @@ contract PoolToken is AccessControl, ERC20 {
     ) ERC20(tokenName, tokenSymbol) {
         poolTokens = poolTokens_;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(MINTER_ROLE, _msgSender());
     }
 
     function addPoolToken(IERC20 token) public onlyAdmin {
         poolTokens.push(token);
     }
 
-    function mint(address to, uint256 amount) public virtual {
-        require(
-            hasRole(MINTER_ROLE, _msgSender()),
-            'PoolToken: must have minter role to mint'
-        );
+    function mint(address to, uint256 amount) public onlyAdmin {
         _mint(to, amount);
     }
 
@@ -78,12 +54,14 @@ contract PoolToken is AccessControl, ERC20 {
     //     _unpause();
     // }
 
-    function _withdraw(uint256 amount) internal {
-        require(amount > 0, 'Lending: amount = 0');
+    function withdraw(uint256 amount) external {
+        require(amount > 0, 'PoolToken: amount = 0');
+        require(amount <= balanceOf(msg.sender), 'PoolToken: amount > balance');
 
         // calculate how much share of the supply the user has
         uint256 percentage = amount.mul(1e8).div(totalSupply());
 
+        // proportionately send each of the pool tokens to the user
         for (uint256 i = 0; i < poolTokens.length; i++) {
             uint256 balance = poolTokens[i].balanceOf(address(this));
             uint256 shareAmount = balance.mul(percentage).div(1e8);
@@ -95,4 +73,6 @@ contract PoolToken is AccessControl, ERC20 {
 
         emit Withdraw(msg.sender, amount);
     }
+
+    event Withdraw(address indexed who, uint256 liquidity);
 }
