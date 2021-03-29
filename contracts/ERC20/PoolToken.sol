@@ -9,6 +9,9 @@ import {IERC20} from './IERC20.sol';
 import {Math} from '../Math/Math.sol';
 
 contract PoolToken is AccessControl, ERC20 {
+    bytes32 public constant MINTER_ROLE = keccak256('MINTER_ROLE');
+    bytes32 public constant PAUSER_ROLE = keccak256('PAUSER_ROLE');
+
     using SafeMath for uint256;
 
     /**
@@ -31,10 +34,6 @@ contract PoolToken is AccessControl, ERC20 {
         _;
     }
 
-    /**
-     * Events.
-     */
-
     // event Deposit(address indexed who, uint256 amount);
     event Withdraw(address indexed who, uint256 liquidity);
 
@@ -48,14 +47,35 @@ contract PoolToken is AccessControl, ERC20 {
     ) ERC20(tokenName, tokenSymbol) {
         poolTokens = poolTokens_;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
     }
 
     function addPoolToken(IERC20 token) public onlyAdmin {
         poolTokens.push(token);
     }
 
-    // function toggleDeposits(bool val) public onlyAdmin {
-    //     enableDeposits = val;
+    function mint(address to, uint256 amount) public virtual {
+        require(
+            hasRole(MINTER_ROLE, _msgSender()),
+            'PoolToken: must have minter role to mint'
+        );
+        _mint(to, amount);
+    }
+
+    // function pause() public virtual {
+    //     require(
+    //         hasRole(PAUSER_ROLE, _msgSender()),
+    //         'ERC20PresetMinterPauser: must have pauser role to pause'
+    //     );
+    //     _pause();
+    // }
+
+    // function unpause() public virtual {
+    //     require(
+    //         hasRole(PAUSER_ROLE, _msgSender()),
+    //         'ERC20PresetMinterPauser: must have pauser role to unpause'
+    //     );
+    //     _unpause();
     // }
 
     function _withdraw(uint256 amount) internal {
@@ -68,7 +88,7 @@ contract PoolToken is AccessControl, ERC20 {
             uint256 balance = poolTokens[i].balanceOf(address(this));
             uint256 shareAmount = balance.mul(percentage).div(1e8);
             if (shareAmount > 0)
-                poolTokens[i].safeTransfer(msg.sender, shareAmount);
+                poolTokens[i].transfer(msg.sender, shareAmount);
         }
 
         _burn(msg.sender, amount);
