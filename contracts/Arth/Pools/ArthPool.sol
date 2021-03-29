@@ -606,18 +606,11 @@ contract ArthPool is AccessControl {
             'Slippage limit reached [ARTHS]'
         );
 
-        redeemCollateralBalances[msg.sender] = redeemCollateralBalances[
-            msg.sender
-        ]
-            .add(collateral_amount);
-        unclaimedPoolCollateral = unclaimedPoolCollateral.add(
-            collateral_amount
-        );
+        redeemCollateralBalances[msg.sender] += collateral_amount;
+        unclaimedPoolCollateral += collateral_amount;
 
-        redeemARTHSBalances[msg.sender] = redeemARTHSBalances[msg.sender].add(
-            arths_amount
-        );
-        unclaimedPoolARTHS = unclaimedPoolARTHS.add(arths_amount);
+        redeemARTHSBalances[msg.sender] += arths_amount;
+        unclaimedPoolARTHS += arths_amount;
 
         lastRedeemed[msg.sender] = block.number;
 
@@ -650,7 +643,7 @@ contract ArthPool is AccessControl {
         redeemARTHSBalances[msg.sender] = redeemARTHSBalances[msg.sender].add(
             arths_amount
         );
-        unclaimedPoolARTHS = unclaimedPoolARTHS.add(arths_amount);
+        unclaimedPoolARTHS += arths_amount;
 
         lastRedeemed[msg.sender] = block.number;
 
