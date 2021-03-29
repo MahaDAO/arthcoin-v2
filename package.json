@@ -19,7 +19,7 @@
     "migrate:dev": "rm -rf build/ && truffle migrate --network development --reset",
     "migrate:ropsten": "rm -rf build/ && truffle migrate --network ropsten --reset"
   },
-  "dependencies": {
+  "devDependencies": {
     "@ethersproject/address": "^5.0.0-beta",
     "@ethersproject/contracts": "^5.0.0-beta",
     "@ethersproject/networks": "^5.0.0-beta",
@@ -79,9 +79,6 @@
     "web3-eth-contract": "^1.3.0",
     "web3-utils": "^1.3.0",
     "bluebird": "^3.7.2",
-    "@openzeppelin/contracts": "git://github.com/OpenZeppelin/openzeppelin-contracts.git#ee6348a7a0b08f82344f2b61e903788aa9dcf36c"
-  },
-  "devDependencies": {
     "@openzeppelin/test-helpers": "^0.5.6"
   }
 }
