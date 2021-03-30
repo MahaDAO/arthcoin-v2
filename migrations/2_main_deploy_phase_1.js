@@ -64,6 +64,7 @@ const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPa
 
 
 // Chainlink Price Consumer
+const SimpleOracle = artifacts.require("Oracle/SimpleOracle");
 const ChainlinkETHUSDPriceConsumer = artifacts.require("Oracle/ChainlinkETHUSDPriceConsumer");
 const ChainlinkETHUSDPriceConsumerTest = artifacts.require("Oracle/ChainlinkETHUSDPriceConsumerTest");
 
@@ -73,7 +74,7 @@ const ARTHShares = artifacts.require("ARTHS/ARTHShares");
 const TokenVesting = artifacts.require("ARTHS/TokenVesting");
 
 // Governance related
-const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
+//const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
 const Timelock = artifacts.require("Governance/Timelock");
 
 // Staking contracts
@@ -165,10 +166,15 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(ArthPoolLibrary);
   await deployer.link(ArthPoolLibrary, [Pool_USDC, Pool_USDT]);
   await deployer.deploy(Owned, COLLATERAL_ARTH_AND_ARTHS_OWNER);
-  await deployer.deploy(ChainlinkETHUSDPriceConsumer);
-  await deployer.deploy(ChainlinkETHUSDPriceConsumerTest);
   await deployer.deploy(Timelock, TIMELOCK_ADMIN, TIMELOCK_DELAY);
   await deployer.deploy(MigrationHelper, TIMELOCK_ADMIN);
+  await deployer.deploy(SimpleOracle, 'GMU', 1000000000000000000);
+
+
+  // Simple Oracle
+  const simpleOracle = await SimpleOracle.deployed()
+  await deployer.deploy(ChainlinkETHUSDPriceConsumer, simpleOracle.address);
+  await deployer.deploy(ChainlinkETHUSDPriceConsumerTest);
 
   // Timelock and MigrationHelper
   const timelockInstance = await Timelock.deployed();
@@ -191,13 +197,13 @@ module.exports = async function (deployer, network, accounts) {
 
   // ======== Deploy the governance contract and its associated timelock ========
   console.log(chalk.yellow('===== DEPLOY THE GOVERNANCE CONTRACT ====='));
-  await deployer.deploy(GovernorAlpha, timelockInstance.address, arthsInstance.address, GOVERNOR_GUARDIAN_ADDRESS);
-  const governanceInstance = await GovernorAlpha.deployed();
-  await governanceInstance.__setTimelockAddress(timelockInstance.address, { from: GOVERNOR_GUARDIAN_ADDRESS });
+  //await deployer.deploy(GovernorAlpha, timelockInstance.address, arthsInstance.address, GOVERNOR_GUARDIAN_ADDRESS);
+  //const governanceInstance = await GovernorAlpha.deployed();
+  //await governanceInstance.__setTimelockAddress(timelockInstance.address, { from: GOVERNOR_GUARDIAN_ADDRESS });
 
   // ======== Set the Governance contract as the timelock admin [Phase 1] ========
-  console.log(chalk.yellow('===== SET THE GOVERNANCE CONTRACT AS THE TIMELOCK ADMIN [Phase 1] ====='));
-  console.log("GOVERNANCE_ADDRESS [BEFORE]: ", governanceInstance.address);
+  // console.log(chalk.yellow('===== SET THE GOVERNANCE CONTRACT AS THE TIMELOCK ADMIN [Phase 1] ====='));
+  // console.log("GOVERNANCE_ADDRESS [BEFORE]: ", governanceInstance.address);
   let timelock_admin_address = await timelockInstance.admin.call();
   console.log("timelock_admin [BEFORE]: ", timelock_admin_address)
 

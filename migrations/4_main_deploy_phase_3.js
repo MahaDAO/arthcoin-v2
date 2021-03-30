@@ -75,7 +75,7 @@ const ARTHShares = artifacts.require("ARTHS/ARTHShares");
 const TokenVesting = artifacts.require("ARTHS/TokenVesting");
 
 // Governance related
-const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
+// const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
 const Timelock = artifacts.require("Governance/Timelock");
 
 // Staking contracts
@@ -154,7 +154,7 @@ module.exports = async function (deployer, network, accounts) {
   if (process.env.MIGRATION_MODE == 'ganache') {
     timelockInstance = await Timelock.deployed();
     migrationHelperInstance = await MigrationHelper.deployed()
-    governanceInstance = await GovernorAlpha.deployed();
+    //governanceInstance = await GovernorAlpha.deployed();
     arthInstance = await ARTHStablecoin.deployed();
     arthsInstance = await ARTHShares.deployed();
     wethInstance = await WETH.deployed();
@@ -182,7 +182,7 @@ module.exports = async function (deployer, network, accounts) {
     CONTRACT_ADDRESSES = constants.CONTRACT_ADDRESSES;
     timelockInstance = await Timelock.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].misc.timelock);
     migrationHelperInstance = await MigrationHelper.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].misc.migration_helper);
-    governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
+    //governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
     arthInstance = await ARTHStablecoin.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTH);
     arthsInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTHS);
     wethInstance = await WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].weth);
