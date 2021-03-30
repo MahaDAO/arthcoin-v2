@@ -14,7 +14,7 @@ import '../../Oracle/UniswapPairOracle.sol';
 import '../../Governance/AccessControl.sol';
 
 interface MintAndCallFallBack {
-    function receiveMint(address from, bytes _data) public;
+    function receiveMint(address from, bytes memory _data) external;
 }
 
 /**
@@ -223,9 +223,7 @@ contract ArthPool is AccessControl {
             uint256 eth_collat_price =
                 collatEthOracle.consult(
                     weth_address,
-                    MintAndCallFallBack(
-                        PRICE_PRECISION * (10**missing_decimals)
-                    )
+                    PRICE_PRECISION * (10**missing_decimals)
                 );
 
             uint256 collat_usd_price =
@@ -412,7 +410,7 @@ contract ArthPool is AccessControl {
         uint256 collateral_amount,
         uint256 arths_amount,
         uint256 ARTH_out_min
-    ) private notMintPaused returns (uint256) {
+    ) private notMintPaused {
         uint256 arths_price = ARTH.arths_price();
         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
 
