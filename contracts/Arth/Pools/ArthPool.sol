@@ -9,12 +9,15 @@ import '../../ERC20/ERC20.sol';
 import './ArthPoolLibrary.sol';
 import '../../Math/SafeMath.sol';
 import '../../Oracle/ISimpleOracle.sol';
-import '../../Staking/ICommonStaking.sol';
 import '../../Oracle/UniswapPairOracle.sol';
 import '../../Governance/AccessControl.sol';
 
-interface MintAndCallFallBack {
-    function receiveMint(address from, bytes memory _data) external;
+interface IMintAndCallFallBack {
+    function receiveMint(
+        address from,
+        uint256 amount,
+        bytes memory _data
+    ) external;
 }
 
 /**
@@ -338,11 +341,11 @@ contract ArthPool is AccessControl {
     function mint1t1ARTHAndCall(
         uint256 collateral_amount,
         uint256 ARTH_out_min,
-        MintAndCallFallBack _spender,
+        IMintAndCallFallBack _spender,
         bytes memory _extraData
     ) external {
         _mint1t1ARTH(collateral_amount, ARTH_out_min);
-        _spender.receiveMint(msg.sender, _extraData);
+        _spender.receiveMint(msg.sender, , _extraData);
     }
 
     // 0% collateral-backed
@@ -382,7 +385,7 @@ contract ArthPool is AccessControl {
     function mintAlgorithmicARTHAndCall(
         uint256 arths_amount_d18,
         uint256 ARTH_out_min,
-        MintAndCallFallBack _spender,
+        IMintAndCallFallBack _spender,
         bytes memory _extraData
     ) external {
         _mintAlgorithmicARTH(arths_amount_d18, ARTH_out_min);
@@ -453,7 +456,7 @@ contract ArthPool is AccessControl {
         uint256 collateral_amount,
         uint256 arths_amount,
         uint256 ARTH_out_min,
-        MintAndCallFallBack _spender,
+        IMintAndCallFallBack _spender,
         bytes memory _extraData
     ) external notMintPaused {
         _mintFractionalARTH(collateral_amount, arths_amount, ARTH_out_min);
@@ -735,7 +738,7 @@ contract ArthPool is AccessControl {
     function recollateralizeARTHAndCall(
         uint256 collateral_amount,
         uint256 ARTHS_out_min,
-        MintAndCallFallBack _spender,
+        IMintAndCallFallBack _spender,
         bytes memory _extraData
     ) external {
         uint256 amountToMint =

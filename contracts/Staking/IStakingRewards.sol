@@ -20,15 +20,9 @@ interface IStakingRewards {
 
     function stake(uint256 amount) external;
 
-    function stakeFor(address who, uint256 amount) external;
-
     function withdraw(uint256 amount) external;
 
     function getReward() external;
-
-    function receiveMint(address who, bytes memory data)
-        external
-        returns (bool);
 
     //function exit() external;
 }

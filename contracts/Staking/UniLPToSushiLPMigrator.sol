@@ -361,15 +361,6 @@ contract UniLPToSushiLPMigrator is
         timelock_address = _new_timelock;
     }
 
-    function stakeFor(address who, uint256 amount) external override {}
-
-    function receiveMint(address who, bytes memory data)
-        external
-        pure
-        override
-        returns (bool)
-    {}
-
     /* ========== NEEDED FOR DELEGATECALL ========== */
 
     function lastTimeRewardApplicable()

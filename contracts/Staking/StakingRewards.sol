@@ -16,6 +16,18 @@ import '../Uniswap/TransferHelper.sol';
 import '../Governance/AccessControl.sol';
 import './RewardsDistributionRecipient.sol';
 
+interface IStaking {
+    function stakeFor(address who, uint256 amount) external;
+}
+
+interface IMintAndCallFallBack {
+    function receiveMint(
+        address from,
+        uint256 amount,
+        bytes memory _data
+    ) external;
+}
+
 /**
  *  Original code written by:
  *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
@@ -26,7 +38,9 @@ import './RewardsDistributionRecipient.sol';
  */
 contract StakingRewards is
     AccessControl,
+    IStaking,
     IStakingRewards,
+    IMintAndCallFallBack,
     RewardsDistributionRecipient,
     ReentrancyGuard,
     Pausable
@@ -120,6 +134,8 @@ contract StakingRewards is
         rewardRate = 380517503805175038; // (uint256(12000000e18)).div(365 * 86400); // Base emission rate of 12M ARTHS over the first year
         rewardRate = rewardRate.mul(pool_weight).div(1e6);
         unlockedStakes = false;
+
+        _setupRole(POOL_ROLE, _msgSender());
     }
 
     /* ========== VIEWS ========== */
@@ -314,17 +330,12 @@ contract StakingRewards is
         emit Staked(msg.sender, amount);
     }
 
-    function receiveMint(address who, bytes memory data)
-        external
-        override
-        nonReentrant
-        notPaused
-        onlyPool
-        returns (bool)
-    {
-        stakeFor(who, 10);
-
-        return true;
+    function receiveMint(
+        address who,
+        uint256 amount,
+        bytes memory data
+    ) external override nonReentrant notPaused onlyPool {
+        stakeFor(who, amount);
     }
 
     function stakeLocked(uint256 amount, uint256 secs)
