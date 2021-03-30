@@ -340,7 +340,7 @@ module.exports = async function (deployer, network, accounts) {
         USDC: col_instance_USDC.address,
         USDT: col_instance_USDT.address,
       },
-      governance: governanceInstance.address,
+      //governance: governanceInstance.address,
       pools: {
         USDC: pool_instance_USDC.address,
         USDT: pool_instance_USDT.address,

@@ -25,7 +25,7 @@ contract ChainlinkETHUSDPriceConsumer {
         );
 
         gmuOracle = gmuOracle_;
-        priceFeedDecimals = priceFeed.decimals();
+        //priceFeedDecimals = priceFeed.decimals();
     }
 
     /**

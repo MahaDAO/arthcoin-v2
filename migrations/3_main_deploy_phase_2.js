@@ -284,7 +284,7 @@ module.exports = async function (deployer, network, accounts) {
         USDC: col_instance_USDC.address,
         USDT: col_instance_USDT.address,
       },
-      governance: governanceInstance.address,
+      //governance: governanceInstance.address,
       pools: {
         USDC: "NOT_DEPLOYED_YET",
         USDT: "NOT_DEPLOYED_YET",

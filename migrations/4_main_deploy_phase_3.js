@@ -84,6 +84,9 @@ const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_
 const StakingRewards_ARTH_ARTHS = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS.sol");
 const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTHS_WETH.sol");
 
+const MockMaha = artifacts.require("ERC20/MockMaha.sol");
+const MahaOracle = artifacts.require("Oracle/MahaOracle.sol");
+
 const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666";
 
 // Make sure Ganache is running beforehand
@@ -107,6 +110,7 @@ module.exports = async function (deployer, network, accounts) {
   // ======== Set other constants ========
 
   const ONE_MILLION_DEC18 = new BigNumber("1000000e18");
+  const DISTRIBUTION_AMOUNT = new BigNumber("100e18");
   const FIVE_MILLION_DEC18 = new BigNumber("5000000e18");
   const FIVE_MILLION_DEC6 = new BigNumber("5000000e6");
   const TEN_MILLION_DEC18 = new BigNumber("10000000e18");
@@ -150,6 +154,8 @@ module.exports = async function (deployer, network, accounts) {
   let pair_instance_ARTH_USDC;
   let pair_instance_ARTH_ARTHS;
   let pair_instance_ARTHS_WETH;
+  let mock_maha_stability_token;
+  let mock_maha_oracle;
 
   if (process.env.MIGRATION_MODE == 'ganache') {
     timelockInstance = await Timelock.deployed();
@@ -167,7 +173,8 @@ module.exports = async function (deployer, network, accounts) {
     stakingInstance_ARTH_USDC = await StakingRewards_ARTH_USDC.deployed();
     stakingInstance_ARTH_ARTHS = await StakingRewards_ARTH_ARTHS.deployed();
     stakingInstance_ARTHS_WETH = await StakingRewards_ARTHS_WETH.deployed();
-
+    mock_maha_stability_token = await MockMaha.deployed();
+    mock_maha_oracle = await MahaOracle.deployed();
 
     const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
@@ -210,24 +217,24 @@ module.exports = async function (deployer, network, accounts) {
 
   // Transfer 1,000,000 ARTHS each to various accounts
   if (!IS_MAINNET) {
-    await arthsInstance.transfer(accounts[1], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[2], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[3], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[4], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[5], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[6], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[7], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[8], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[9], new BigNumber(ONE_MILLION_DEC18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[1], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[2], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[3], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[4], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[5], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[6], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[7], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[8], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[9], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
   }
 
   // Transfer ARTHS to staking contracts
   console.log(chalk.yellow('===== Transfer ARTHS to staking contracts ====='));
   await Promise.all([
-    arthsInstance.transfer(stakingInstance_ARTH_WETH.address, new BigNumber("6000000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthsInstance.transfer(stakingInstance_ARTH_USDC.address, new BigNumber("6000000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthsInstance.transfer(stakingInstance_ARTH_ARTHS.address, new BigNumber("1000000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthsInstance.transfer(stakingInstance_ARTHS_WETH.address, new BigNumber("1000000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    arthsInstance.transfer(stakingInstance_ARTH_WETH.address, new BigNumber("6e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    arthsInstance.transfer(stakingInstance_ARTH_USDC.address, new BigNumber("618"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    arthsInstance.transfer(stakingInstance_ARTH_ARTHS.address, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    arthsInstance.transfer(stakingInstance_ARTHS_WETH.address, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
   ]);
 
   if (!IS_MAINNET) {
@@ -242,16 +249,16 @@ module.exports = async function (deployer, network, accounts) {
   const previous_block = (await time.latestBlock()) - 1;
 
   // Get the prices
-  let stake_ARTH_WETH_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_WETH.address, previous_block))).div(BIG18);
-  let stake_ARTH_USDC_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_USDC.address, previous_block))).div(BIG18);
-  let stake_ARTH_ARTHS_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_ARTHS.address, previous_block))).div(BIG18);
-  let stake_ARTHS_WETH_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTHS_WETH.address, previous_block))).div(BIG18);
+  // let stake_ARTH_WETH_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_WETH.address, previous_block))).div(BIG18);
+  // let stake_ARTH_USDC_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_USDC.address, previous_block))).div(BIG18);
+  // let stake_ARTH_ARTHS_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_ARTHS.address, previous_block))).div(BIG18);
+  // let stake_ARTHS_WETH_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTHS_WETH.address, previous_block))).div(BIG18);
 
   // Print the new prices
-  console.log("stake_ARTH_WETH_votes: ", stake_ARTH_WETH_votes.toString());
-  console.log("stake_ARTH_USDC_votes: ", stake_ARTH_USDC_votes.toString());
-  console.log("stake_ARTH_ARTHS_votes: ", stake_ARTH_ARTHS_votes.toString());
-  console.log("stake_ARTHS_WETH_votes: ", stake_ARTHS_WETH_votes.toString());
+  // console.log("stake_ARTH_WETH_votes: ", stake_ARTH_WETH_votes.toString());
+  // console.log("stake_ARTH_USDC_votes: ", stake_ARTH_USDC_votes.toString());
+  // console.log("stake_ARTH_ARTHS_votes: ", stake_ARTH_ARTHS_votes.toString());
+  // console.log("stake_ARTHS_WETH_votes: ", stake_ARTHS_WETH_votes.toString());
 
   // ======== Add liquidity to the pairs so the oracle constructor doesn't error  ========
   // Initially, all prices will be 1:1, but that can be changed in further testing via arbitrage simulations to a known price
@@ -404,8 +411,8 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('========== ARTH POOLS =========='));
   await deployer.link(StringHelpers, [Pool_USDC, Pool_USDT]);
   await Promise.all([
-    deployer.deploy(Pool_USDC, arthInstance.address, arthsInstance.address, col_instance_USDC.address, POOL_CREATOR, timelockInstance.address, FIVE_MILLION_DEC6),
-    deployer.deploy(Pool_USDT, arthInstance.address, arthsInstance.address, col_instance_USDT.address, POOL_CREATOR, timelockInstance.address, FIVE_MILLION_DEC6)
+    deployer.deploy(Pool_USDC, arthInstance.address, arthsInstance.address, col_instance_USDC.address, POOL_CREATOR, timelockInstance.address, mock_maha_stability_token.address, mock_maha_oracle.address, FIVE_MILLION_DEC6),
+    deployer.deploy(Pool_USDT, arthInstance.address, arthsInstance.address, col_instance_USDT.address, POOL_CREATOR, timelockInstance.address, mock_maha_stability_token.address, mock_maha_oracle.address, FIVE_MILLION_DEC6)
   ])
 
   // ============= Get the pool instances ========
@@ -506,7 +513,7 @@ module.exports = async function (deployer, network, accounts) {
         USDC: col_instance_USDC.address,
         USDT: col_instance_USDT.address,
       },
-      governance: governanceInstance.address,
+      //governance: governanceInstance.address,
       pools: {
         USDC: pool_instance_USDC.address,
         USDT: pool_instance_USDT.address,

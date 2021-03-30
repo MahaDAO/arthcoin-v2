@@ -208,17 +208,17 @@ module.exports = async function (deployer, network, accounts) {
   // Fetch the delay transaction
   const eta_with_delay = (await migrationHelperInstance.gov_to_timelock_eta.call()).toNumber();
 
-  const tx_nugget = [
-    timelockInstance.address,
-    0,
-    "setPendingAdmin(address)",
-    web3.eth.abi.encodeParameters(['address'], [governanceInstance.address]),
-    eta_with_delay,
-    { from: TIMELOCK_ADMIN }
-  ]
+  // const tx_nugget = [
+  //   timelockInstance.address,
+  //   0,
+  //   "setPendingAdmin(address)",
+  //   web3.eth.abi.encodeParameters(['address'], [governanceInstance.address]),
+  //   eta_with_delay,
+  //   { from: TIMELOCK_ADMIN }
+  // ]
 
   await timelockInstance.executeTransaction(...tx_nugget);
-  await governanceInstance.__acceptAdmin({ from: GOVERNOR_GUARDIAN_ADDRESS });
+  //await governanceInstance.__acceptAdmin({ from: GOVERNOR_GUARDIAN_ADDRESS });
   timelock_admin_address = await timelockInstance.admin.call();
   console.log("timelock_admin [AFTER]: ", timelock_admin_address)
 

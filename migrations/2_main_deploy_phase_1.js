@@ -11,6 +11,7 @@ const { expectEvent, send, shouldFail, time } = require('@openzeppelin/test-help
 const BIG6 = new BigNumber("1e6");
 const BIG18 = new BigNumber("1e18");
 const chalk = require('chalk');
+const { artifacts } = require('hardhat');
 
 const Address = artifacts.require("Utils/Address");
 const BlockMiner = artifacts.require("Utils/BlockMiner");
@@ -25,7 +26,7 @@ const Owned = artifacts.require("Staking/Owned");
 const ERC20 = artifacts.require("ERC20/ERC20");
 const ERC20Custom = artifacts.require("ERC20/ERC20Custom");
 const SafeERC20 = artifacts.require("ERC20/SafeERC20");
-const MockMaha = artifacts.require("ERC20/MockMaha");
+//const MockMaha = artifacts.require("ERC20/MockMaha");
 
 
 // Uniswap related
@@ -67,6 +68,8 @@ const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPa
 
 // Chainlink Price Consumer
 const SimpleOracle = artifacts.require("Oracle/SimpleOracle");
+const MahaOracle = artifacts.require("Oracle/MahaOracle.sol");
+
 const ChainlinkETHUSDPriceConsumer = artifacts.require("Oracle/ChainlinkETHUSDPriceConsumer");
 const ChainlinkETHUSDPriceConsumerTest = artifacts.require("Oracle/ChainlinkETHUSDPriceConsumerTest");
 
@@ -84,6 +87,9 @@ const StakingRewards_ARTH_WETH = artifacts.require("Staking/Variants/Stake_ARTH_
 const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_USDC.sol");
 const StakingRewards_ARTH_ARTHS = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS.sol");
 const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTHS_WETH.sol");
+
+// Stability Token
+const MockMaha = artifacts.require("ERC20/MockMaha.sol")
 
 const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666";
 
@@ -171,6 +177,8 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(Timelock, TIMELOCK_ADMIN, TIMELOCK_DELAY);
   await deployer.deploy(MigrationHelper, TIMELOCK_ADMIN);
   await deployer.deploy(SimpleOracle, 'GMU', BIG18);
+  await deployer.deploy(MockMaha, 'MAHA', 'MAHA');
+  await deployer.deploy(MahaOracle, 'GMU', BIG18);
 
 
   // Simple Oracle
@@ -218,15 +226,15 @@ module.exports = async function (deployer, network, accounts) {
   console.log("current_timestamp + timelock_delay [BEFORE]: ", eta_with_delay);
   await migrationHelperInstance.setGovToTimeLockETA(eta_with_delay, { from: TIMELOCK_ADMIN });
 
-  const tx_nugget = [
-    timelockInstance.address,
-    0,
-    "setPendingAdmin(address)",
-    web3.eth.abi.encodeParameters(['address'], [governanceInstance.address]),
-    eta_with_delay,
-    { from: TIMELOCK_ADMIN }
-  ]
-  await timelockInstance.queueTransaction(...tx_nugget);
+  // const tx_nugget = [
+  //   timelockInstance.address,
+  //   0,
+  //   "setPendingAdmin(address)",
+  //   web3.eth.abi.encodeParameters(['address'], [governanceInstance.address]),
+  //   eta_with_delay,
+  //   { from: TIMELOCK_ADMIN }
+  // ]
+  // await timelockInstance.queueTransaction(...tx_nugget);
 
   console.log(chalk.red.bold('NEED TO DO THIS PART LATER [Execute timelock]'));
 
@@ -283,7 +291,7 @@ module.exports = async function (deployer, network, accounts) {
         USDC: col_instance_USDC.address,
         USDT: col_instance_USDT.address,
       },
-      governance: governanceInstance.address,
+      //governance: governanceInstance.address,
       pools: {
         USDC: "NOT_DEPLOYED_YET",
         USDT: "NOT_DEPLOYED_YET",
