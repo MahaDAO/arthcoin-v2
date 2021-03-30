@@ -13,6 +13,7 @@ import '../ERC20/SafeERC20.sol';
 import '../Utils/StringHelpers.sol';
 import '../Utils/ReentrancyGuard.sol';
 import '../Uniswap/TransferHelper.sol';
+import '../Governance/AccessControl.sol';
 import './RewardsDistributionRecipient.sol';
 
 /**
@@ -24,6 +25,7 @@ import './RewardsDistributionRecipient.sol';
  *  https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
  */
 contract StakingRewards is
+    AccessControl,
     IStakingRewards,
     RewardsDistributionRecipient,
     ReentrancyGuard,
@@ -33,6 +35,8 @@ contract StakingRewards is
     using SafeERC20 for ERC20;
 
     /* ========== STATE VARIABLES ========== */
+
+    bytes32 private constant POOL_ROLE = keccak256('POOL_ROLE');
 
     ARTHStablecoin private ARTH;
     ERC20 public rewardsToken;
@@ -84,6 +88,14 @@ contract StakingRewards is
         uint256 amount;
         uint256 ending_timestamp;
         uint256 multiplier; // 6 decimals of precision. 1x = 1000000
+    }
+
+    /**
+     * Modifier.
+     */
+    modifier onlyPool {
+        require(hasRole(POOL_ROLE, msg.sender), 'Staking: FORBIDDEN');
+        _;
     }
 
     /* ========== CONSTRUCTOR ========== */
@@ -237,6 +249,7 @@ contract StakingRewards is
         override
         nonReentrant
         notPaused
+        onlyPool
         updateReward(who)
     {
         require(amount > 0, 'Cannot stake 0');
@@ -301,14 +314,15 @@ contract StakingRewards is
         emit Staked(msg.sender, amount);
     }
 
-    function onTokenMint(address who, uint256 amount)
+    function receiveMint(address who, bytes memory data)
         external
         override
         nonReentrant
         notPaused
+        onlyPool
         returns (bool)
     {
-        stakeFor(who, amount);
+        stakeFor(who, 10);
 
         return true;
     }

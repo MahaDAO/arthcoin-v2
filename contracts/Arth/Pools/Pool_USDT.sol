@@ -15,8 +15,6 @@ contract Pool_USDT is ArthPool {
         address _timelock_address,
         address _stability_fee_token,
         address _arth_stability_token_oracle,
-        address _arth_staking_pool,
-        address _arths_staking_pool,
         uint256 _pool_ceiling
     )
         ArthPool(
@@ -27,8 +25,6 @@ contract Pool_USDT is ArthPool {
             _timelock_address,
             _stability_fee_token,
             _arth_stability_token_oracle,
-            _arth_staking_pool,
-            _arths_staking_pool,
             _pool_ceiling
         )
     {

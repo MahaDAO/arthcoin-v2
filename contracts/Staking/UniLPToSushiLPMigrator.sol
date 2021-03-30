@@ -363,14 +363,12 @@ contract UniLPToSushiLPMigrator is
 
     function stakeFor(address who, uint256 amount) external override {}
 
-    function onTokenMint(address who, uint256 amount)
+    function receiveMint(address who, bytes memory data)
         external
         pure
         override
         returns (bool)
-    {
-        return false;
-    }
+    {}
 
     /* ========== NEEDED FOR DELEGATECALL ========== */
 

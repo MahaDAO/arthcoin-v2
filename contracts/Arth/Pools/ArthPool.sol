@@ -30,8 +30,6 @@ contract ArthPool is AccessControl {
 
     ERC20 private collateral_token;
     ERC20 private stability_fee_token;
-    ICommonStaking private arth_staking_pool;
-    ICommonStaking private arths_staking_pool;
 
     // TODO: replace this oracle with chainlink oracle.
     ISimpleOracle public arth_stability_token_oracle;
@@ -156,8 +154,6 @@ contract ArthPool is AccessControl {
         address _timelock_address,
         address _stability_fee_token,
         address _arth_stability_token_oracle,
-        address _arth_staking_pool,
-        address _arths_staking_pool,
         uint256 _pool_ceiling
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
@@ -176,23 +172,12 @@ contract ArthPool is AccessControl {
             _arth_stability_token_oracle
         );
 
-        arth_staking_pool = ICommonStaking(_arth_staking_pool);
-        arths_staking_pool = ICommonStaking(_arths_staking_pool);
-
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         grantRole(MINT_PAUSER, timelock_address);
         grantRole(REDEEM_PAUSER, timelock_address);
         grantRole(RECOLLATERALIZE_PAUSER, timelock_address);
         grantRole(BUYBACK_PAUSER, timelock_address);
         grantRole(COLLATERAL_PRICE_PAUSER, timelock_address);
-    }
-
-    function setStakingPools(
-        ICommonStaking _arth_staking_pool,
-        ICommonStaking _arths_staking_pool
-    ) public onlyAdmin {
-        arth_staking_pool = _arth_staking_pool;
-        arths_staking_pool = _arths_staking_pool;
     }
 
     function setStabilityFee(uint256 percent)
@@ -749,23 +734,17 @@ contract ArthPool is AccessControl {
 
     function recollateralizeARTHAndCall(
         uint256 collateral_amount,
-        uint256 ARTHS_out_min
+        uint256 ARTHS_out_min,
+        MintAndCallFallBack _spender,
+        bytes memory _extraData
     ) external {
-        require(
-            address(arths_staking_pool) != address(0),
-            'ArthPool: pools not set yet'
-        );
-
         uint256 amountToMint =
             _recollateralizeARTH(collateral_amount, ARTHS_out_min);
 
         ARTHS.pool_mint(address(this), amountToMint);
-        ARTHS.approve(address(arths_staking_pool), amountToMint);
-        // require(
-        //     arths_staking_pool.onTokenMint(msg.sender, amountToMint),
-        //     'ArthPool: staking failed'
-        // );
-        arths_staking_pool.stakeFor(msg.sender, amountToMint);
+        ARTHS.approve(address(_spender), amountToMint);
+
+        _spender.receiveMint(msg.sender, _extraData);
     }
 
     // Function can be called by an ARTHS holder to have the protocol buy back ARTHS with excess collateral value from a desired collateral pool
