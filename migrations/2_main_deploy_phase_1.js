@@ -25,6 +25,8 @@ const Owned = artifacts.require("Staking/Owned");
 const ERC20 = artifacts.require("ERC20/ERC20");
 const ERC20Custom = artifacts.require("ERC20/ERC20Custom");
 const SafeERC20 = artifacts.require("ERC20/SafeERC20");
+const MockMaha = artifacts.require("ERC20/MockMaha");
+
 
 // Uniswap related
 const TransferHelper = artifacts.require("Uniswap/TransferHelper");
@@ -168,7 +170,7 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(Owned, COLLATERAL_ARTH_AND_ARTHS_OWNER);
   await deployer.deploy(Timelock, TIMELOCK_ADMIN, TIMELOCK_DELAY);
   await deployer.deploy(MigrationHelper, TIMELOCK_ADMIN);
-  await deployer.deploy(SimpleOracle, 'GMU', 1000000000000000000);
+  await deployer.deploy(SimpleOracle, 'GMU', BIG18);
 
 
   // Simple Oracle
