@@ -11,6 +11,7 @@ import '../Math/SafeMath.sol';
 import './IStakingRewards.sol';
 import '../ERC20/SafeERC20.sol';
 import '../Utils/StringHelpers.sol';
+import './IMintAndCallFallBack.sol';
 import '../Utils/ReentrancyGuard.sol';
 import '../Uniswap/TransferHelper.sol';
 import '../Governance/AccessControl.sol';
@@ -18,14 +19,6 @@ import './RewardsDistributionRecipient.sol';
 
 interface IStaking {
     function stakeFor(address who, uint256 amount) external;
-}
-
-interface IMintAndCallFallBack {
-    function receiveMint(
-        address from,
-        uint256 amount,
-        bytes memory _data
-    ) external;
 }
 
 /**
