@@ -30,6 +30,7 @@ module.exports = {
       network_id: 3,
       gas: 8000000,      // Make sure this gas allocation isn't over 4M, which is the max
       gasPrice: 30000000000, // 30 gwei,
+      skipDryRun: true
     },
     rinkeby: {
       provider: providerFactory(),

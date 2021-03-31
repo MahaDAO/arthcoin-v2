@@ -198,41 +198,41 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('===== SET UNISWAP PAIRS ====='));
   console.log(chalk.blue('=== ARTH / XXXX ==='));
   await Promise.all([
-    uniswapFactoryInstance.createPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    uniswapFactoryInstance.createPair(arthInstance.address, arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    uniswapFactoryInstance.createPair(arthInstance.address, wethInstance.address, { from: METAMASK_ADDRESS }),
+    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDC.address, { from: METAMASK_ADDRESS }),
+    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDT.address, { from: METAMASK_ADDRESS }),
+    uniswapFactoryInstance.createPair(arthInstance.address, arthsInstance.address, { from: METAMASK_ADDRESS })
   ]);
 
   console.log(chalk.blue('=== ARTHS / XXXX ==='));
   await Promise.all([
-    uniswapFactoryInstance.createPair(arthsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    uniswapFactoryInstance.createPair(arthsInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    uniswapFactoryInstance.createPair(arthsInstance.address, col_instance_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    uniswapFactoryInstance.createPair(arthsInstance.address, wethInstance.address, { from: METAMASK_ADDRESS }),
+    uniswapFactoryInstance.createPair(arthsInstance.address, col_instance_USDC.address, { from: METAMASK_ADDRESS }),
+    uniswapFactoryInstance.createPair(arthsInstance.address, col_instance_USDT.address, { from: METAMASK_ADDRESS })
   ])
 
   if (!IS_MAINNET) {
     console.log(chalk.blue('=== XXXX / WETH ==='));
-    await uniswapFactoryInstance.createPair(col_instance_USDC.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await uniswapFactoryInstance.createPair(col_instance_USDT.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await uniswapFactoryInstance.createPair(col_instance_USDC.address, wethInstance.address, { from: METAMASK_ADDRESS });
+    await uniswapFactoryInstance.createPair(col_instance_USDT.address, wethInstance.address, { from: METAMASK_ADDRESS });
   }
 
   // ======== Get the addresses of the pairs ========
   console.log(chalk.yellow('===== GET THE ADDRESSES OF THE PAIRS ====='));
-  const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
+  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: METAMASK_ADDRESS });
+  const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: METAMASK_ADDRESS });
+  const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
 
   // ======== Deploy the staking contracts ========
   console.log(chalk.yellow('===== DEPLOY THE STAKING CONTRACTS ====='));
   await deployer.link(ARTHStablecoin, [StakingRewards_ARTH_WETH, StakingRewards_ARTH_USDC, StakingRewards_ARTHS_WETH, StakingRewards_ARTH_ARTHS]);
   await deployer.link(StringHelpers, [StakingRewards_ARTH_WETH, StakingRewards_ARTH_USDC, StakingRewards_ARTHS_WETH, StakingRewards_ARTH_ARTHS]);
   await Promise.all([
-    deployer.deploy(StakingRewards_ARTH_WETH, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_WETH, ARTHStablecoin.address, timelockInstance.address, 500000),
-    deployer.deploy(StakingRewards_ARTH_USDC, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_USDC, ARTHStablecoin.address, timelockInstance.address, 500000),
-    deployer.deploy(StakingRewards_ARTH_ARTHS, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_ARTHS, ARTHStablecoin.address, timelockInstance.address, 0),
-    deployer.deploy(StakingRewards_ARTHS_WETH, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTHS_WETH, ARTHStablecoin.address, timelockInstance.address, 0)
+    deployer.deploy(StakingRewards_ARTH_WETH, METAMASK_ADDRESS, METAMASK_ADDRESS, arthsInstance.address, pair_addr_ARTH_WETH, ARTHStablecoin.address, timelockInstance.address, 500000),
+    deployer.deploy(StakingRewards_ARTH_USDC, METAMASK_ADDRESS, METAMASK_ADDRESS, arthsInstance.address, pair_addr_ARTH_USDC, ARTHStablecoin.address, timelockInstance.address, 500000),
+    deployer.deploy(StakingRewards_ARTH_ARTHS, METAMASK_ADDRESS, METAMASK_ADDRESS, arthsInstance.address, pair_addr_ARTH_ARTHS, ARTHStablecoin.address, timelockInstance.address, 0),
+    deployer.deploy(StakingRewards_ARTHS_WETH, METAMASK_ADDRESS, METAMASK_ADDRESS, arthsInstance.address, pair_addr_ARTHS_WETH, ARTHStablecoin.address, timelockInstance.address, 0)
   ])
 
   // ======== Get various staking addresses ========
@@ -252,11 +252,11 @@ module.exports = async function (deployer, network, accounts) {
   // ======== Add allowances to the Uniswap Router ========
   console.log(chalk.yellow('===== ADD ALLOWANCES TO THE UNISWAP ROUTER ====='));
   await Promise.all([
-    wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e6), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e6), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+    col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e6), { from: METAMASK_ADDRESS }),
+    col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e6), { from: METAMASK_ADDRESS }),
+    arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: METAMASK_ADDRESS }),
+    arthsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: METAMASK_ADDRESS })
   ])
 
   // ======== Note the addresses ========

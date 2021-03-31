@@ -215,15 +215,15 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.red.bold('YOU NEED TO WAIT AT LEAST 24 HOURS HERE NORMALLY, BUT TEMPORARILY RESETTING THE PRICE UPDATE TO ONE SECOND'));
   console.log(chalk.yellow('===== TEMPORARILY SET THE PERIOD TO 1 SECOND ====='));
   await Promise.all([
-    oracle_instance_ARTH_WETH.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDC.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDT.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_ARTHS.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_WETH.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDC.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDT.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDC_WETH.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDT_WETH.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    oracle_instance_ARTH_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.setPeriod(1, { from: METAMASK_ADDRESS })
   ])
 
   console.log(chalk.yellow('===== UPDATE THE PRICES ====='));
@@ -239,15 +239,15 @@ module.exports = async function (deployer, network, accounts) {
 
   // Make sure the prices are updated
   await Promise.all([
-    oracle_instance_ARTH_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDC.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDT.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_ARTHS.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDC.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDT.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDC_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDT_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    oracle_instance_ARTH_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.update({ from: METAMASK_ADDRESS })
   ]);
 
   console.log(chalk.yellow('===== SET THE PERIOD TO BACK TO 24 HOURS ====='));
@@ -262,14 +262,14 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   await Promise.all([
-    oracle_instance_ARTH_WETH.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDC.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDT.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_ARTHS.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_WETH.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDC.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDT.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDC_WETH.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDT_WETH.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    oracle_instance_ARTH_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.setPeriod(3600, { from: METAMASK_ADDRESS })
   ]);
 };

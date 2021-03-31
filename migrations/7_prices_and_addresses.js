@@ -226,10 +226,10 @@ module.exports = async function (deployer, network, accounts) {
 
   }
 
-  const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
+  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: METAMASK_ADDRESS });
+  const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: METAMASK_ADDRESS });
+  const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
 
   // ======== Get various pair instances ========
   console.log(chalk.yellow('===== GET VARIOUS PAIR INSTANCES ====='));
@@ -247,13 +247,13 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('===== ARTH COLLATERAL POOL ====='));
 
   // Link the FAKE collateral pool to the ARTH contract
-  await arthInstance.addPool(pool_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  await arthInstance.addPool(pool_instance_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  await arthInstance.addPool(pool_instance_USDC.address, { from: METAMASK_ADDRESS });
+  await arthInstance.addPool(pool_instance_USDT.address, { from: METAMASK_ADDRESS });
 
   // ======== Set the ARTH address inside of the ARTHS contract ========
   console.log(chalk.yellow('===== SET ARTH ADDRESS ====='));
   // Link the ARTH contract to the ARTHS contract
-  await arthsInstance.setARTHAddress(arthInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  await arthsInstance.setARTHAddress(arthInstance.address, { from: METAMASK_ADDRESS });
 
   // ======== Display prices ========
   console.log(chalk.yellow('===== DISPLAY PRICES ====='));
@@ -267,8 +267,8 @@ module.exports = async function (deployer, network, accounts) {
   let arths_price_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
   let USDC_price_from_USDC_WETH = (new BigNumber(await oracle_instance_USDC_WETH.consult.call(wethInstance.address, new BigNumber("1e18")))).div(BIG6);
 
-  const arth_price_initial = new BigNumber(await arthInstance.arth_price({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER })).div(BIG6);
-  const arths_price_initial = new BigNumber(await arthInstance.arths_price({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER })).div(BIG6);
+  const arth_price_initial = new BigNumber(await arthInstance.arth_price({ from: METAMASK_ADDRESS })).div(BIG6);
+  const arths_price_initial = new BigNumber(await arthInstance.arths_price({ from: METAMASK_ADDRESS })).div(BIG6);
 
   // Print the new prices
   console.log("arth_price_initial: ", arth_price_initial.toString(), "USD = 1 ARTH");
@@ -285,8 +285,8 @@ module.exports = async function (deployer, network, accounts) {
 
   // ARTH and ARTHS
   await Promise.all([
-    arthsInstance.transfer(METAMASK_ADDRESS, new BigNumber("1000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthInstance.transfer(METAMASK_ADDRESS, new BigNumber("1000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    arthsInstance.transfer(METAMASK_ADDRESS, new BigNumber("1000e18"), { from: METAMASK_ADDRESS }),
+    arthInstance.transfer(METAMASK_ADDRESS, new BigNumber("1000e18"), { from: METAMASK_ADDRESS })
   ])
 
 

@@ -176,10 +176,10 @@ module.exports = async function (deployer, network, accounts) {
     mock_maha_stability_token = await MockMaha.deployed();
     arth_maha_oracle = await ARTHMAHAOracle.deployed();
 
-    const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
+    const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: METAMASK_ADDRESS });
+    const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
+    const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: METAMASK_ADDRESS });
     pair_instance_ARTH_WETH = await UniswapV2Pair.at(pair_addr_ARTH_WETH);
     pair_instance_ARTH_USDC = await UniswapV2Pair.at(pair_addr_ARTH_USDC);
     pair_instance_ARTH_ARTHS = await UniswapV2Pair.at(pair_addr_ARTH_ARTHS);
@@ -217,24 +217,24 @@ module.exports = async function (deployer, network, accounts) {
 
   // Transfer 1,000,000 ARTHS each to various accounts
   if (!IS_MAINNET) {
-    await arthsInstance.transfer(accounts[1], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[2], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[3], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[4], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[5], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[6], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[7], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[8], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(accounts[9], new BigNumber(DISTRIBUTION_AMOUNT), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthsInstance.transfer(accounts[1], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
+    await arthsInstance.transfer(accounts[2], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
+    await arthsInstance.transfer(accounts[3], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
+    await arthsInstance.transfer(accounts[4], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
+    await arthsInstance.transfer(accounts[5], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
+    await arthsInstance.transfer(accounts[6], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
+    await arthsInstance.transfer(accounts[7], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
+    await arthsInstance.transfer(accounts[8], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
+    await arthsInstance.transfer(accounts[9], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
   }
 
   // Transfer ARTHS to staking contracts
   console.log(chalk.yellow('===== Transfer ARTHS to staking contracts ====='));
   await Promise.all([
-    arthsInstance.transfer(stakingInstance_ARTH_WETH.address, new BigNumber("6e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthsInstance.transfer(stakingInstance_ARTH_USDC.address, new BigNumber("618"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthsInstance.transfer(stakingInstance_ARTH_ARTHS.address, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthsInstance.transfer(stakingInstance_ARTHS_WETH.address, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    arthsInstance.transfer(stakingInstance_ARTH_WETH.address, new BigNumber("6e18"), { from: METAMASK_ADDRESS }),
+    arthsInstance.transfer(stakingInstance_ARTH_USDC.address, new BigNumber("618"), { from: METAMASK_ADDRESS }),
+    arthsInstance.transfer(stakingInstance_ARTH_ARTHS.address, new BigNumber("10e18"), { from: METAMASK_ADDRESS }),
+    arthsInstance.transfer(stakingInstance_ARTHS_WETH.address, new BigNumber("10e18"), { from: METAMASK_ADDRESS })
   ]);
 
   if (!IS_MAINNET) {
@@ -276,9 +276,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(1e18),
       new BigNumber(600e18),
       new BigNumber(1e18),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     ),
     // ARTH / USDC
     routerInstance.addLiquidity(
@@ -288,9 +288,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(100e6),
       new BigNumber(100e18),
       new BigNumber(100e6),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     ),
     // ARTH / USDT
     routerInstance.addLiquidity(
@@ -300,9 +300,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(100e6),
       new BigNumber(100e18),
       new BigNumber(100e6),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     ),
     // ARTH / ARTHS
     routerInstance.addLiquidity(
@@ -312,9 +312,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(100e18),
       new BigNumber(133333e15),
       new BigNumber(100e18),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     ),
     // ARTHS / WETH
     routerInstance.addLiquidity(
@@ -324,9 +324,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(1e18),
       new BigNumber(800e18),
       new BigNumber(1e18),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     ),
     // ARTHS / USDC
     routerInstance.addLiquidity(
@@ -336,9 +336,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(100e6),
       new BigNumber(133333e15),
       new BigNumber(100e6),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     ),
     // ARTHS / USDT
     routerInstance.addLiquidity(
@@ -348,9 +348,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(100e6),
       new BigNumber(133333e15),
       new BigNumber(100e6),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     )
   ]);
 
@@ -365,9 +365,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(1000e18),
       new BigNumber(600000e6),
       new BigNumber(1000e18),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     );
 
     // Handle USDT / WETH
@@ -378,9 +378,9 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(1000e18),
       new BigNumber(600000e6),
       new BigNumber(1000e18),
-      COLLATERAL_ARTH_AND_ARTHS_OWNER,
+      METAMASK_ADDRESS,
       new BigNumber(2105300114),
-      { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+      { from: METAMASK_ADDRESS }
     );
   }
 
@@ -388,31 +388,31 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('========== UNISWAP ORACLES =========='));
   console.log(chalk.blue('=== ARTH ORACLES ==='));
   await Promise.all([
-    deployer.deploy(UniswapPairOracle_ARTH_WETH, uniswapFactoryInstance.address, arthInstance.address, wethInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTH_USDC, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDC.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTH_USDT, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDT.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTH_ARTHS, uniswapFactoryInstance.address, arthInstance.address, arthsInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address)
+    deployer.deploy(UniswapPairOracle_ARTH_WETH, uniswapFactoryInstance.address, arthInstance.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTH_USDC, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTH_USDT, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTH_ARTHS, uniswapFactoryInstance.address, arthInstance.address, arthsInstance.address, METAMASK_ADDRESS, timelockInstance.address)
   ]);
 
   console.log(chalk.blue('=== ARTHS ORACLES ==='));
   await Promise.all([
-    deployer.deploy(UniswapPairOracle_ARTHS_WETH, uniswapFactoryInstance.address, arthsInstance.address, wethInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTHS_USDC, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDC.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTHS_USDT, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDT.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address)
+    deployer.deploy(UniswapPairOracle_ARTHS_WETH, uniswapFactoryInstance.address, arthsInstance.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTHS_USDC, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTHS_USDT, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address)
   ]);
 
   console.log(chalk.blue('=== COLLATERAL ORACLES ==='));
   await Promise.all([
-    deployer.deploy(UniswapPairOracle_USDT_WETH, uniswapFactoryInstance.address, col_instance_USDT.address, wethInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_USDC_WETH, uniswapFactoryInstance.address, col_instance_USDC.address, wethInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_USDT_WETH, uniswapFactoryInstance.address, col_instance_USDT.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_USDC_WETH, uniswapFactoryInstance.address, col_instance_USDC.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
   ]);
 
   // ============= Set the Arth Pools ========
   console.log(chalk.yellow('========== ARTH POOLS =========='));
   await deployer.link(StringHelpers, [Pool_USDC, Pool_USDT]);
   await Promise.all([
-    deployer.deploy(Pool_USDC, arthInstance.address, arthsInstance.address, col_instance_USDC.address, POOL_CREATOR, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6),
-    deployer.deploy(Pool_USDT, arthInstance.address, arthsInstance.address, col_instance_USDT.address, POOL_CREATOR, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6)
+    deployer.deploy(Pool_USDC, arthInstance.address, arthsInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6),
+    deployer.deploy(Pool_USDT, arthInstance.address, arthsInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6)
   ])
 
   // ============= Get the pool instances ========
@@ -426,15 +426,15 @@ module.exports = async function (deployer, network, accounts) {
   // Set the redemption fee to 0.04%
   // Set the minting fee to 0.03%
   await Promise.all([
-    arthInstance.setRedemptionFee(REDEMPTION_FEE, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    arthInstance.setMintingFee(MINTING_FEE, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    arthInstance.setRedemptionFee(REDEMPTION_FEE, { from: METAMASK_ADDRESS }),
+    arthInstance.setMintingFee(MINTING_FEE, { from: METAMASK_ADDRESS })
   ])
 
   // ============= Set the pool parameters so the minting and redemption fees get set ========
   console.log(chalk.yellow('========== REFRESH POOL PARAMETERS =========='));
   await Promise.all([
-    await pool_instance_USDC.setPoolParameters(FIVE_MILLION_DEC6, 7500, 1, 1, 1, 1, 1, { from: POOL_CREATOR }),
-    await pool_instance_USDT.setPoolParameters(FIVE_MILLION_DEC6, 7500, 1, 1, 1, 1, 1, { from: POOL_CREATOR }),
+    await pool_instance_USDC.setPoolParameters(FIVE_MILLION_DEC6, 7500, 1, 1, 1, 1, 1, { from: METAMASK_ADDRESS }),
+    await pool_instance_USDT.setPoolParameters(FIVE_MILLION_DEC6, 7500, 1, 1, 1, 1, 1, { from: METAMASK_ADDRESS }),
   ]);
 
   // ============= Get ARTH and ARTHS oracles ========
@@ -461,11 +461,11 @@ module.exports = async function (deployer, network, accounts) {
   // Add the ETH / USD Chainlink oracle
   if (IS_MAINNET) {
     oracle_chainlink_ETH_USD = await ChainlinkETHUSDPriceConsumer.at("0xBa6C6EaC41a24F9D39032513f66D738B3559f15a");
-    await arthInstance.setETHUSDOracle(oracle_chainlink_ETH_USD.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthInstance.setETHUSDOracle(oracle_chainlink_ETH_USD.address, { from: METAMASK_ADDRESS });
   }
   else {
     oracle_chainlink_ETH_USD = await ChainlinkETHUSDPriceConsumerTest.deployed();
-    await arthInstance.setETHUSDOracle(oracle_chainlink_ETH_USD.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthInstance.setETHUSDOracle(oracle_chainlink_ETH_USD.address, { from: METAMASK_ADDRESS });
   }
 
 
@@ -476,9 +476,9 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.blue('=== ARTH / WETH ORACLE SETTING ==='));
   console.log(chalk.blue('=== COLLATERAL / WETH ORACLE SETTING ==='));
   await Promise.all([
-    arthInstance.setARTHEthOracle(oracle_instance_ARTH_WETH.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    pool_instance_USDC.setCollatETHOracle(oracle_instance_USDC_WETH.address, wethInstance.address, { from: POOL_CREATOR }),
-    pool_instance_USDT.setCollatETHOracle(oracle_instance_USDT_WETH.address, wethInstance.address, { from: POOL_CREATOR })
+    arthInstance.setARTHEthOracle(oracle_instance_ARTH_WETH.address, wethInstance.address, { from: METAMASK_ADDRESS }),
+    pool_instance_USDC.setCollatETHOracle(oracle_instance_USDC_WETH.address, wethInstance.address, { from: METAMASK_ADDRESS }),
+    pool_instance_USDT.setCollatETHOracle(oracle_instance_USDT_WETH.address, wethInstance.address, { from: METAMASK_ADDRESS })
 
   ]);
 
@@ -486,7 +486,7 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('===== LINK ARTHS ORACLES ====='));
 
   // Link the ARTHS oracles
-  await arthInstance.setARTHSEthOracle(oracle_instance_ARTHS_WETH.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  await arthInstance.setARTHSEthOracle(oracle_instance_ARTHS_WETH.address, wethInstance.address, { from: METAMASK_ADDRESS });
 
   // ======== Note the addresses ========
   // If you are testing the frontend, you need to copy-paste the output of CONTRACT_ADDRESSES to the frontend src/misc/constants.tsx

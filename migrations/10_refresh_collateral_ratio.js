@@ -198,15 +198,15 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   await Promise.all([
-    oracle_instance_ARTH_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDC.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDT.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_ARTHS.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDC.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDT.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDC_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDT_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    oracle_instance_ARTH_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.update({ from: METAMASK_ADDRESS })
   ]);
 
   // return false;

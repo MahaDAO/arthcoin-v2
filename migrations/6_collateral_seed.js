@@ -233,16 +233,16 @@ module.exports = async function (deployer, network, accounts) {
   console.log("Seed the collateral pools some collateral to start off with")
   if (IS_MAINNET) {
     await Promise.all([
-      await col_instance_USDC.transfer(pool_instance_USDC.address, ONE_HUNDRED_DEC6, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      await col_instance_USDT.transfer(pool_instance_USDT.address, ONE_HUNDRED_DEC6, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+      await col_instance_USDC.transfer(pool_instance_USDC.address, ONE_HUNDRED_DEC6, { from: METAMASK_ADDRESS }),
+      await col_instance_USDT.transfer(pool_instance_USDT.address, ONE_HUNDRED_DEC6, { from: METAMASK_ADDRESS }),
     ]);
   }
   else {
     console.log(chalk.blue('=== USDC ==='));
-    await col_instance_USDC.transfer(pool_instance_USDC.address, COLLATERAL_SEED_DEC6, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await col_instance_USDC.transfer(pool_instance_USDC.address, COLLATERAL_SEED_DEC6, { from: METAMASK_ADDRESS });
 
     console.log(chalk.blue('=== USDT ==='));
-    await col_instance_USDT.transfer(pool_instance_USDT.address, COLLATERAL_SEED_DEC6, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await col_instance_USDT.transfer(pool_instance_USDT.address, COLLATERAL_SEED_DEC6, { from: METAMASK_ADDRESS });
 
   }
 

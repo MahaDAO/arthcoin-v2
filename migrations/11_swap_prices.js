@@ -203,21 +203,21 @@ module.exports = async function (deployer, network, accounts) {
   if (true) {
     // Add allowances to the Uniswap Router
     await Promise.all([
-      wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      arthsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+      wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: METAMASK_ADDRESS }),
+      arthsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: METAMASK_ADDRESS })
     ])
 
     // Add allowances to the swapToPrice contract
     console.log("Doing swapToPrice allowances...");
     await Promise.all([
-      wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      col_instance_USDC.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      col_instance_USDT.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-      arthsInstance.approve(swapToPriceInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+      wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      col_instance_USDC.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      col_instance_USDT.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: METAMASK_ADDRESS }),
+      arthsInstance.approve(swapToPriceInstance.address, new BigNumber(5000000e18), { from: METAMASK_ADDRESS })
     ])
   }
 
@@ -231,9 +231,9 @@ module.exports = async function (deployer, network, accounts) {
     new BigNumber(1e6),
     new BigNumber(100e18),
     new BigNumber(100e18),
-    COLLATERAL_ARTH_AND_ARTHS_OWNER,
+    METAMASK_ADDRESS,
     new BigNumber(2105300114),
-    { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+    { from: METAMASK_ADDRESS }
   )
   console.log("ARTH / WETH swapped");
 
@@ -246,9 +246,9 @@ module.exports = async function (deployer, network, accounts) {
     new BigNumber(997e3),
     new BigNumber(100e18),
     new BigNumber(100e18),
-    COLLATERAL_ARTH_AND_ARTHS_OWNER,
+    METAMASK_ADDRESS,
     new BigNumber(2105300114),
-    { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+    { from: METAMASK_ADDRESS }
   )
   console.log("ARTH / USDC swapped");
 
@@ -261,9 +261,9 @@ module.exports = async function (deployer, network, accounts) {
     new BigNumber(1005e3),
     new BigNumber(100e18),
     new BigNumber(100e18),
-    COLLATERAL_ARTH_AND_ARTHS_OWNER,
+    METAMASK_ADDRESS,
     new BigNumber(2105300114),
-    { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+    { from: METAMASK_ADDRESS }
   )
   console.log("ARTH / USDT swapped");
 
@@ -278,9 +278,9 @@ module.exports = async function (deployer, network, accounts) {
     new BigNumber(1e6),
     new BigNumber(100e18),
     new BigNumber(100e18),
-    COLLATERAL_ARTH_AND_ARTHS_OWNER,
+    METAMASK_ADDRESS,
     new BigNumber(2105300114),
-    { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+    { from: METAMASK_ADDRESS }
   )
   console.log("ARTHS / WETH swapped");
 
@@ -293,9 +293,9 @@ module.exports = async function (deployer, network, accounts) {
     new BigNumber(1e6),
     new BigNumber(100e18),
     new BigNumber(100e18),
-    COLLATERAL_ARTH_AND_ARTHS_OWNER,
+    METAMASK_ADDRESS,
     new BigNumber(2105300114),
-    { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+    { from: METAMASK_ADDRESS }
   )
   console.log("ARTHS / USDC swapped");
 
@@ -309,9 +309,9 @@ module.exports = async function (deployer, network, accounts) {
     new BigNumber(1e6),
     new BigNumber(100e18),
     new BigNumber(100e18),
-    COLLATERAL_ARTH_AND_ARTHS_OWNER,
+    METAMASK_ADDRESS,
     new BigNumber(2105300114),
-    { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
+    { from: METAMASK_ADDRESS }
   )
   console.log("ARTHS / USDT swapped");
 
@@ -320,42 +320,42 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('===== TEMPORARILY SET THE PERIOD TO 1 SECOND ====='));
 
   await Promise.all([
-    oracle_instance_ARTH_WETH.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDC.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDT.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_ARTHS.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_WETH.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDC.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDT.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDC_WETH.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDT_WETH.setPeriod(1, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    oracle_instance_ARTH_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.setPeriod(1, { from: METAMASK_ADDRESS })
   ])
 
   console.log(chalk.yellow('===== UPDATE THE PRICES ====='));
 
   // Make sure the prices are updated
   await Promise.all([
-    oracle_instance_ARTH_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDC.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDT.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_ARTHS.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDC.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDT.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDC_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDT_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    oracle_instance_ARTH_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.update({ from: METAMASK_ADDRESS })
   ]);
 
   console.log(chalk.yellow('===== SET THE PERIOD TO BACK TO 1 HOUR ====='));
   await Promise.all([
-    oracle_instance_ARTH_WETH.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDC.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDT.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_ARTHS.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_WETH.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDC.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDT.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDC_WETH.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDT_WETH.setPeriod(3600, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
+    oracle_instance_ARTH_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
   ]);
 };

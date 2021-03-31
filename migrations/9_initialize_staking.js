@@ -235,8 +235,8 @@ module.exports = async function (deployer, network, accounts) {
   // ======== Initialize the staking rewards ========
   console.log(chalk.yellow.bold('======== Initialize the staking rewards ========'));
   await Promise.all([
-    stakingInstance_ARTH_WETH.initializeDefault({ from: STAKING_OWNER }),
-    stakingInstance_ARTH_USDC.initializeDefault({ from: STAKING_OWNER }),
+    stakingInstance_ARTH_WETH.initializeDefault({ from: METAMASK_ADDRESS }),
+    stakingInstance_ARTH_USDC.initializeDefault({ from: METAMASK_ADDRESS }),
   ])
 
   // console.log(chalk.blue('=== stakingInstance_ARTH_ARTHS ==='));

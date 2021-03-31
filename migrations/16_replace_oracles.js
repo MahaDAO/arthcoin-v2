@@ -247,23 +247,23 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('========== UNISWAP ORACLES =========='));
   console.log(chalk.blue('=== ARTH ORACLES ==='));
   await Promise.all([
-    deployer.deploy(UniswapPairOracle_ARTH_WETH, uniswapFactoryInstance.address, arthInstance.address, wethInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTH_USDC, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDC.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTH_USDT, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDT.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTH_ARTHS, uniswapFactoryInstance.address, arthInstance.address, arthsInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address)
+    deployer.deploy(UniswapPairOracle_ARTH_WETH, uniswapFactoryInstance.address, arthInstance.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTH_USDC, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTH_USDT, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTH_ARTHS, uniswapFactoryInstance.address, arthInstance.address, arthsInstance.address, METAMASK_ADDRESS, timelockInstance.address)
   ]);
 
   console.log(chalk.blue('=== ARTHS ORACLES ==='));
   await Promise.all([
-    deployer.deploy(UniswapPairOracle_ARTHS_WETH, uniswapFactoryInstance.address, arthsInstance.address, wethInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTHS_USDC, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDC.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_ARTHS_USDT, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDT.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address)
+    deployer.deploy(UniswapPairOracle_ARTHS_WETH, uniswapFactoryInstance.address, arthsInstance.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTHS_USDC, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_ARTHS_USDT, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address)
   ]);
 
   console.log(chalk.blue('=== COLLATERAL ORACLES ==='));
   await Promise.all([
-    deployer.deploy(UniswapPairOracle_USDC_WETH, uniswapFactoryInstance.address, col_instance_USDC.address, wethInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
-    deployer.deploy(UniswapPairOracle_USDT_WETH, uniswapFactoryInstance.address, col_instance_USDT.address, wethInstance.address, COLLATERAL_ARTH_AND_ARTHS_OWNER, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_USDC_WETH, uniswapFactoryInstance.address, col_instance_USDC.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
+    deployer.deploy(UniswapPairOracle_USDT_WETH, uniswapFactoryInstance.address, col_instance_USDT.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
   ]);
 
   // Get the instances
