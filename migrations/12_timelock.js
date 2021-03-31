@@ -217,7 +217,7 @@ module.exports = async function (deployer, network, accounts) {
   //   { from: TIMELOCK_ADMIN }
   // ]
 
-  await timelockInstance.executeTransaction(...tx_nugget);
+  // await timelockInstance.executeTransaction(...tx_nugget);
   //await governanceInstance.__acceptAdmin({ from: GOVERNOR_GUARDIAN_ADDRESS });
   timelock_admin_address = await timelockInstance.admin.call();
   console.log("timelock_admin [AFTER]: ", timelock_admin_address)

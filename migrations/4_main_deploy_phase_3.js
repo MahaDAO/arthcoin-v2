@@ -85,7 +85,7 @@ const StakingRewards_ARTH_ARTHS = artifacts.require("Staking/Variants/Stake_ARTH
 const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTHS_WETH.sol");
 
 const MockMaha = artifacts.require("ERC20/MockMaha.sol");
-const MahaOracle = artifacts.require("Oracle/MahaOracle.sol");
+const ARTHMAHAOracle = artifacts.require("Oracle/ARTHMAHAOracle.sol");
 
 const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666";
 
@@ -155,7 +155,7 @@ module.exports = async function (deployer, network, accounts) {
   let pair_instance_ARTH_ARTHS;
   let pair_instance_ARTHS_WETH;
   let mock_maha_stability_token;
-  let mock_maha_oracle;
+  let arth_maha_oracle;
 
   if (process.env.MIGRATION_MODE == 'ganache') {
     timelockInstance = await Timelock.deployed();
@@ -174,7 +174,7 @@ module.exports = async function (deployer, network, accounts) {
     stakingInstance_ARTH_ARTHS = await StakingRewards_ARTH_ARTHS.deployed();
     stakingInstance_ARTHS_WETH = await StakingRewards_ARTHS_WETH.deployed();
     mock_maha_stability_token = await MockMaha.deployed();
-    mock_maha_oracle = await MahaOracle.deployed();
+    arth_maha_oracle = await ARTHMAHAOracle.deployed();
 
     const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
@@ -411,8 +411,8 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('========== ARTH POOLS =========='));
   await deployer.link(StringHelpers, [Pool_USDC, Pool_USDT]);
   await Promise.all([
-    deployer.deploy(Pool_USDC, arthInstance.address, arthsInstance.address, col_instance_USDC.address, POOL_CREATOR, timelockInstance.address, mock_maha_stability_token.address, mock_maha_oracle.address, FIVE_MILLION_DEC6),
-    deployer.deploy(Pool_USDT, arthInstance.address, arthsInstance.address, col_instance_USDT.address, POOL_CREATOR, timelockInstance.address, mock_maha_stability_token.address, mock_maha_oracle.address, FIVE_MILLION_DEC6)
+    deployer.deploy(Pool_USDC, arthInstance.address, arthsInstance.address, col_instance_USDC.address, POOL_CREATOR, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6),
+    deployer.deploy(Pool_USDT, arthInstance.address, arthsInstance.address, col_instance_USDT.address, POOL_CREATOR, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6)
   ])
 
   // ============= Get the pool instances ========
