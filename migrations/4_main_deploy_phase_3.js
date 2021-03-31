@@ -157,7 +157,7 @@ module.exports = async function (deployer, network, accounts) {
   let mock_maha_stability_token;
   let arth_maha_oracle;
 
-  if (process.env.MIGRATION_MODE == 'ganache') {
+  if (process.env.MIGRATION_MODE != 'mainnet') {
     timelockInstance = await Timelock.deployed();
     migrationHelperInstance = await MigrationHelper.deployed()
     //governanceInstance = await GovernorAlpha.deployed();
@@ -214,19 +214,6 @@ module.exports = async function (deployer, network, accounts) {
 
   // ======== Spread some ARTHS around ========
   console.log(chalk.yellow('===== SPREAD SOME ARTHS AROUND ====='));
-
-  // Transfer 1,000,000 ARTHS each to various accounts
-  if (!IS_MAINNET) {
-    await arthsInstance.transfer(accounts[1], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-    await arthsInstance.transfer(accounts[2], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-    await arthsInstance.transfer(accounts[3], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-    await arthsInstance.transfer(accounts[4], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-    await arthsInstance.transfer(accounts[5], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-    await arthsInstance.transfer(accounts[6], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-    await arthsInstance.transfer(accounts[7], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-    await arthsInstance.transfer(accounts[8], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-    await arthsInstance.transfer(accounts[9], new BigNumber(DISTRIBUTION_AMOUNT), { from: METAMASK_ADDRESS });
-  }
 
   // Transfer ARTHS to staking contracts
   console.log(chalk.yellow('===== Transfer ARTHS to staking contracts ====='));
