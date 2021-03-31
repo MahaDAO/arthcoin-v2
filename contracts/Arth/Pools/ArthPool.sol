@@ -338,11 +338,23 @@ contract ArthPool is AccessControl {
         uint256 collateral_amount,
         uint256 ARTH_out_min,
         IMintAndCallFallBack _spender,
-        bytes memory _extraData
+        bytes memory _extraData,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) external {
         uint256 amountToStake = _mint1t1ARTH(collateral_amount, ARTH_out_min);
-        // NOTE: Assuming that msg.sender has already approved staking contract to
-        // stake tokens.
+
+        ARTH.permit(
+            msg.sender,
+            address(_spender),
+            amountToStake,
+            block.timestamp,
+            v,
+            r,
+            s
+        );
+
         _spender.receiveMint(msg.sender, amountToStake, _extraData);
     }
 
@@ -386,10 +398,24 @@ contract ArthPool is AccessControl {
         uint256 arths_amount_d18,
         uint256 ARTH_out_min,
         IMintAndCallFallBack _spender,
-        bytes memory _extraData
+        bytes memory _extraData,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) external {
         uint256 amountToStake =
             _mintAlgorithmicARTH(arths_amount_d18, ARTH_out_min);
+
+        ARTH.permit(
+            msg.sender,
+            address(_spender),
+            amountToStake,
+            block.timestamp,
+            v,
+            r,
+            s
+        );
+
         _spender.receiveMint(msg.sender, amountToStake, _extraData);
     }
 
@@ -460,10 +486,24 @@ contract ArthPool is AccessControl {
         uint256 arths_amount,
         uint256 ARTH_out_min,
         IMintAndCallFallBack _spender,
-        bytes memory _extraData
+        bytes memory _extraData,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) external notMintPaused {
         uint256 amountToStake =
             _mintFractionalARTH(collateral_amount, arths_amount, ARTH_out_min);
+
+        ARTH.permit(
+            msg.sender,
+            address(_spender),
+            amountToStake,
+            block.timestamp,
+            v,
+            r,
+            s
+        );
+
         _spender.receiveMint(msg.sender, amountToStake, _extraData);
     }
 
@@ -742,13 +782,24 @@ contract ArthPool is AccessControl {
         uint256 collateral_amount,
         uint256 ARTHS_out_min,
         IMintAndCallFallBack _spender,
-        bytes memory _extraData
+        bytes memory _extraData,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
     ) external {
         uint256 amountToStake =
             _recollateralizeARTH(collateral_amount, ARTHS_out_min);
 
-        // NOTE: Assuming that msg.sender has already approved staking contract to
-        // stake tokens.
+        ARTH.permit(
+            msg.sender,
+            address(_spender),
+            amountToStake,
+            block.timestamp,
+            v,
+            r,
+            s
+        );
+
         _spender.receiveMint(msg.sender, amountToStake, _extraData);
     }
 

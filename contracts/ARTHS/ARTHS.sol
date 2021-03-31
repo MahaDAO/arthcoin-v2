@@ -9,6 +9,7 @@ import '../Math/SafeMath.sol';
 import '../Common/Context.sol';
 import '../ERC20/ERC20Custom.sol';
 import '../Governance/AccessControl.sol';
+import '../ERC20/Variants/AnyswapV4Token.sol';
 
 /**
  *  Original code written by:
@@ -16,7 +17,7 @@ import '../Governance/AccessControl.sol';
  *  Code modified by:
  *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
  */
-contract ARTHShares is ERC20Custom, AccessControl {
+contract ARTHShares is AnyswapV4Token {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
@@ -59,7 +60,7 @@ contract ARTHShares is ERC20Custom, AccessControl {
         address _oracle_address,
         address _owner_address,
         address _timelock_address
-    ) {
+    ) AnyswapV4Token(_name) {
         name = _name;
         symbol = _symbol;
         owner_address = _owner_address;
