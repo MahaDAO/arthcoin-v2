@@ -13,13 +13,14 @@ const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
 const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH")
 const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH")
-const UniswapPairOracle_ARTHS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_WETH")
 
 
 module.exports = async function (deployer, network, accounts) {
 
+  const REDEMPTION_FEE = 400 // 0.04%
+  const MINTING_FEE = 300 // 0.03%
+  const DEPLOYER_ADDRESS = accounts[0]
   const FIVE_MILLION = new BigNumber("500000e6")
-  const DEPLOYER_ADDRESS = process.env.DEPLOYER_ADDRESS
   const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
   const arthsInstance = await ARTHShares.deployed()
@@ -76,7 +77,6 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nGetting ARTH and ARTHS oracles...'))
   const oracle_instance_USDC_WETH = await UniswapPairOracle_USDC_WETH.deployed()
   const oracle_instance_USDT_WETH = await UniswapPairOracle_USDT_WETH.deployed()
-  const oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.deployed()
 
   console.log(chalk.yellow('\nLinking Collateral oracles...'))
   await Promise.all([

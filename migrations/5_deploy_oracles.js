@@ -21,7 +21,7 @@ const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapP
 
 module.exports = async function (deployer, network, accounts) {
 
-  const DEPLOYER_ADDRESS = process.env.DEPLOYER_ADDRESS
+  const DEPLOYER_ADDRESS = accounts[0]
   const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
   const arthsInstance = await ARTHShares.deployed()
@@ -128,6 +128,7 @@ module.exports = async function (deployer, network, accounts) {
   const arthWETHOracle = await UniswapPairOracle_ARTH_WETH.deployed()
   arthInstance.setARTHEthOracle(arthWETHOracle.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
 
+  const oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.deployed()
   console.log(chalk.yellow('Linking ARTHS oracles...'))
   await arthInstance.setARTHSEthOracle(oracle_instance_ARTHS_WETH.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
 }

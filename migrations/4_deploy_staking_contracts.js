@@ -16,7 +16,7 @@ const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTH
 
 module.exports = async function (deployer, network, accounts) {
 
-  const DEPLOYER_ADDRESS = process.env.DEPLOYER_ADDRESS
+  const DEPLOYER_ADDRESS = accounts[0]
   const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
   const arthsInstance = await ARTHShares.deployed()
