@@ -5,7 +5,7 @@ require('dotenv').config()
 
 
 const Timelock = artifacts.require("Governance/Timelock")
-const MigrationHelper = artifacts.require("Utils/MigrationHelper")
+// const MigrationHelper = artifacts.require("Utils/MigrationHelper")
 
 
 module.exports = async function (deployer, network, accounts) {
@@ -13,7 +13,7 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0]
 
   const timelockInstance = await Timelock.deployed()
-  const migrationHelperInstance = await MigrationHelper.deployed()
+  // const migrationHelperInstance = await MigrationHelper.deployed()
 
   if (process.env.MIGRATION_MODE == 'ganache' || network == 'development') {
     // Advance 2 days to catch things up.
@@ -27,7 +27,7 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nSet the GOVERNANCE CONTRACT as the timelock admin [Phase 2].'))
 
   // Fetch the delay transaction
-  const eta_with_delay = (await migrationHelperInstance.gov_to_timelock_eta.call()).toNumber()
+  // const eta_with_delay = (await migrationHelperInstance.gov_to_timelock_eta.call()).toNumber()
 
   // const tx_nugget = [
   //   timelockInstance.address,

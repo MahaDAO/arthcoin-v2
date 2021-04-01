@@ -21,10 +21,11 @@ const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapP
 module.exports = async function (deployer, network, accounts) {
 
   const DEPLOYER_ADDRESS = accounts[0]
+  const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
   const arthsInstance = await ARTHShares.deployed()
   const arthInstance = await ARTHStablecoin.deployed()
-  const routerInstance = await UniswapV2Router02_Modified.deployed()
+  const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts)
   const oracle_instance_USDC_WETH = await UniswapPairOracle_USDC_WETH.deployed()
   const oracle_instance_USDT_WETH = await UniswapPairOracle_USDT_WETH.deployed()
   const oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed()

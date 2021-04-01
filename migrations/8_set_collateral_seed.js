@@ -14,6 +14,7 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0]
   const ONE_HUNDRED_DEC6 = new BigNumber("100e6")
   const COLLATERAL_SEED_DEC6 = new BigNumber(508500e6)
+  const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
   const pool_instance_USDC = await Pool_USDC.deployed()
   const pool_instance_USDT = await Pool_USDT.deployed()

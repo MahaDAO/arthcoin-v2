@@ -9,6 +9,7 @@ const ARTHShares = artifacts.require("ARTHS/ARTHShares")
 const Timelock = artifacts.require("Governance/Timelock")
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC")
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT")
+const ArthPoolLibrary = artifacts.require("ArthPoolLibrary")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
 const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH")
 const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH")
@@ -30,6 +31,10 @@ module.exports = async function (deployer, network, accounts) {
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
   const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
+
+  console.log(chalk.yellow('\nDeploying and linking Pools library...'))
+  await deployer.deploy(ArthPoolLibrary)
+  await deployer.link(ArthPoolLibrary, [Pool_USDC, Pool_USDT]);
 
   console.log(chalk.yellow('\nDeploying Pools...'))
   await Promise.all([
@@ -69,8 +74,8 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nRefreshing pool params...'))
   await Promise.all([
-    await pool_instance_USDC.setPoolParameters(FIVE_MILLION_DEC6, 7500, 1, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
-    await pool_instance_USDT.setPoolParameters(FIVE_MILLION_DEC6, 7500, 1, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDC.setPoolParameters(FIVE_MILLION, 7500, 1, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDT.setPoolParameters(FIVE_MILLION, 7500, 1, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
   ])
 
   console.log(chalk.yellow('\nGetting ARTH and ARTHS oracles...'))

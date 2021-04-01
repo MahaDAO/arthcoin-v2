@@ -1,8 +1,10 @@
 const chalk = require('chalk')
+const { time } = require('@openzeppelin/test-helpers')
 
 require('dotenv').config()
 
 
+const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
 const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH")
 const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH")
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH")
@@ -16,8 +18,9 @@ const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapP
 
 module.exports = async function (deployer, network, accounts) {
 
-  const METAMASK_ADDRESS = accounts[0]
+  const DEPLOYER_ADDRESS = accounts[0]
 
+  const arthInstance = await ARTHStablecoin.deployed()
   const oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed()
   const oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed()
   const oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.deployed()
@@ -40,15 +43,15 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   await Promise.all([
-    oracle_instance_ARTH_WETH.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTH_USDC.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTH_USDT.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTH_ARTHS.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTHS_WETH.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTHS_USDC.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTHS_USDT.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_USDC_WETH.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_USDT_WETH.update({ from: METAMASK_ADDRESS })
+    oracle_instance_ARTH_WETH.update({ from: DEPLOYER_ADDRESS }),
+    oracle_instance_ARTH_USDC.update({ from: DEPLOYER_ADDRESS }),
+    oracle_instance_ARTH_USDT.update({ from: DEPLOYER_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.update({ from: DEPLOYER_ADDRESS }),
+    oracle_instance_ARTHS_WETH.update({ from: DEPLOYER_ADDRESS }),
+    oracle_instance_ARTHS_USDC.update({ from: DEPLOYER_ADDRESS }),
+    oracle_instance_ARTHS_USDT.update({ from: DEPLOYER_ADDRESS }),
+    oracle_instance_USDC_WETH.update({ from: DEPLOYER_ADDRESS }),
+    oracle_instance_USDT_WETH.update({ from: DEPLOYER_ADDRESS })
   ])
 
 
@@ -61,5 +64,5 @@ module.exports = async function (deployer, network, accounts) {
     console.log(chalk.red.bold('\nYou need to wait atleast 2 days here.'))
   }
 
-  await arthInstance.refreshCollateralRatio()
+  // await arthInstance.refreshCollateralRatio()
 }
