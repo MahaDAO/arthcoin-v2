@@ -121,8 +121,10 @@ module.exports = {
   SUSHI: {
     mainnet: '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2',
   },
+  ETHUSDChainlinkOracleDefault: {
+    kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331'
+  },
   ETHUSDChainlinkOracle: {
-    mainnet: '0xBa6C6EaC41a24F9D39032513f66D738B3559f15a'
   },
   GMUOracle: {},
   ARTHMAHAOracle: {}

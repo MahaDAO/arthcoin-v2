@@ -121,8 +121,8 @@ module.exports = async function (deployer, network, accounts) {
   await helpers.getARTHMAHAOracle(network, deployer, artifacts)
   const chainlinkETHUSDOracle = await helpers.getChainlinkETHUSDOracle(network, deployer, artifacts)
 
-  // console.log(chalk.yellow('\nSetting chainlink oracle...'))
-  // await arthInstance.setETHUSDOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS })
+  console.log(chalk.yellow('\nSetting chainlink oracle...'))
+  await arthInstance.setETHUSDOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS })
 
   console.log(chalk.yellow('\nSetting ARTHWETH oracle...'))
   const arthWETHOracle = await UniswapPairOracle_ARTH_WETH.deployed()

@@ -17,7 +17,8 @@
     "server-graphql": "tsc && nodemon dist/server/server-graphql.js",
     "deploy-ropsten": "tsc && nodemon src/truffle/deploy/ropsten/deploy-ropsten.js",
     "migrate:dev": "rm -rf build/ && truffle migrate --network development --reset",
-    "migrate:ropsten": "rm -rf build/ && truffle migrate --network ropsten --reset"
+    "migrate:ropsten": "rm -rf build/ && truffle migrate --network ropsten --reset",
+    "migrate:kovan": "rm -rf build/ && truffle migrate --network kovan --reset"
   },
   "devDependencies": {
     "@chainlink/contracts": "0.0.10",

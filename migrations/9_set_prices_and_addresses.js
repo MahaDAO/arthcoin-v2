@@ -66,5 +66,5 @@ module.exports = async function (deployer, network, accounts) {
   ])
 
   console.log(chalk.blue('\nRefreshing collateral ratio...'))
-  // await arthInstance.refreshCollateralRatio()
+  await arthInstance.refreshCollateralRatio()
 }

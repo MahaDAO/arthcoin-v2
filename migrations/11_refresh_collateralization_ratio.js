@@ -64,5 +64,5 @@ module.exports = async function (deployer, network, accounts) {
     console.log(chalk.red.bold('\nYou need to wait atleast 2 days here.'))
   }
 
-  // await arthInstance.refreshCollateralRatio()
+  await arthInstance.refreshCollateralRatio()
 }

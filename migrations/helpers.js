@@ -169,8 +169,11 @@ const getChainlinkETHUSDOracle = async (network, deployer, artifacts) => {
 
   if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed()
 
+  const defaultChainlinkConsumerAddr = knownContracts.ETHUSDChainlinkOracleDefault[network]
+  if (!defaultChainlinkConsumerAddr) throw Error('Default Chainlink Address not specified in known-contracts.')
+
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`))
-  await deployer.deploy(ChainlinkETHUSDPriceConsumer, (await getGMUOracle(network, deployer, artifacts)).address)
+  await deployer.deploy(ChainlinkETHUSDPriceConsumer, defaultChainlinkConsumerAddr, (await getGMUOracle(network, deployer, artifacts)).address)
 
   return ChainlinkETHUSDPriceConsumer.deployed()
 }
