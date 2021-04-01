@@ -137,7 +137,7 @@ module.exports = async function (deployer, network, accounts) {
   let pool_instance_USDC;
   let pool_instance_USDT;
 
-  if (process.env.MIGRATION_MODE == 'ganache') {
+  if (process.env.MIGRATION_MODE != 'mainnet') {
     timelockInstance = await Timelock.deployed();
     migrationHelperInstance = await MigrationHelper.deployed()
     governanceInstance = await GovernorAlpha.deployed();

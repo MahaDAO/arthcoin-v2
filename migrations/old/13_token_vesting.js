@@ -67,6 +67,7 @@ const ChainlinkETHUSDPriceConsumerTest = artifacts.require("Oracle/ChainlinkETHU
 // ARTH core
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const ARTHShares = artifacts.require("ARTHS/ARTHShares");
+const TokenVesting = artifacts.require("ARTHS/TokenVesting");
 
 // Governance related
 //const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
@@ -83,8 +84,10 @@ const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666";
 // Make sure Ganache is running beforehand
 module.exports = async function (deployer, network, accounts) {
 
-  // ======== Set the addresses ========
+  const IS_MAINNET = (process.env.MIGRATION_MODE == 'mainnet');
 
+  // ======== Set the addresses ========
+  console.log(chalk.yellow('===== SET THE ADDRESSES ====='));
   const COLLATERAL_ARTH_AND_ARTHS_OWNER = accounts[1];
   const ORACLE_ADDRESS = accounts[2];
   const POOL_CREATOR = accounts[3];
@@ -138,7 +141,7 @@ module.exports = async function (deployer, network, accounts) {
   let pool_instance_USDC;
   let pool_instance_USDT;
 
-  if (process.env.MIGRATION_MODE == 'ganache') {
+  if (process.env.MIGRATION_MODE != 'mainnet') {
     timelockInstance = await Timelock.deployed();
     migrationHelperInstance = await MigrationHelper.deployed()
     //governanceInstance = await GovernorAlpha.deployed();
@@ -147,7 +150,6 @@ module.exports = async function (deployer, network, accounts) {
     arthsInstance = await ARTHShares.deployed();
     wethInstance = await WETH.deployed();
     col_instance_USDC = await FakeCollateral_USDC.deployed();
-    col_instance_USDT = await FakeCollateral_USDT.deployed();
     uniswapFactoryInstance = await UniswapV2Factory.deployed();
     oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed();
     oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed();
@@ -170,7 +172,6 @@ module.exports = async function (deployer, network, accounts) {
     //governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
     wethInstance = await WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].weth);
     col_instance_USDC = await FakeCollateral_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDC);
-    col_instance_USDT = await FakeCollateral_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDT);
     routerInstance = await UniswapV2Router02.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].uniswap_other.router);
     uniswapFactoryInstance = await UniswapV2Factory.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].uniswap_other.factory);
     swapToPriceInstance = await SwapToPrice.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pricing.swap_to_price);
@@ -185,45 +186,20 @@ module.exports = async function (deployer, network, accounts) {
     oracle_instance_USDT_WETH = await UniswapPairOracle_USDT_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.USDT_WETH);
     pool_instance_USDC = await Pool_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pools.USDC);
     pool_instance_USDT = await Pool_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pools.USDT);
-
   }
-
-  if (process.env.MIGRATION_MODE == 'ganache') {
-    // Advance a few seconds
-    await time.increase(86400 + 10 * 60);
-    await time.advanceBlock();
-  }
-  else {
-    console.log(chalk.red.bold('YOU NEED TO WAIT AT LEAST 1 SECOND HERE HERE'));
-  }
-
-  await Promise.all([
-    oracle_instance_ARTH_WETH.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTH_USDC.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTH_USDT.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTH_ARTHS.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTHS_WETH.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTHS_USDC.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_ARTHS_USDT.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_USDC_WETH.update({ from: METAMASK_ADDRESS }),
-    oracle_instance_USDT_WETH.update({ from: METAMASK_ADDRESS })
-  ]);
-
-  // return false;
 
   // CONTINUE MAIN DEPLOY CODE HERE
   // ====================================================================================================================
   // ====================================================================================================================
 
+  // return false;
 
-  if (process.env.MIGRATION_MODE == 'ganache') {
-    // Advance 1 hr to catch things up
-    await time.increase(3600 + 1);
-    await time.advanceBlock();
+  const theTime = await time.latest();
+  if (IS_MAINNET) {
+    await deployer.deploy(TokenVesting, accounts[5], theTime, 86400 * 180, 86400 * 365, true, { from: accounts[0] });
   }
   else {
-    console.log(chalk.red.bold('YOU NEED TO WAIT AT LEAST TWO DAYS HERE'));
+    await deployer.deploy(TokenVesting, accounts[5], theTime, 86400, 86400 * 10, true, { from: accounts[0] });
   }
-
-  await arthInstance.refreshCollateralRatio();
+  await TokenVesting.deployed();
 };
