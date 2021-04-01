@@ -28,9 +28,9 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nGetting created uniswap pair addresses...'))
   const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
-  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: DEPLOYER_ADDRESS })
   const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: DEPLOYER_ADDRESS })
   const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
+  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: DEPLOYER_ADDRESS })
 
   console.log(chalk.yellow('\nDeploying staking contracts...'))
   await Promise.all([

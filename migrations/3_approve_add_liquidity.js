@@ -6,6 +6,7 @@ const helpers = require('./helpers')
 
 
 const ARTHShares = artifacts.require("ARTHS/ARTHShares")
+const SwapToPrice = artifacts.require("Uniswap/SwapToPrice")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
 
 
@@ -22,8 +23,11 @@ module.exports = async function (deployer, network, accounts) {
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
   const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
 
+  console.log(chalk.yellow('\nDeploying SwapToPrice'))
+  await deployer.deploy(SwapToPrice, uniswapFactoryInstance.address, routerInstance.address);
+
   console.log(chalk.yellow('\nSetting uniswap pairs...'))
-  console.log(chalk.blue(' - Setting Pair including ARTH...'))
+  console.log(chalk.yellow(' - Setting Pair including ARTH...'))
   await Promise.all([
     uniswapFactoryInstance.createPair(arthInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDC.address, { from: DEPLOYER_ADDRESS }),
@@ -31,7 +35,7 @@ module.exports = async function (deployer, network, accounts) {
     uniswapFactoryInstance.createPair(arthInstance.address, arthsInstance.address, { from: DEPLOYER_ADDRESS })
   ])
 
-  console.log(chalk.blue(' - Setting Pair including ARTHX...'))
+  console.log(chalk.yellow(' - Setting Pair including ARTHX...'))
   await Promise.all([
     uniswapFactoryInstance.createPair(arthsInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactoryInstance.createPair(arthsInstance.address, col_instance_USDC.address, { from: DEPLOYER_ADDRESS }),
