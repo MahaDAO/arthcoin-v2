@@ -40,7 +40,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       arthsInstance.address,
       pair_addr_ARTH_WETH,
-      ARTHStablecoin.address,
+      arthInstance.address,
       timelockInstance.address,
       500000
     ),
@@ -50,7 +50,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       arthsInstance.address,
       pair_addr_ARTH_USDC,
-      ARTHStablecoin.address,
+      arthInstance.address,
       timelockInstance.address,
       500000
     ),
@@ -60,7 +60,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       arthsInstance.address,
       pair_addr_ARTH_ARTHS,
-      ARTHStablecoin.address,
+      arthInstance.address,
       timelockInstance.address,
       0
     ),
@@ -70,7 +70,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       arthsInstance.address,
       pair_addr_ARTHS_WETH,
-      ARTHStablecoin.address,
+      arthInstance.address,
       timelockInstance.address,
       0
     )
