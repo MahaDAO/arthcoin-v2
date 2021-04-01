@@ -20,7 +20,7 @@ module.exports = async function (deployer, network, accounts) {
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
   const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
 
-  console.log("\nSeeding the collateral pools some collateral to start off with...")
+  console.log(chalk.yellow("\nSeeding the collateral pools some collateral to start off with..."))
   if (helpers.isMainnet(network)) {
     await Promise.all([
       await col_instance_USDC.transfer(pool_instance_USDC.address, ONE_HUNDRED_DEC6, { from: DEPLOYER_ADDRESS }),
@@ -30,6 +30,5 @@ module.exports = async function (deployer, network, accounts) {
   else {
     await col_instance_USDC.transfer(pool_instance_USDC.address, COLLATERAL_SEED_DEC6, { from: DEPLOYER_ADDRESS })
     await col_instance_USDT.transfer(pool_instance_USDT.address, COLLATERAL_SEED_DEC6, { from: DEPLOYER_ADDRESS })
-
   }
 }
