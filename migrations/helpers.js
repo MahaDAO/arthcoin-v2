@@ -162,17 +162,17 @@ const getARTHMAHAOracle = async (network, deployer, artifacts) => {
 
 
 const getChainlinkETHUSDOracle = async (network, deployer, artifacts) => {
-  const ETHUSDChainlink = artifacts.require('ChainlinkETHUSDPriceConsumer')
+  const ChainlinkETHUSDPriceConsumer = artifacts.require('ChainlinkETHUSDPriceConsumer')
 
   const addr = knownContracts.ETHUSDChainlinkOracle && knownContracts.ETHUSDChainlinkOracle[network]
-  if (addr) return ETHUSDChainlink.at(addr)
+  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr)
 
-  if (ETHUSDChainlink.isDeployed()) return ETHUSDChainlink.deployed()
+  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed()
 
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`))
-  await deployer.deploy(ETHUSDChainlink, (await getGMUOracle()).address)
+  await deployer.deploy(ChainlinkETHUSDPriceConsumer, (await getGMUOracle(network, deployer, artifacts)).address)
 
-  return ETHUSDChainlink.deployed()
+  return ChainlinkETHUSDPriceConsumer.deployed()
 }
 
 

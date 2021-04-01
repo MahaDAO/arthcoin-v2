@@ -7,7 +7,6 @@ const helpers = require('./helpers')
 
 const ARTHShares = artifacts.require("ARTHS/ARTHShares")
 const Timelock = artifacts.require("Governance/Timelock")
-const Timelock = artifacts.require("Governance/Timelock")
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC")
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
@@ -51,9 +50,9 @@ module.exports = async function (deployer, network, accounts) {
       arthsInstance.address,
       col_instance_USDT.address,
       DEPLOYER_ADDRESS,
-      stimelockInstance.address,
-      mock_maha_stability_token.address,
-      arth_maha_oracle.address,
+      timelockInstance.address,
+      mahaTokenInstance.address,
+      arthMahaOracle.address,
       FIVE_MILLION
     )
   ])

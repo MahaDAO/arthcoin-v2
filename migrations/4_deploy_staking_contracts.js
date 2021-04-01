@@ -22,7 +22,7 @@ module.exports = async function (deployer, network, accounts) {
   const arthsInstance = await ARTHShares.deployed()
   const timelockInstance = await Timelock.deployed()
   const arthInstance = await ARTHStablecoin.deployed()
-  const uniswapFactoryInstance = helpers.getUniswapFactory(network, deployer, artifacts)
+  const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts)
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
 
@@ -83,9 +83,9 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nTransfering ARTHS to staking contracts...'))
   await Promise.all([
-    arthsInstance.transfer(stakingInstance_ARTH_WETH.address, ONE_HUNDRED_MILLION, { from: METAMASK_ADDRESS }),
-    arthsInstance.transfer(stakingInstance_ARTH_USDC.address, ONE_HUNDRED_MILLION, { from: METAMASK_ADDRESS }),
-    arthsInstance.transfer(stakingInstance_ARTH_ARTHS.address, ONE_HUNDRED_MILLION, { from: METAMASK_ADDRESS }),
-    arthsInstance.transfer(stakingInstance_ARTHS_WETH.address, ONE_HUNDRED_MILLION, { from: METAMASK_ADDRESS })
+    arthsInstance.transfer(stakingInstance_ARTH_WETH.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
+    arthsInstance.transfer(stakingInstance_ARTH_USDC.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
+    arthsInstance.transfer(stakingInstance_ARTH_ARTHS.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
+    arthsInstance.transfer(stakingInstance_ARTHS_WETH.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS })
   ])
 }

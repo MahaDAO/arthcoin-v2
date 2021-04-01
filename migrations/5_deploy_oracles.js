@@ -33,7 +33,7 @@ module.exports = async function (deployer, network, accounts) {
   const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
 
   console.log(chalk.yellow('\nDeploying uniswap oracles...'))
-  console.log(chalk.blue(' - Starting ARTH oracle...'))
+  console.log(chalk.yellow(' - Starting ARTH oracle...'))
   await Promise.all([
     deployer.deploy(
       UniswapPairOracle_ARTH_WETH,
@@ -69,7 +69,7 @@ module.exports = async function (deployer, network, accounts) {
     )
   ])
 
-  console.log(chalk.blue('- Starting ARTHS oracles...'))
+  console.log(chalk.yellow('- Starting ARTHS oracles...'))
   await Promise.all([
     deployer.deploy(
       UniswapPairOracle_ARTHS_WETH,
@@ -97,7 +97,7 @@ module.exports = async function (deployer, network, accounts) {
     )
   ])
 
-  console.log(chalk.blue('- Starting with collateral oracles...'))
+  console.log(chalk.yellow('- Starting with collateral oracles...'))
   await Promise.all([
     deployer.deploy(
       UniswapPairOracle_USDT_WETH,
@@ -117,18 +117,18 @@ module.exports = async function (deployer, network, accounts) {
     ),
   ])
 
-  await helpers.getGMUOracle()
-  await helpers.getARTHMAHAOracle()
+  await helpers.getGMUOracle(network, deployer, artifacts)
+  await helpers.getARTHMAHAOracle(network, deployer, artifacts)
   const chainlinkETHUSDOracle = await helpers.getChainlinkETHUSDOracle(network, deployer, artifacts)
 
-  console.log(chalk.yellow('\nSetting chainlink oracle...'))
-  await arthInstance.setETHUSDOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS })
+  // console.log(chalk.yellow('\nSetting chainlink oracle...'))
+  // await arthInstance.setETHUSDOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS })
 
   console.log(chalk.yellow('\nSetting ARTHWETH oracle...'))
   const arthWETHOracle = await UniswapPairOracle_ARTH_WETH.deployed()
   arthInstance.setARTHEthOracle(arthWETHOracle.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
 
   const oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.deployed()
-  console.log(chalk.yellow('Linking ARTHS oracles...'))
+  console.log(chalk.yellow('\nLinking ARTHS oracles...'))
   await arthInstance.setARTHSEthOracle(oracle_instance_ARTHS_WETH.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
 }
