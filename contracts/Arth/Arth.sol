@@ -91,7 +91,7 @@ contract ARTHStablecoin is AnyswapV4Token {
         string memory _name,
         string memory _symbol,
         address _creator_address,
-        address _timelock_address //, // address _vault
+        address _timelock_address
     ) AnyswapV4Token(_name) {
         name = _name;
         symbol = _symbol;
@@ -208,12 +208,7 @@ contract ARTHStablecoin is AnyswapV4Token {
         // all incentive, if active applies to every transfer
         address allIncentive = incentiveContract[address(0)];
         if (allIncentive != address(0)) {
-            IncentiveController(senderIncentive).incentivize(
-                sender,
-                recipient,
-                msg.sender,
-                amount
-            );
+            allIncentive.incentivize(sender, recipient, msg.sender, amount);
         }
     }
 

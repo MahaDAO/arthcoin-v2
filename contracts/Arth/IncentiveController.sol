@@ -5,13 +5,14 @@ pragma experimental ABIEncoderV2;
 
 import '../Math//Math.sol';
 import '../Math/SafeMath.sol';
+import './IIncentive.sol';
 import '../Governance/AccessControl.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import {ARTHStablecoin} from './Arth.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
 
-contract IncentiveController is AccessControl {
+contract IncentiveController is AccessControl, IIncentive {
     using SafeMath for uint256;
 
     /**
@@ -221,9 +222,9 @@ contract IncentiveController is AccessControl {
     function incentivize(
         address sender,
         address receiver,
-        address,
+        address operator,
         uint256 amountIn
-    ) public {
+    ) public override {
         require(sender != receiver, 'UniswapIncentive: cannot send self');
         updateOracle();
 
