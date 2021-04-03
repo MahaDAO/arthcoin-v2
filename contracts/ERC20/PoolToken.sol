@@ -11,13 +11,17 @@ import {Math} from '../Math/Math.sol';
 contract PoolToken is AccessControl, ERC20 {
     using SafeMath for uint256;
 
+    bytes32 public constant GOVERNANCE_ROLE = keccak256('GOVERNANCE_ROLE');
     IERC20[] public poolTokens;
+    bool public enableWithdrawals = false;
 
     modifier onlyAdmin {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'PoolToken: FORBIDDEN'
-        );
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()));
+        _;
+    }
+
+    modifier onlyGovernance() {
+        require(hasRole(GOVERNANCE_ROLE, msg.sender));
         _;
     }
 
@@ -28,33 +32,28 @@ contract PoolToken is AccessControl, ERC20 {
     ) ERC20(tokenName, tokenSymbol) {
         poolTokens = poolTokens_;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(GOVERNANCE_ROLE, _msgSender());
     }
 
-    function addPoolToken(IERC20 token) public onlyAdmin {
+    function addPoolToken(IERC20 token) external onlyGovernance {
         poolTokens.push(token);
+        emit TokenAdded(address(token));
     }
 
-    function mint(address to, uint256 amount) public onlyAdmin {
+    function replacePoolToken(uint256 index, IERC20 token)
+        external
+        onlyGovernance
+    {
+        poolTokens[index] = token;
+        emit TokenReplaced(address(token), index);
+    }
+
+    function mint(address to, uint256 amount) external onlyGovernance {
         _mint(to, amount);
     }
 
-    // function pause() public virtual {
-    //     require(
-    //         hasRole(PAUSER_ROLE, _msgSender()),
-    //         'ERC20PresetMinterPauser: must have pauser role to pause'
-    //     );
-    //     _pause();
-    // }
-
-    // function unpause() public virtual {
-    //     require(
-    //         hasRole(PAUSER_ROLE, _msgSender()),
-    //         'ERC20PresetMinterPauser: must have pauser role to unpause'
-    //     );
-    //     _unpause();
-    // }
-
     function withdraw(uint256 amount) external {
+        require(enableWithdrawals, 'PoolToken: withdrawals disabled');
         require(amount > 0, 'PoolToken: amount = 0');
         require(amount <= balanceOf(msg.sender), 'PoolToken: amount > balance');
 
@@ -63,6 +62,7 @@ contract PoolToken is AccessControl, ERC20 {
 
         // proportionately send each of the pool tokens to the user
         for (uint256 i = 0; i < poolTokens.length; i++) {
+            if (address(poolTokens[i]) == address(0)) continue;
             uint256 balance = poolTokens[i].balanceOf(address(this));
             uint256 shareAmount = balance.mul(percentage).div(1e8);
             if (shareAmount > 0)
@@ -70,9 +70,23 @@ contract PoolToken is AccessControl, ERC20 {
         }
 
         _burn(msg.sender, amount);
-
         emit Withdraw(msg.sender, amount);
     }
 
-    event Withdraw(address indexed who, uint256 liquidity);
+    function toggleWithdrawals() external onlyAdmin {
+        enableWithdrawals = !enableWithdrawals;
+        emit ToggleWithdrawals(enableWithdrawals);
+    }
+
+    function retrieveTokens(IERC20 token) external onlyAdmin {
+        uint256 balance = token.balanceOf(address(this));
+        token.transfer(msg.sender, balance);
+        emit TokensRetrieved(address(token), msg.sender, balance);
+    }
+
+    event TokenReplaced(address indexed token, uint256 index);
+    event TokensRetrieved(address indexed token, address who, uint256 amount);
+    event TokenAdded(address indexed token);
+    event Withdraw(address indexed who, uint256 amount);
+    event ToggleWithdrawals(bool state);
 }
