@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../../Arth/Arth.sol';
+import '../../Arth/ArthController.sol';
 import '../../ARTHS/ARTHS.sol';
 import '../../ERC20/ERC20.sol';
 import './ArthPoolLibrary.sol';
@@ -33,6 +34,7 @@ contract ArthPool is AccessControl {
     address private owner_address;
     address private collateral_address;
 
+    ArthController private controller;
     ARTHShares private ARTHS;
     ARTHStablecoin private ARTH;
     address private timelock_address;
@@ -200,7 +202,7 @@ contract ArthPool is AccessControl {
                     .mul(pausedPrice)
                     .div(PRICE_PRECISION);
         } else {
-            uint256 eth_usd_price = ARTH.eth_usd_price();
+            uint256 eth_usd_price = controller.eth_usd_price();
             uint256 eth_collat_price =
                 collatEthOracle.consult(
                     weth_address,
@@ -224,8 +226,8 @@ contract ArthPool is AccessControl {
     // Returns the value of excess collateral held in this Arth pool, compared to what is needed to maintain the global collateral ratio
     function availableExcessCollatDV() public view returns (uint256) {
         uint256 total_supply = ARTH.totalSupply();
-        uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
-        uint256 global_collat_value = ARTH.globalCollateralValue();
+        uint256 global_collateral_ratio = controller.global_collateral_ratio();
+        uint256 global_collat_value = controller.globalCollateralValue();
 
         if (global_collateral_ratio > COLLATERAL_RATIO_PRECISION)
             global_collateral_ratio = COLLATERAL_RATIO_PRECISION; // Handles an overcollateralized contract with CR > 1
@@ -245,7 +247,7 @@ contract ArthPool is AccessControl {
         if (collateralPricePaused == true) {
             return pausedPrice;
         } else {
-            uint256 eth_usd_price = ARTH.eth_usd_price();
+            uint256 eth_usd_price = controller.eth_usd_price();
             return
                 eth_usd_price.mul(PRICE_PRECISION).div(
                     collatEthOracle.consult(
@@ -297,7 +299,7 @@ contract ArthPool is AccessControl {
             collateral_amount * (10**missing_decimals);
 
         require(
-            ARTH.global_collateral_ratio() >= COLLATERAL_RATIO_MAX,
+            controller.global_collateral_ratio() >= COLLATERAL_RATIO_MAX,
             'Collateral ratio must be >= 1'
         );
         require(
@@ -363,9 +365,9 @@ contract ArthPool is AccessControl {
         uint256 arths_amount_d18,
         uint256 ARTH_out_min
     ) private notMintPaused returns (uint256) {
-        uint256 arths_price = ARTH.arths_price();
+        uint256 arths_price = controller.arths_price();
         require(
-            ARTH.global_collateral_ratio() == 0,
+            controller.global_collateral_ratio() == 0,
             'Collateral ratio must be 0'
         );
 
@@ -426,8 +428,8 @@ contract ArthPool is AccessControl {
         uint256 arths_amount,
         uint256 ARTH_out_min
     ) private notMintPaused returns (uint256) {
-        uint256 arths_price = ARTH.arths_price();
-        uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
+        uint256 arths_price = controller.arths_price();
+        uint256 global_collateral_ratio = controller.global_collateral_ratio();
 
         require(
             global_collateral_ratio < COLLATERAL_RATIO_MAX &&
@@ -536,7 +538,7 @@ contract ArthPool is AccessControl {
         notRedeemPaused
     {
         require(
-            ARTH.global_collateral_ratio() == COLLATERAL_RATIO_MAX,
+            controller.global_collateral_ratio() == COLLATERAL_RATIO_MAX,
             'Collateral ratio must be == 1'
         );
 
@@ -586,8 +588,8 @@ contract ArthPool is AccessControl {
         uint256 ARTHS_out_min,
         uint256 COLLATERAL_out_min
     ) external notRedeemPaused {
-        uint256 arths_price = ARTH.arths_price();
-        uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
+        uint256 arths_price = controller.arths_price();
+        uint256 global_collateral_ratio = controller.global_collateral_ratio();
 
         require(
             global_collateral_ratio < COLLATERAL_RATIO_MAX &&
@@ -656,8 +658,8 @@ contract ArthPool is AccessControl {
         external
         notRedeemPaused
     {
-        uint256 arths_price = ARTH.arths_price();
-        uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
+        uint256 arths_price = controller.arths_price();
+        uint256 global_collateral_ratio = controller.global_collateral_ratio();
 
         require(global_collateral_ratio == 0, 'Collateral ratio must be 0');
         uint256 arths_dollar_value_d18 = ARTH_amount;
@@ -727,12 +729,15 @@ contract ArthPool is AccessControl {
     }
 
     function getTargetCollateralValue() public view returns (uint256) {
-        return ARTH.totalSupply().mul(ARTH.global_collateral_ratio()).div(1e6);
+        return
+            ARTH.totalSupply().mul(controller.global_collateral_ratio()).div(
+                1e6
+            );
     }
 
     function getCurveExponent() public view returns (uint256) {
         uint256 targetCollatValue = getTargetCollateralValue();
-        uint256 currentCollatValue = ARTH.globalCollateralValue();
+        uint256 currentCollatValue = controller.globalCollateralValue();
 
         if (targetCollatValue <= currentCollatValue) return 0;
 
@@ -765,10 +770,10 @@ contract ArthPool is AccessControl {
         require(recollateralizePaused == false, 'Recollateralize is paused');
         uint256 collateral_amount_d18 =
             collateral_amount * (10**missing_decimals);
-        uint256 arths_price = ARTH.arths_price();
+        uint256 arths_price = controller.arths_price();
         uint256 arth_total_supply = ARTH.totalSupply();
-        uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
-        uint256 global_collat_value = ARTH.globalCollateralValue();
+        uint256 global_collateral_ratio = controller.global_collateral_ratio();
+        uint256 global_collat_value = controller.globalCollateralValue();
 
         (uint256 collateral_units, uint256 amount_to_recollat) =
             ArthPoolLibrary.calcRecollateralizeARTHInner(
@@ -838,7 +843,7 @@ contract ArthPool is AccessControl {
         external
     {
         require(buyBackPaused == false, 'Buyback is paused');
-        uint256 arths_price = ARTH.arths_price();
+        uint256 arths_price = controller.arths_price();
 
         ArthPoolLibrary.BuybackARTHS_Params memory input_params =
             ArthPoolLibrary.BuybackARTHS_Params(

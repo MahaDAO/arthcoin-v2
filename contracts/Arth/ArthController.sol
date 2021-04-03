@@ -7,7 +7,7 @@ import '../ARTHS/ARTHS.sol';
 import '../ERC20/ERC20.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
-import './Pools/ArthPool.sol';
+import './Pools/IArthPool.sol';
 import '../Common/Context.sol';
 import '../Governance/AccessControl.sol';
 import '../ERC20/ERC20Custom.sol';
@@ -241,7 +241,7 @@ contract ArthController is AccessControl {
             // Exclude null addresses
             if (arth_pools_array[i] != address(0)) {
                 total_collateral_value_d18 = total_collateral_value_d18.add(
-                    ArthPool(arth_pools_array[i]).collatDollarBalance()
+                    IArthPool(arth_pools_array[i]).collatDollarBalance()
                 );
             }
         }
@@ -351,13 +351,6 @@ contract ArthController is AccessControl {
         onlyByOwnerOrGovernance
     {
         timelock_address = new_timelock;
-    }
-
-    function setController(address _controller_address)
-        external
-        onlyByOwnerOrGovernance
-    {
-        controller_address = _controller_address;
     }
 
     function setPriceBand(uint256 _price_band)
