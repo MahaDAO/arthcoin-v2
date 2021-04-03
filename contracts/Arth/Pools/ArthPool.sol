@@ -726,6 +726,34 @@ contract ArthPool is AccessControl {
         }
     }
 
+    function getTargetCollateralValue() public view returns (uint256) {
+        return ARTH.totalSupply().mul(ARTH.global_collateral_ratio()).div(1e6);
+    }
+
+    function getCurveExponent() public view returns (uint256) {
+        uint256 targetCollatValue = getTargetCollateralValue();
+        uint256 currentCollatValue = ARTH.globalCollateralValue();
+
+        if (targetCollatValue <= currentCollatValue) return 0;
+
+        return
+            targetCollatValue
+                .sub(currentCollatValue)
+                .mul(1e6)
+                .div(targetCollatValue)
+                .div(1e6);
+    }
+
+    function getCurvedDiscount() public view returns (uint256) {
+        uint256 exponent = getCurveExponent();
+        if (exponent == 0) return 0;
+
+        uint256 discount = (10**exponent).sub(1).div(10).mul(bonus_rate);
+
+        // Fail safe cap to bonus_rate.
+        return discount > bonus_rate ? bonus_rate : discount;
+    }
+
     // When the protocol is recollateralizing, we need to give a discount of ARTHS to hit the new CR target
     // Thus, if the target collateral ratio is higher than the actual value of collateral, minters get ARTHS for adding collateral
     // This function simply rewards anyone that sends collateral to a pool with the same amount of ARTHS + the bonus rate
@@ -754,9 +782,10 @@ contract ArthPool is AccessControl {
         uint256 collateral_units_precision =
             collateral_units.div(10**missing_decimals);
 
+        // NEED to make sure that recollat_fee is less than 1e6.
         uint256 arths_paid_back =
             amount_to_recollat
-                .mul(uint256(1e6).add(bonus_rate).sub(recollat_fee))
+                .mul(uint256(1e6).add(getCurvedDiscount()).sub(recollat_fee))
                 .div(arths_price);
 
         require(ARTHS_out_min <= arths_paid_back, 'Slippage limit reached');
