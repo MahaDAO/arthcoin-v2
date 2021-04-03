@@ -24,12 +24,7 @@ interface ITransferReceiver {
 }
 
 contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
-    /**
-     * State variables.
-     */
-
     bytes32 public constant BRIDGE_ROLE = keccak256('BRIDGE_ROLE');
-
     bytes32 public constant PERMIT_TYPEHASH =
         keccak256(
             'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
@@ -38,6 +33,7 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
         keccak256(
             'Transfer(address owner,address to,uint256 value,uint256 nonce,uint256 deadline)'
         );
+
     bytes32 public immutable DOMAIN_SEPARATOR;
 
     bool private _vaultOnly = false;
@@ -74,7 +70,7 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
                     'EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'
                 ),
                 keccak256(bytes(name)),
-                keccak256(bytes('2')),
+                keccak256(bytes('1')),
                 chainId,
                 address(this)
             )
@@ -120,7 +116,6 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
     ) internal pure returns (bool) {
         bytes32 hash = prefixed(hashStruct);
         address signer = ecrecover(hash, v, r, s);
-
         return (signer != address(0) && signer == target);
     }
 
@@ -165,7 +160,6 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
         uint256 amount
     ) public override onlyBridge returns (bool) {
         _mint(account, amount);
-
         emit LogSwapin(txhash, account, amount);
         return true;
     }
@@ -176,9 +170,7 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
         onlyBridge
         returns (bool)
     {
-        // Refer: https://github.com/connext/chaindata/blob/main/AnyswapV4ERC20.sol#L258
-        // @Sagar: is the below two require necessary?
-        // require(!_vaultOnly, 'AnyswapV4ERC20: onlyAuth');
+        require(!_vaultOnly, 'AnyswapV4ERC20: onlyAuth');
         require(bindaddr != address(0), 'AnyswapV4ERC20: address(0x0)');
 
         _burn(msg.sender, amount);
@@ -213,10 +205,7 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
             'AnyswapV3ERC20: transfer amount exceeds balance'
         );
 
-        // _balances[msg.sender] = balance - value;
-        // _balances[to] += value;
         _transfer(msg.sender, to, value);
-
         return ITransferReceiver(to).onTokenTransfer(msg.sender, value, data);
     }
 
@@ -254,9 +243,6 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
             balanceOf(target) >= value,
             'AnyswapV3ERC20: transfer amount exceeds balance'
         );
-
-        // _balances[target] = balance - value;
-        // _balances[to] += value;
 
         _transfer(target, to, value);
         return true;

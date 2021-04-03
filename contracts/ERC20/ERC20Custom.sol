@@ -84,7 +84,6 @@ contract ERC20Custom is Context, Pausable, IERC20 {
      */
     function blacklist(address who) public onlyOwner returns (bool) {
         if (getIsBlacklisted(who)) return true;
-
         _blacklisted[who] = true;
         return true;
     }

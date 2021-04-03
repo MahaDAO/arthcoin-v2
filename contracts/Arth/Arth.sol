@@ -13,7 +13,7 @@ import '../ERC20/ERC20Custom.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../ERC20/Variants/AnyswapV4Token.sol';
 import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
-import './IncentiveController.sol';
+import './IIncentive.sol';
 
 /**
  *  Original code written by:
@@ -25,8 +25,6 @@ contract ARTHStablecoin is AnyswapV4Token {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
-
-    IncentiveController private incentiveController;
     string public symbol;
     string public name;
     uint8 public constant decimals = 18;
@@ -45,7 +43,7 @@ contract ARTHStablecoin is AnyswapV4Token {
 
     // Mapping is also used for faster verification
     mapping(address => bool) public arth_pools;
-    mapping(address => address) public incentiveContract;
+    mapping(address => IIncentive) public incentiveContract;
 
     address public DEFAULT_ADMIN_ADDRESS;
 
@@ -178,18 +176,13 @@ contract ARTHStablecoin is AnyswapV4Token {
         // incentive on sender
         address senderIncentive = incentiveContract[sender];
         if (senderIncentive != address(0)) {
-            IncentiveController(senderIncentive).incentivize(
-                sender,
-                recipient,
-                msg.sender,
-                amount
-            );
+            senderIncentive.incentivize(sender, recipient, msg.sender, amount);
         }
 
         // incentive on recipient
         address recipientIncentive = incentiveContract[recipient];
         if (recipientIncentive != address(0)) {
-            IncentiveController(senderIncentive).incentivize(
+            recipientIncentive.incentivize(
                 sender,
                 recipient,
                 msg.sender,
@@ -204,7 +197,7 @@ contract ARTHStablecoin is AnyswapV4Token {
             msg.sender != recipient &&
             operatorIncentive != address(0)
         ) {
-            IncentiveController(senderIncentive).incentivize(
+            operatorIncentive.incentivize(
                 sender,
                 recipient,
                 msg.sender,
