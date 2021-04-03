@@ -348,7 +348,7 @@ contract ArthPool is AccessControl {
         ARTH.permit(
             msg.sender,
             address(_spender),
-            amountToStake,
+            uint256(-1)//amountToStake,
             block.timestamp,
             v,
             r,
@@ -409,7 +409,7 @@ contract ArthPool is AccessControl {
         ARTH.permit(
             msg.sender,
             address(_spender),
-            amountToStake,
+            uint256(-1),
             block.timestamp,
             v,
             r,
@@ -497,7 +497,7 @@ contract ArthPool is AccessControl {
         ARTH.permit(
             msg.sender,
             address(_spender),
-            amountToStake,
+            uint256(-1),
             block.timestamp,
             v,
             r,
@@ -790,10 +790,10 @@ contract ArthPool is AccessControl {
         uint256 amountToStake =
             _recollateralizeARTH(collateral_amount, ARTHS_out_min);
 
-        ARTH.permit(
+        ARTHS.permit(
             msg.sender,
             address(_spender),
-            amountToStake,
+            uint256(-1),
             block.timestamp,
             v,
             r,
