@@ -28,6 +28,7 @@ contract IncentiveControllerRouter is AccessControl, IIncentive {
         onlyAdmin
     {
         senderMapping[target] = controller;
+        // todo add event
     }
 
     function setRecieverIncentiveControllers(address target, address controller)
@@ -35,6 +36,15 @@ contract IncentiveControllerRouter is AccessControl, IIncentive {
         onlyAdmin
     {
         receiverMapping[target] = controller;
+        // todo add event
+    }
+
+    function setOperatorIncentiveControllers(address target, address controller)
+        external
+        onlyAdmin
+    {
+        operatorMapping[target] = controller;
+        // todo add event
     }
 
     function incentivize(
@@ -57,6 +67,17 @@ contract IncentiveControllerRouter is AccessControl, IIncentive {
         address recvrCtrl = receiverMapping[sender];
         if (recvrCtrl != address(0)) {
             IIncentive(recvrCtrl).incentivize(
+                sender,
+                receiver,
+                operator,
+                amountIn
+            );
+            return;
+        }
+
+        address operatorCtrl = operatorMapping[sender];
+        if (operatorCtrl != address(0)) {
+            IIncentive(operatorCtrl).incentivize(
                 sender,
                 receiver,
                 operator,

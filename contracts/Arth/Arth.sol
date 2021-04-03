@@ -38,9 +38,6 @@ contract ARTHStablecoin is AnyswapV4Token {
     // This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant genesis_supply = 2000000e18;
 
-    // The addresses in this array are added by the oracle and these contracts are able to mint arth
-    address[] public arth_pools_array;
-
     // Mapping is also used for faster verification
     mapping(address => bool) public arth_pools;
     mapping(address => IIncentive) public incentiveContract;
@@ -128,7 +125,6 @@ contract ARTHStablecoin is AnyswapV4Token {
     function addPool(address pool_address) public onlyByOwnerOrGovernance {
         require(arth_pools[pool_address] == false, 'address already exists');
         arth_pools[pool_address] = true;
-        arth_pools_array.push(pool_address);
     }
 
     // Remove a pool
@@ -140,14 +136,6 @@ contract ARTHStablecoin is AnyswapV4Token {
 
         // Delete from the mapping
         delete arth_pools[pool_address];
-
-        // 'Delete' from the array by setting the address to 0x0
-        for (uint256 i = 0; i < arth_pools_array.length; i++) {
-            if (arth_pools_array[i] == pool_address) {
-                arth_pools_array[i] = address(0); // This will leave a null in the array and keep the indices the same
-                break;
-            }
-        }
     }
 
     function setOwner(address _owner_address) external onlyByOwnerOrGovernance {

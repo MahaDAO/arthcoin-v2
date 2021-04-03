@@ -207,6 +207,32 @@ contract ArthController is AccessControl {
         );
     }
 
+    // Adds collateral addresses supported, such as tether and busd, must be ERC20
+    function addPool(address pool_address) public onlyByOwnerOrGovernance {
+        require(arth_pools[pool_address] == false, 'address already exists');
+        arth_pools[pool_address] = true;
+        arth_pools_array.push(pool_address);
+    }
+
+    // Remove a pool
+    function removePool(address pool_address) public onlyByOwnerOrGovernance {
+        require(
+            arth_pools[pool_address] == true,
+            "address doesn't exist already"
+        );
+
+        // Delete from the mapping
+        delete arth_pools[pool_address];
+
+        // 'Delete' from the array by setting the address to 0x0
+        for (uint256 i = 0; i < arth_pools_array.length; i++) {
+            if (arth_pools_array[i] == pool_address) {
+                arth_pools_array[i] = address(0); // This will leave a null in the array and keep the indices the same
+                break;
+            }
+        }
+    }
+
     // Iterate through all arth pools and calculate all value of collateral in all pools globally
     function globalCollateralValue() public view returns (uint256) {
         uint256 total_collateral_value_d18 = 0;
@@ -219,6 +245,7 @@ contract ArthController is AccessControl {
                 );
             }
         }
+
         return total_collateral_value_d18;
     }
 
