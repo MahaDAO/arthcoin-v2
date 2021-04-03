@@ -85,6 +85,14 @@ contract ARTHStablecoin is AnyswapV4Token {
         _;
     }
 
+    modifier onlyAdmin() {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            'You are not the owner or the governance timelock'
+        );
+        _;
+    }
+
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner_address ||
@@ -225,6 +233,13 @@ contract ARTHStablecoin is AnyswapV4Token {
     }
 
     /* ========== PUBLIC FUNCTIONS ========== */
+
+    function setGlobalCollateralRatio(uint256 _global_collateral_ratio)
+        public
+        onlyAdmin
+    {
+        global_collateral_ratio = _global_collateral_ratio;
+    }
 
     // There needs to be a time interval that this can be called. Otherwise it can be called multiple times per expansion.
     uint256 public last_call_time; // Last time the refreshCollateralRatio function was called
