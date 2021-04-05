@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../Math/SafeMath.sol';
-import '../ARTHS/ARTHS.sol';
+import '../ARTHX/ARTHX.sol';
 import '../Arth/Arth.sol';
 import '../ERC20/ERC20.sol';
 import '../Oracle/UniswapPairOracle.sol';
@@ -68,7 +68,7 @@ import '../Arth/Pools/ArthPoolvAMM.sol';
 
 //     /* ========== VIEWS ========== */
 
-//     // BuyAndBurnARTHS
+//     // BuyAndBurnARTHX
 
 //     /* ========== PUBLIC FUNCTIONS ========== */
 

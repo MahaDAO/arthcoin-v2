@@ -98,24 +98,24 @@ contract ARTHShares is AnyswapV4Token {
         _mint(to, amount);
     }
 
-    // This function is what other arth pools will call to mint new ARTHS (similar to the ARTH mint)
+    // This function is what other arth pools will call to mint new ARTHX (similar to the ARTH mint)
     function pool_mint(address m_address, uint256 m_amount) external onlyPools {
         super._mint(m_address, m_amount);
-        emit ARTHSMinted(address(this), m_address, m_amount);
+        emit ARTHXMinted(address(this), m_address, m_amount);
     }
 
-    // This function is what other arth pools will call to burn ARTHS
+    // This function is what other arth pools will call to burn ARTHX
     function pool_burn_from(address b_address, uint256 b_amount)
         external
         onlyPools
     {
         super._burnFrom(b_address, b_amount);
-        emit ARTHSBurned(b_address, address(this), b_amount);
+        emit ARTHXBurned(b_address, address(this), b_amount);
     }
 
-    // Track ARTHS burned
-    event ARTHSBurned(address indexed from, address indexed to, uint256 amount);
+    // Track ARTHX burned
+    event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
 
-    // Track ARTHS minted
-    event ARTHSMinted(address indexed from, address indexed to, uint256 amount);
+    // Track ARTHX minted
+    event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
 }

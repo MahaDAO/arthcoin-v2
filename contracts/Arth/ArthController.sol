@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../ARTHS/ARTHS.sol';
+import '../ARTHX/ARTHX.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
 import './Pools/IArthPool.sol';
@@ -18,20 +18,20 @@ contract ArthController is AccessControl {
 
     /* ========== STATE VARIABLES ========== */
 
-    enum PriceChoice {ARTH, ARTHS}
+    enum PriceChoice {ARTH, ARTHX}
     ChainlinkETHUSDPriceConsumer private eth_usd_pricer;
     uint8 private eth_usd_pricer_decimals;
     IUniswapPairOracle private arthEthOracle;
-    IUniswapPairOracle private arthsEthOracle;
+    IUniswapPairOracle private arthxEthOracle;
     IncentiveController private incentiveController;
 
     address public owner_address;
     address public creator_address;
     address public timelock_address; // Governance timelock address
     address public controller_address; // Controller contract to dynamically adjust system parameters automatically
-    address public arths_address;
+    address public arthx_address;
     address public arth_eth_oracle_address;
-    address public arths_eth_oracle_address;
+    address public arthx_eth_oracle_address;
     address public weth_address;
     address public eth_usd_consumer_address;
     // 2M ARTH (only for testing, genesis supply will be 5k on Mainnet). This is to help with establishing the Uniswap pools, as they need liquidity.
@@ -131,7 +131,7 @@ contract ArthController is AccessControl {
 
     /* ========== VIEWS ========== */
 
-    // Choice = 'ARTH' or 'ARTHS' for now
+    // Choice = 'ARTH' or 'ARTHX' for now
     function oracle_price(PriceChoice choice) internal view returns (uint256) {
         // Get the ETH / USD price first, and cut it down to 1e6 precision
         uint256 eth_2_usd_price =
@@ -144,13 +144,13 @@ contract ArthController is AccessControl {
             price_vs_eth = uint256(
                 arthEthOracle.consult(weth_address, PRICE_PRECISION)
             ); // How much ARTH if you put in PRICE_PRECISION WETH
-        } else if (choice == PriceChoice.ARTHS) {
+        } else if (choice == PriceChoice.ARTHX) {
             price_vs_eth = uint256(
-                arthsEthOracle.consult(weth_address, PRICE_PRECISION)
-            ); // How much ARTHS if you put in PRICE_PRECISION WETH
+                arthxEthOracle.consult(weth_address, PRICE_PRECISION)
+            ); // How much ARTHX if you put in PRICE_PRECISION WETH
         } else
             revert(
-                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHS)'
+                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHX)'
             );
 
         // Will be in 1e6 format
@@ -162,9 +162,9 @@ contract ArthController is AccessControl {
         return oracle_price(PriceChoice.ARTH);
     }
 
-    // Returns X ARTHS = 1 USD
-    function arths_price() public view returns (uint256) {
-        return oracle_price(PriceChoice.ARTHS);
+    // Returns X ARTHX = 1 USD
+    function arthx_price() public view returns (uint256) {
+        return oracle_price(PriceChoice.ARTHX);
     }
 
     function eth_usd_price() public view returns (uint256) {
@@ -192,7 +192,7 @@ contract ArthController is AccessControl {
     {
         return (
             oracle_price(PriceChoice.ARTH), // arth_price()
-            oracle_price(PriceChoice.ARTHS), // arths_price()
+            oracle_price(PriceChoice.ARTHX), // arthx_price()
             arth.totalSupply(), // totalSupply()
             global_collateral_ratio, // global_collateral_ratio()
             globalCollateralValue(), // globalCollateralValue
@@ -269,7 +269,7 @@ contract ArthController is AccessControl {
             'Must wait for the refresh cooldown since last refresh'
         );
 
-        // Step increments are 0.25% (upon genesis, changable by setArthStep())
+        // Step increments are 0.25% (upon genesis, changable by setArthXtep())
 
         if (arth_price_cur > price_target.add(price_band)) {
             //decrease collateral ratio
@@ -327,11 +327,11 @@ contract ArthController is AccessControl {
         refresh_cooldown = _new_cooldown;
     }
 
-    function setARTHSAddress(address _arths_address)
+    function setARTHXAddress(address _arthx_address)
         public
         onlyByOwnerOrGovernance
     {
-        arths_address = _arths_address;
+        arthx_address = _arthx_address;
     }
 
     function setETHUSDOracle(address _eth_usd_consumer_address)
@@ -367,13 +367,13 @@ contract ArthController is AccessControl {
         weth_address = _weth_address;
     }
 
-    // Sets the ARTHS_ETH Uniswap oracle address
-    function setARTHSEthOracle(
-        address _arths_oracle_addr,
+    // Sets the ARTHX_ETH Uniswap oracle address
+    function setARTHXEthOracle(
+        address _arthx_oracle_addr,
         address _weth_address
     ) public onlyByOwnerOrGovernance {
-        arths_eth_oracle_address = _arths_oracle_addr;
-        arthsEthOracle = IUniswapPairOracle(_arths_oracle_addr);
+        arthx_eth_oracle_address = _arthx_oracle_addr;
+        arthxEthOracle = IUniswapPairOracle(_arthx_oracle_addr);
         weth_address = _weth_address;
     }
 

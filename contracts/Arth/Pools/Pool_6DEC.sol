@@ -9,7 +9,7 @@ contract Pool_6DEC is ArthPool {
 
     constructor(
         address _arth_contract_address,
-        address _arths_contract_address,
+        address _arthx_contract_address,
         address _collateral_address,
         address _creator_address,
         address _timelock_address,
@@ -19,7 +19,7 @@ contract Pool_6DEC is ArthPool {
     )
         ArthPool(
             _arth_contract_address,
-            _arths_contract_address,
+            _arthx_contract_address,
             _collateral_address,
             _creator_address,
             _timelock_address,
