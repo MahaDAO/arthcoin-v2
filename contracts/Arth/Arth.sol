@@ -17,16 +17,15 @@ contract ARTHStablecoin is AnyswapV4Token {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
-    string public symbol = 'ARTH';
-    string public name = 'ARTH Valuecoin';
+    string public constant symbol = 'ARTH';
+    string public constant name = 'ARTH Valuecoin';
     uint8 public constant decimals = 18;
 
-    address public owner_address;
-    address public timelock_address; // Governance timelock address
+    address public governance; // Governance timelock address
 
-    // 2M ARTH (only for testing, genesis supply will be 5k on Mainnet).
+    // 22M ARTH (only for testing, genesis supply will be 5k on Mainnet).
     // This is to help with establishing the Uniswap pools, as they need liquidity.
-    uint256 public constant genesis_supply = 2000000e18;
+    uint256 public constant genesisSupply = 22000000e18;
 
     // Mapping is also used for faster verification
     mapping(address => bool) public pools;
@@ -42,17 +41,9 @@ contract ARTHStablecoin is AnyswapV4Token {
         _;
     }
 
-    modifier onlyAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'You are not the owner or the governance timelock'
-        );
-        _;
-    }
-
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner() || msg.sender == timelock_address,
+            msg.sender == owner() || msg.sender == governance,
             'You are not the owner,  or the governance timelock'
         );
         _;
@@ -60,24 +51,18 @@ contract ARTHStablecoin is AnyswapV4Token {
 
     modifier onlyByOwnerGovernanceOrPool() {
         require(
-            msg.sender == owner_address ||
-                msg.sender == timelock_address ||
+            msg.sender == owner() ||
+                msg.sender == governance ||
                 pools[msg.sender] == true,
             'You are not the owner, the governance timelock, or a pool'
         );
         _;
     }
 
-    constructor(address _creator_address, address _timelock_address)
-        AnyswapV4Token(name)
-    {
-        timelock_address = _timelock_address;
-        owner_address = _creator_address;
-
-        _mint(msg.sender, genesis_supply);
+    constructor(address _governance) AnyswapV4Token(name) {
+        governance = _governance;
+        _mint(msg.sender, genesisSupply);
     }
-
-    /* ========== VIEWS ========== */
 
     // Used by pools when user redeems
     function poolBurnFrom(address who, uint256 amount) public onlyPools {
@@ -100,20 +85,11 @@ contract ARTHStablecoin is AnyswapV4Token {
     // Remove a pool
     function removePool(address pool) public onlyByOwnerOrGovernance {
         require(pools[pool] == true, "address doesn't exist already");
-
-        // Delete from the mapping
         delete pools[pool];
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
-    }
-
-    function setTimelock(address new_timelock)
-        external
-        onlyByOwnerOrGovernance
-    {
-        timelock_address = new_timelock;
+    function setGovernance(address _governance) external onlyOwner {
+        governance = _governance;
     }
 
     function _checkAndApplyIncentives(
