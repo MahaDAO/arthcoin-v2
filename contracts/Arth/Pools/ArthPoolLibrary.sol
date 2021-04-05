@@ -13,18 +13,18 @@ library ArthPoolLibrary {
     // ================ Structs ================
     // Needed to lower stack size
     struct MintFF_Params {
-        uint256 arths_price_usd;
+        uint256 arthx_price_usd;
         uint256 col_price_usd;
-        uint256 arths_amount;
+        uint256 arthx_amount;
         uint256 collateral_amount;
         uint256 col_ratio;
     }
 
-    struct BuybackARTHS_Params {
+    struct BuybackARTHX_Params {
         uint256 excess_collateral_dollar_value_d18;
-        uint256 arths_price_usd;
+        uint256 arthx_price_usd;
         uint256 col_price_usd;
-        uint256 ARTHS_amount;
+        uint256 ARTHX_amount;
     }
 
     // ================ Functions ================
@@ -38,10 +38,10 @@ library ArthPoolLibrary {
     }
 
     function calcMintAlgorithmicARTH(
-        uint256 arths_price_usd,
-        uint256 arths_amount_d18
+        uint256 arthx_price_usd,
+        uint256 arthx_amount_d18
     ) public pure returns (uint256) {
-        return arths_amount_d18.mul(arths_price_usd).div(1e6);
+        return arthx_amount_d18.mul(arthx_price_usd).div(1e6);
     }
 
     // Must be internal because of the struct
@@ -52,34 +52,34 @@ library ArthPoolLibrary {
     {
         // Since solidity truncates division, every division operation must be the last operation in the equation to ensure minimum error
         // The contract must check the proper ratio was sent to mint ARTH. We do this by seeing the minimum mintable ARTH based on each amount
-        uint256 arths_dollar_value_d18;
+        uint256 arthx_dollar_value_d18;
         uint256 c_dollar_value_d18;
 
         // Scoping for stack concerns
         {
-            // USD amounts of the collateral and the ARTHS
-            arths_dollar_value_d18 = params
-                .arths_amount
-                .mul(params.arths_price_usd)
+            // USD amounts of the collateral and the ARTHX
+            arthx_dollar_value_d18 = params
+                .arthx_amount
+                .mul(params.arthx_price_usd)
                 .div(1e6);
             c_dollar_value_d18 = params
                 .collateral_amount
                 .mul(params.col_price_usd)
                 .div(1e6);
         }
-        uint256 calculated_arths_dollar_value_d18 =
+        uint256 calculated_arthx_dollar_value_d18 =
             (c_dollar_value_d18.mul(1e6).div(params.col_ratio)).sub(
                 c_dollar_value_d18
             );
 
-        uint256 calculated_arths_needed =
-            calculated_arths_dollar_value_d18.mul(1e6).div(
-                params.arths_price_usd
+        uint256 calculated_arthx_needed =
+            calculated_arthx_dollar_value_d18.mul(1e6).div(
+                params.arthx_price_usd
             );
 
         return (
-            c_dollar_value_d18.add(calculated_arths_dollar_value_d18),
-            calculated_arths_needed
+            c_dollar_value_d18.add(calculated_arthx_dollar_value_d18),
+            calculated_arthx_needed
         );
     }
 
@@ -92,28 +92,28 @@ library ArthPoolLibrary {
     }
 
     // Must be internal because of the struct
-    function calcBuyBackARTHS(BuybackARTHS_Params memory params)
+    function calcBuyBackARTHX(BuybackARTHX_Params memory params)
         internal
         pure
         returns (uint256)
     {
-        // If the total collateral value is higher than the amount required at the current collateral ratio then buy back up to the possible ARTHS with the desired collateral
+        // If the total collateral value is higher than the amount required at the current collateral ratio then buy back up to the possible ARTHX with the desired collateral
         require(
             params.excess_collateral_dollar_value_d18 > 0,
             'No excess collateral to buy back!'
         );
 
         // Make sure not to take more than is available
-        uint256 arths_dollar_value_d18 =
-            params.ARTHS_amount.mul(params.arths_price_usd).div(1e6);
+        uint256 arthx_dollar_value_d18 =
+            params.ARTHX_amount.mul(params.arthx_price_usd).div(1e6);
         require(
-            arths_dollar_value_d18 <= params.excess_collateral_dollar_value_d18,
+            arthx_dollar_value_d18 <= params.excess_collateral_dollar_value_d18,
             'You are trying to buy back more than the excess!'
         );
 
-        // Get the equivalent amount of collateral based on the market value of ARTHS provided
+        // Get the equivalent amount of collateral based on the market value of ARTHX provided
         uint256 collateral_equivalent_d18 =
-            arths_dollar_value_d18.mul(1e6).div(params.col_price_usd);
+            arthx_dollar_value_d18.mul(1e6).div(params.col_price_usd);
         //collateral_equivalent_d18 = collateral_equivalent_d18.sub((collateral_equivalent_d18.mul(params.buyback_fee)).div(1e6));
 
         return (collateral_equivalent_d18);

@@ -62,7 +62,7 @@ const ChainlinkETHUSDPriceConsumerTest = artifacts.require("Oracle/ChainlinkETHU
 
 // ARTH core
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const ARTHShares = artifacts.require("ARTHS/ARTHShares");
+const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const StakingRewards_ARTH_WETH = artifacts.require("Staking/Fake_Stakes/Stake_ARTH_WETH.sol");
 const StakingRewards_ARTH_USDC = artifacts.require("Staking/Fake_Stakes/Stake_ARTH_USDC.sol");
 const StakingRewards_ARTH_USDT = artifacts.require("Staking/Fake_Stakes/Stake_ARTH_USDT.sol");
@@ -109,7 +109,7 @@ contract('ARTH', async (accounts) => {
 
   // Initialize core contract instances
   let arthInstance;
-  let arthsInstance;
+  let arthxInstance;
 
   let vestingInstance;
 
@@ -179,14 +179,14 @@ contract('ARTH', async (accounts) => {
   // let pair_instance_ARTHS_yUSD;
 
   // Initialize pair orders
-  let artharths_first_ARTH_WETH;
-  let artharths_first_ARTH_USDC;
-  let artharths_first_ARTH_USDT;
-  // let artharths_first_ARTH_yUSD;
-  let artharths_first_ARTHS_WETH;
-  let artharths_first_ARTHS_USDC;
-  let artharths_first_ARTHS_USDT;
-  // let artharths_first_ARTHS_yUSD;
+  let artharthx_first_ARTH_WETH;
+  let artharthx_first_ARTH_USDC;
+  let artharthx_first_ARTH_USDT;
+  // let artharthx_first_ARTH_yUSD;
+  let artharthx_first_ARTHS_WETH;
+  let artharthx_first_ARTHS_USDC;
+  let artharthx_first_ARTHS_USDT;
+  // let artharthx_first_ARTHS_yUSD;
 
   // Initialize staking instances
   let stakingInstance_ARTH_WETH;
@@ -200,7 +200,7 @@ contract('ARTH', async (accounts) => {
 
   // Initialize running balances
   let bal_arth = 0;
-  let bal_arths = 0;
+  let bal_arthx = 0;
   let col_bal_usdc = 0;
   let col_rat = 1;
   let pool_bal_usdc = 0;
@@ -219,7 +219,7 @@ contract('ARTH', async (accounts) => {
 
     // Fill core contract instances
     arthInstance = await ARTHStablecoin.deployed();
-    arthsInstance = await ARTHShares.deployed();
+    arthxInstance = await ARTHShares.deployed();
 
     vestingInstance = await TokenVesting.deployed();
 
@@ -276,10 +276,10 @@ contract('ARTH', async (accounts) => {
     pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, FakeCollateral_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     pair_addr_ARTH_USDT = await uniswapFactoryInstance.getPair(arthInstance.address, FakeCollateral_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     // pair_addr_ARTH_yUSD = await uniswapFactoryInstance.getPair(arthInstance.address, FakeCollateral_yUSD.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, WETH.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    pair_addr_ARTHS_USDC = await uniswapFactoryInstance.getPair(arthsInstance.address, FakeCollateral_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    pair_addr_ARTHS_USDT = await uniswapFactoryInstance.getPair(arthsInstance.address, FakeCollateral_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    // pair_addr_ARTHS_yUSD = await uniswapFactoryInstance.getPair(arthsInstance.address, FakeCollateral_yUSD.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthxInstance.address, WETH.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    pair_addr_ARTHS_USDC = await uniswapFactoryInstance.getPair(arthxInstance.address, FakeCollateral_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    pair_addr_ARTHS_USDT = await uniswapFactoryInstance.getPair(arthxInstance.address, FakeCollateral_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    // pair_addr_ARTHS_yUSD = await uniswapFactoryInstance.getPair(arthxInstance.address, FakeCollateral_yUSD.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     pair_addr_USDT_WETH = await uniswapFactoryInstance.getPair(FakeCollateral_USDT.address, WETH.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     pair_addr_USDC_WETH = await uniswapFactoryInstance.getPair(FakeCollateral_USDC.address, WETH.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
@@ -296,23 +296,23 @@ contract('ARTH', async (accounts) => {
     pair_instance_USDC_WETH = await UniswapV2Pair.at(pair_addr_USDC_WETH);
 
     // Get the pair order results
-    artharths_first_ARTH_WETH = await oracle_instance_ARTH_WETH.token0();
-    artharths_first_ARTH_USDC = await oracle_instance_ARTH_USDC.token0();
-    artharths_first_ARTH_USDT = await oracle_instance_ARTH_USDT.token0();
-    // artharths_first_ARTH_yUSD = await oracle_instance_ARTH_yUSD.token0();
-    artharths_first_ARTHS_WETH = await oracle_instance_ARTHS_WETH.token0();
-    artharths_first_ARTHS_USDC = await oracle_instance_ARTHS_USDC.token0();
-    artharths_first_ARTHS_USDT = await oracle_instance_ARTHS_USDT.token0();
-    // artharths_first_ARTHS_yUSD = await oracle_instance_ARTHS_yUSD.token0();
+    artharthx_first_ARTH_WETH = await oracle_instance_ARTH_WETH.token0();
+    artharthx_first_ARTH_USDC = await oracle_instance_ARTH_USDC.token0();
+    artharthx_first_ARTH_USDT = await oracle_instance_ARTH_USDT.token0();
+    // artharthx_first_ARTH_yUSD = await oracle_instance_ARTH_yUSD.token0();
+    artharthx_first_ARTHS_WETH = await oracle_instance_ARTHS_WETH.token0();
+    artharthx_first_ARTHS_USDC = await oracle_instance_ARTHS_USDC.token0();
+    artharthx_first_ARTHS_USDT = await oracle_instance_ARTHS_USDT.token0();
+    // artharthx_first_ARTHS_yUSD = await oracle_instance_ARTHS_yUSD.token0();
 
-    artharths_first_ARTH_WETH = arthInstance.address == artharths_first_ARTH_WETH;
-    artharths_first_ARTH_USDC = arthInstance.address == artharths_first_ARTH_USDC;
-    artharths_first_ARTH_USDT = arthInstance.address == artharths_first_ARTH_USDT;
-    // artharths_first_ARTH_yUSD = arthInstance.address == artharths_first_ARTH_yUSD;
-    artharths_first_ARTHS_WETH = arthsInstance.address == artharths_first_ARTHS_WETH;
-    artharths_first_ARTHS_USDC = arthsInstance.address == artharths_first_ARTHS_USDC;
-    artharths_first_ARTHS_USDT = arthsInstance.address == artharths_first_ARTHS_USDT;
-    // artharths_first_ARTHS_yUSD = arthsInstance.address == artharths_first_ARTHS_yUSD;
+    artharthx_first_ARTH_WETH = arthInstance.address == artharthx_first_ARTH_WETH;
+    artharthx_first_ARTH_USDC = arthInstance.address == artharthx_first_ARTH_USDC;
+    artharthx_first_ARTH_USDT = arthInstance.address == artharthx_first_ARTH_USDT;
+    // artharthx_first_ARTH_yUSD = arthInstance.address == artharthx_first_ARTH_yUSD;
+    artharthx_first_ARTHS_WETH = arthxInstance.address == artharthx_first_ARTHS_WETH;
+    artharthx_first_ARTHS_USDC = arthxInstance.address == artharthx_first_ARTHS_USDC;
+    artharthx_first_ARTHS_USDT = arthxInstance.address == artharthx_first_ARTHS_USDT;
+    // artharthx_first_ARTHS_yUSD = arthxInstance.address == artharthx_first_ARTHS_yUSD;
 
     // Fill the staking rewards instances
     stakingInstance_ARTH_WETH = await StakingRewards_ARTH_WETH.deployed();
@@ -351,10 +351,10 @@ contract('ARTH', async (accounts) => {
     let arth_price_from_ARTH_USDC = (new BigNumber(await oracle_instance_ARTH_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
     let arth_price_from_ARTH_USDT = (new BigNumber(await oracle_instance_ARTH_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
     // let arth_price_from_ARTH_yUSD = (new BigNumber(await oracle_instance_ARTH_yUSD.consult.call(FakeCollateral_yUSD.address, 1e6))).div(BIG6).toNumber();
-    let arths_price_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
-    let arths_price_from_ARTHS_USDC = (new BigNumber(await oracle_instance_ARTHS_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
-    let arths_price_from_ARTHS_USDT = (new BigNumber(await oracle_instance_ARTHS_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
-    // let arths_price_from_ARTHS_yUSD = (new BigNumber(await oracle_instance_ARTHS_yUSD.consult.call(FakeCollateral_yUSD.address, 1e6))).div(BIG6).toNumber();
+    let arthx_price_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
+    let arthx_price_from_ARTHS_USDC = (new BigNumber(await oracle_instance_ARTHS_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
+    let arthx_price_from_ARTHS_USDT = (new BigNumber(await oracle_instance_ARTHS_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
+    // let arthx_price_from_ARTHS_yUSD = (new BigNumber(await oracle_instance_ARTHS_yUSD.consult.call(FakeCollateral_yUSD.address, 1e6))).div(BIG6).toNumber();
     let USDT_price_from_USDT_WETH = (new BigNumber(await oracle_instance_USDT_WETH.consult.call(WETH.address, 1e6))).div(1e6).toNumber();
     let USDC_price_from_USDC_WETH = (new BigNumber(await oracle_instance_USDC_WETH.consult.call(WETH.address, 1e6))).div(1e6).toNumber();
 
@@ -363,10 +363,10 @@ contract('ARTH', async (accounts) => {
     console.log("arth_price_from_ARTH_USDC: ", arth_price_from_ARTH_USDC.toString(), " ARTH = 1 USDC");
     console.log("arth_price_from_ARTH_USDT: ", arth_price_from_ARTH_USDT.toString(), " ARTH = 1 USDT");
     // console.log("arth_price_from_ARTH_yUSD: ", arth_price_from_ARTH_yUSD.toString(), " ARTH = 1 yUSD");
-    console.log("arths_price_from_ARTHS_WETH: ", arths_price_from_ARTHS_WETH.toString(), " ARTHS = 1 WETH");
-    console.log("arths_price_from_ARTHS_USDC: ", arths_price_from_ARTHS_USDC.toString(), " ARTHS = 1 USDC");
-    console.log("arths_price_from_ARTHS_USDT: ", arths_price_from_ARTHS_USDT.toString(), " ARTHS = 1 USDT");
-    // console.log("arths_price_from_ARTHS_yUSD: ", arths_price_from_ARTHS_yUSD.toString(), " ARTHS = 1 yUSD");
+    console.log("arthx_price_from_ARTHS_WETH: ", arthx_price_from_ARTHS_WETH.toString(), " ARTHX = 1 WETH");
+    console.log("arthx_price_from_ARTHS_USDC: ", arthx_price_from_ARTHS_USDC.toString(), " ARTHX = 1 USDC");
+    console.log("arthx_price_from_ARTHS_USDT: ", arthx_price_from_ARTHS_USDT.toString(), " ARTHX = 1 USDT");
+    // console.log("arthx_price_from_ARTHS_yUSD: ", arthx_price_from_ARTHS_yUSD.toString(), " ARTHX = 1 yUSD");
     console.log("USDT_price_from_USDT_WETH: ", USDT_price_from_USDT_WETH.toString(), " USDT = 1 WETH");
     console.log("USDC_price_from_USDC_WETH: ", USDC_price_from_USDC_WETH.toString(), " USDC = 1 WETH");
 
@@ -376,7 +376,7 @@ contract('ARTH', async (accounts) => {
     await col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     // await col_instance_yUSD.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     await arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthxInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // Add allowances to the swapToPrice contract
     await wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
@@ -384,7 +384,7 @@ contract('ARTH', async (accounts) => {
     await col_instance_USDT.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     // await col_instance_yUSD.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     await arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.approve(swapToPriceInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthxInstance.approve(swapToPriceInstance.address, new BigNumber(5000000e18), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
 
     // console.log("===============FIRST SWAPS===============");
@@ -449,10 +449,10 @@ contract('ARTH', async (accounts) => {
 
     // //--- ARTHS
 
-    // // Handle ARTHS / WETH
-    // // Targeting 1955 ARTHS / 1 WETH
+    // // Handle ARTHX / WETH
+    // // Targeting 1955 ARTHX / 1 WETH
     // await swapToPriceInstance.swapToPrice(
-    // 	arthsInstance.address,
+    // 	arthxInstance.address,
     // 	wethInstance.address,
     // 	new BigNumber(1955e6),
     // 	new BigNumber(1e6),
@@ -463,10 +463,10 @@ contract('ARTH', async (accounts) => {
     // 	{ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
     // )
 
-    // // Handle ARTHS / USDC
-    // // Targeting 5.2 ARTHS / 1 USDC
+    // // Handle ARTHX / USDC
+    // // Targeting 5.2 ARTHX / 1 USDC
     // await swapToPriceInstance.swapToPrice(
-    // 	arthsInstance.address,
+    // 	arthxInstance.address,
     // 	col_instance_USDC.address,
     // 	new BigNumber(52e5),
     // 	new BigNumber(1e6),
@@ -478,10 +478,10 @@ contract('ARTH', async (accounts) => {
     // )
 
 
-    // // Handle ARTHS / USDT
-    // // Targeting 5.1 ARTHS / 1 USDT
+    // // Handle ARTHX / USDT
+    // // Targeting 5.1 ARTHX / 1 USDT
     // await swapToPriceInstance.swapToPrice(
-    // 	arthsInstance.address,
+    // 	arthxInstance.address,
     // 	col_instance_USDT.address,
     // 	new BigNumber(51e5),
     // 	new BigNumber(1e6),
@@ -492,10 +492,10 @@ contract('ARTH', async (accounts) => {
     // 	{ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }
     // )
 
-    // // Handle ARTHS / yUSD
-    // // Targeting 4.9 ARTHS / 1 yUSD
+    // // Handle ARTHX / yUSD
+    // // Targeting 4.9 ARTHX / 1 yUSD
     // // await swapToPriceInstance.swapToPrice(
-    // // 	arthsInstance.address,
+    // // 	arthxInstance.address,
     // // 	col_instance_yUSD.address,
     // // 	new BigNumber(49e5),
     // // 	new BigNumber(1e6),
@@ -531,10 +531,10 @@ contract('ARTH', async (accounts) => {
     arth_price_from_ARTH_USDC = (new BigNumber(await oracle_instance_ARTH_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
     arth_price_from_ARTH_USDT = (new BigNumber(await oracle_instance_ARTH_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
     // arth_price_from_ARTH_yUSD = (new BigNumber(await oracle_instance_ARTH_yUSD.consult.call(FakeCollateral_yUSD.address, 1e6))).div(BIG6).toNumber();
-    arths_price_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
-    arths_price_from_ARTHS_USDC = (new BigNumber(await oracle_instance_ARTHS_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
-    arths_price_from_ARTHS_USDT = (new BigNumber(await oracle_instance_ARTHS_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
-    // arths_price_from_ARTHS_yUSD = (new BigNumber(await oracle_instance_ARTHS_yUSD.consult.call(FakeCollateral_yUSD.address, 1e6))).div(BIG6).toNumber();
+    arthx_price_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
+    arthx_price_from_ARTHS_USDC = (new BigNumber(await oracle_instance_ARTHS_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
+    arthx_price_from_ARTHS_USDT = (new BigNumber(await oracle_instance_ARTHS_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
+    // arthx_price_from_ARTHS_yUSD = (new BigNumber(await oracle_instance_ARTHS_yUSD.consult.call(FakeCollateral_yUSD.address, 1e6))).div(BIG6).toNumber();
     USDT_price_from_USDT_WETH = (new BigNumber(await oracle_instance_USDT_WETH.consult.call(WETH.address, 1e6))).div(1e6).toNumber();
     USDC_price_from_USDC_WETH = (new BigNumber(await oracle_instance_USDC_WETH.consult.call(WETH.address, 1e6))).div(1e6).toNumber();
 
@@ -546,10 +546,10 @@ contract('ARTH', async (accounts) => {
     //console.log("arth_price_from_ARTH_USDC: ", arth_price_from_ARTH_USDC.toString(), " ARTH = 1 USDC");
     //console.log("arth_price_from_ARTH_USDT: ", arth_price_from_ARTH_USDT.toString(), " ARTH = 1 USDT");
     //console.log("arth_price_from_ARTH_yUSD: ", arth_price_from_ARTH_yUSD.toString(), " ARTH = 1 yUSD");
-    console.log("arths_price_from_ARTHS_WETH: ", arths_price_from_ARTHS_WETH.toString(), " ARTHS = 1 WETH");
-    //console.log("arths_price_from_ARTHS_USDC: ", arths_price_from_ARTHS_USDC.toString(), " ARTHS = 1 USDC");
-    //console.log("arths_price_from_ARTHS_USDT: ", arths_price_from_ARTHS_USDT.toString(), " ARTHS = 1 USDT");
-    //console.log("arths_price_from_ARTHS_yUSD: ", arths_price_from_ARTHS_yUSD.toString(), " ARTHS = 1 yUSD");
+    console.log("arthx_price_from_ARTHS_WETH: ", arthx_price_from_ARTHS_WETH.toString(), " ARTHX = 1 WETH");
+    //console.log("arthx_price_from_ARTHS_USDC: ", arthx_price_from_ARTHS_USDC.toString(), " ARTHX = 1 USDC");
+    //console.log("arthx_price_from_ARTHS_USDT: ", arthx_price_from_ARTHS_USDT.toString(), " ARTHX = 1 USDT");
+    //console.log("arthx_price_from_ARTHS_yUSD: ", arthx_price_from_ARTHS_yUSD.toString(), " ARTHX = 1 yUSD");
     console.log("USDT_price_from_USDT_WETH: ", USDT_price_from_USDT_WETH.toString(), " USDT = 1 WETH");
     console.log("USDC_price_from_USDC_WETH: ", USDC_price_from_USDC_WETH.toString(), " USDC = 1 WETH");
     console.log("USDT_price_from_pool: ", (new BigNumber(await pool_instance_USDT.getCollateralPrice.call())).div(1e6).toString(), " USDT = 1 USD");
@@ -560,10 +560,10 @@ contract('ARTH', async (accounts) => {
 
   // TOKEN VESTING TEST
 
-  it('Deposits ARTHS into the vesting contract, attempts to withdraw before the cliff, between cliff and end, and after end', async () => {
-    await vestingInstance.setARTHSAddress(arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  it('Deposits ARTHX into the vesting contract, attempts to withdraw before the cliff, between cliff and end, and after end', async () => {
+    await vestingInstance.setARTHSAddress(arthxInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     await vestingInstance.setTimelockAddress(timelockInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    await arthsInstance.transfer(vestingInstance.address, new BigNumber("5400000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await arthxInstance.transfer(vestingInstance.address, new BigNumber("5400000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     console.log("current timestamp:", (await time.latest()).toNumber());
     console.log("TokenVesting contract info:");
     console.log("beneficiary:", await vestingInstance.beneficiary());
@@ -572,7 +572,7 @@ contract('ARTH', async (accounts) => {
     console.log("duration:", (await vestingInstance.duration()).toNumber());
     console.log("revocable:", await vestingInstance.revocable());
     console.log("released:", (await vestingInstance.released()).toNumber());
-    console.log("accounts[9] ARTHS balance:", (new BigNumber(await arthsInstance.balanceOf(accounts[9]))).div(BIG18).toNumber());
+    console.log("accounts[9] ARTHX balance:", (new BigNumber(await arthxInstance.balanceOf(accounts[9]))).div(BIG18).toNumber());
 
     console.log("======================================");
     console.log("wait 121.25 days (1/3 of a year, ~four months)");
@@ -583,7 +583,7 @@ contract('ARTH', async (accounts) => {
     //console.log("current timestamp:", (await time.latest()).toNumber());
     //console.log("released:", (await vestingInstance.released()).toNumber());
     //console.log("attempt to withdraw from vesting instance", await vestingInstance.release({ from: accounts[9] }));
-    //console.log("accounts[9] ARTHS balance:", (new BigNumber(await arthsInstance.balanceOf(accounts[9]))).div(BIG18).toNumber());
+    //console.log("accounts[9] ARTHX balance:", (new BigNumber(await arthxInstance.balanceOf(accounts[9]))).div(BIG18).toNumber());
 
     console.log("======================================");
     console.log("wait another 121.25 days");
@@ -595,7 +595,7 @@ contract('ARTH', async (accounts) => {
     console.log("released:", (new BigNumber(await vestingInstance.released())).div(BIG18).toNumber())
     console.log("attempt to withdraw from vesting instance");
     await vestingInstance.release({ from: accounts[9] });
-    console.log("accounts[9] ARTHS balance:", (new BigNumber(await arthsInstance.balanceOf(accounts[9]))).div(BIG18).toNumber());
+    console.log("accounts[9] ARTHX balance:", (new BigNumber(await arthxInstance.balanceOf(accounts[9]))).div(BIG18).toNumber());
 
     console.log("======================================");
     console.log("wait the last 121.25 days");
@@ -607,7 +607,7 @@ contract('ARTH', async (accounts) => {
     console.log("released:", (new BigNumber(await vestingInstance.released())).div(BIG18).toNumber())
     console.log("attempt to withdraw from vesting instance");
     await vestingInstance.release({ from: accounts[9] });
-    console.log("accounts[9] ARTHS balance:", (new BigNumber(await arthsInstance.balanceOf(accounts[9]))).div(BIG18).toNumber());
+    console.log("accounts[9] ARTHX balance:", (new BigNumber(await arthxInstance.balanceOf(accounts[9]))).div(BIG18).toNumber());
   });
 
 });

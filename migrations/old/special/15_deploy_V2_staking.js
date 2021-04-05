@@ -55,7 +55,7 @@ const Pool_USDT_V2 = artifacts.require("Arth/Pools/Pool_USDT_V2");
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC");
 const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT");
-const UniswapPairOracle_ARTH_ARTHS = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS");
+const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS");
 const UniswapPairOracle_ARTHS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_WETH");
 const UniswapPairOracle_ARTHS_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDC");
 const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDT");
@@ -68,7 +68,7 @@ const ChainlinkETHUSDPriceConsumerTest = artifacts.require("Oracle/ChainlinkETHU
 
 // ARTH core
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const ARTHShares = artifacts.require("ARTHS/ARTHShares");
+const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 
 // Governance related
 const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
@@ -77,7 +77,7 @@ const Timelock = artifacts.require("Governance/Timelock");
 // Staking contracts
 const StakingRewards_ARTH_WETH = artifacts.require("Staking/Variants/Stake_ARTH_WETH");
 const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_USDC");
-const StakingRewards_ARTH_ARTHS = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS");
+const StakingRewards_ARTH_ARTHX = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS");
 const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTHS_WETH");
 
 // Staking contracts V2
@@ -127,7 +127,7 @@ module.exports = async function (deployer, network, accounts) {
   let timelockInstance;
   let migrationHelperInstance;
   let arthInstance;
-  let arthsInstance;
+  let arthxInstance;
   let governanceInstance;
   let wethInstance;
   let col_instance_USDC;
@@ -152,14 +152,14 @@ module.exports = async function (deployer, network, accounts) {
     governanceInstance = await GovernorAlpha.deployed();
     routerInstance = await UniswapV2Router02_Modified.deployed();
     arthInstance = await ARTHStablecoin.deployed();
-    arthsInstance = await ARTHShares.deployed();
+    arthxInstance = await ARTHShares.deployed();
     wethInstance = await WETH.deployed();
     col_instance_USDC = await FakeCollateral_USDC.deployed();
     uniswapFactoryInstance = await UniswapV2Factory.deployed();
     oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed();
     oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed();
     oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.deployed();
-    oracle_instance_ARTH_ARTHS = await UniswapPairOracle_ARTH_ARTHS.deployed();
+    oracle_instance_ARTH_ARTHX = await UniswapPairOracle_ARTH_ARTHS.deployed();
     oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.deployed();
     oracle_instance_ARTHS_USDC = await UniswapPairOracle_ARTHS_USDC.deployed();
     oracle_instance_ARTHS_USDT = await UniswapPairOracle_ARTHS_USDT.deployed();
@@ -173,7 +173,7 @@ module.exports = async function (deployer, network, accounts) {
     timelockInstance = await Timelock.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].misc.timelock);
     migrationHelperInstance = await MigrationHelper.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].misc.migration_helper);
     arthInstance = await ARTHStablecoin.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTH);
-    arthsInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTHS);
+    arthxInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTHS);
     governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
     wethInstance = await WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].weth);
     col_instance_USDC = await FakeCollateral_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDC);
@@ -184,7 +184,7 @@ module.exports = async function (deployer, network, accounts) {
     oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_WETH);
     oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_USDC);
     oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_USDT);
-    oracle_instance_ARTH_ARTHS = await UniswapPairOracle_ARTH_ARTHS.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_ARTHS);
+    oracle_instance_ARTH_ARTHX = await UniswapPairOracle_ARTH_ARTHS.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_ARTHS);
     oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTHS_WETH);
     oracle_instance_ARTHS_USDC = await UniswapPairOracle_ARTHS_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTHS_USDC);
     oracle_instance_ARTHS_USDT = await UniswapPairOracle_ARTHS_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTHS_USDT);
@@ -198,8 +198,8 @@ module.exports = async function (deployer, network, accounts) {
 
   const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
   const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTH_ARTHX = await uniswapFactoryInstance.getPair(arthInstance.address, arthxInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthxInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
   // CONTINUE MAIN DEPLOY CODE HERE
   // ====================================================================================================================
@@ -225,10 +225,10 @@ module.exports = async function (deployer, network, accounts) {
   // ======== Deploy the staking contracts ========
   console.log(chalk.yellow('===== DEPLOY THE STAKING CONTRACTS ====='));
   await Promise.all([
-    deployer.deploy(StakingRewards_ARTH_WETH_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_WETH, ARTHStablecoin.address, timelockInstance.address, 500000),
-    deployer.deploy(StakingRewards_ARTH_USDC_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_USDC, ARTHStablecoin.address, timelockInstance.address, 500000),
-    deployer.deploy(StakingRewards_ARTH_ARTHS_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_ARTHS, ARTHStablecoin.address, timelockInstance.address, 0),
-    deployer.deploy(StakingRewards_ARTHS_WETH_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTHS_WETH, ARTHStablecoin.address, timelockInstance.address, 0)
+    deployer.deploy(StakingRewards_ARTH_WETH_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthxInstance.address, pair_addr_ARTH_WETH, ARTHStablecoin.address, timelockInstance.address, 500000),
+    deployer.deploy(StakingRewards_ARTH_USDC_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthxInstance.address, pair_addr_ARTH_USDC, ARTHStablecoin.address, timelockInstance.address, 500000),
+    deployer.deploy(StakingRewards_ARTH_ARTHS_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthxInstance.address, pair_addr_ARTH_ARTHS, ARTHStablecoin.address, timelockInstance.address, 0),
+    deployer.deploy(StakingRewards_ARTHS_WETH_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthxInstance.address, pair_addr_ARTHS_WETH, ARTHStablecoin.address, timelockInstance.address, 0)
   ])
 
   // ======== Get various staking addresses ========
@@ -238,13 +238,13 @@ module.exports = async function (deployer, network, accounts) {
   const stakingInstance_ARTH_ARTHS_V2 = await StakingRewards_ARTH_ARTHS_V2.deployed();
   const stakingInstance_ARTHS_WETH_V2 = await StakingRewards_ARTHS_WETH_V2.deployed();
 
-  // Transfer ARTHS to staking contracts
-  console.log(chalk.yellow('===== Transfer ARTHS to staking contracts ====='));
+  // Transfer ARTHX to staking contracts
+  console.log(chalk.yellow('===== Transfer ARTHX to staking contracts ====='));
   await Promise.all([
-    arthsInstance.transfer(stakingInstance_ARTH_WETH_V2.address, new BigNumber("100000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 6000000e18
-    arthsInstance.transfer(stakingInstance_ARTH_USDC_V2.address, new BigNumber("100000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 6000000e18
-    arthsInstance.transfer(stakingInstance_ARTH_ARTHS_V2.address, new BigNumber("100e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 1000000e18
-    arthsInstance.transfer(stakingInstance_ARTHS_WETH_V2.address, new BigNumber("100e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }) // eventually should be 1000000e18
+    arthxInstance.transfer(stakingInstance_ARTH_WETH_V2.address, new BigNumber("100000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 6000000e18
+    arthxInstance.transfer(stakingInstance_ARTH_USDC_V2.address, new BigNumber("100000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 6000000e18
+    arthxInstance.transfer(stakingInstance_ARTH_ARTHS_V2.address, new BigNumber("100e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 1000000e18
+    arthxInstance.transfer(stakingInstance_ARTHS_WETH_V2.address, new BigNumber("100e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }) // eventually should be 1000000e18
   ]);
 
   // THIS WILL BE DONE AT A LATER TIME

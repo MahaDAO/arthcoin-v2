@@ -5,14 +5,14 @@ require('dotenv').config()
 const helpers = require('./helpers')
 
 
-const ARTHShares = artifacts.require("ARTHS/ARTHShares")
+const ARTHShares = artifacts.require("ARTHX/ARTHShares")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH")
 const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC")
 const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT")
 const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH")
 const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH")
-const UniswapPairOracle_ARTH_ARTHS = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS")
+const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS")
 const UniswapPairOracle_ARTHS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_WETH")
 const UniswapPairOracle_ARTHS_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDC")
 const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDT")
@@ -23,7 +23,7 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0]
   const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
-  const arthsInstance = await ARTHShares.deployed()
+  const arthxInstance = await ARTHShares.deployed()
   const arthInstance = await ARTHStablecoin.deployed()
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts)
   const oracle_instance_USDC_WETH = await UniswapPairOracle_USDC_WETH.deployed()
@@ -31,7 +31,7 @@ module.exports = async function (deployer, network, accounts) {
   const oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed()
   const oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed()
   const oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.deployed()
-  const oracle_instance_ARTH_ARTHS = await UniswapPairOracle_ARTH_ARTHS.deployed()
+  const oracle_instance_ARTH_ARTHX = await UniswapPairOracle_ARTH_ARTHS.deployed()
   const oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.deployed()
   const oracle_instance_ARTHS_USDC = await UniswapPairOracle_ARTHS_USDC.deployed()
   const oracle_instance_ARTHS_USDT = await UniswapPairOracle_ARTHS_USDT.deployed()
@@ -48,7 +48,7 @@ module.exports = async function (deployer, network, accounts) {
     col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: DEPLOYER_ADDRESS }),
-    arthsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: DEPLOYER_ADDRESS })
+    arthxInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: DEPLOYER_ADDRESS })
   ])
 
   console.log(chalk.yellow("\nApproving swapToPrice..."))
@@ -57,7 +57,7 @@ module.exports = async function (deployer, network, accounts) {
     col_instance_USDC.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     col_instance_USDT.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: DEPLOYER_ADDRESS }),
-    arthsInstance.approve(swapToPriceInstance.address, new BigNumber(5000000e18), { from: DEPLOYER_ADDRESS })
+    arthxInstance.approve(swapToPriceInstance.address, new BigNumber(5000000e18), { from: DEPLOYER_ADDRESS })
   ])
 
   console.log(chalk.yellow("\nDoing swapToPrice..."))
@@ -100,7 +100,7 @@ module.exports = async function (deployer, network, accounts) {
   )
 
   await swapToPriceInstance.swapToPrice(
-    arthsInstance.address,
+    arthxInstance.address,
     wethInstance.address,
     new BigNumber(1855e6),
     new BigNumber(1e6),
@@ -112,7 +112,7 @@ module.exports = async function (deployer, network, accounts) {
   )
 
   await swapToPriceInstance.swapToPrice(
-    arthsInstance.address,
+    arthxInstance.address,
     col_instance_USDC.address,
     new BigNumber(52e5),
     new BigNumber(1e6),
@@ -124,7 +124,7 @@ module.exports = async function (deployer, network, accounts) {
   )
 
   await swapToPriceInstance.swapToPrice(
-    arthsInstance.address,
+    arthxInstance.address,
     col_instance_USDT.address,
     new BigNumber(51e5),
     new BigNumber(1e6),

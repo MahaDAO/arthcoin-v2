@@ -37,8 +37,8 @@ contract TokenVesting {
     uint256 private _start;
     uint256 private _duration;
 
-    address public _ARTHS_contract_address;
-    ERC20 ARTHS;
+    address public _ARTHX_contract_address;
+    ERC20 ARTHX;
     address public _timelock_address;
     bool public _revocable;
 
@@ -87,10 +87,10 @@ contract TokenVesting {
         _owner = msg.sender;
     }
 
-    function setARTHSAddress(address ARTHS_address) public {
+    function setARTHXAddress(address ARTHX_address) public {
         require(msg.sender == _owner, 'must be set by the owner');
-        _ARTHS_contract_address = ARTHS_address;
-        ARTHS = ERC20(ARTHS_address);
+        _ARTHX_contract_address = ARTHX_address;
+        ARTHX = ERC20(ARTHX_address);
     }
 
     function setTimelockAddress(address timelock_address) public {
@@ -161,7 +161,7 @@ contract TokenVesting {
 
         _released = _released.add(unreleased);
 
-        ARTHS.transfer(_beneficiary, unreleased);
+        ARTHX.transfer(_beneficiary, unreleased);
 
         emit TokensReleased(unreleased);
     }
@@ -178,14 +178,14 @@ contract TokenVesting {
         require(_revocable, 'TokenVesting: cannot revoke');
         require(!_revoked, 'TokenVesting: token already revoked');
 
-        uint256 balance = ARTHS.balanceOf(address(this));
+        uint256 balance = ARTHX.balanceOf(address(this));
 
         uint256 unreleased = _releasableAmount();
         uint256 refund = balance.sub(unreleased);
 
         _revoked = true;
 
-        ARTHS.transfer(_owner, refund);
+        ARTHX.transfer(_owner, refund);
 
         emit TokenVestingRevoked();
     }
@@ -199,8 +199,8 @@ contract TokenVesting {
 
         // Cannot recover the staking token or the rewards token
         require(
-            tokenAddress != _ARTHS_contract_address,
-            'Cannot withdraw the ARTHS through this function'
+            tokenAddress != _ARTHX_contract_address,
+            'Cannot withdraw the ARTHX through this function'
         );
         ERC20(tokenAddress).transfer(_beneficiary, tokenAmount);
     }
@@ -216,7 +216,7 @@ contract TokenVesting {
      * @dev Calculates the amount that has already vested.
      */
     function _vestedAmount() private view returns (uint256) {
-        uint256 currentBalance = ARTHS.balanceOf(address(this));
+        uint256 currentBalance = ARTHX.balanceOf(address(this));
         uint256 totalBalance = currentBalance.add(_released);
         if (block.timestamp < _cliff) {
             return 0;

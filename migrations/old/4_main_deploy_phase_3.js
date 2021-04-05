@@ -56,7 +56,7 @@
 // const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC");
 // const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT");
 
-// const UniswapPairOracle_ARTH_ARTHS = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS");
+// const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS");
 // const UniswapPairOracle_ARTHS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_WETH");
 // const UniswapPairOracle_ARTHS_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDC");
 // const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDT");
@@ -71,7 +71,7 @@
 
 // // ARTH core
 // const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-// const ARTHShares = artifacts.require("ARTHS/ARTHShares");
+// const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 // const TokenVesting = artifacts.require("ARTHS/TokenVesting");
 
 // // Governance related
@@ -81,7 +81,7 @@
 // // Staking contracts
 // const StakingRewards_ARTH_WETH = artifacts.require("Staking/Variants/Stake_ARTH_WETH.sol");
 // const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_USDC.sol");
-// const StakingRewards_ARTH_ARTHS = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS.sol");
+// const StakingRewards_ARTH_ARTHX = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS.sol");
 // const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTHS_WETH.sol");
 
 // const MockMaha = artifacts.require("ERC20/MockMaha.sol");
@@ -138,7 +138,7 @@
 //   let timelockInstance;
 //   let migrationHelperInstance;
 //   let arthInstance;
-//   let arthsInstance;
+//   let arthxInstance;
 //   let governanceInstance;
 //   let wethInstance;
 //   let col_instance_USDC;
@@ -162,7 +162,7 @@
 //     migrationHelperInstance = await MigrationHelper.deployed()
 //     //governanceInstance = await GovernorAlpha.deployed();
 //     arthInstance = await ARTHStablecoin.deployed();
-//     arthsInstance = await ARTHShares.deployed();
+//     arthxInstance = await ARTHShares.deployed();
 //     wethInstance = await WETH.deployed();
 //     col_instance_USDC = await FakeCollateral_USDC.deployed();
 //     col_instance_USDT = await FakeCollateral_USDT.deployed();
@@ -171,18 +171,18 @@
 //     swapToPriceInstance = await SwapToPrice.deployed();
 //     stakingInstance_ARTH_WETH = await StakingRewards_ARTH_WETH.deployed();
 //     stakingInstance_ARTH_USDC = await StakingRewards_ARTH_USDC.deployed();
-//     stakingInstance_ARTH_ARTHS = await StakingRewards_ARTH_ARTHS.deployed();
+//     stakingInstance_ARTH_ARTHX = await StakingRewards_ARTH_ARTHS.deployed();
 //     stakingInstance_ARTHS_WETH = await StakingRewards_ARTHS_WETH.deployed();
 //     mock_maha_stability_token = await MockMaha.deployed();
 //     arth_maha_oracle = await ARTHMAHAOracle.deployed();
 
 //     const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
 //     const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: METAMASK_ADDRESS });
-//     const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
-//     const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: METAMASK_ADDRESS });
+//     const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthxInstance.address, wethInstance.address, { from: METAMASK_ADDRESS });
+//     const pair_addr_ARTH_ARTHX = await uniswapFactoryInstance.getPair(arthInstance.address, arthxInstance.address, { from: METAMASK_ADDRESS });
 //     pair_instance_ARTH_WETH = await UniswapV2Pair.at(pair_addr_ARTH_WETH);
 //     pair_instance_ARTH_USDC = await UniswapV2Pair.at(pair_addr_ARTH_USDC);
-//     pair_instance_ARTH_ARTHS = await UniswapV2Pair.at(pair_addr_ARTH_ARTHS);
+//     pair_instance_ARTH_ARTHX = await UniswapV2Pair.at(pair_addr_ARTH_ARTHS);
 //     pair_instance_ARTHS_WETH = await UniswapV2Pair.at(pair_addr_ARTHS_WETH);
 //   }
 //   else {
@@ -191,7 +191,7 @@
 //     migrationHelperInstance = await MigrationHelper.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].misc.migration_helper);
 //     //governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
 //     arthInstance = await ARTHStablecoin.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTH);
-//     arthsInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTHS);
+//     arthxInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTHS);
 //     wethInstance = await WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].weth);
 //     col_instance_USDC = await FakeCollateral_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDC);
 //     col_instance_USDT = await FakeCollateral_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDT);
@@ -200,11 +200,11 @@
 //     swapToPriceInstance = await SwapToPrice.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pricing.swap_to_price);
 //     stakingInstance_ARTH_WETH = await StakingRewards_ARTH_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].staking_contracts["Uniswap ARTH/WETH"]);
 //     stakingInstance_ARTH_USDC = await StakingRewards_ARTH_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].staking_contracts["Uniswap ARTH/USDC"]);
-//     stakingInstance_ARTH_ARTHS = await StakingRewards_ARTH_ARTHS.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].staking_contracts["Uniswap ARTH/ARTHS"]);
+//     stakingInstance_ARTH_ARTHX = await StakingRewards_ARTH_ARTHS.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].staking_contracts["Uniswap ARTH/ARTHS"]);
 //     stakingInstance_ARTHS_WETH = await StakingRewards_ARTHS_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].staking_contracts["Uniswap ARTHS/WETH"]);
 //     pair_instance_ARTH_WETH = await UniswapV2Pair.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pair_tokens["Uniswap ARTH/WETH"]);
 //     pair_instance_ARTH_USDC = await UniswapV2Pair.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pair_tokens["Uniswap ARTH/USDC"]);
-//     pair_instance_ARTH_ARTHS = await UniswapV2Pair.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pair_tokens["Uniswap ARTH/ARTHS"]);
+//     pair_instance_ARTH_ARTHX = await UniswapV2Pair.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pair_tokens["Uniswap ARTH/ARTHS"]);
 //     pair_instance_ARTHS_WETH = await UniswapV2Pair.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pair_tokens["Uniswap ARTHS/WETH"]);
 //   }
 
@@ -212,16 +212,16 @@
 //   // ====================================================================================================================
 //   // ====================================================================================================================
 
-//   // ======== Spread some ARTHS around ========
-//   console.log(chalk.yellow('===== SPREAD SOME ARTHS AROUND ====='));
+//   // ======== Spread some ARTHX around ========
+//   console.log(chalk.yellow('===== SPREAD SOME ARTHX AROUND ====='));
 
-//   // Transfer ARTHS to staking contracts
-//   console.log(chalk.yellow('===== Transfer ARTHS to staking contracts ====='));
+//   // Transfer ARTHX to staking contracts
+//   console.log(chalk.yellow('===== Transfer ARTHX to staking contracts ====='));
 //   await Promise.all([
-//     arthsInstance.transfer(stakingInstance_ARTH_WETH.address, new BigNumber("6e18"), { from: METAMASK_ADDRESS }),
-//     arthsInstance.transfer(stakingInstance_ARTH_USDC.address, new BigNumber("618"), { from: METAMASK_ADDRESS }),
-//     arthsInstance.transfer(stakingInstance_ARTH_ARTHS.address, new BigNumber("10e18"), { from: METAMASK_ADDRESS }),
-//     arthsInstance.transfer(stakingInstance_ARTHS_WETH.address, new BigNumber("10e18"), { from: METAMASK_ADDRESS })
+//     arthxInstance.transfer(stakingInstance_ARTH_WETH.address, new BigNumber("6e18"), { from: METAMASK_ADDRESS }),
+//     arthxInstance.transfer(stakingInstance_ARTH_USDC.address, new BigNumber("618"), { from: METAMASK_ADDRESS }),
+//     arthxInstance.transfer(stakingInstance_ARTH_ARTHS.address, new BigNumber("10e18"), { from: METAMASK_ADDRESS }),
+//     arthxInstance.transfer(stakingInstance_ARTHS_WETH.address, new BigNumber("10e18"), { from: METAMASK_ADDRESS })
 //   ]);
 
 //   if (!IS_MAINNET) {
@@ -236,10 +236,10 @@
 //   const previous_block = (await time.latestBlock()) - 1;
 
 //   // Get the prices
-//   // let stake_ARTH_WETH_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_WETH.address, previous_block))).div(BIG18);
-//   // let stake_ARTH_USDC_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_USDC.address, previous_block))).div(BIG18);
-//   // let stake_ARTH_ARTHS_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTH_ARTHS.address, previous_block))).div(BIG18);
-//   // let stake_ARTHS_WETH_votes = (new BigNumber(await arthsInstance.getPriorVotes.call(stakingInstance_ARTHS_WETH.address, previous_block))).div(BIG18);
+//   // let stake_ARTH_WETH_votes = (new BigNumber(await arthxInstance.getPriorVotes.call(stakingInstance_ARTH_WETH.address, previous_block))).div(BIG18);
+//   // let stake_ARTH_USDC_votes = (new BigNumber(await arthxInstance.getPriorVotes.call(stakingInstance_ARTH_USDC.address, previous_block))).div(BIG18);
+//   // let stake_ARTH_ARTHS_votes = (new BigNumber(await arthxInstance.getPriorVotes.call(stakingInstance_ARTH_ARTHS.address, previous_block))).div(BIG18);
+//   // let stake_ARTHS_WETH_votes = (new BigNumber(await arthxInstance.getPriorVotes.call(stakingInstance_ARTHS_WETH.address, previous_block))).div(BIG18);
 
 //   // Print the new prices
 //   // console.log("stake_ARTH_WETH_votes: ", stake_ARTH_WETH_votes.toString());
@@ -293,7 +293,7 @@
 //     ),
 //     // ARTH / ARTHS
 //     routerInstance.addLiquidity(
-//       arthsInstance.address,
+//       arthxInstance.address,
 //       arthInstance.address,
 //       new BigNumber(133333e15),
 //       new BigNumber(100e18),
@@ -303,9 +303,9 @@
 //       new BigNumber(2105300114),
 //       { from: METAMASK_ADDRESS }
 //     ),
-//     // ARTHS / WETH
+//     // ARTHX / WETH
 //     routerInstance.addLiquidity(
-//       arthsInstance.address,
+//       arthxInstance.address,
 //       wethInstance.address,
 //       new BigNumber(800e18),
 //       new BigNumber(1e18),
@@ -315,9 +315,9 @@
 //       new BigNumber(2105300114),
 //       { from: METAMASK_ADDRESS }
 //     ),
-//     // ARTHS / USDC
+//     // ARTHX / USDC
 //     routerInstance.addLiquidity(
-//       arthsInstance.address,
+//       arthxInstance.address,
 //       col_instance_USDC.address,
 //       new BigNumber(133333e15),
 //       new BigNumber(100e6),
@@ -327,9 +327,9 @@
 //       new BigNumber(2105300114),
 //       { from: METAMASK_ADDRESS }
 //     ),
-//     // ARTHS / USDT
+//     // ARTHX / USDT
 //     routerInstance.addLiquidity(
-//       arthsInstance.address,
+//       arthxInstance.address,
 //       col_instance_USDT.address,
 //       new BigNumber(133333e15),
 //       new BigNumber(100e6),
@@ -378,14 +378,14 @@
 //     deployer.deploy(UniswapPairOracle_ARTH_WETH, uniswapFactoryInstance.address, arthInstance.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
 //     deployer.deploy(UniswapPairOracle_ARTH_USDC, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address),
 //     deployer.deploy(UniswapPairOracle_ARTH_USDT, uniswapFactoryInstance.address, arthInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address),
-//     deployer.deploy(UniswapPairOracle_ARTH_ARTHS, uniswapFactoryInstance.address, arthInstance.address, arthsInstance.address, METAMASK_ADDRESS, timelockInstance.address)
+//     deployer.deploy(UniswapPairOracle_ARTH_ARTHS, uniswapFactoryInstance.address, arthInstance.address, arthxInstance.address, METAMASK_ADDRESS, timelockInstance.address)
 //   ]);
 
-//   console.log(chalk.blue('=== ARTHS ORACLES ==='));
+//   console.log(chalk.blue('=== ARTHX ORACLES ==='));
 //   await Promise.all([
-//     deployer.deploy(UniswapPairOracle_ARTHS_WETH, uniswapFactoryInstance.address, arthsInstance.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
-//     deployer.deploy(UniswapPairOracle_ARTHS_USDC, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address),
-//     deployer.deploy(UniswapPairOracle_ARTHS_USDT, uniswapFactoryInstance.address, arthsInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address)
+//     deployer.deploy(UniswapPairOracle_ARTHS_WETH, uniswapFactoryInstance.address, arthxInstance.address, wethInstance.address, METAMASK_ADDRESS, timelockInstance.address),
+//     deployer.deploy(UniswapPairOracle_ARTHS_USDC, uniswapFactoryInstance.address, arthxInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address),
+//     deployer.deploy(UniswapPairOracle_ARTHS_USDT, uniswapFactoryInstance.address, arthxInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address)
 //   ]);
 
 //   console.log(chalk.blue('=== COLLATERAL ORACLES ==='));
@@ -398,8 +398,8 @@
 //   console.log(chalk.yellow('========== ARTH POOLS =========='));
 //   await deployer.link(StringHelpers, [Pool_USDC, Pool_USDT]);
 //   await Promise.all([
-//     deployer.deploy(Pool_USDC, arthInstance.address, arthsInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6),
-//     deployer.deploy(Pool_USDT, arthInstance.address, arthsInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6)
+//     deployer.deploy(Pool_USDC, arthInstance.address, arthxInstance.address, col_instance_USDC.address, METAMASK_ADDRESS, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6),
+//     deployer.deploy(Pool_USDT, arthInstance.address, arthxInstance.address, col_instance_USDT.address, METAMASK_ADDRESS, timelockInstance.address, mock_maha_stability_token.address, arth_maha_oracle.address, FIVE_MILLION_DEC6)
 //   ])
 
 //   // ============= Get the pool instances ========
@@ -424,14 +424,14 @@
 //     await pool_instance_USDT.setPoolParameters(FIVE_MILLION_DEC6, 7500, 1, 1, 1, 1, 1, { from: METAMASK_ADDRESS }),
 //   ]);
 
-//   // ============= Get ARTH and ARTHS oracles ========
-//   console.log(chalk.yellow('========== GET ARTH AND ARTHS ORACLES =========='));
+//   // ============= Get ARTH and ARTHX oracles ========
+//   console.log(chalk.yellow('========== GET ARTH AND ARTHX ORACLES =========='));
 
 //   // Get the instances
 //   const oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed();
 //   const oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed();
 //   const oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.deployed();
-//   const oracle_instance_ARTH_ARTHS = await UniswapPairOracle_ARTH_ARTHS.deployed();
+//   const oracle_instance_ARTH_ARTHX = await UniswapPairOracle_ARTH_ARTHS.deployed();
 //   const oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.deployed();
 //   const oracle_instance_ARTHS_USDC = await UniswapPairOracle_ARTHS_USDC.deployed();
 //   const oracle_instance_ARTHS_USDT = await UniswapPairOracle_ARTHS_USDT.deployed();
@@ -469,10 +469,10 @@
 
 //   ]);
 
-//   // ======== Link ARTHS oracles ========
-//   console.log(chalk.yellow('===== LINK ARTHS ORACLES ====='));
+//   // ======== Link ARTHX oracles ========
+//   console.log(chalk.yellow('===== LINK ARTHX ORACLES ====='));
 
-//   // Link the ARTHS oracles
+//   // Link the ARTHX oracles
 //   await arthInstance.setARTHSEthOracle(oracle_instance_ARTHS_WETH.address, wethInstance.address, { from: METAMASK_ADDRESS });
 
 //   // ======== Note the addresses ========
@@ -481,7 +481,7 @@
 //     [process.env.MIGRATION_MODE]: {
 //       main: {
 //         ARTH: arthInstance.address,
-//         ARTHS: arthsInstance.address,
+//         ARTHS: arthxInstance.address,
 //         vesting: "NOT_DEPLOYED_YET"
 //       },
 //       weth: wethInstance.address,

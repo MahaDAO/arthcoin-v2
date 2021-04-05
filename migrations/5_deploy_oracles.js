@@ -5,7 +5,7 @@ require('dotenv').config()
 const helpers = require('./helpers')
 
 
-const ARTHShares = artifacts.require("ARTHS/ARTHShares")
+const ARTHShares = artifacts.require("ARTHX/ARTHShares")
 const Timelock = artifacts.require("Governance/Timelock")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH")
@@ -13,7 +13,7 @@ const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPa
 const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT")
 const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH")
 const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH")
-const UniswapPairOracle_ARTH_ARTHS = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS")
+const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS")
 const UniswapPairOracle_ARTHS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_WETH")
 const UniswapPairOracle_ARTHS_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDC")
 const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDT")
@@ -24,7 +24,7 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0]
   const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
-  const arthsInstance = await ARTHShares.deployed()
+  const arthxInstance = await ARTHShares.deployed()
   const timelockInstance = await Timelock.deployed()
   const arthInstance = await ARTHStablecoin.deployed()
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
@@ -63,18 +63,18 @@ module.exports = async function (deployer, network, accounts) {
       UniswapPairOracle_ARTH_ARTHS,
       uniswapFactoryInstance.address,
       arthInstance.address,
-      arthsInstance.address,
+      arthxInstance.address,
       DEPLOYER_ADDRESS,
       timelockInstance.address
     )
   ])
 
-  console.log(chalk.yellow('- Starting ARTHS oracles...'))
+  console.log(chalk.yellow('- Starting ARTHX oracles...'))
   await Promise.all([
     deployer.deploy(
       UniswapPairOracle_ARTHS_WETH,
       uniswapFactoryInstance.address,
-      arthsInstance.address,
+      arthxInstance.address,
       wethInstance.address,
       DEPLOYER_ADDRESS,
       timelockInstance.address
@@ -82,7 +82,7 @@ module.exports = async function (deployer, network, accounts) {
     deployer.deploy(
       UniswapPairOracle_ARTHS_USDC,
       uniswapFactoryInstance.address,
-      arthsInstance.address,
+      arthxInstance.address,
       col_instance_USDC.address,
       DEPLOYER_ADDRESS,
       timelockInstance.address
@@ -90,7 +90,7 @@ module.exports = async function (deployer, network, accounts) {
     deployer.deploy(
       UniswapPairOracle_ARTHS_USDT,
       uniswapFactoryInstance.address,
-      arthsInstance.address,
+      arthxInstance.address,
       col_instance_USDT.address,
       DEPLOYER_ADDRESS,
       timelockInstance.address
@@ -129,6 +129,6 @@ module.exports = async function (deployer, network, accounts) {
   arthInstance.setARTHEthOracle(arthWETHOracle.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
 
   const oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.deployed()
-  console.log(chalk.yellow('\nLinking ARTHS oracles...'))
+  console.log(chalk.yellow('\nLinking ARTHX oracles...'))
   await arthInstance.setARTHSEthOracle(oracle_instance_ARTHS_WETH.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
 }

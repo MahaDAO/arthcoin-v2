@@ -25,7 +25,7 @@ Fully on-chain oracles – Arth v1 uses Uniswap (ETH, USDT, USDC time-weighted a
 
   * <b>Fully on-chain oracles</b> – Arth v1 uses Uniswap (ETH, USDT, USDC time-weighted average prices) and Chainlink (USD price) oracles.
 
-  * <b>Two Tokens</b> – ARTH is the stablecoin targeting a tight band around $1/coin. Arth Shares (ARTHS) is the governance token which accrues fees, seigniorage revenue, and excess collateral value.
+  * <b>Two Tokens</b> – ARTH is the stablecoin targeting a tight band around $1/coin. Arth Shares (ARTHX) is the governance token which accrues fees, seigniorage revenue, and excess collateral value.
 
   * <b>Swap-based Monetary Policy</b> – Arth uses principles from automated market makers like Uniswap to create swap-based price discovery and real-time stabilization incentives through arbitrage.
 
