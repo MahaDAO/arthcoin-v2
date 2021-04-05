@@ -18,13 +18,13 @@ contract PIDController {
     using SafeMath for uint256;
 
     ARTHStablecoin public ARTH;
-    ARTHShares public ARTHS;
+    ARTHShares public ARTHX;
     ReserveTracker public reserve_tracker;
     IMetaImplementationUSD arth_metapool;
     ArthController private controller;
 
     address public arth_contract_address;
-    address public arths_contract_address;
+    address public arthx_contract_address;
 
     address public owner_address;
     address public timelock_address;
@@ -58,20 +58,20 @@ contract PIDController {
 
     constructor(
         address _arth_contract_address,
-        address _arths_contract_address,
+        address _arthx_contract_address,
         address _creator_address,
         address _timelock_address,
         address _reserve_tracker_address
     ) {
         arth_contract_address = _arth_contract_address;
-        arths_contract_address = _arths_contract_address;
+        arthx_contract_address = _arthx_contract_address;
         owner_address = _creator_address;
         timelock_address = _timelock_address;
         reserve_tracker_address = _reserve_tracker_address;
         reserve_tracker = ReserveTracker(reserve_tracker_address);
         arth_step = 2500;
         ARTH = ARTHStablecoin(arth_contract_address);
-        ARTHS = ARTHShares(arths_contract_address);
+        ARTHX = ARTHShares(arthx_contract_address);
 
         // Upon genesis, if GR changes by more than 1% percent, enable change of collateral ratio
         GR_top_band = 1000;
@@ -104,10 +104,10 @@ contract PIDController {
             block.timestamp - last_update >= internal_cooldown,
             'internal cooldown not passed'
         );
-        uint256 arths_reserves = reserve_tracker.getARTHSReserves();
-        uint256 arths_price = reserve_tracker.getARTHSPrice();
+        uint256 arthx_reserves = reserve_tracker.getARTHXReserves();
+        uint256 arthx_price = reserve_tracker.getARTHXPrice();
 
-        uint256 arths_liquidity = (arths_reserves.mul(arths_price)); // Has 6 decimals of precision
+        uint256 arthx_liquidity = (arthx_reserves.mul(arthx_price)); // Has 6 decimals of precision
 
         uint256 arth_supply = ARTH.totalSupply();
         //uint256 arth_price = reserve_tracker.getARTHPrice(); // Using Uniswap
@@ -125,7 +125,7 @@ contract PIDController {
                 arth_metapool.get_virtual_price()
             );
 
-        uint256 new_growth_ratio = arths_liquidity.div(arth_supply); // (E18 + E6) / E18
+        uint256 new_growth_ratio = arthx_liquidity.div(arth_supply); // (E18 + E6) / E18
 
         uint256 last_collateral_ratio = controller.global_collateral_ratio();
         uint256 new_collateral_ratio = last_collateral_ratio;

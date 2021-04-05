@@ -24,10 +24,10 @@ contract TestAll {
     }
 
     function testARTHSDeployment() public {
-        ARTHShares arths = ARTHShares(DeployedAddresses.ARTHShares());
+        ARTHShares arthx = ARTHShares(DeployedAddresses.ARTHShares());
 
         // Check for 18 decimals
-        Assert.equal(arths.decimals(), uint256(18), '18 decimals expected');
+        Assert.equal(arthx.decimals(), uint256(18), '18 decimals expected');
     }
 
     function testGovernanceDeployment() public {

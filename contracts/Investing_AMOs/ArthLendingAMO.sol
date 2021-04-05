@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../Arth/Arth.sol';
-import '../ARTHS/ARTHS.sol';
+import '../ARTHX/ARTHX.sol';
 import '../ERC20/ERC20.sol';
 import '../Math/SafeMath.sol';
 import './finnexus/IFNX_CFNX.sol';
@@ -28,7 +28,7 @@ contract ArthLendingAMO is AccessControl {
     /* ========== STATE VARIABLES ========== */
 
     ERC20 private collateral_token;
-    ARTHShares private ARTHS;
+    ARTHShares private ARTHX;
     ARTHStablecoin private ARTH;
     ArthPool private pool;
     ArthController private controller;
@@ -86,7 +86,7 @@ contract ArthLendingAMO is AccessControl {
 
     constructor(
         address _arth_contract_address,
-        address _arths_contract_address,
+        address _arthx_contract_address,
         address _pool_address,
         address _collateral_address,
         address _owner_address,
@@ -94,7 +94,7 @@ contract ArthLendingAMO is AccessControl {
         address _timelock_address
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
-        ARTHS = ARTHShares(_arths_contract_address);
+        ARTHX = ARTHShares(_arthx_contract_address);
         pool_address = _pool_address;
         pool = ArthPool(_pool_address);
         collateral_address = _collateral_address;
@@ -235,10 +235,10 @@ contract ArthLendingAMO is AccessControl {
         burned_sum_historical = burned_sum_historical.add(arth_amount);
     }
 
-    // Burn unneeded ARTHS
-    function burnARTHS(uint256 amount) public onlyByOwnerOrGovernance {
-        ARTHS.approve(address(this), amount);
-        ARTHS.pool_burn_from(address(this), amount);
+    // Burn unneeded ARTHX
+    function burnARTHX(uint256 amount) public onlyByOwnerOrGovernance {
+        ARTHX.approve(address(this), amount);
+        ARTHX.pool_burn_from(address(this), amount);
     }
 
     /* ==================== CREAM ==================== */

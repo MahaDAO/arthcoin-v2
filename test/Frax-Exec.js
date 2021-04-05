@@ -54,7 +54,7 @@ const ChainlinkETHUSDPriceConsumer = artifacts.require("Oracle/ChainlinkETHUSDPr
 
 // ARTH core
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const ARTHShares = artifacts.require("ARTHS/ARTHShares");
+const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
 const StakingRewards = artifacts.require("Staking/StakingRewards");
 

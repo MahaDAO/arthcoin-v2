@@ -9,7 +9,7 @@ pragma experimental ABIEncoderV2;
 // // and https://github.com/compound-finance/compound-protocol/tree/master/contracts/Governance
 // contract GovernorAlpha {
 //     /// @notice The name of this contract
-//     string public constant name = 'ARTHS Governor Alpha';
+//     string public constant name = 'ARTHX Governor Alpha';
 
 //     /// @notice The number of votes in support of a proposal required in order for a quorum to be reached and for a vote to succeed
 //     function quorumVotes() public pure returns (uint256) {
@@ -39,8 +39,8 @@ pragma experimental ABIEncoderV2;
 //     /// @notice The address of the Timelock
 //     TimelockInterface public timelock;
 
-//     // The address of the ARTHS token
-//     ARTHShares public arths;
+//     // The address of the ARTHX token
+//     ARTHShares public arthx;
 
 //     /// @notice The address of the Governor Guardian
 //     address public guardian;
@@ -153,11 +153,11 @@ pragma experimental ABIEncoderV2;
 
 //     constructor(
 //         address timelock_,
-//         address arths_,
+//         address arthx_,
 //         address guardian_
 //     ) {
 //         timelock = TimelockInterface(timelock_);
-//         arths = ARTHShares(arths_);
+//         arthx = ARTHShares(arthx_);
 //         guardian = guardian_;
 //     }
 
@@ -170,7 +170,7 @@ pragma experimental ABIEncoderV2;
 //         string memory description
 //     ) public returns (uint256) {
 //         require(
-//             arths.getPriorVotes(msg.sender, sub256(block.number, 1)) >=
+//             arthx.getPriorVotes(msg.sender, sub256(block.number, 1)) >=
 //                 proposalThreshold(),
 //             'GovernorAlpha::propose: proposer votes below proposal threshold'
 //         );
@@ -305,7 +305,7 @@ pragma experimental ABIEncoderV2;
 //         Proposal storage proposal = proposals[proposalId];
 //         require(
 //             msg.sender == guardian ||
-//                 arths.getPriorVotes(
+//                 arthx.getPriorVotes(
 //                     proposal.proposer,
 //                     sub256(block.number, 1)
 //                 ) <
@@ -428,7 +428,7 @@ pragma experimental ABIEncoderV2;
 //             receipt.hasVoted == false,
 //             'GovernorAlpha::_castVote: voter already voted'
 //         );
-//         uint96 votes = arths.getPriorVotes(voter, proposal.startBlock);
+//         uint96 votes = arthx.getPriorVotes(voter, proposal.startBlock);
 
 //         if (support) {
 //             proposal.forVotes = add256(proposal.forVotes, votes);

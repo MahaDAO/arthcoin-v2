@@ -5,7 +5,7 @@ require('dotenv').config()
 const helpers = require('./helpers')
 
 
-const ARTHShares = artifacts.require("ARTHS/ARTHShares")
+const ARTHShares = artifacts.require("ARTHX/ARTHShares")
 const Timelock = artifacts.require("Governance/Timelock")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
 
@@ -26,10 +26,10 @@ module.exports = async function (deployer, network, accounts) {
   let arth_name = await arthInstance.name.call()
   console.log(` - NOTE: ARTH name: ${arth_name}`)
 
-  await deployer.deploy(ARTHShares, "Arth Share", "ARTHS", DEPLOYER_ADDRESS, DEPLOYER_ADDRESS, timelockInstance.address)
-  const arthsInstance = await ARTHShares.deployed()
-  let arths_name = await arthsInstance.name.call()
-  console.log(` - NOTE: ARTHS name: ${arths_name}`)
+  await deployer.deploy(ARTHShares, "Arth Share", "ARTHX", DEPLOYER_ADDRESS, DEPLOYER_ADDRESS, timelockInstance.address)
+  const arthxInstance = await ARTHShares.deployed()
+  let arthx_name = await arthxInstance.name.call()
+  console.log(` - NOTE: ARTHX name: ${arthx_name}`)
 
   await helpers.getMahaToken(network, deployer, artifacts)
   await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
@@ -38,5 +38,5 @@ module.exports = async function (deployer, network, accounts) {
   await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, MOCK_TOKEN_INITIAL_SUPPLY, 'USDT', 6)
 
   console.log(chalk.yellow('\nSetting appropriate token addresses...'))
-  await arthInstance.setARTHSAddress(arthsInstance.address, { from: DEPLOYER_ADDRESS })
+  await arthInstance.setARTHXAddress(arthxInstance.address, { from: DEPLOYER_ADDRESS })
 }

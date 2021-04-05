@@ -25,12 +25,12 @@ interface IArthPool {
     function mint1t1ARTH(uint256 collateral_amount, uint256 ARTH_out_min)
         external;
 
-    function mintAlgorithmicARTH(uint256 arths_amount_d18, uint256 ARTH_out_min)
+    function mintAlgorithmicARTH(uint256 arthx_amount_d18, uint256 ARTH_out_min)
         external;
 
     function mintFractionalARTH(
         uint256 collateral_amount,
-        uint256 arths_amount,
+        uint256 arthx_amount,
         uint256 ARTH_out_min
     ) external;
 
@@ -39,21 +39,21 @@ interface IArthPool {
 
     function redeemFractionalARTH(
         uint256 ARTH_amount,
-        uint256 ARTHS_out_min,
+        uint256 ARTHX_out_min,
         uint256 COLLATERAL_out_min
     ) external;
 
-    function redeemAlgorithmicARTH(uint256 ARTH_amount, uint256 ARTHS_out_min)
+    function redeemAlgorithmicARTH(uint256 ARTH_amount, uint256 ARTHX_out_min)
         external;
 
     function collectRedemption() external;
 
     function recollateralizeARTH(
         uint256 collateral_amount,
-        uint256 ARTHS_out_min
+        uint256 ARTHX_out_min
     ) external;
 
-    function buyBackARTHS(uint256 ARTHS_amount, uint256 COLLATERAL_out_min)
+    function buyBackARTHX(uint256 ARTHX_amount, uint256 COLLATERAL_out_min)
         external;
 
     function toggleMinting() external;
