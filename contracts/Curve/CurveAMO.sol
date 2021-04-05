@@ -13,6 +13,7 @@ import './ILiquidityGauge.sol';
 import './IStableSwap3Pool.sol';
 import './IMetaImplementationUSD.sol';
 import '../Arth/ArthController.sol';
+import '../Arth/Pools/IArthPool.sol';
 
 /**
  *  Original code written by:
@@ -29,7 +30,7 @@ contract CurveAMO is AccessControl {
     IMinter private crv_minter;
     ERC20 private three_pool_erc20;
     ARTHStablecoin private ARTH;
-    ArthPool private pool;
+    IArthPool private pool;
     ARTHShares private ARTHS;
     ERC20 private collateral_token;
     ERC20 private CRV = ERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
@@ -595,7 +596,7 @@ contract CurveAMO is AccessControl {
 
     function setPool(address _pool_address) external onlyByOwnerOrGovernance {
         pool_address = _pool_address;
-        pool = ArthPool(_pool_address);
+        pool = IArthPool(_pool_address);
     }
 
     function setThreePool(

@@ -4,16 +4,13 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../ARTHS/ARTHS.sol';
-import '../ERC20/ERC20.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
 import './Pools/IArthPool.sol';
-import '../Common/Context.sol';
 import '../Governance/AccessControl.sol';
-import '../ERC20/ERC20Custom.sol';
-import '../Oracle/UniswapPairOracle.sol';
-import '../ERC20/Variants/AnyswapV4Token.sol';
-import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
+import '../Interfaces/IUniswapPairOracle.sol';
+import '../Interfaces/IChainlinkETHUSDPriceConsumer.sol';
+// Note: check this implementation
 import './IncentiveController.sol';
 
 contract ArthController is AccessControl {
@@ -24,8 +21,8 @@ contract ArthController is AccessControl {
     enum PriceChoice {ARTH, ARTHS}
     ChainlinkETHUSDPriceConsumer private eth_usd_pricer;
     uint8 private eth_usd_pricer_decimals;
-    UniswapPairOracle private arthEthOracle;
-    UniswapPairOracle private arthsEthOracle;
+    IUniswapPairOracle private arthEthOracle;
+    IUniswapPairOracle private arthsEthOracle;
     IncentiveController private incentiveController;
 
     address public owner_address;
@@ -233,21 +230,6 @@ contract ArthController is AccessControl {
         }
     }
 
-    // function _total_collateral_value_d18() public view returns (uint256) {
-    //     uint256 total_collateral_value_d18 = 0;
-
-    //     for (uint256 i = 0; i < arth_pools_array.length; i++) {
-    //         // Exclude null addresses
-    //         if (arth_pools_array[i] != address(0)) {
-    //             total_collateral_value_d18 = total_collateral_value_d18.add(
-    //                 IArthPool(arth_pools_array[i]).collatDollarBalance()
-    //             );
-    //         }
-    //     }
-
-    //     return total_collateral_value_d18;
-    // }
-
     // Iterate through all arth pools and calculate all value of collateral in all pools globally
     function globalCollateralValue() public view returns (uint256) {
         uint256 total_collateral_value_d18 = 0;
@@ -381,7 +363,7 @@ contract ArthController is AccessControl {
         onlyByOwnerOrGovernance
     {
         arth_eth_oracle_address = _arth_oracle_addr;
-        arthEthOracle = UniswapPairOracle(_arth_oracle_addr);
+        arthEthOracle = IUniswapPairOracle(_arth_oracle_addr);
         weth_address = _weth_address;
     }
 
@@ -391,7 +373,7 @@ contract ArthController is AccessControl {
         address _weth_address
     ) public onlyByOwnerOrGovernance {
         arths_eth_oracle_address = _arths_oracle_addr;
-        arthsEthOracle = UniswapPairOracle(_arths_oracle_addr);
+        arthsEthOracle = IUniswapPairOracle(_arths_oracle_addr);
         weth_address = _weth_address;
     }
 

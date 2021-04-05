@@ -10,7 +10,8 @@ import '../Math//Math.sol';
 import '../Math/SafeMath.sol';
 import './IIncentive.sol';
 import '../Governance/AccessControl.sol';
-import '../Oracle/UniswapPairOracle.sol';
+//import '../Oracle/UniswapPairOracle.sol';
+import '../Interfaces/IUniswapPairOracle.sol';
 import {ARTHStablecoin} from './Arth.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
@@ -32,7 +33,7 @@ contract IncentiveController is AccessControl, IIncentive {
     }
 
     TimeWeightInfo private timeWeightInfo;
-    UniswapPairOracle public arthETHOracle;
+    IUniswapPairOracle public arthETHOracle;
     ChainlinkETHUSDPriceConsumer public ethGMUPricer;
 
     /**
@@ -67,7 +68,7 @@ contract IncentiveController is AccessControl, IIncentive {
         arthAddr = arthAddr_;
         uniswapPairAddr = uniswapPairAddr_;
 
-        arthETHOracle = UniswapPairOracle(arthETHOracle_);
+        arthETHOracle = IUniswapPairOracle(arthETHOracle_);
         ethGMUPricer = ChainlinkETHUSDPriceConsumer(ethGMUPricer_);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());

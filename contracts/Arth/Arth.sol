@@ -3,16 +3,8 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../ARTHS/ARTHS.sol';
-import '../ERC20/ERC20.sol';
-import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
-import './Pools/ArthPool.sol';
-import '../Common/Context.sol';
-import '../ERC20/ERC20Custom.sol';
-import '../Oracle/UniswapPairOracle.sol';
 import '../ERC20/Variants/AnyswapV4Token.sol';
-import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
 import './IIncentive.sol';
 
 /**

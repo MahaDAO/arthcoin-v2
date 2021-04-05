@@ -3,13 +3,14 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './Arth.sol';
+//import './Arth.sol';
+import '../Interfaces/IArth.sol';
 import '../Governance/AccessControl.sol';
 
 contract ArthBridge is AccessControl {
     /* ========== STATE VARIABLES ========== */
 
-    ARTHStablecoin private ARTH;
+    IArth private ARTH;
     address public timelock_address;
     address public owner_address;
 
@@ -33,7 +34,7 @@ contract ArthBridge is AccessControl {
         address _creator_address,
         address _timelock_address
     ) {
-        ARTH = ARTHStablecoin(_arth_contract_address);
+        ARTH = IArth(_arth_contract_address);
         timelock_address = _timelock_address;
         owner_address = _creator_address;
         _setupRole(DEFAULT_ADMIN_ROLE, owner_address);
