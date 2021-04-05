@@ -162,14 +162,14 @@ contract ARTHStablecoin is AnyswapV4Token {
         uint256 amount
     ) internal {
         // incentive on sender
-        address senderIncentive = incentiveContract[sender];
-        if (senderIncentive != address(0)) {
+        IIncentive senderIncentive = incentiveContract[sender];
+        if (address(senderIncentive) != address(0)) {
             senderIncentive.incentivize(sender, recipient, msg.sender, amount);
         }
 
         // incentive on recipient
-        address recipientIncentive = incentiveContract[recipient];
-        if (recipientIncentive != address(0)) {
+        IIncentive recipientIncentive = incentiveContract[recipient];
+        if (address(recipientIncentive) != address(0)) {
             recipientIncentive.incentivize(
                 sender,
                 recipient,
@@ -179,11 +179,11 @@ contract ARTHStablecoin is AnyswapV4Token {
         }
 
         // incentive on operator
-        address operatorIncentive = incentiveContract[msg.sender];
+        IIncentive operatorIncentive = incentiveContract[msg.sender];
         if (
             msg.sender != sender &&
             msg.sender != recipient &&
-            operatorIncentive != address(0)
+            address(operatorIncentive) != address(0)
         ) {
             operatorIncentive.incentivize(
                 sender,
@@ -194,8 +194,8 @@ contract ARTHStablecoin is AnyswapV4Token {
         }
 
         // all incentive, if active applies to every transfer
-        address allIncentive = incentiveContract[address(0)];
-        if (allIncentive != address(0)) {
+        IIncentive allIncentive = incentiveContract[address(0)];
+        if (address(allIncentive) != address(0)) {
             allIncentive.incentivize(sender, recipient, msg.sender, amount);
         }
     }
