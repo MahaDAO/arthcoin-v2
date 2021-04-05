@@ -319,10 +319,7 @@ contract IncentiveController is AccessControl, IIncentive {
         uint256 adjustedReserveOther = k.div(adjustedReserveARTH);
 
         return
-            adjustedReserveARTH
-                .mul(PRICE_PRECISION)
-                .div(adjustedReserveOther)
-                .div(PRICE_PRECISION);
+            adjustedReserveARTH.mul(PRICE_PRECISION).div(adjustedReserveOther);
     }
 
     function _deviationBelowPeg(uint256 price) internal view returns (uint256) {
@@ -364,7 +361,12 @@ contract IncentiveController is AccessControl, IIncentive {
         view
         returns (uint256)
     {
-        uint256 radicand = targetPrice.mul(reserveTarget).mul(reserveOther);
+        uint256 missingDecimals =
+            uint256(ARTHStablecoin(arthAddr).decimals()).sub(6);
+        uint256 radicand =
+            targetPrice.mul(reserveTarget).mul(reserveOther).mul(
+                10**missingDecimals
+            );
         uint256 root = Math.sqrt(radicand);
 
         if (root > reserveTarget)
