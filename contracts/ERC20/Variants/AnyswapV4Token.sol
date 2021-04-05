@@ -79,6 +79,8 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
                 address(this)
             )
         );
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /**

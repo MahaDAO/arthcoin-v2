@@ -44,21 +44,26 @@ const WETH = artifacts.require("ERC20/WETH");
 const FakeCollateral_USDC = artifacts.require("FakeCollateral/FakeCollateral_USDC");
 const FakeCollateral_USDT = artifacts.require("FakeCollateral/FakeCollateral_USDT");
 
+
 // Collateral Pools
 const ArthPoolLibrary = artifacts.require("Arth/Pools/ArthPoolLibrary");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 
+
 // Oracles
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC");
 const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT");
+
 const UniswapPairOracle_ARTH_ARTHS = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHS");
 const UniswapPairOracle_ARTHS_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_WETH");
 const UniswapPairOracle_ARTHS_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDC");
 const UniswapPairOracle_ARTHS_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHS_USDT");
+
 const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH");
 const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH");
+
 
 // Chainlink Price Consumer
 const ChainlinkETHUSDPriceConsumer = artifacts.require("Oracle/ChainlinkETHUSDPriceConsumer");
@@ -129,16 +134,20 @@ module.exports = async function (deployer, network, accounts) {
   let oracle_instance_ARTH_WETH;
   let oracle_instance_ARTH_USDC;
   let oracle_instance_ARTH_USDT;
+
   let oracle_instance_ARTH_ARTHS;
   let oracle_instance_ARTHS_WETH;
   let oracle_instance_ARTHS_USDC;
   let oracle_instance_ARTHS_USDT;
+
   let oracle_instance_USDC_WETH;
   let oracle_instance_USDT_WETH;
+
   let pool_instance_USDC;
   let pool_instance_USDT;
 
-  if (process.env.MIGRATION_MODE == 'ganache') {
+
+  if (process.env.MIGRATION_MODE != 'mainnet') {
     timelockInstance = await Timelock.deployed();
     migrationHelperInstance = await MigrationHelper.deployed()
     //governanceInstance = await GovernorAlpha.deployed();
@@ -147,19 +156,22 @@ module.exports = async function (deployer, network, accounts) {
     arthsInstance = await ARTHShares.deployed();
     wethInstance = await WETH.deployed();
     col_instance_USDC = await FakeCollateral_USDC.deployed();
-    col_instance_USDT = await FakeCollateral_USDT.deployed();
     uniswapFactoryInstance = await UniswapV2Factory.deployed();
     oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed();
     oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed();
     oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.deployed();
+
     oracle_instance_ARTH_ARTHS = await UniswapPairOracle_ARTH_ARTHS.deployed();
     oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.deployed();
     oracle_instance_ARTHS_USDC = await UniswapPairOracle_ARTHS_USDC.deployed();
     oracle_instance_ARTHS_USDT = await UniswapPairOracle_ARTHS_USDT.deployed();
+
     oracle_instance_USDC_WETH = await UniswapPairOracle_USDC_WETH.deployed();
     oracle_instance_USDT_WETH = await UniswapPairOracle_USDT_WETH.deployed();
+
     pool_instance_USDC = await Pool_USDC.deployed();
     pool_instance_USDT = await Pool_USDT.deployed();
+
   }
   else {
     CONTRACT_ADDRESSES = constants.CONTRACT_ADDRESSES;
@@ -170,27 +182,79 @@ module.exports = async function (deployer, network, accounts) {
     //governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
     wethInstance = await WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].weth);
     col_instance_USDC = await FakeCollateral_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDC);
-    col_instance_USDT = await FakeCollateral_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDT);
     routerInstance = await UniswapV2Router02.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].uniswap_other.router);
     uniswapFactoryInstance = await UniswapV2Factory.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].uniswap_other.factory);
     swapToPriceInstance = await SwapToPrice.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pricing.swap_to_price);
     oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_WETH);
     oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_USDC);
     oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_USDT);
+
     oracle_instance_ARTH_ARTHS = await UniswapPairOracle_ARTH_ARTHS.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTH_ARTHS);
     oracle_instance_ARTHS_WETH = await UniswapPairOracle_ARTHS_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTHS_WETH);
     oracle_instance_ARTHS_USDC = await UniswapPairOracle_ARTHS_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTHS_USDC);
     oracle_instance_ARTHS_USDT = await UniswapPairOracle_ARTHS_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.ARTHS_USDT);
+
     oracle_instance_USDC_WETH = await UniswapPairOracle_USDC_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.USDC_WETH);
     oracle_instance_USDT_WETH = await UniswapPairOracle_USDT_WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].oracles.USDT_WETH);
+
     pool_instance_USDC = await Pool_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pools.USDC);
     pool_instance_USDT = await Pool_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pools.USDT);
 
   }
 
+
+  // CONTINUE MAIN DEPLOY CODE HERE
+  // ====================================================================================================================
+  // ====================================================================================================================
+
+
+  // Advance 24 hrs so the period can be computed
+  // await time.increase(86400 + 1);
+  // await time.advanceBlock();
+
+  console.log(chalk.red.bold('YOU NEED TO WAIT AT LEAST 24 HOURS HERE NORMALLY, BUT TEMPORARILY RESETTING THE PRICE UPDATE TO ONE SECOND'));
+  console.log(chalk.yellow('===== TEMPORARILY SET THE PERIOD TO 1 SECOND ====='));
+  await Promise.all([
+    oracle_instance_ARTH_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.setPeriod(1, { from: METAMASK_ADDRESS })
+  ])
+
+  console.log(chalk.yellow('===== UPDATE THE PRICES ====='));
+
   if (process.env.MIGRATION_MODE == 'ganache') {
     // Advance a few seconds
-    await time.increase(86400 + 10 * 60);
+    await time.increase(5);
+    await time.advanceBlock();
+  }
+  else {
+    console.log(chalk.red.bold('YOU NEED TO WAIT AT LEAST 1 SECOND HERE HERE'));
+  }
+
+  // Make sure the prices are updated
+  await Promise.all([
+    oracle_instance_ARTH_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.update({ from: METAMASK_ADDRESS })
+  ]);
+
+  console.log(chalk.yellow('===== SET THE PERIOD TO BACK TO 24 HOURS ====='));
+
+  if (process.env.MIGRATION_MODE == 'ganache') {
+    // Advance a few seconds
+    await time.increase(5);
     await time.advanceBlock();
   }
   else {
@@ -198,32 +262,14 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   await Promise.all([
-    oracle_instance_ARTH_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDC.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_USDT.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTH_ARTHS.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDC.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_ARTHS_USDT.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDC_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    oracle_instance_USDT_WETH.update({ from: COLLATERAL_ARTH_AND_ARTHS_OWNER })
+    oracle_instance_ARTH_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.setPeriod(3600, { from: METAMASK_ADDRESS })
   ]);
-
-  // return false;
-
-  // CONTINUE MAIN DEPLOY CODE HERE
-  // ====================================================================================================================
-  // ====================================================================================================================
-
-
-  if (process.env.MIGRATION_MODE == 'ganache') {
-    // Advance 1 hr to catch things up
-    await time.increase(3600 + 1);
-    await time.advanceBlock();
-  }
-  else {
-    console.log(chalk.red.bold('YOU NEED TO WAIT AT LEAST TWO DAYS HERE'));
-  }
-
-  await arthInstance.refreshCollateralRatio();
 };

@@ -128,6 +128,7 @@ contract StakingRewards is
         rewardRate = rewardRate.mul(pool_weight).div(1e6);
         unlockedStakes = false;
 
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(POOL_ROLE, _msgSender());
     }
 
@@ -270,7 +271,7 @@ contract StakingRewards is
         // Pull the tokens from the staker.
         TransferHelper.safeTransferFrom(
             address(stakingToken),
-            msg.sender, // Should be ArthPool contract(via. mintAndCall, recollateralizeAndCall etc)
+            who, // The msg.sender in POOLS *AndCall funcs.
             address(this),
             amount
         );

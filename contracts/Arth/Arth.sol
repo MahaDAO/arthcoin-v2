@@ -13,6 +13,7 @@ import '../ERC20/ERC20Custom.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../ERC20/Variants/AnyswapV4Token.sol';
 import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
+import './IncentiveController.sol';
 
 /**
  *  Original code written by:
@@ -30,6 +31,7 @@ contract ARTHStablecoin is AnyswapV4Token {
     uint8 private eth_usd_pricer_decimals;
     UniswapPairOracle private arthEthOracle;
     UniswapPairOracle private arthsEthOracle;
+    IncentiveController private incentiveController;
     string public symbol;
     string public name;
     uint8 public constant decimals = 18;
@@ -50,6 +52,7 @@ contract ARTHStablecoin is AnyswapV4Token {
 
     // Mapping is also used for faster verification
     mapping(address => bool) public arth_pools;
+    mapping(address => address) public incentiveContract;
 
     // Constants for various precisions
     uint256 private constant PRICE_PRECISION = 1e6;
@@ -395,6 +398,69 @@ contract ARTHStablecoin is AnyswapV4Token {
 
     function toggleCollateralRatio() public onlyCollateralRatioPauser {
         collateral_ratio_paused = !collateral_ratio_paused;
+    }
+
+    function _checkAndApplyIncentives(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal {
+        // incentive on sender
+        address senderIncentive = incentiveContract[sender];
+        if (senderIncentive != address(0)) {
+            IncentiveController(senderIncentive).incentivize(
+                sender,
+                recipient,
+                msg.sender,
+                amount
+            );
+        }
+
+        // incentive on recipient
+        address recipientIncentive = incentiveContract[recipient];
+        if (recipientIncentive != address(0)) {
+            IncentiveController(senderIncentive).incentivize(
+                sender,
+                recipient,
+                msg.sender,
+                amount
+            );
+        }
+
+        // incentive on operator
+        address operatorIncentive = incentiveContract[msg.sender];
+        if (
+            msg.sender != sender &&
+            msg.sender != recipient &&
+            operatorIncentive != address(0)
+        ) {
+            IncentiveController(senderIncentive).incentivize(
+                sender,
+                recipient,
+                msg.sender,
+                amount
+            );
+        }
+
+        // all incentive, if active applies to every transfer
+        address allIncentive = incentiveContract[address(0)];
+        if (allIncentive != address(0)) {
+            IncentiveController(senderIncentive).incentivize(
+                sender,
+                recipient,
+                msg.sender,
+                amount
+            );
+        }
+    }
+
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal override {
+        super._transfer(sender, recipient, amount);
+        _checkAndApplyIncentives(sender, recipient, amount);
     }
 
     /* ========== EVENTS ========== */

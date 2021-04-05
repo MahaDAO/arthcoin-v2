@@ -19,13 +19,11 @@ contract ChainlinkETHUSDPriceConsumer {
 
     uint256 public priceFeedDecimals = 8;
 
-    constructor(ISimpleOracle gmuOracle_) {
-        priceFeed = AggregatorV3Interface(
-            0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
-        );
+    constructor(address priceFeed_, ISimpleOracle gmuOracle_) {
+        priceFeed = AggregatorV3Interface(priceFeed_);
 
         gmuOracle = gmuOracle_;
-        //priceFeedDecimals = priceFeed.decimals();
+        priceFeedDecimals = priceFeed.decimals();
     }
 
     /**

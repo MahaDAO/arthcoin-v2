@@ -5,9 +5,9 @@ require('dotenv').config({ path: envPath });
 const constants = require(path.join(__dirname, '../src/types/constants'));
 
 const BigNumber = require('bignumber.js');
-require('@openzeppelin/test-helpers/configure')({
-  provider: process.env.NETWORK_ENDPOINT,
-});
+// require('@openzeppelin/test-helpers/configure')({
+//   provider: process.env.NETWORK_ENDPOINT,
+// });
 
 const { expectEvent, send, shouldFail, time } = require('@openzeppelin/test-helpers');
 const BIG6 = new BigNumber("1e6");
@@ -48,8 +48,6 @@ const FakeCollateral_USDT = artifacts.require("FakeCollateral/FakeCollateral_USD
 const ArthPoolLibrary = artifacts.require("Arth/Pools/ArthPoolLibrary");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
-const Pool_USDC_V2 = artifacts.require("Arth/Pools/Pool_USDC_V2");
-const Pool_USDT_V2 = artifacts.require("Arth/Pools/Pool_USDT_V2");
 
 // Oracles
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
@@ -71,7 +69,7 @@ const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const ARTHShares = artifacts.require("ARTHS/ARTHShares");
 
 // Governance related
-const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
+//const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
 const Timelock = artifacts.require("Governance/Timelock");
 
 // Staking contracts
@@ -85,8 +83,9 @@ const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666";
 // Make sure Ganache is running beforehand
 module.exports = async function (deployer, network, accounts) {
 
+  const IS_MAINNET = (process.env.MIGRATION_MODE == 'mainnet');
+
   // ======== Set the addresses ========
-  console.log(chalk.yellow('===== SET THE ADDRESSES ====='));
   const COLLATERAL_ARTH_AND_ARTHS_OWNER = accounts[1];
   const ORACLE_ADDRESS = accounts[2];
   const POOL_CREATOR = accounts[3];
@@ -97,7 +96,7 @@ module.exports = async function (deployer, network, accounts) {
   // const COLLATERAL_ARTH_AND_ARTHS_OWNER = accounts[8];
 
   // ======== Set other constants ========
-  const TWENTY_FIVE_DEC6 = new BigNumber("25e6");
+
   const ONE_MILLION_DEC18 = new BigNumber("1000000e18");
   const FIVE_MILLION_DEC18 = new BigNumber("5000000e18");
   const TEN_MILLION_DEC18 = new BigNumber("10000000e18");
@@ -140,15 +139,16 @@ module.exports = async function (deployer, network, accounts) {
   let pool_instance_USDC;
   let pool_instance_USDT;
 
-  if (process.env.MIGRATION_MODE == 'ganache') {
+  if (process.env.MIGRATION_MODE != 'mainnet') {
     timelockInstance = await Timelock.deployed();
     migrationHelperInstance = await MigrationHelper.deployed()
-    governanceInstance = await GovernorAlpha.deployed();
+    //governanceInstance = await GovernorAlpha.deployed();
     routerInstance = await UniswapV2Router02_Modified.deployed();
     arthInstance = await ARTHStablecoin.deployed();
     arthsInstance = await ARTHShares.deployed();
     wethInstance = await WETH.deployed();
     col_instance_USDC = await FakeCollateral_USDC.deployed();
+    col_instance_USDT = await FakeCollateral_USDT.deployed();
     uniswapFactoryInstance = await UniswapV2Factory.deployed();
     oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed();
     oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed();
@@ -168,7 +168,7 @@ module.exports = async function (deployer, network, accounts) {
     migrationHelperInstance = await MigrationHelper.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].misc.migration_helper);
     arthInstance = await ARTHStablecoin.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTH);
     arthsInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTHS);
-    governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
+    //governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
     wethInstance = await WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].weth);
     col_instance_USDC = await FakeCollateral_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDC);
     col_instance_USDT = await FakeCollateral_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDT);
@@ -188,75 +188,174 @@ module.exports = async function (deployer, network, accounts) {
     pool_instance_USDT = await Pool_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pools.USDT);
   }
 
+
   // CONTINUE MAIN DEPLOY CODE HERE
   // ====================================================================================================================
   // ====================================================================================================================
 
+  // TODO: Not sure about the swapToPriceInstance.swapToPrice parameters
   return false;
 
-  // Have to do these since Truffle gets messy when you want to link already-deployed libraries
-  console.log(chalk.yellow('========== LINK STUFF =========='));
-  // await deployer.deploy(SafeMath);
-  await deployer.link(SafeMath, [Pool_USDC_V2, Pool_USDT_V2]);
-  // await deployer.deploy(TransferHelper);
-  await deployer.link(TransferHelper, [Pool_USDC_V2, Pool_USDT_V2]);
-  // await deployer.deploy(SafeERC20);
-  await deployer.link(SafeERC20, [Pool_USDC_V2, Pool_USDT_V2]);
-  // await deployer.deploy(ArthPoolLibrary);
-  await deployer.link(ArthPoolLibrary, [Pool_USDC_V2, Pool_USDT_V2]);
-  await deployer.link(StringHelpers, [Pool_USDC_V2, Pool_USDC_V2]);
+  console.log("===============FIRST SWAPS===============");
 
-  // ============= Set the Arth Pools ========
-  console.log(chalk.yellow('========== SET THE V2 POOLS =========='));
-  await Promise.all([
-    deployer.deploy(Pool_USDC_V2, arthInstance.address, arthsInstance.address, col_instance_USDC.address, POOL_CREATOR, timelockInstance.address, FIVE_MILLION_DEC18),
-    deployer.deploy(Pool_USDT_V2, arthInstance.address, arthsInstance.address, col_instance_USDT.address, POOL_CREATOR, timelockInstance.address, FIVE_MILLION_DEC18)
-  ])
+  // return false;
 
-  // ============= Get the pool instances ========
-  console.log(chalk.yellow('========== POOL INSTANCES =========='));
-  const pool_instance_USDC_V2 = await Pool_USDC_V2.deployed();
-  const pool_instance_USDT_V2 = await Pool_USDT_V2.deployed();
+  if (true) {
+    // Add allowances to the Uniswap Router
+    await Promise.all([
+      wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: METAMASK_ADDRESS }),
+      arthsInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: METAMASK_ADDRESS })
+    ])
 
-  // ============= Set the new pool oracles ========
-  console.log(chalk.yellow('========== SET THE ORACLES FOR THE POOLS =========='));
-  await Promise.all([
-    pool_instance_USDC_V2.setCollatETHOracle(oracle_instance_USDC_WETH.address, wethInstance.address, { from: POOL_CREATOR }),
-    pool_instance_USDT_V2.setCollatETHOracle(oracle_instance_USDT_WETH.address, wethInstance.address, { from: POOL_CREATOR })
-  ]);
-
-  // ============= Minimally seed the pools ========
-  console.log(chalk.yellow('========== MINI POOL SEED =========='));
-  await Promise.all([
-    await col_instance_USDC.transfer(pool_instance_USDC_V2.address, TWENTY_FIVE_DEC6, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-    await col_instance_USDT.transfer(pool_instance_USDT_V2.address, TWENTY_FIVE_DEC6, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }),
-  ]);
-
-  // ============= Set the pool parameters so the minting and redemption fees get set ========
-  console.log(chalk.yellow('========== REFRESH POOL PARAMETERS =========='));
-  await Promise.all([
-    await pool_instance_USDC_V2.setPoolParameters(FIVE_MILLION_DEC18, 7500, 1, { from: POOL_CREATOR }),
-    await pool_instance_USDT_V2.setPoolParameters(FIVE_MILLION_DEC18, 7500, 1, { from: POOL_CREATOR }),
-  ]);
-
-  // Link the FAKE collateral pool to the ARTH contract
-  console.log(chalk.yellow('===== ADD NEW POOLS TO ARTH ====='));
-  await arthInstance.addPool(pool_instance_USDC_V2.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  await arthInstance.addPool(pool_instance_USDT_V2.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-
-  // Remove the old pools
-  console.log(chalk.yellow('===== REMOVE THE OLD POOLS ====='));
-  // await arthInstance.removePool(pool_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  // await arthInstance.removePool(pool_instance_USDT.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  await arthInstance.removePool('0x5e57064B79c8A0854858e13614A7024ccB8F09E9', { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-  await arthInstance.removePool('0xF8eC470B09d8636546fCd6A0922046e3fE9940C7', { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-
-  // ============= Print the new pools ========
-  const NEW_POOLS = {
-    USDC: pool_instance_USDC_V2.address,
-    USDT: pool_instance_USDT_V2.address,
+    // Add allowances to the swapToPrice contract
+    console.log("Doing swapToPrice allowances...");
+    await Promise.all([
+      wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      col_instance_USDC.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      col_instance_USDT.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: METAMASK_ADDRESS }),
+      arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: METAMASK_ADDRESS }),
+      arthsInstance.approve(swapToPriceInstance.address, new BigNumber(5000000e18), { from: METAMASK_ADDRESS })
+    ])
   }
 
-  console.log("NEW POOLS: ", NEW_POOLS);
-};
+  //--- ARTH
 
+  // Handle ARTH / WETH
+  await swapToPriceInstance.swapToPrice(
+    arthInstance.address,
+    wethInstance.address,
+    new BigNumber(3650e5),
+    new BigNumber(1e6),
+    new BigNumber(100e18),
+    new BigNumber(100e18),
+    METAMASK_ADDRESS,
+    new BigNumber(2105300114),
+    { from: METAMASK_ADDRESS }
+  )
+  console.log("ARTH / WETH swapped");
+
+  // Handle ARTH / USDC
+  // Targeting 1.008 ARTH / 1 USDC
+  await swapToPriceInstance.swapToPrice(
+    arthInstance.address,
+    col_instance_USDC.address,
+    new BigNumber(1008e3),
+    new BigNumber(997e3),
+    new BigNumber(100e18),
+    new BigNumber(100e18),
+    METAMASK_ADDRESS,
+    new BigNumber(2105300114),
+    { from: METAMASK_ADDRESS }
+  )
+  console.log("ARTH / USDC swapped");
+
+  // Handle ARTH / USDT
+  // Targeting 0.990 ARTH / 1 USDT
+  await swapToPriceInstance.swapToPrice(
+    arthInstance.address,
+    col_instance_USDT.address,
+    new BigNumber(990e3),
+    new BigNumber(1005e3),
+    new BigNumber(100e18),
+    new BigNumber(100e18),
+    METAMASK_ADDRESS,
+    new BigNumber(2105300114),
+    { from: METAMASK_ADDRESS }
+  )
+  console.log("ARTH / USDT swapped");
+
+  //--- ARTHS
+
+  // Handle ARTHS / WETH
+  // Targeting 1855 ARTHS / 1 WETH
+  await swapToPriceInstance.swapToPrice(
+    arthsInstance.address,
+    wethInstance.address,
+    new BigNumber(1855e6),
+    new BigNumber(1e6),
+    new BigNumber(100e18),
+    new BigNumber(100e18),
+    METAMASK_ADDRESS,
+    new BigNumber(2105300114),
+    { from: METAMASK_ADDRESS }
+  )
+  console.log("ARTHS / WETH swapped");
+
+  // Handle ARTHS / USDC
+  // Targeting 5.2 ARTHS / 1 USDC
+  await swapToPriceInstance.swapToPrice(
+    arthsInstance.address,
+    col_instance_USDC.address,
+    new BigNumber(52e5),
+    new BigNumber(1e6),
+    new BigNumber(100e18),
+    new BigNumber(100e18),
+    METAMASK_ADDRESS,
+    new BigNumber(2105300114),
+    { from: METAMASK_ADDRESS }
+  )
+  console.log("ARTHS / USDC swapped");
+
+
+  // Handle ARTHS / USDT
+  // Targeting 5.1 ARTHS / 1 USDT
+  await swapToPriceInstance.swapToPrice(
+    arthsInstance.address,
+    col_instance_USDT.address,
+    new BigNumber(51e5),
+    new BigNumber(1e6),
+    new BigNumber(100e18),
+    new BigNumber(100e18),
+    METAMASK_ADDRESS,
+    new BigNumber(2105300114),
+    { from: METAMASK_ADDRESS }
+  )
+  console.log("ARTHS / USDT swapped");
+
+
+  console.log(chalk.red.bold('YOU NEED TO WAIT AT LEAST 24 HOURS HERE NORMALLY, BUT TEMPORARILY RESETTING THE PRICE UPDATE TO ONE SECOND'));
+  console.log(chalk.yellow('===== TEMPORARILY SET THE PERIOD TO 1 SECOND ====='));
+
+  await Promise.all([
+    oracle_instance_ARTH_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.setPeriod(1, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.setPeriod(1, { from: METAMASK_ADDRESS })
+  ])
+
+  console.log(chalk.yellow('===== UPDATE THE PRICES ====='));
+
+  // Make sure the prices are updated
+  await Promise.all([
+    oracle_instance_ARTH_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.update({ from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.update({ from: METAMASK_ADDRESS })
+  ]);
+
+  console.log(chalk.yellow('===== SET THE PERIOD TO BACK TO 1 HOUR ====='));
+  await Promise.all([
+    oracle_instance_ARTH_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDC.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_USDT.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTH_ARTHS.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDC.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_ARTHS_USDT.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDC_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+    oracle_instance_USDT_WETH.setPeriod(3600, { from: METAMASK_ADDRESS }),
+  ]);
+};

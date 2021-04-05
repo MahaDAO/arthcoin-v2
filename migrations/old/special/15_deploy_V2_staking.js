@@ -5,9 +5,9 @@ require('dotenv').config({ path: envPath });
 const constants = require(path.join(__dirname, '../src/types/constants'));
 
 const BigNumber = require('bignumber.js');
-// require('@openzeppelin/test-helpers/configure')({
-//   provider: process.env.NETWORK_ENDPOINT,
-// });
+require('@openzeppelin/test-helpers/configure')({
+  provider: process.env.NETWORK_ENDPOINT,
+});
 
 const { expectEvent, send, shouldFail, time } = require('@openzeppelin/test-helpers');
 const BIG6 = new BigNumber("1e6");
@@ -18,7 +18,7 @@ const Address = artifacts.require("Utils/Address");
 const BlockMiner = artifacts.require("Utils/BlockMiner");
 const MigrationHelper = artifacts.require("Utils/MigrationHelper");
 const StringHelpers = artifacts.require("Utils/StringHelpers");
-const Math = artifacts.require("Math/Math");
+const Math_Artifact = artifacts.require("Math/Math");
 const SafeMath = artifacts.require("Math/SafeMath");
 const Babylonian = artifacts.require("Math/Babylonian");
 const FixedPoint = artifacts.require("Math/FixedPoint");
@@ -48,6 +48,8 @@ const FakeCollateral_USDT = artifacts.require("FakeCollateral/FakeCollateral_USD
 const ArthPoolLibrary = artifacts.require("Arth/Pools/ArthPoolLibrary");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
+const Pool_USDC_V2 = artifacts.require("Arth/Pools/Pool_USDC_V2");
+const Pool_USDT_V2 = artifacts.require("Arth/Pools/Pool_USDT_V2");
 
 // Oracles
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
@@ -67,24 +69,27 @@ const ChainlinkETHUSDPriceConsumerTest = artifacts.require("Oracle/ChainlinkETHU
 // ARTH core
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const ARTHShares = artifacts.require("ARTHS/ARTHShares");
-const TokenVesting = artifacts.require("ARTHS/TokenVesting");
 
 // Governance related
-//const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
+const GovernorAlpha = artifacts.require("Governance/GovernorAlpha");
 const Timelock = artifacts.require("Governance/Timelock");
 
 // Staking contracts
-const StakingRewards_ARTH_WETH = artifacts.require("Staking/Variants/Stake_ARTH_WETH.sol");
-const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_USDC.sol");
-const StakingRewards_ARTH_ARTHS = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS.sol");
-const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTHS_WETH.sol");
+const StakingRewards_ARTH_WETH = artifacts.require("Staking/Variants/Stake_ARTH_WETH");
+const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_USDC");
+const StakingRewards_ARTH_ARTHS = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS");
+const StakingRewards_ARTHS_WETH = artifacts.require("Staking/Variants/Stake_ARTHS_WETH");
+
+// Staking contracts V2
+const StakingRewards_ARTH_WETH_V2 = artifacts.require("Staking/Variants/Stake_ARTH_WETH_V2");
+const StakingRewards_ARTH_USDC_V2 = artifacts.require("Staking/Variants/Stake_ARTH_USDC_V2");
+const StakingRewards_ARTH_ARTHS_V2 = artifacts.require("Staking/Variants/Stake_ARTH_ARTHS_V2");
+const StakingRewards_ARTHS_WETH_V2 = artifacts.require("Staking/Variants/Stake_ARTHS_WETH_V2");
 
 const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666";
 
 // Make sure Ganache is running beforehand
 module.exports = async function (deployer, network, accounts) {
-
-  const IS_MAINNET = (process.env.MIGRATION_MODE == 'mainnet');
 
   // ======== Set the addresses ========
   console.log(chalk.yellow('===== SET THE ADDRESSES ====='));
@@ -98,7 +103,7 @@ module.exports = async function (deployer, network, accounts) {
   // const COLLATERAL_ARTH_AND_ARTHS_OWNER = accounts[8];
 
   // ======== Set other constants ========
-
+  const TWENTY_FIVE_DEC6 = new BigNumber("25e6");
   const ONE_MILLION_DEC18 = new BigNumber("1000000e18");
   const FIVE_MILLION_DEC18 = new BigNumber("5000000e18");
   const TEN_MILLION_DEC18 = new BigNumber("10000000e18");
@@ -141,10 +146,10 @@ module.exports = async function (deployer, network, accounts) {
   let pool_instance_USDC;
   let pool_instance_USDT;
 
-  if (process.env.MIGRATION_MODE == 'ganache') {
+  if (process.env.MIGRATION_MODE != 'mainnet') {
     timelockInstance = await Timelock.deployed();
     migrationHelperInstance = await MigrationHelper.deployed()
-    //governanceInstance = await GovernorAlpha.deployed();
+    governanceInstance = await GovernorAlpha.deployed();
     routerInstance = await UniswapV2Router02_Modified.deployed();
     arthInstance = await ARTHStablecoin.deployed();
     arthsInstance = await ARTHShares.deployed();
@@ -169,9 +174,10 @@ module.exports = async function (deployer, network, accounts) {
     migrationHelperInstance = await MigrationHelper.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].misc.migration_helper);
     arthInstance = await ARTHStablecoin.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTH);
     arthsInstance = await ARTHShares.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].main.ARTHS);
-    //governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
+    governanceInstance = await GovernorAlpha.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].governance);
     wethInstance = await WETH.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].weth);
     col_instance_USDC = await FakeCollateral_USDC.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDC);
+    col_instance_USDT = await FakeCollateral_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].collateral.USDT);
     routerInstance = await UniswapV2Router02.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].uniswap_other.router);
     uniswapFactoryInstance = await UniswapV2Factory.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].uniswap_other.factory);
     swapToPriceInstance = await SwapToPrice.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pricing.swap_to_price);
@@ -188,18 +194,76 @@ module.exports = async function (deployer, network, accounts) {
     pool_instance_USDT = await Pool_USDT.at(CONTRACT_ADDRESSES[process.env.MIGRATION_MODE].pools.USDT);
   }
 
+  return false;
+
+  const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, col_instance_USDC.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTH_ARTHS = await uniswapFactoryInstance.getPair(arthInstance.address, arthsInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+  const pair_addr_ARTHS_WETH = await uniswapFactoryInstance.getPair(arthsInstance.address, wethInstance.address, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+
   // CONTINUE MAIN DEPLOY CODE HERE
   // ====================================================================================================================
   // ====================================================================================================================
 
-  // return false;
+  // Have to do these since Truffle gets messy when you want to link already-deployed libraries
+  console.log(chalk.yellow('========== LINK STUFF =========='));
+  console.log(chalk.blue("--- Linking Math ---"));
+  await deployer.link(Math_Artifact, [StakingRewards_ARTH_WETH_V2, StakingRewards_ARTH_USDC_V2, StakingRewards_ARTH_ARTHS_V2, StakingRewards_ARTHS_WETH_V2]);
 
-  const theTime = await time.latest();
-  if (IS_MAINNET) {
-    await deployer.deploy(TokenVesting, accounts[5], theTime, 86400 * 180, 86400 * 365, true, { from: accounts[0] });
+  console.log(chalk.blue("--- Linking TransferHelper ---"));
+  await deployer.link(TransferHelper, [StakingRewards_ARTH_WETH_V2, StakingRewards_ARTH_USDC_V2, StakingRewards_ARTH_ARTHS_V2, StakingRewards_ARTHS_WETH_V2]);
+
+  console.log(chalk.blue("--- Linking SafeERC20 ---"));
+  await deployer.link(SafeERC20, [StakingRewards_ARTH_WETH_V2, StakingRewards_ARTH_USDC_V2, StakingRewards_ARTH_ARTHS_V2, StakingRewards_ARTHS_WETH_V2]);
+
+  console.log(chalk.blue("--- Linking ARTHStablecoin ---"));
+  await deployer.link(ARTHStablecoin, [StakingRewards_ARTH_WETH_V2, StakingRewards_ARTH_USDC_V2, StakingRewards_ARTHS_WETH_V2, StakingRewards_ARTH_ARTHS_V2]);
+
+  console.log(chalk.blue("--- Linking StringHelpers ---"));
+  await deployer.link(StringHelpers, [StakingRewards_ARTH_WETH_V2, StakingRewards_ARTH_USDC_V2, StakingRewards_ARTHS_WETH_V2, StakingRewards_ARTH_ARTHS_V2]);
+
+  // ======== Deploy the staking contracts ========
+  console.log(chalk.yellow('===== DEPLOY THE STAKING CONTRACTS ====='));
+  await Promise.all([
+    deployer.deploy(StakingRewards_ARTH_WETH_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_WETH, ARTHStablecoin.address, timelockInstance.address, 500000),
+    deployer.deploy(StakingRewards_ARTH_USDC_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_USDC, ARTHStablecoin.address, timelockInstance.address, 500000),
+    deployer.deploy(StakingRewards_ARTH_ARTHS_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTH_ARTHS, ARTHStablecoin.address, timelockInstance.address, 0),
+    deployer.deploy(StakingRewards_ARTHS_WETH_V2, STAKING_OWNER, STAKING_REWARDS_DISTRIBUTOR, arthsInstance.address, pair_addr_ARTHS_WETH, ARTHStablecoin.address, timelockInstance.address, 0)
+  ])
+
+  // ======== Get various staking addresses ========
+  console.log(chalk.yellow('===== GET VARIOUS STAKING ADDRESSES ====='));
+  const stakingInstance_ARTH_WETH_V2 = await StakingRewards_ARTH_WETH_V2.deployed();
+  const stakingInstance_ARTH_USDC_V2 = await StakingRewards_ARTH_USDC_V2.deployed();
+  const stakingInstance_ARTH_ARTHS_V2 = await StakingRewards_ARTH_ARTHS_V2.deployed();
+  const stakingInstance_ARTHS_WETH_V2 = await StakingRewards_ARTHS_WETH_V2.deployed();
+
+  // Transfer ARTHS to staking contracts
+  console.log(chalk.yellow('===== Transfer ARTHS to staking contracts ====='));
+  await Promise.all([
+    arthsInstance.transfer(stakingInstance_ARTH_WETH_V2.address, new BigNumber("100000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 6000000e18
+    arthsInstance.transfer(stakingInstance_ARTH_USDC_V2.address, new BigNumber("100000e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 6000000e18
+    arthsInstance.transfer(stakingInstance_ARTH_ARTHS_V2.address, new BigNumber("100e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }), // eventually should be 1000000e18
+    arthsInstance.transfer(stakingInstance_ARTHS_WETH_V2.address, new BigNumber("100e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }) // eventually should be 1000000e18
+  ]);
+
+  // THIS WILL BE DONE AT A LATER TIME
+  // // ======== Initialize the staking rewards ========
+  // console.log(chalk.yellow.bold('======== Initialize the staking rewards ========'));
+  // await Promise.all([
+  // 	stakingInstance_ARTH_WETH_V2.initializeDefault({ from: STAKING_OWNER }),
+  // 	stakingInstance_ARTH_USDC_V2.initializeDefault({ from: STAKING_OWNER }),
+  // ])
+
+  // ============= Print the new staking contracts ========
+  const NEW_STAKING_CONTRACTS = {
+    staking_contracts: {
+      'Uniswap ARTH/WETH': stakingInstance_ARTH_WETH_V2.address,
+      'Uniswap ARTH/USDC': stakingInstance_ARTH_USDC_V2.address,
+      'Uniswap ARTH/ARTHS': stakingInstance_ARTH_ARTHS_V2.address,
+      'Uniswap ARTHS/WETH': stakingInstance_ARTHS_WETH_V2.address
+    }
   }
-  else {
-    await deployer.deploy(TokenVesting, accounts[5], theTime, 86400, 86400 * 10, true, { from: accounts[0] });
-  }
-  await TokenVesting.deployed();
+  console.log("NEW STAKING CONTRACTS: ", NEW_STAKING_CONTRACTS);
 };
+
