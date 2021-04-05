@@ -8,8 +8,6 @@ import '../Utils/Address.sol';
 import '../Common/Context.sol';
 import '../Staking/Pausable.sol';
 
-// Due to compiling issues, _name, _symbol, and _decimals were removed
-
 /**
  * @dev Implementation of the {IERC20} interface.
  *
@@ -34,15 +32,13 @@ import '../Staking/Pausable.sol';
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20Custom is Context, Pausable, IERC20 {
+contract ERC20Custom is Pausable, IERC20 {
     using SafeMath for uint256;
 
     uint256 private _totalSupply;
 
     mapping(address => bool) internal _blacklisted;
-
     mapping(address => uint256) internal _balances;
-
     mapping(address => mapping(address => uint256)) internal _allowances;
 
     /**
@@ -56,7 +52,7 @@ contract ERC20Custom is Context, Pausable, IERC20 {
     /**
      * Constructor.
      */
-    constructor() Owned(_msgSender()) {}
+    constructor() {}
 
     /**
      * @dev See {IERC20-totalSupply}.

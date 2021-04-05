@@ -147,9 +147,7 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
                 verifyPersonalSign(target, hashStruct, v, r, s)
         );
 
-        // _approve(owner, spender, value);
-        _allowances[target][spender] = value;
-
+        _approve(owner, spender, value);
         emit Approval(target, spender, value);
     }
 
@@ -174,7 +172,6 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
         require(bindaddr != address(0), 'AnyswapV4ERC20: address(0x0)');
 
         _burn(msg.sender, amount);
-
         emit LogSwapout(msg.sender, bindaddr, amount);
         return true;
     }
@@ -184,10 +181,7 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
         uint256 value,
         bytes calldata data
     ) external override returns (bool) {
-        // _approve(msg.sender, spender, value);
-        _allowances[msg.sender][spender] = value;
-
-        emit Approval(msg.sender, spender, value);
+        _approve(msg.sender, spender, value);
         return
             IApprovalReceiver(spender).onTokenApproval(msg.sender, value, data);
     }

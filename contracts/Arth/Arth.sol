@@ -17,30 +17,26 @@ contract ARTHStablecoin is AnyswapV4Token {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
-    string public symbol;
-    string public name;
+    string public symbol = 'ARTH';
+    string public name = 'ARTH Valuecoin';
     uint8 public constant decimals = 18;
 
     address public owner_address;
-    address public creator_address;
     address public timelock_address; // Governance timelock address
-    address public controller_address; // Controller contract to dynamically adjust system parameters automatically
 
     // 2M ARTH (only for testing, genesis supply will be 5k on Mainnet).
     // This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant genesis_supply = 2000000e18;
 
     // Mapping is also used for faster verification
-    mapping(address => bool) public arth_pools;
+    mapping(address => bool) public pools;
     mapping(address => IIncentive) public incentiveContract;
-
-    address public DEFAULT_ADMIN_ADDRESS;
 
     /* ========== MODIFIERS ========== */
 
     modifier onlyPools() {
         require(
-            arth_pools[msg.sender] == true,
+            pools[msg.sender] == true,
             'Only arth pools can call this function'
         );
         _;
@@ -56,10 +52,8 @@ contract ARTHStablecoin is AnyswapV4Token {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address ||
-                msg.sender == timelock_address ||
-                msg.sender == controller_address,
-            'You are not the owner, controller, or the governance timelock'
+            msg.sender == owner() || msg.sender == timelock_address,
+            'You are not the owner,  or the governance timelock'
         );
         _;
     }
@@ -68,66 +62,47 @@ contract ARTHStablecoin is AnyswapV4Token {
         require(
             msg.sender == owner_address ||
                 msg.sender == timelock_address ||
-                arth_pools[msg.sender] == true,
+                pools[msg.sender] == true,
             'You are not the owner, the governance timelock, or a pool'
         );
         _;
     }
 
-    /* ========== CONSTRUCTOR ========== */
-
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        address _creator_address,
-        address _timelock_address
-    ) AnyswapV4Token(_name) {
-        name = _name;
-        symbol = _symbol;
-        creator_address = _creator_address;
+    constructor(address _creator_address, address _timelock_address)
+        AnyswapV4Token(name)
+    {
         timelock_address = _timelock_address;
-
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        DEFAULT_ADMIN_ADDRESS = _msgSender();
         owner_address = _creator_address;
 
-        _mint(creator_address, genesis_supply);
+        _mint(msg.sender, genesis_supply);
     }
 
     /* ========== VIEWS ========== */
 
-    /* ========== RESTRICTED FUNCTIONS ========== */
-
     // Used by pools when user redeems
-    function pool_burn_from(address b_address, uint256 b_amount)
-        public
-        onlyPools
-    {
-        super._burnFrom(b_address, b_amount);
-        emit ARTHBurned(b_address, msg.sender, b_amount);
+    function poolBurnFrom(address who, uint256 amount) public onlyPools {
+        super._burnFrom(who, amount);
+        emit PoolBurned(who, msg.sender, amount);
     }
 
     // This function is what other arth pools will call to mint new ARTH
-    function pool_mint(address m_address, uint256 m_amount) public onlyPools {
-        super._mint(m_address, m_amount);
-        emit ARTHMinted(msg.sender, m_address, m_amount);
+    function poolMint(address who, uint256 amount) public onlyPools {
+        super._mint(who, amount);
+        emit PoolMinted(msg.sender, who, amount);
     }
 
     // Adds collateral addresses supported, such as tether and busd, must be ERC20
-    function addPool(address pool_address) public onlyByOwnerOrGovernance {
-        require(arth_pools[pool_address] == false, 'address already exists');
-        arth_pools[pool_address] = true;
+    function addPool(address pool) public onlyByOwnerOrGovernance {
+        require(pools[pool] == false, 'address already exists');
+        pools[pool] = true;
     }
 
     // Remove a pool
-    function removePool(address pool_address) public onlyByOwnerOrGovernance {
-        require(
-            arth_pools[pool_address] == true,
-            "address doesn't exist already"
-        );
+    function removePool(address pool) public onlyByOwnerOrGovernance {
+        require(pools[pool] == true, "address doesn't exist already");
 
         // Delete from the mapping
-        delete arth_pools[pool_address];
+        delete pools[pool];
     }
 
     function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
@@ -139,13 +114,6 @@ contract ARTHStablecoin is AnyswapV4Token {
         onlyByOwnerOrGovernance
     {
         timelock_address = new_timelock;
-    }
-
-    function setController(address _controller_address)
-        external
-        onlyByOwnerOrGovernance
-    {
-        controller_address = _controller_address;
     }
 
     function _checkAndApplyIncentives(
@@ -201,11 +169,6 @@ contract ARTHStablecoin is AnyswapV4Token {
         _checkAndApplyIncentives(sender, recipient, amount);
     }
 
-    /* ========== EVENTS ========== */
-
-    // Track ARTH burned
-    event ARTHBurned(address indexed from, address indexed to, uint256 amount);
-
-    // Track ARTH minted
-    event ARTHMinted(address indexed from, address indexed to, uint256 amount);
+    event PoolBurned(address indexed from, address indexed to, uint256 amount);
+    event PoolMinted(address indexed from, address indexed to, uint256 amount);
 }
