@@ -325,7 +325,7 @@ contract ArthPool is AccessControl {
             collateral_amount
         );
 
-        ARTH.pool_mint(msg.sender, arth_amount_d18);
+        ARTH.poolMint(msg.sender, arth_amount_d18);
 
         return arth_amount_d18;
     }
@@ -381,8 +381,8 @@ contract ArthPool is AccessControl {
             .div(1e6);
         require(ARTH_out_min <= arth_amount_d18, 'Slippage limit reached');
 
-        ARTHX.pool_burn_from(msg.sender, arthx_amount_d18);
-        ARTH.pool_mint(msg.sender, arth_amount_d18);
+        ARTHX.poolBurnFrom(msg.sender, arthx_amount_d18);
+        ARTH.poolMint(msg.sender, arth_amount_d18);
 
         return arth_amount_d18;
     }
@@ -462,13 +462,13 @@ contract ArthPool is AccessControl {
         require(ARTH_out_min <= mint_amount, 'Slippage limit reached');
         require(arthx_needed <= arthx_amount, 'Not enough ARTHX inputted');
 
-        ARTHX.pool_burn_from(msg.sender, arthx_needed);
+        ARTHX.poolBurnFrom(msg.sender, arthx_needed);
         collateral_token.transferFrom(
             msg.sender,
             address(this),
             collateral_amount
         );
-        ARTH.pool_mint(address(this), mint_amount);
+        ARTH.poolMint(address(this), mint_amount);
 
         return mint_amount;
     }
@@ -578,7 +578,7 @@ contract ArthPool is AccessControl {
         _chargeStabilityFee(ARTH_amount);
 
         // Move all external functions to the end
-        ARTH.pool_burn_from(msg.sender, ARTH_amount);
+        ARTH.poolBurnFrom(msg.sender, ARTH_amount);
     }
 
     // Will fail if fully collateralized or algorithmic
@@ -649,8 +649,8 @@ contract ArthPool is AccessControl {
         _chargeStabilityFee(ARTH_amount);
 
         // Move all external functions to the end
-        ARTH.pool_burn_from(msg.sender, ARTH_amount);
-        ARTHX.pool_mint(address(this), arthx_amount);
+        ARTH.poolBurnFrom(msg.sender, ARTH_amount);
+        ARTHX.poolMint(address(this), arthx_amount);
     }
 
     // Redeem ARTH for ARTHX. 0% collateral-backed
@@ -684,8 +684,8 @@ contract ArthPool is AccessControl {
         _chargeStabilityFee(ARTH_amount);
 
         // Move all external functions to the end
-        ARTH.pool_burn_from(msg.sender, ARTH_amount);
-        ARTHX.pool_mint(address(this), arthx_amount);
+        ARTH.poolBurnFrom(msg.sender, ARTH_amount);
+        ARTHX.poolMint(address(this), arthx_amount);
     }
 
     // After a redemption happens, transfer the newly minted ARTHX and owed collateral from this pool
@@ -800,7 +800,7 @@ contract ArthPool is AccessControl {
             collateral_units_precision
         );
 
-        ARTHX.pool_mint(msg.sender, arthx_paid_back);
+        ARTHX.poolMint(msg.sender, arthx_paid_back);
 
         return arthx_paid_back;
     }
@@ -865,7 +865,7 @@ contract ArthPool is AccessControl {
             'Slippage limit reached'
         );
         // Give the sender their desired collateral and burn the ARTHX
-        ARTHX.pool_burn_from(msg.sender, ARTHX_amount);
+        ARTHX.poolBurnFrom(msg.sender, ARTHX_amount);
         collateral_token.transfer(msg.sender, collateral_precision);
     }
 

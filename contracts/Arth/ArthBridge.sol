@@ -42,7 +42,7 @@ contract ArthBridge is AccessControl {
 
     /* ========== VIEWS ========== */
 
-    // Needed for compatibility to use pool_mint()
+    // Needed for compatibility to use poolMint()
     function collatDollarBalance() public pure returns (uint256) {
         return 0;
     }
@@ -56,7 +56,7 @@ contract ArthBridge is AccessControl {
     ) external {
         ARTH.transferFrom(msg.sender, address(this), _amount_d18);
         cumulative_deposits += _amount_d18;
-        ARTH.pool_burn_from(address(this), _amount_d18);
+        ARTH.poolBurnFrom(address(this), _amount_d18);
         emit receivedDeposit(_chain_id, _to, _amount_d18);
     }
 
@@ -67,7 +67,7 @@ contract ArthBridge is AccessControl {
         onlyByOwnerOrGovernance
     {
         cumulative_withdrawals += _amount_d18;
-        ARTH.pool_mint(_to, _amount_d18);
+        ARTH.poolMint(_to, _amount_d18);
     }
 
     /* ========== EVENTS ========== */

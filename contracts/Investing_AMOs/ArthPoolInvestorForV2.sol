@@ -187,7 +187,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
     }
 
     // This is basically a workaround to transfer USDC from the ArthPool to this investor contract
-    // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like pool_mint and pool_burn_from
+    // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like poolMint and poolBurnFrom
     // on the main ARTH contract
     // It mints ARTH from nothing, and redeems it on the target pool for collateral and ARTHX.
     // The burn can be called separately later on
@@ -220,7 +220,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         borrowed_historical = borrowed_historical.add(expected_collat_amount);
 
         // Mint the arth
-        ARTH.pool_mint(address(this), arth_amount);
+        ARTH.poolMint(address(this), arth_amount);
 
         // Redeem the arth
         ARTH.approve(address(pool), arth_amount);
@@ -246,7 +246,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
 
     function burnARTHX(uint256 amount) public onlyByOwnerOrGovernance {
         ARTHX.approve(address(this), amount);
-        ARTHX.pool_burn_from(address(this), amount);
+        ARTHX.poolBurnFrom(address(this), amount);
     }
 
     /* ========== yearn V2 ========== */

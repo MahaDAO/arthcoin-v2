@@ -99,13 +99,13 @@ contract ARTHShares is AnyswapV4Token {
     }
 
     // This function is what other arth pools will call to mint new ARTHX (similar to the ARTH mint)
-    function pool_mint(address m_address, uint256 m_amount) external onlyPools {
+    function poolMint(address m_address, uint256 m_amount) external onlyPools {
         super._mint(m_address, m_amount);
         emit ARTHXMinted(address(this), m_address, m_amount);
     }
 
     // This function is what other arth pools will call to burn ARTHX
-    function pool_burn_from(address b_address, uint256 b_amount)
+    function poolBurnFrom(address b_address, uint256 b_amount)
         external
         onlyPools
     {

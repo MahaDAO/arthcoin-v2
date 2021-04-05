@@ -224,7 +224,7 @@ contract ArthBondIssuerOld is AccessControl {
     //     // Decrement the unissued amount
     //     issuable_arthb = issuable_arthb.sub(arthb_out);
     //     // Burn ARTH from the sender
-    //     ARTH.pool_burn_from(msg.sender, arth_amount);
+    //     ARTH.poolBurnFrom(msg.sender, arth_amount);
     //     // Mint ARTHB to the sender
     //     ARTHB.issuer_mint(msg.sender, arthb_out);
     // }
@@ -322,7 +322,7 @@ contract ArthBondIssuerOld is AccessControl {
     //     arth_fee = arthb_amount.mul(redemption_fee).div(PRICE_PRECISION);
     //     arth_out = arthb_amount.sub(arth_fee);
     //     // Give the ARTH to the redeemer
-    //     ARTH.pool_mint(msg.sender, arth_out);
+    //     ARTH.poolMint(msg.sender, arth_out);
     //     emit ARTHB_Redeemed(msg.sender, arthb_amount, arth_out);
     // }
     // /* ========== RESTRICTED INTERNAL FUNCTIONS ========== */
@@ -334,7 +334,7 @@ contract ArthBondIssuerOld is AccessControl {
     //     uint256 arth_inside_contract = ARTH.balanceOf(address(this));
     //     if (arth_required > arth_inside_contract){
     //         // Mint the deficiency
-    //         ARTH.pool_mint(address(this), arth_required.sub(arth_inside_contract));
+    //         ARTH.poolMint(address(this), arth_required.sub(arth_inside_contract));
     //     }
     //     else if (arth_required < arth_inside_contract){
     //         // Burn the excess

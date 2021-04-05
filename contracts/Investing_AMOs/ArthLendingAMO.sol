@@ -187,7 +187,7 @@ contract ArthLendingAMO is AccessControl {
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like pool_mint and pool_burn_from
+    // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like poolMint and poolBurnFrom
     // on the main ARTH contract
     function mintARTHForInvestments(uint256 arth_amount)
         public
@@ -221,7 +221,7 @@ contract ArthLendingAMO is AccessControl {
         );
 
         // Mint the arth
-        ARTH.pool_mint(address(this), arth_amount);
+        ARTH.poolMint(address(this), arth_amount);
     }
 
     // Give USDC profits back
@@ -238,7 +238,7 @@ contract ArthLendingAMO is AccessControl {
     // Burn unneeded ARTHX
     function burnARTHX(uint256 amount) public onlyByOwnerOrGovernance {
         ARTHX.approve(address(this), amount);
-        ARTHX.pool_burn_from(address(this), amount);
+        ARTHX.poolBurnFrom(address(this), amount);
     }
 
     /* ==================== CREAM ==================== */

@@ -402,7 +402,7 @@ contract CurveAMO is AccessControl {
     /* ========== RESTRICTED FUNCTIONS ========== */
 
     // This is basically a workaround to transfer USDC from the ArthPool to this investor contract
-    // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like pool_mint and pool_burn_from
+    // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like poolMint and poolBurnFrom
     // on the main ARTH contract
     // It mints ARTH from nothing, and redeems it on the target pool for collateral and ARTHX
     // The burn can be called separately later on
@@ -434,7 +434,7 @@ contract CurveAMO is AccessControl {
         );
 
         // Mint the arth
-        ARTH.pool_mint(address(this), arth_amount);
+        ARTH.poolMint(address(this), arth_amount);
 
         // Redeem the arth
         ARTH.approve(address(pool), arth_amount);
@@ -459,7 +459,7 @@ contract CurveAMO is AccessControl {
 
     function burnARTHX(uint256 amount) public onlyByOwnerOrGovernance {
         ARTHX.approve(address(this), amount);
-        ARTHX.pool_burn_from(address(this), amount);
+        ARTHX.poolBurnFrom(address(this), amount);
     }
 
     function metapoolDeposit(uint256 _arth_amount, uint256 _collateral_amount)
@@ -468,7 +468,7 @@ contract CurveAMO is AccessControl {
         returns (uint256 metapool_LP_received)
     {
         // Mint the ARTH component
-        ARTH.pool_mint(address(this), _arth_amount);
+        ARTH.poolMint(address(this), _arth_amount);
         minted_arth_historical = minted_arth_historical.add(_arth_amount);
         require(
             arthBalance() <= max_arth_outstanding,

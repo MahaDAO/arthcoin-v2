@@ -388,7 +388,7 @@ contract ArthBondIssuer is AccessControl {
         }
 
         // Burn ARTH from the sender. No vAMM balance change here
-        ARTH.pool_burn_from(msg.sender, arth_in);
+        ARTH.poolBurnFrom(msg.sender, arth_in);
 
         // Mint ARTHB to the sender. No vAMM balance change here
         ARTHB.issuer_mint(msg.sender, arthb_out);
@@ -538,7 +538,7 @@ contract ArthBondIssuer is AccessControl {
         vBal_ARTHB = vBal_ARTHB.add(arthb_in);
 
         // Give ARTH to sender from the vAMM and decrease the virtual balance
-        ARTH.pool_mint(msg.sender, arth_out);
+        ARTH.poolMint(msg.sender, arth_out);
         vBal_ARTH = vBal_ARTH.sub(arth_out);
 
         // If any ARTHB was sold under the floor price, retire / burn it and rebalance the pool
@@ -565,7 +565,7 @@ contract ArthBondIssuer is AccessControl {
         arth_out = arthb_in.sub(arth_fee);
 
         // Give the ARTH to the redeemer
-        ARTH.pool_mint(msg.sender, arth_out);
+        ARTH.poolMint(msg.sender, arth_out);
 
         emit ARTHB_Redeemed(msg.sender, arthb_in, arth_out);
     }

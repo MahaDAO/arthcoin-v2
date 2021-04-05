@@ -70,11 +70,11 @@ interface IArthPartial {
 
     function last_call_time() external returns (uint256);
 
-    function pool_mint(address m_address, uint256 m_amount) external;
+    function poolMint(address m_address, uint256 m_amount) external;
 
     function burn(uint256 amount) external;
 
-    function pool_burn_from(address b_address, uint256 b_amount) external;
+    function poolBurnFrom(address b_address, uint256 b_amount) external;
 
     /* ========== VIEWS ========== */
     function arth_price() external returns (uint256);

@@ -12,10 +12,10 @@ import '../ERC20/IERC20.sol';
  *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
  */
 interface IArth is IERC20 {
-    function pool_burn_from(address b_address, uint256 b_amount) external;
+    function poolBurnFrom(address b_address, uint256 b_amount) external;
 
     // This function is what other arth pools will call to mint new ARTH
-    function pool_mint(address m_address, uint256 m_amount) external;
+    function poolMint(address m_address, uint256 m_amount) external;
 
     // Adds collateral addresses supported, such as tether and busd, must be ERC20
     function addPool(address pool_address) external;

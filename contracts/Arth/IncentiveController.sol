@@ -300,7 +300,7 @@ contract IncentiveController is AccessControl, IIncentive {
         _updateTimeWeight(weight, finalDeviation, initialDeviation);
 
         if (incentive != 0)
-            ARTHStablecoin(arthAddr).pool_mint(target, incentive); // POOL_MINT? or create seperate mint for controller?
+            ARTHStablecoin(arthAddr).poolMint(target, incentive); // poolMint? or create seperate mint for controller?
     }
 
     function _getFinalPrice(

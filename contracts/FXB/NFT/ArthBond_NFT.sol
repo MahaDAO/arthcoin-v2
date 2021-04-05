@@ -283,7 +283,7 @@ contract ArthBond_NFT is ERC721, AccessControl {
         return_value = purchase_price.add(maturity_value);
 
         // Mint the ARTH
-        ARTH.pool_mint(msg.sender, return_value);
+        ARTH.poolMint(msg.sender, return_value);
 
         // Increment the redeem count
         redeemed_bonds_count++;

@@ -520,7 +520,7 @@
 //             'Pool ceiling reached, no more ARTH can be minted with this collateral'
 //         );
 
-//         ARTHS.pool_burn_from(msg.sender, arthx_needed);
+//         ARTHS.poolBurnFrom(msg.sender, arthx_needed);
 //         collateral_token.transferFrom(msg.sender, address(this), collat_needed);
 
 //         // Sanity check to make sure the ARTH mint amount is close to the expected amount from the collateral input
@@ -535,7 +535,7 @@
 //                     .div(global_collateral_ratio),
 //             '[max_drift_band] Too much ARTH being minted'
 //         );
-//         ARTH.pool_mint(msg.sender, total_arth_mint);
+//         ARTH.poolMint(msg.sender, total_arth_mint);
 
 //         return (total_arth_mint, collat_needed, arthx_needed);
 //     }
@@ -649,8 +649,8 @@
 
 //         lastRedeemed[msg.sender] = block.number;
 
-//         ARTH.pool_burn_from(msg.sender, ARTH_amount);
-//         ARTHS.pool_mint(address(this), arthx_out);
+//         ARTH.poolBurnFrom(msg.sender, ARTH_amount);
+//         ARTHS.poolMint(address(this), arthx_out);
 
 //         return (ARTH_amount, collat_out, arthx_out);
 //     }
@@ -754,7 +754,7 @@
 //         // Add in the bonus
 //         arthx_out = arthx_out.add(arthx_out.mul(bonus_rate).div(1e6));
 
-//         ARTHS.pool_mint(msg.sender, arthx_out);
+//         ARTHS.poolMint(msg.sender, arthx_out);
 
 //         return (collateral_amount, arthx_out);
 //     }
@@ -787,7 +787,7 @@
 //             collat_virtual_reserves
 //         );
 
-//         ARTHS.pool_burn_from(msg.sender, ARTHS_amount);
+//         ARTHS.poolBurnFrom(msg.sender, ARTHS_amount);
 
 //         // Sanity check to make sure the value of the outgoing collat amount is close to the expected amount based on the ARTHX input
 //         // Useful in case of a sandwich attack or some other fault with the virtual reserves

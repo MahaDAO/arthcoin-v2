@@ -330,7 +330,7 @@ contract ArthBondIssuerWithDeposits is AccessControl {
     //     // Give 1 ARTH per 1 ARTHB, minus the redemption fee
     //     arth_fee = arthb_amount.mul(redemption_fee).div(PRICE_PRECISION);
     //     arth_out = arthb_amount.sub(arth_fee);
-    //     ARTH.pool_mint(msg.sender, arth_out);
+    //     ARTH.poolMint(msg.sender, arth_out);
     //     emit ARTHB_Redeemed(msg.sender, arthb_amount, arth_out);
     // }
     // function redeemDepositedARTHB(bytes32 kek_id) external notDepositRedeemingPaused returns (uint256 arth_out, uint256 arth_fee) {
@@ -354,7 +354,7 @@ contract ArthBondIssuerWithDeposits is AccessControl {
     //     // Give 1 ARTH per 1 ARTHB, minus the redemption fee
     //     arth_fee = arthb_amount.mul(redemption_fee).div(PRICE_PRECISION);
     //     uint256 arth_out = arthb_amount.sub(arth_fee);
-    //     ARTH.pool_mint(msg.sender, arth_out);
+    //     ARTH.poolMint(msg.sender, arth_out);
     //     emit ARTHB_Deposit_Redeemed(msg.sender, arthb_amount, arth_out, epoch_end, kek_id);
     // }
     // /* ========== RESTRICTED INTERNAL FUNCTIONS ========== */
@@ -410,7 +410,7 @@ contract ArthBondIssuerWithDeposits is AccessControl {
     //     // Update max_arthb_outstanding
     //     max_arthb_outstanding = max_arthb_outstanding.add(arthb_expansion_amount);
     //     // Mint the required ARTH
-    //     ARTH.pool_mint(address(this), arthb_expansion_amount.mul(arthb_spot_price).div(PRICE_PRECISION));
+    //     ARTH.poolMint(address(this), arthb_expansion_amount.mul(arthb_spot_price).div(PRICE_PRECISION));
     //     // Mint the required ARTHB
     //     ARTHB.issuer_mint(address(this), arthb_expansion_amount);
     // }
@@ -438,7 +438,7 @@ contract ArthBondIssuerWithDeposits is AccessControl {
     //         uint256 arth_inside_contract = ARTH.balanceOf(address(this));
     //         if (desired_arth_amount > arth_inside_contract){
     //             // Mint the deficiency
-    //             ARTH.pool_mint(address(this), desired_arth_amount.sub(arth_inside_contract));
+    //             ARTH.poolMint(address(this), desired_arth_amount.sub(arth_inside_contract));
     //         }
     //         else if (desired_arth_amount < arth_inside_contract){
     //             // Burn the excess
