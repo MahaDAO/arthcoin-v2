@@ -3,6 +3,9 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
+import '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import '@openzeppelin/contracts/utils/math/SignedSafeMath.sol';
+
 import '../Math//Math.sol';
 import '../Math/SafeMath.sol';
 import './IIncentive.sol';
@@ -13,7 +16,9 @@ import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
 
 contract IncentiveController is AccessControl, IIncentive {
+    using SafeCast for int256;
     using SafeMath for uint256;
+    using SignedSafeMath for int256;
 
     /**
      * Data structures.
@@ -161,7 +166,7 @@ contract IncentiveController is AccessControl, IIncentive {
         )
     {
         (uint256 initialDeviation, uint256 finalDeviation) =
-            _getPriceDeviations(amount);
+            _getPriceDeviations(int256(amount));
         (uint256 reserveARTH, uint256 reserveOther) = getReserves();
 
         // If trafe ends above peg, it was always above peg and no penalty needed.
@@ -222,7 +227,7 @@ contract IncentiveController is AccessControl, IIncentive {
     function incentivize(
         address sender,
         address receiver,
-        address operator,
+        address,
         uint256 amountIn
     ) public override {
         require(sender != receiver, 'UniswapIncentive: cannot send self');
@@ -259,7 +264,10 @@ contract IncentiveController is AccessControl, IIncentive {
 
         // Partial buy should update time weight.
         if (initialDeviation > finalDeviation) {
-            uint256 remainingRatio = finalDeviation.div(initialDeviation);
+            uint256 remainingRatio =
+                finalDeviation.mul(PRICE_PRECISION).div(initialDeviation).div(
+                    PRICE_PRECISION
+                );
 
             updatedWeight = remainingRatio.mul(uint256(currentWeight));
         }
@@ -295,35 +303,45 @@ contract IncentiveController is AccessControl, IIncentive {
     }
 
     function _getFinalPrice(
-        uint256 amountARTH,
+        int256 amountARTH,
         uint256 reserveARTH,
         uint256 reserveOther
     ) internal pure returns (uint256) {
         uint256 k = reserveARTH.mul(reserveOther);
-        // TODO: consider a sepereate fee for buy side also.
-        uint256 amountARTHWithFee = amountARTH.mul(997).div(1000);
 
-        uint256 adjustedReserveARTH = reserveARTH.sub(amountARTHWithFee);
-        uint256 adjustedReserveOther = k / adjustedReserveARTH;
+        // Buys already have fee factored in on uniswap's other token side.
+        int256 amountARTHWithFee =
+            amountARTH > 0 ? amountARTH.mul(997).div(1000) : amountARTH;
+
+        int256 reserveARTHSignedFormat = int256(reserveARTH);
+        uint256 adjustedReserveARTH =
+            uint256(reserveARTHSignedFormat.add(amountARTHWithFee));
+        uint256 adjustedReserveOther = k.div(adjustedReserveARTH);
 
         return
-            adjustedReserveARTH.mul(PRICE_PRECISION).div(adjustedReserveOther);
+            adjustedReserveARTH
+                .mul(PRICE_PRECISION)
+                .div(adjustedReserveOther)
+                .div(PRICE_PRECISION);
     }
 
     function _deviationBelowPeg(uint256 price) internal view returns (uint256) {
         if (price > targetPrice) return 0;
 
-        return targetPrice.sub(price).mul(PRICE_PRECISION).div(targetPrice);
+        return
+            targetPrice.sub(price).mul(PRICE_PRECISION).div(targetPrice).div(
+                PRICE_PRECISION
+            );
     }
 
-    function _getPriceDeviations(uint256 amountIn)
+    function _getPriceDeviations(int256 amountIn)
         internal
         view
         returns (uint256, uint256)
     {
+        uint256 price = getCurrentArthPrice();
         (uint256 reservesARTH, uint256 reservesQuote) = getReserves();
 
-        uint256 price = getCurrentArthPrice();
         uint256 initialDeviation = _deviationBelowPeg(price);
 
         uint256 finalPrice =
@@ -425,8 +443,10 @@ contract IncentiveController is AccessControl, IIncentive {
         )
     {
         uint32 weight = getTimeWeight();
+
+        int256 amountSignedFormat = int256(amount);
         (uint256 initialDeviation, uint256 finalDeviation) =
-            _getPriceDeviations(amount);
+            _getPriceDeviations(amountSignedFormat.mul(-1));
         (uint256 reserveARTH, uint256 reserveOther) = getReserves();
 
         // Buy started above peg.
