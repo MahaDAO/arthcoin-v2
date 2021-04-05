@@ -16,6 +16,7 @@ import '../Oracle/UniswapPairOracle.sol';
 import '../Governance/AccessControl.sol';
 import './aave/IAAVELendingPool_Partial.sol';
 import './compound/ICompComptrollerPartial.sol';
+import '../Arth/ArthController.sol';
 
 /**
  *  Original code written by:
@@ -34,6 +35,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
     ARTHShares private ARTHS;
     ARTHStablecoin private ARTH;
     ArthPool private pool;
+    ArthController private controller;
 
     // Pools and vaults
     IyUSDC_V2_Partial private yUSDC_V2 =
@@ -167,7 +169,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
                     .mul(pool.pausedPrice())
                     .div(PRICE_PRECISION);
         } else {
-            uint256 eth_usd_price = ARTH.eth_usd_price();
+            uint256 eth_usd_price = controller.eth_usd_price();
             uint256 eth_collat_price =
                 UniswapPairOracle(pool.collat_eth_oracle_address()).consult(
                     weth_address,
@@ -199,7 +201,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         );
         uint256 redemption_fee = pool.redemption_fee();
         uint256 col_price_usd = pool.getCollateralPrice();
-        uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
+        uint256 global_collateral_ratio = controller.global_collateral_ratio();
         uint256 redeem_amount_E6 =
             (arth_amount.mul(uint256(1e6).sub(redemption_fee))).div(1e6).div(
                 10**missing_decimals

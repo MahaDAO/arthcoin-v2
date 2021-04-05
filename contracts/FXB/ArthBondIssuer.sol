@@ -8,6 +8,7 @@ import '../Arth/Arth.sol';
 import '../ERC20/ERC20.sol';
 import '../Math/SafeMath.sol';
 import '../Governance/AccessControl.sol';
+import '../Arth/ArthController.sol';
 
 /**
  *  Original code written by:
@@ -21,6 +22,7 @@ contract ArthBondIssuer is AccessControl {
 
     ARTHStablecoin private ARTH;
     ArthBond private ARTHB;
+    ArthController private controller;
 
     address public owner_address;
     address public timelock_address;
@@ -333,11 +335,11 @@ contract ArthBondIssuer is AccessControl {
         require(isInEpoch(), 'Not in an epoch');
         require(issuable_arthb > 0, 'No new ARTHB to issue');
         require(
-            ARTH.arth_price() < PRICE_PRECISION,
+            controller.arth_price() < PRICE_PRECISION,
             'ARTH price must be less than $1'
         );
         require(
-            ARTH.global_collateral_ratio() >= min_collateral_ratio,
+            controller.global_collateral_ratio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 
@@ -641,7 +643,7 @@ contract ArthBondIssuer is AccessControl {
     ) external onlyByOwnerControllerOrGovernance {
         require(isInEpoch(), 'Not in an epoch');
         require(
-            ARTH.global_collateral_ratio() >= min_collateral_ratio,
+            controller.global_collateral_ratio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 
@@ -664,7 +666,7 @@ contract ArthBondIssuer is AccessControl {
     ) external onlyByOwnerControllerOrGovernance {
         require(isInEpoch(), 'Not in an epoch');
         require(
-            ARTH.global_collateral_ratio() >= min_collateral_ratio,
+            controller.global_collateral_ratio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 

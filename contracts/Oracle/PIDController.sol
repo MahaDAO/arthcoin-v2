@@ -6,6 +6,7 @@ import '../Arth/Arth.sol';
 import '../Math/SafeMath.sol';
 import './ReserveTracker.sol';
 import '../Curve/IMetaImplementationUSD.sol';
+import '../Arth/ArthController.sol';
 
 /**
  *  Original code written by:
@@ -20,6 +21,7 @@ contract PIDController {
     ARTHShares public ARTHS;
     ReserveTracker public reserve_tracker;
     IMetaImplementationUSD arth_metapool;
+    ArthController private controller;
 
     address public arth_contract_address;
     address public arths_contract_address;
@@ -125,7 +127,7 @@ contract PIDController {
 
         uint256 new_growth_ratio = arths_liquidity.div(arth_supply); // (E18 + E6) / E18
 
-        uint256 last_collateral_ratio = ARTH.global_collateral_ratio();
+        uint256 last_collateral_ratio = controller.global_collateral_ratio();
         uint256 new_collateral_ratio = last_collateral_ratio;
 
         // First, check if the price is out of the band
@@ -161,26 +163,26 @@ contract PIDController {
                 delta_collateral_ratio =
                     new_collateral_ratio -
                     last_collateral_ratio;
-                ARTH.setPriceTarget(0); // Set to zero to increase CR
+                controller.setPriceTarget(0); // Set to zero to increase CR
                 emit ARTHdecollateralize(new_collateral_ratio);
             } else if (new_collateral_ratio < last_collateral_ratio) {
                 delta_collateral_ratio =
                     last_collateral_ratio -
                     new_collateral_ratio;
-                ARTH.setPriceTarget(1000e6); // Set to high value to decrease CR
+                controller.setPriceTarget(1000e6); // Set to high value to decrease CR
                 emit ARTHrecollateralize(new_collateral_ratio);
             }
 
-            ARTH.setArthStep(delta_collateral_ratio); // Change by the delta
-            uint256 cooldown_before = ARTH.refresh_cooldown(); // Note the existing cooldown period
-            ARTH.setRefreshCooldown(0); // Unlock the CR cooldown
+            controller.setArthStep(delta_collateral_ratio); // Change by the delta
+            uint256 cooldown_before = controller.refresh_cooldown(); // Note the existing cooldown period
+            controller.setRefreshCooldown(0); // Unlock the CR cooldown
 
-            ARTH.refreshCollateralRatio(); // Refresh CR
+            controller.refreshCollateralRatio(); // Refresh CR
 
             // Reset params
-            ARTH.setArthStep(0);
-            ARTH.setRefreshCooldown(cooldown_before); // Set the cooldown period to what it was before, or until next controller refresh
-            ARTH.setPriceTarget(1e6);
+            controller.setArthStep(0);
+            controller.setRefreshCooldown(cooldown_before); // Set the cooldown period to what it was before, or until next controller refresh
+            controller.setPriceTarget(1e6);
         }
 
         growth_ratio = new_growth_ratio;

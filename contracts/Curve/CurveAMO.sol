@@ -12,6 +12,7 @@ import '../Math/SafeMath.sol';
 import './ILiquidityGauge.sol';
 import './IStableSwap3Pool.sol';
 import './IMetaImplementationUSD.sol';
+import '../Arth/ArthController.sol';
 
 /**
  *  Original code written by:
@@ -32,6 +33,7 @@ contract CurveAMO is AccessControl {
     ARTHShares private ARTHS;
     ERC20 private collateral_token;
     ERC20 private CRV = ERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
+    ArthController private controller;
 
     address public arth3crv_metapool_address;
     address public three_pool_address;
@@ -134,7 +136,7 @@ contract CurveAMO is AccessControl {
 
         uint256 arth_withdrawable =
             (collat_info[0])
-                .mul(ARTH.global_collateral_ratio())
+                .mul(controller.global_collateral_ratio())
                 .mul(ARTH.balanceOf(arth3crv_metapool_address))
                 .div(collat_info[1])
                 .div(uint256(1e6));
@@ -181,7 +183,7 @@ contract CurveAMO is AccessControl {
         uint256 _3pool_withdrawable;
         if (arth3crv_supply > 0) {
             _3pool_withdrawable = lp_owned
-                .mul(ARTH.global_collateral_ratio())
+                .mul(controller.global_collateral_ratio())
                 .mul(three_pool_erc20.balanceOf(arth3crv_metapool_address))
                 .div(arth3crv_supply)
                 .div(uint256(1e6));
@@ -334,7 +336,7 @@ contract CurveAMO is AccessControl {
             uint256(1e18).div(three_pool.get_virtual_price());
 
         uint256 floor_price_arth =
-            uint256(1e18).mul(ARTH.global_collateral_ratio()).div(1e6);
+            uint256(1e18).mul(controller.global_collateral_ratio()).div(1e6);
 
         uint256 arth_received;
         for (uint256 i = 0; i < 256; i++) {
@@ -410,7 +412,7 @@ contract CurveAMO is AccessControl {
         //require(allow_yearn || allow_aave || allow_compound, 'All strategies are currently off');
         uint256 redemption_fee = pool.redemption_fee();
         uint256 col_price_usd = pool.getCollateralPrice();
-        uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
+        uint256 global_collateral_ratio = controller.global_collateral_ratio();
         uint256 redeem_amount_E6 =
             (arth_amount.mul(uint256(1e6).sub(redemption_fee))).div(1e6).div(
                 10**missing_decimals
@@ -497,7 +499,7 @@ contract CurveAMO is AccessControl {
 
         // Make sure the collateral ratio did not fall too much
         uint256 current_collateral_E18 =
-            (ARTH.globalCollateralValue()).mul(10**missing_decimals);
+            (controller.global_collateral_ratio()).mul(10**missing_decimals);
         uint256 cur_arth_supply = ARTH.totalSupply();
         uint256 new_cr =
             (current_collateral_E18.mul(PRICE_PRECISION)).div(cur_arth_supply);

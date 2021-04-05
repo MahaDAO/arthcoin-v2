@@ -11,7 +11,7 @@ interface IArthPool {
 
     function recollat_fee() external returns (uint256);
 
-    function collatDollarBalance() external returns (uint256);
+    function collatDollarBalance() external view returns (uint256);
 
     function availableExcessCollatDV() external returns (uint256);
 

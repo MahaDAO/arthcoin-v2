@@ -233,6 +233,21 @@ contract ArthController is AccessControl {
         }
     }
 
+    // function _total_collateral_value_d18() public view returns (uint256) {
+    //     uint256 total_collateral_value_d18 = 0;
+
+    //     for (uint256 i = 0; i < arth_pools_array.length; i++) {
+    //         // Exclude null addresses
+    //         if (arth_pools_array[i] != address(0)) {
+    //             total_collateral_value_d18 = total_collateral_value_d18.add(
+    //                 IArthPool(arth_pools_array[i]).collatDollarBalance()
+    //             );
+    //         }
+    //     }
+
+    //     return total_collateral_value_d18;
+    // }
+
     // Iterate through all arth pools and calculate all value of collateral in all pools globally
     function globalCollateralValue() public view returns (uint256) {
         uint256 total_collateral_value_d18 = 0;

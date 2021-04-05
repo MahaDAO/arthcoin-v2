@@ -16,6 +16,7 @@ import '../Utils/ReentrancyGuard.sol';
 import '../Uniswap/TransferHelper.sol';
 import '../Governance/AccessControl.sol';
 import './RewardsDistributionRecipient.sol';
+import '../Arth/ArthController.sol';
 
 interface IStaking {
     function stakeFor(address who, uint256 amount) external;
@@ -48,6 +49,7 @@ contract StakingRewards is
     ARTHStablecoin private ARTH;
     ERC20 public rewardsToken;
     ERC20 public stakingToken;
+    ArthController private controller;
     uint256 public periodFinish;
 
     // Constant for various precisions
@@ -157,7 +159,11 @@ contract StakingRewards is
     function crBoostMultiplier() public view returns (uint256) {
         uint256 multiplier =
             uint256(MULTIPLIER_BASE).add(
-                (uint256(MULTIPLIER_BASE).sub(ARTH.global_collateral_ratio()))
+                (
+                    uint256(MULTIPLIER_BASE).sub(
+                        controller.global_collateral_ratio()
+                    )
+                )
                     .mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE))
                     .div(MULTIPLIER_BASE)
             );

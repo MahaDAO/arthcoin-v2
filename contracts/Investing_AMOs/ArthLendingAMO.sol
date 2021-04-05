@@ -20,6 +20,7 @@ import '../Governance/AccessControl.sol';
 import './finnexus/IFNX_ManagerProxy.sol';
 import './finnexus/IFNX_TokenConverter.sol';
 import './finnexus/IFNX_IntegratedStake.sol';
+import '../Arth/ArthController.sol';
 
 contract ArthLendingAMO is AccessControl {
     using SafeMath for uint256;
@@ -30,6 +31,7 @@ contract ArthLendingAMO is AccessControl {
     ARTHShares private ARTHS;
     ARTHStablecoin private ARTH;
     ArthPool private pool;
+    ArthController private controller;
 
     // Cream
     ICREAM_crARTH private crARTH =
@@ -202,13 +204,13 @@ contract ArthLendingAMO is AccessControl {
 
         // Make sure the current CR isn't already too low
         require(
-            ARTH.global_collateral_ratio() > min_cr,
+            controller.global_collateral_ratio() > min_cr,
             'Collateral ratio is already too low'
         );
 
         // Make sure the ARTH minting wouldn't push the CR down too much
         uint256 current_collateral_E18 =
-            (ARTH.globalCollateralValue()).mul(10**missing_decimals);
+            (controller.globalCollateralValue()).mul(10**missing_decimals);
         uint256 cur_arth_supply = ARTH.totalSupply();
         uint256 new_arth_supply = cur_arth_supply.add(arth_amount);
         uint256 new_cr =

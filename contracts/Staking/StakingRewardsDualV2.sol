@@ -14,6 +14,7 @@ import './IStakingRewardsDual.sol';
 import '../Utils/StringHelpers.sol';
 import '../Utils/ReentrancyGuard.sol';
 import '../Uniswap/TransferHelper.sol';
+import '../Arth/ArthController.sol';
 
 /**
  *  Original code written by:
@@ -38,6 +39,7 @@ contract StakingRewardsDualV2 is
     ERC20 public rewardsToken0;
     ERC20 public rewardsToken1;
     ERC20 public stakingToken;
+    ArthController private controller;
     uint256 public periodFinish;
 
     // Constant for various precisions
@@ -215,7 +217,11 @@ contract StakingRewardsDualV2 is
     function crBoostMultiplier() public view returns (uint256) {
         uint256 multiplier =
             uint256(MULTIPLIER_BASE).add(
-                (uint256(MULTIPLIER_BASE).sub(ARTH.global_collateral_ratio()))
+                (
+                    uint256(MULTIPLIER_BASE).sub(
+                        controller.global_collateral_ratio()
+                    )
+                )
                     .mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE))
                     .div(MULTIPLIER_BASE)
             );
