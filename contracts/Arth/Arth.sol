@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../Math/SafeMath.sol';
 import '../ERC20/Variants/AnyswapV4Token.sol';
 import './IIncentive.sol';
 
@@ -14,8 +13,6 @@ import './IIncentive.sol';
  *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
  */
 contract ARTHStablecoin is AnyswapV4Token {
-    using SafeMath for uint256;
-
     /* ========== STATE VARIABLES ========== */
     string public constant symbol = 'ARTH';
     string public constant name = 'ARTH Valuecoin';
@@ -31,8 +28,6 @@ contract ARTHStablecoin is AnyswapV4Token {
     mapping(address => bool) public pools;
     mapping(address => IIncentive) public incentiveContract;
 
-    /* ========== MODIFIERS ========== */
-
     modifier onlyPools() {
         require(
             pools[msg.sender] == true,
@@ -44,17 +39,7 @@ contract ARTHStablecoin is AnyswapV4Token {
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner() || msg.sender == governance,
-            'You are not the owner,  or the governance timelock'
-        );
-        _;
-    }
-
-    modifier onlyByOwnerGovernanceOrPool() {
-        require(
-            msg.sender == owner() ||
-                msg.sender == governance ||
-                pools[msg.sender] == true,
-            'You are not the owner, the governance timelock, or a pool'
+            'You are not the owner, or the governance timelock'
         );
         _;
     }
