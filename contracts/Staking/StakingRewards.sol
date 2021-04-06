@@ -117,7 +117,7 @@ contract StakingRewards is
         address _arth_address,
         address _timelock_address,
         uint256 _pool_weight
-    ) Owned(_owner) {
+    ) {
         owner_address = _owner;
         rewardsToken = ERC20(_rewardsToken);
         stakingToken = ERC20(_stakingToken);

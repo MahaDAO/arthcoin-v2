@@ -10,6 +10,7 @@ import '../Common/Context.sol';
 import '../ERC20/ERC20Custom.sol';
 import '../Governance/AccessControl.sol';
 import '../ERC20/Variants/AnyswapV4Token.sol';
+import '../Arth/ArthController.sol';
 
 /**
  *  Original code written by:
@@ -33,12 +34,13 @@ contract ARTHShares is AnyswapV4Token {
     address public oracle_address;
     address public timelock_address; // Governance timelock address
     ARTHStablecoin private ARTH;
+    ArthController private controller;
 
     /* ========== MODIFIERS ========== */
 
     modifier onlyPools() {
         require(
-            ARTH.arth_pools(msg.sender) == true,
+            controller.arth_pools(msg.sender) == true,
             'Only arth pools can mint new ARTH'
         );
         _;

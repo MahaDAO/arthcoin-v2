@@ -2,10 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import './Owned.sol';
+//import './Owned.sol';
+import '../Common/Ownable.sol';
 
 /// Refer: https://docs.synthetix.io/contracts/RewardsDistributionRecipient
-abstract contract RewardsDistributionRecipient is Owned {
+abstract contract RewardsDistributionRecipient is Ownable {
     address public rewardsDistribution;
 
     //function notifyRewardAmount(uint256 reward) external virtual;

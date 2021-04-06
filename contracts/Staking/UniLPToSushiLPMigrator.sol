@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './Owned.sol';
+//import './Owned.sol';
 import './Pausable.sol';
 import '../Arth/Arth.sol';
 import '../Math/Math.sol';
@@ -113,7 +113,7 @@ contract UniLPToSushiLPMigrator is
         address _owner,
         address _source_staking_contract_addr,
         address _dest_staking_contract_addr
-    ) Owned(_owner) {
+    ) {
         owner_address = _owner;
         source_staking_contract_addr = _source_staking_contract_addr;
         dest_staking_contract_addr = _dest_staking_contract_addr;

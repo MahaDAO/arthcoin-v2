@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './Owned.sol';
+//import './Owned.sol';
 import './Pausable.sol';
 import '../Arth/Arth.sol';
 import '../Math/Math.sol';
@@ -26,7 +26,7 @@ import '../Arth/ArthController.sol';
  */
 contract StakingRewardsDualV2 is
     IStakingRewardsDual,
-    Owned,
+    //Owned,
     ReentrancyGuard,
     Pausable
 {
@@ -170,7 +170,7 @@ contract StakingRewardsDualV2 is
         address _timelock_address,
         uint256 _pool_weight0,
         uint256 _pool_weight1
-    ) Owned(_owner) {
+    ) {
         owner_address = _owner;
         rewardsToken0 = ERC20(_rewardsToken0);
         rewardsToken1 = ERC20(_rewardsToken1);

@@ -147,7 +147,7 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
                 verifyPersonalSign(target, hashStruct, v, r, s)
         );
 
-        _approve(owner, spender, value);
+        _approve(target, spender, value);
         emit Approval(target, spender, value);
     }
 
