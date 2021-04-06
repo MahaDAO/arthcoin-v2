@@ -38,9 +38,9 @@ contract ArthPoolRouter {
         uint256 arthOut = pool.mint1t1ARTH(collateralAmount, ARTHOutMin);
         ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
 
-        if (lockDuration == 0)
-            stakingPoolARTH.stakeForLocked(msg.sender, arthOut, lockDuration);
-        else stakingPoolARTH.stakeFor(msg.sender, arthOut, lockDuration);
+        if (lockDuration != 0)
+            stakingPoolARTH.stakeLockedFor(msg.sender, arthOut, lockDuration);
+        else stakingPoolARTH.stakeFor(msg.sender, arthOut);
     }
 
     function mint1t1ARTHAndStakeWithPermit(
@@ -69,10 +69,10 @@ contract ArthPoolRouter {
         uint256 arthOut = pool.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
         ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
 
-        if (lockDuration == 0) {
-            stakingPoolARTH.stakeForLocked(msg.sender, arthOut, lockDuration);
+        if (lockDuration != 0) {
+            stakingPoolARTH.stakeLockedFor(msg.sender, arthOut, lockDuration);
         } else {
-            stakingPoolARTH.stakeFor(msg.sender, arthOut, lockDuration);
+            stakingPoolARTH.stakeFor(msg.sender, arthOut);
         }
     }
 

@@ -265,6 +265,19 @@ contract StakingRewards is
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
+    function receiveMint(
+        address from,
+        uint256 amount,
+        uint256 lockedDuration,
+        bytes memory _data
+    ) external override onlyPool {
+        if (lockedDuration != 0) {
+            _stakeLocked(from, amount, lockedDuration);
+        } else {
+            _stake(from, amount);
+        }
+    }
+
     // NOTE: should this be made private or internal?
     function stakeLockedFor(
         address who,

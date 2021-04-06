@@ -22,10 +22,13 @@ interface IArthPool {
         address _weth_address
     ) external;
 
-    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin) external;
+    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
+        external
+        returns (uint256);
 
     function mintAlgorithmicARTH(uint256 arthxAmount_d18, uint256 ARTHOutMin)
-        external;
+        external
+        returns (uint256);
 
     function mintFractionalARTH(
         uint256 collateralAmount,

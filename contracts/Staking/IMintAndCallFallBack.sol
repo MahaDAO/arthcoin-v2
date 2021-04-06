@@ -6,6 +6,7 @@ interface IMintAndCallFallBack {
     function receiveMint(
         address from,
         uint256 amount,
+        uint256 lockedDuration,
         bytes memory _data
     ) external;
 }
