@@ -29,18 +29,26 @@ contract ArthPoolRouter {
         ARTHX = _ARTHX;
     }
 
-    function mint1t1ARTHAndStake(uint256 collateralAmount, uint256 ARTH_out_min)
-        public
-    {
+    function mint1t1ARTHAndStake(
+        uint256 collateralAmount,
+        uint256 ARTH_out_min,
+        uint256 lockDuration
+    ) public {
         collateral.transferFrom(msg.sender, address(this), collateralAmount);
         uint256 arthOut = pool.mint1t1ARTH(collateralAmount, ARTH_out_min);
         ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
-        stakingPoolARTH.stakeFor(msg.sender, arthOut);
+
+        if (lockDuration == 0) {
+            stakingPoolARTH.stakeForLocked(msg.sender, arthOut, lockDuration);
+        } else {
+            stakingPoolARTH.stakeFor(msg.sender, arthOut, lockDuration);
+        }
     }
 
     function mint1t1ARTHAndStakeWithPermit(
         uint256 collateral_amount,
         uint256 ARTH_out_min,
+        uint256 lockDuration,
         uint8 v,
         bytes32 r,
         bytes32 s
@@ -50,19 +58,24 @@ contract ArthPoolRouter {
         //     ...
         // );
 
-        mint1t1ARTHAndStake(collateral_amount, ARTH_out_min);
+        mint1t1ARTHAndStake(collateral_amount, ARTH_out_min, lockDuration);
     }
 
     // 0% collateral-backed
     function mintAlgorithmicARTHAndStake(
         uint256 arthxAmountD18,
         uint256 arthOutMin,
-        uint256 stakeDuration
+        uint256 lockDuration
     ) external {
         ARTHX.transferFrom(msg.sender, address(this), arthxAmountD18);
         uint256 arthOut = pool.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
         ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
-        stakingPoolARTH.stakeFor(msg.sender, arthOut, stakeDuration);
+
+        if (lockDuration == 0) {
+            stakingPoolARTH.stakeForLocked(msg.sender, arthOut, lockDuration);
+        } else {
+            stakingPoolARTH.stakeFor(msg.sender, arthOut, lockDuration);
+        }
     }
 
     function mintAlgorithmicARTHAndStakeWithPermit(
