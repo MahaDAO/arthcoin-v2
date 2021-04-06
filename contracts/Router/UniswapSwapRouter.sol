@@ -7,42 +7,53 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 
-import './IArthRouter.sol';
+import './IUniswapSwapRouter.sol';
 import '../Uniswap/UniswapV2Library.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 
-/// @title A Uniswap Router for FEI/ETH swaps.
-/// @author Fei Protocol.
-contract ArthRouter is IArthRouter {
+/**
+ * @title  A Uniswap Router for tokens involving ARTH.
+ * @author Original code written by FEI Protocol. Modified by MahaDAO.
+ */
+contract UniswapSwapRouter is IUniswapSwapRouter {
     using SafeMath for uint256;
 
     // solhint-disable-next-line var-name-mixedcase
     IWETH public immutable WETH;
-
     // solhint-disable-next-line var-name-mixedcase
     IUniswapV2Pair public immutable PAIR;
 
-    constructor(address pair, address weth) {
-        PAIR = IUniswapV2Pair(pair);
-        WETH = IWETH(weth);
-    }
+    address public arthAddr;
 
     modifier ensure(uint256 deadline) {
-        // solhint-disable-next-line not-rely-on-time
-        require(deadline >= block.timestamp, 'FeiRouter: Expired');
+        require(deadline >= block.timestamp, 'UniswapSwapRouter: Expired');
         _;
     }
 
-    receive() external payable {
-        assert(msg.sender == address(WETH)); // only accept ETH via fallback from the WETH contract
+    constructor(
+        IUniswapV2Pair pair_,
+        IWETH weth_,
+        address arthAddr_
+    ) {
+        WETH = weth_;
+        PAIR = pair_;
+
+        arthAddr = arthAddr_;
     }
 
-    /// @notice buy FEI for ETH with some protections
-    /// @param minReward minimum mint reward for purchasing
-    /// @param amountOutMin minimum FEI received
-    /// @param to address to send FEI
-    /// @param deadline block timestamp after which trade is invalid
-    function buyArth(
+    receive() external payable {
+        // Only accept ETH via fallback from the WETH contract.
+        assert(msg.sender == address(WETH));
+    }
+
+    /**
+     * @notice             Buy ARTH for ETH with some protections.
+     * @param minReward    Minimum mint reward for purchasing.
+     * @param amountOutMin Minimum ARTH received.
+     * @param to           Address to send ARTH.
+     * @param deadline     Block timestamp after which trade is invalid.
+     */
+    function buyARTHForETH(
         uint256 minReward,
         uint256 amountOutMin,
         address to,
@@ -60,39 +71,42 @@ contract ArthRouter is IArthRouter {
 
         require(
             amountOut >= amountOutMin,
-            'FeiRouter: Insufficient output amount'
+            'UniswapSwapRouter: Insufficient output amount'
         );
 
-        // Convert sent ETH to wrapped ETH and assert successful transfer to pair
+        // Convert sent ETH to wrapped ETH and assert successful transfer to pair.
         IWETH(WETH).deposit{value: amountIn}();
         assert(IWETH(WETH).transfer(address(PAIR), amountIn));
 
-        address fei = isWETHPairToken0 ? PAIR.token1() : PAIR.token0();
+        address arth = isWETHPairToken0 ? PAIR.token1() : PAIR.token0();
 
-        // Check fei balance of recipient before to compare against
-        uint256 feiBalanceBefore = IERC20(fei).balanceOf(to);
+        // Check ARTH balance of recipient before to compare against.
+        uint256 arthBalanceBefore = IERC20(arth).balanceOf(to);
 
         (uint256 amount0Out, uint256 amount1Out) =
             isWETHPairToken0
                 ? (uint256(0), amountOut)
                 : (amountOut, uint256(0));
+
         PAIR.swap(amount0Out, amount1Out, to, new bytes(0));
 
-        // Check that FEI recipient got at least minReward on top of trade amount
-        uint256 feiBalanceAfter = IERC20(fei).balanceOf(to);
-        uint256 reward = feiBalanceAfter.sub(feiBalanceBefore).sub(amountOut);
-        require(reward >= minReward, 'FeiRouter: Not enough reward');
+        // Check that ARTH recipient got at least minReward on top of trade amount.
+        uint256 arthBalanceAfter = IERC20(arth).balanceOf(to);
+        uint256 reward = arthBalanceAfter.sub(arthBalanceBefore).sub(amountOut);
+        require(reward >= minReward, 'UniswapSwapRouter: Not enough reward');
 
         return amountOut;
     }
 
-    /// @notice sell FEI for ETH with some protections
-    /// @param maxPenalty maximum fei burn for purchasing
-    /// @param amountIn amount of FEI to sell
-    /// @param amountOutMin minimum ETH received
-    /// @param to address to send ETH
-    /// @param deadline block timestamp after which trade is invalid
-    function sellArth(
+    /**
+     * @notice             Sell ARTH for ETH with some protections.
+     * @param maxPenalty   Maximum ARTH burn for purchasing.
+     * @param amountIn     Amount of ARTH to sell.
+     * @param amountOutMin Minimum ETH received.
+     * @param to           Address to send ETH.
+     * @param deadline     Block timestamp after which trade is invalid.
+     */
+    function sellARTHForETH(
         uint256 maxPenalty,
         uint256 amountIn,
         uint256 amountOutMin,
@@ -102,18 +116,21 @@ contract ArthRouter is IArthRouter {
         (uint256 reservesETH, uint256 reservesOther, bool isWETHPairToken0) =
             _getReserves();
 
-        address fei = isWETHPairToken0 ? PAIR.token1() : PAIR.token0();
+        address arth = isWETHPairToken0 ? PAIR.token1() : PAIR.token0();
 
-        IERC20(fei).transferFrom(msg.sender, address(PAIR), amountIn);
+        IERC20(arth).transferFrom(msg.sender, address(PAIR), amountIn);
 
-        // Figure out how much the PAIR actually received net of FEI burn
+        // Figure out how much the PAIR actually received net of ARTH burn.
         uint256 effectiveAmountIn =
-            IERC20(fei).balanceOf(address(PAIR)).sub(reservesOther);
+            IERC20(arth).balanceOf(address(PAIR)).sub(reservesOther);
 
         // Check that burned fee-on-transfer is not more than the maxPenalty
         if (effectiveAmountIn < amountIn) {
             uint256 penalty = amountIn - effectiveAmountIn;
-            require(penalty <= maxPenalty, 'FeiRouter: Penalty too high');
+            require(
+                penalty <= maxPenalty,
+                'UniswapSwapRouter: Penalty too high'
+            );
         }
 
         amountOut = UniswapV2Library.getAmountOut(
@@ -123,7 +140,7 @@ contract ArthRouter is IArthRouter {
         );
         require(
             amountOut >= amountOutMin,
-            'FeiRouter: Insufficient output amount'
+            'UniswapSwapRouter: Insufficient output amount'
         );
 
         (uint256 amount0Out, uint256 amount1Out) =
@@ -150,6 +167,7 @@ contract ArthRouter is IArthRouter {
     {
         (uint256 reserves0, uint256 reserves1, ) = PAIR.getReserves();
         isWETHPairToken0 = PAIR.token0() == address(WETH);
+
         return
             isWETHPairToken0
                 ? (reserves0, reserves1, isWETHPairToken0)

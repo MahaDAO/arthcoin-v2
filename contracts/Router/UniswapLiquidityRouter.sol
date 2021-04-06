@@ -13,7 +13,7 @@ import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 
 /**
- * @title A Uniswap Router for managing liquidity.
+ * @title  A Uniswap Router for managing liquidity.
  * @author MahaDAO.
  */
 contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
