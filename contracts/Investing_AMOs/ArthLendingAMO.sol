@@ -27,7 +27,7 @@ contract ArthLendingAMO is AccessControl {
 
     /* ========== STATE VARIABLES ========== */
 
-    ERC20 private collateral_token;
+    ERC20 private collateralToken;
     ARTHShares private ARTHX;
     ARTHStablecoin private ARTH;
     ArthPool private pool;
@@ -59,9 +59,9 @@ contract ArthLendingAMO is AccessControl {
         IFNX_CFNX(0x9d7beb4265817a4923FAD9Ca9EF8af138499615d);
     ERC20 private FNX = ERC20(0xeF9Cd7882c067686691B6fF49e650b43AFBBCC6B);
 
-    address public collateral_address;
+    address public collateralAddress;
     address public pool_address;
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address;
     address public custodian_address;
 
@@ -88,8 +88,8 @@ contract ArthLendingAMO is AccessControl {
         address _arth_contract_address,
         address _arthx_contract_address,
         address _pool_address,
-        address _collateral_address,
-        address _owner_address,
+        address _collateralAddress,
+        address _ownerAddress,
         address _custodian_address,
         address _timelock_address
     ) {
@@ -97,12 +97,12 @@ contract ArthLendingAMO is AccessControl {
         ARTHX = ARTHShares(_arthx_contract_address);
         pool_address = _pool_address;
         pool = ArthPool(_pool_address);
-        collateral_address = _collateral_address;
-        collateral_token = ERC20(_collateral_address);
+        collateralAddress = _collateralAddress;
+        collateralToken = ERC20(_collateralAddress);
         timelock_address = _timelock_address;
-        owner_address = _owner_address;
+        ownerAddress = _ownerAddress;
         custodian_address = _custodian_address;
-        missing_decimals = uint256(18).sub(collateral_token.decimals());
+        missing_decimals = uint256(18).sub(collateralToken.decimals());
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -111,7 +111,7 @@ contract ArthLendingAMO is AccessControl {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == timelock_address || msg.sender == owner_address,
+            msg.sender == timelock_address || msg.sender == ownerAddress,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -204,7 +204,7 @@ contract ArthLendingAMO is AccessControl {
 
         // Make sure the current CR isn't already too low
         require(
-            controller.global_collateral_ratio() > min_cr,
+            controller.globalCollateralRatio() > min_cr,
             'Collateral ratio is already too low'
         );
 
@@ -226,7 +226,7 @@ contract ArthLendingAMO is AccessControl {
 
     // Give USDC profits back
     function giveCollatBack(uint256 amount) public onlyByOwnerOrGovernance {
-        collateral_token.transfer(address(pool), amount);
+        collateralToken.transfer(address(pool), amount);
     }
 
     // Burn unneeded or excess ARTH
@@ -411,8 +411,8 @@ contract ArthLendingAMO is AccessControl {
         timelock_address = new_timelock;
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function setMiscRewardsCustodian(address _custodian_address)

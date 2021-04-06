@@ -31,7 +31,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
 
     /* ========== STATE VARIABLES ========== */
 
-    ERC20 private collateral_token;
+    ERC20 private collateralToken;
     ARTHShares private ARTHX;
     ARTHStablecoin private ARTH;
     ArthPool private pool;
@@ -52,9 +52,9 @@ contract ArthPoolInvestorForV2 is AccessControl {
     ICompComptrollerPartial private CompController =
         ICompComptrollerPartial(0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B);
 
-    address public collateral_address;
+    address public collateralAddress;
     address public pool_address;
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address;
     address public custodian_address;
     address public weth_address = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
@@ -79,7 +79,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == timelock_address || msg.sender == owner_address,
+            msg.sender == timelock_address || msg.sender == ownerAddress,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -99,8 +99,8 @@ contract ArthPoolInvestorForV2 is AccessControl {
         address _arth_contract_address,
         address _arthx_contract_address,
         address _pool_address,
-        address _collateral_address,
-        address _owner_address,
+        address _collateralAddress,
+        address _ownerAddress,
         address _custodian_address,
         address _timelock_address
     ) {
@@ -108,12 +108,12 @@ contract ArthPoolInvestorForV2 is AccessControl {
         ARTHX = ARTHShares(_arthx_contract_address);
         pool_address = _pool_address;
         pool = ArthPool(_pool_address);
-        collateral_address = _collateral_address;
-        collateral_token = ERC20(_collateral_address);
+        collateralAddress = _collateralAddress;
+        collateralToken = ERC20(_collateralAddress);
         timelock_address = _timelock_address;
-        owner_address = _owner_address;
+        ownerAddress = _ownerAddress;
         custodian_address = _custodian_address;
-        missing_decimals = uint256(18).sub(collateral_token.decimals());
+        missing_decimals = uint256(18).sub(collateralToken.decimals());
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -129,7 +129,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         // Should ONLY be used externally, because it may fail if any one of the functions below fail
 
         // All numbers given are assuming xyzUSDC, etc. is converted back to actual USDC
-        allocations[0] = collateral_token.balanceOf(address(this)); // Unallocated
+        allocations[0] = collateralToken.balanceOf(address(this)); // Unallocated
         allocations[1] = (yUSDC_V2.balanceOf(address(this)))
             .mul(yUSDC_V2.pricePerShare())
             .div(1e6); // yearn
@@ -199,15 +199,15 @@ contract ArthPoolInvestorForV2 is AccessControl {
             allow_yearn || allow_aave || allow_compound,
             'All strategies are currently off'
         );
-        uint256 redemption_fee = pool.redemption_fee();
+        uint256 redemptionFee = pool.redemptionFee();
         uint256 col_price_usd = pool.getCollateralPrice();
-        uint256 global_collateral_ratio = controller.global_collateral_ratio();
+        uint256 globalCollateralRatio = controller.globalCollateralRatio();
         uint256 redeem_amount_E6 =
-            (arth_amount.mul(uint256(1e6).sub(redemption_fee))).div(1e6).div(
+            (arth_amount.mul(uint256(1e6).sub(redemptionFee))).div(1e6).div(
                 10**missing_decimals
             );
         uint256 expected_collat_amount =
-            redeem_amount_E6.mul(global_collateral_ratio).div(1e6);
+            redeem_amount_E6.mul(globalCollateralRatio).div(1e6);
         expected_collat_amount = expected_collat_amount.mul(1e6).div(
             col_price_usd
         );
@@ -241,7 +241,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
             borrowed_balance = 0;
         }
         paid_back_historical = paid_back_historical.add(amount);
-        collateral_token.transfer(address(pool), amount);
+        collateralToken.transfer(address(pool), amount);
     }
 
     function burnARTHX(uint256 amount) public onlyByOwnerOrGovernance {
@@ -253,7 +253,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
 
     function yDepositUSDC(uint256 USDC_amount) public onlyByOwnerOrGovernance {
         require(allow_yearn, 'yearn strategy is currently off');
-        collateral_token.approve(address(yUSDC_V2), USDC_amount);
+        collateralToken.approve(address(yUSDC_V2), USDC_amount);
         yUSDC_V2.deposit(USDC_amount);
     }
 
@@ -272,13 +272,8 @@ contract ArthPoolInvestorForV2 is AccessControl {
         onlyByOwnerOrGovernance
     {
         require(allow_aave, 'AAVE strategy is currently off');
-        collateral_token.approve(address(aaveUSDC_Pool), USDC_amount);
-        aaveUSDC_Pool.deposit(
-            collateral_address,
-            USDC_amount,
-            address(this),
-            0
-        );
+        collateralToken.approve(address(aaveUSDC_Pool), USDC_amount);
+        aaveUSDC_Pool.deposit(collateralAddress, USDC_amount, address(this), 0);
     }
 
     // E6
@@ -286,7 +281,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         public
         onlyByOwnerOrGovernance
     {
-        aaveUSDC_Pool.withdraw(collateral_address, aUSDC_amount, address(this));
+        aaveUSDC_Pool.withdraw(collateralAddress, aUSDC_amount, address(this));
     }
 
     /* ========== Compound cUSDC + COMP ========== */
@@ -296,7 +291,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         onlyByOwnerOrGovernance
     {
         require(allow_compound, 'Compound strategy is currently off');
-        collateral_token.approve(address(cUSDC), USDC_amount);
+        collateralToken.approve(address(cUSDC), USDC_amount);
         cUSDC.mint(USDC_amount);
     }
 
@@ -332,8 +327,8 @@ contract ArthPoolInvestorForV2 is AccessControl {
         timelock_address = new_timelock;
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function setWethAddress(address _weth_address)

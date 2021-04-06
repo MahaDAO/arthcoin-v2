@@ -12,7 +12,7 @@ contract ArthBridge is AccessControl {
 
     IArth private ARTH;
     address public timelock_address;
-    address public owner_address;
+    address public ownerAddress;
 
     uint256 public cumulative_deposits;
     uint256 public cumulative_withdrawals;
@@ -21,7 +21,7 @@ contract ArthBridge is AccessControl {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == timelock_address || msg.sender == owner_address,
+            msg.sender == timelock_address || msg.sender == ownerAddress,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -36,8 +36,8 @@ contract ArthBridge is AccessControl {
     ) {
         ARTH = IArth(_arth_contract_address);
         timelock_address = _timelock_address;
-        owner_address = _creator_address;
-        _setupRole(DEFAULT_ADMIN_ROLE, owner_address);
+        ownerAddress = _creator_address;
+        _setupRole(DEFAULT_ADMIN_ROLE, ownerAddress);
     }
 
     /* ========== VIEWS ========== */

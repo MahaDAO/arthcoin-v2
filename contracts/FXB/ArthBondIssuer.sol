@@ -24,7 +24,7 @@ contract ArthBondIssuer is AccessControl {
     ArthBond private ARTHB;
     ArthController private controller;
 
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address;
     address public controller_address;
 
@@ -51,7 +51,7 @@ contract ArthBondIssuer is AccessControl {
     uint256 public issue_fee = 500; // 0.05% initially
     uint256 public buying_fee = 1500; // 0.15% initially
     uint256 public selling_fee = 1500; // 0.15% initially
-    uint256 public redemption_fee = 500; // 0.05% initially
+    uint256 public redemptionFee = 500; // 0.05% initially
 
     // Epoch start and end times
     uint256 public epoch_start;
@@ -85,7 +85,7 @@ contract ArthBondIssuer is AccessControl {
 
     modifier onlyByOwnerControllerOrGovernance() {
         require(
-            msg.sender == owner_address ||
+            msg.sender == ownerAddress ||
                 msg.sender == timelock_address ||
                 msg.sender == controller_address,
             'You are not the owner, controller, or the governance timelock'
@@ -95,7 +95,7 @@ contract ArthBondIssuer is AccessControl {
 
     modifier onlyByOwnerOrTimelock() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -126,13 +126,13 @@ contract ArthBondIssuer is AccessControl {
     constructor(
         address _arth_contract_address,
         address _arthb_contract_address,
-        address _owner_address,
+        address _ownerAddress,
         address _timelock_address,
         address _controller_address
     ) {
         ARTH = ARTHStablecoin(_arth_contract_address);
         ARTHB = ArthBond(_arthb_contract_address);
-        owner_address = _owner_address;
+        ownerAddress = _ownerAddress;
         timelock_address = _timelock_address;
         controller_address = _controller_address;
 
@@ -142,16 +142,16 @@ contract ArthBondIssuer is AccessControl {
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         DEFAULT_ADMIN_ADDRESS = _msgSender();
-        grantRole(ISSUING_PAUSER, _owner_address);
+        grantRole(ISSUING_PAUSER, _ownerAddress);
         grantRole(ISSUING_PAUSER, _timelock_address);
         grantRole(ISSUING_PAUSER, _controller_address);
-        grantRole(BUYING_PAUSER, _owner_address);
+        grantRole(BUYING_PAUSER, _ownerAddress);
         grantRole(BUYING_PAUSER, _timelock_address);
         grantRole(BUYING_PAUSER, _controller_address);
-        grantRole(SELLING_PAUSER, _owner_address);
+        grantRole(SELLING_PAUSER, _ownerAddress);
         grantRole(SELLING_PAUSER, _timelock_address);
         grantRole(SELLING_PAUSER, _controller_address);
-        grantRole(REDEEMING_PAUSER, _owner_address);
+        grantRole(REDEEMING_PAUSER, _ownerAddress);
         grantRole(REDEEMING_PAUSER, _timelock_address);
         grantRole(REDEEMING_PAUSER, _controller_address);
     }
@@ -183,7 +183,7 @@ contract ArthBondIssuer is AccessControl {
             issue_fee,
             buying_fee,
             selling_fee,
-            redemption_fee,
+            redemptionFee,
             issuable_arthb,
             epoch_start,
             epoch_end,
@@ -339,7 +339,7 @@ contract ArthBondIssuer is AccessControl {
             'ARTH price must be less than $1'
         );
         require(
-            controller.global_collateral_ratio() >= min_collateral_ratio,
+            controller.globalCollateralRatio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 
@@ -561,7 +561,7 @@ contract ArthBondIssuer is AccessControl {
         ARTHB.burnFrom(msg.sender, arthb_in);
 
         // Give 1 ARTH per 1 ARTHB, minus the redemption fee
-        arth_fee = arthb_in.mul(redemption_fee).div(PRICE_PRECISION);
+        arth_fee = arthb_in.mul(redemptionFee).div(PRICE_PRECISION);
         arth_out = arthb_in.sub(arth_fee);
 
         // Give the ARTH to the redeemer
@@ -643,7 +643,7 @@ contract ArthBondIssuer is AccessControl {
     ) external onlyByOwnerControllerOrGovernance {
         require(isInEpoch(), 'Not in an epoch');
         require(
-            controller.global_collateral_ratio() >= min_collateral_ratio,
+            controller.globalCollateralRatio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 
@@ -666,7 +666,7 @@ contract ArthBondIssuer is AccessControl {
     ) external onlyByOwnerControllerOrGovernance {
         require(isInEpoch(), 'Not in an epoch');
         require(
-            controller.global_collateral_ratio() >= min_collateral_ratio,
+            controller.globalCollateralRatio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 
@@ -779,12 +779,12 @@ contract ArthBondIssuer is AccessControl {
         uint256 _issue_fee,
         uint256 _buying_fee,
         uint256 _selling_fee,
-        uint256 _redemption_fee
+        uint256 _redemptionFee
     ) external onlyByOwnerControllerOrGovernance {
         issue_fee = _issue_fee;
         buying_fee = _buying_fee;
         selling_fee = _selling_fee;
-        redemption_fee = _redemption_fee;
+        redemptionFee = _redemptionFee;
     }
 
     function setCooldownPeriod(uint256 _cooldown_period)
@@ -833,8 +833,8 @@ contract ArthBondIssuer is AccessControl {
         timelock_address = new_timelock;
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrTimelock {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrTimelock {
+        ownerAddress = _ownerAddress;
     }
 
     function emergencyRecoverERC20(

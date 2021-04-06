@@ -59,7 +59,7 @@ contract StakingRewardsDualV2 is
     uint256 public pool_weight0; // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
     uint256 public pool_weight1; // This staking pool's percentage of the total TOKEN 2 being distributed by all pools, 6 decimals of precision
 
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address; // Governance timelock address
 
     uint256 public locked_stake_max_multiplier = 2000000; // 6 decimals of precision. 1x = 1000000
@@ -111,7 +111,7 @@ contract StakingRewardsDualV2 is
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -119,7 +119,7 @@ contract StakingRewardsDualV2 is
 
     modifier onlyByOwnerOrGovernanceOrMigrator() {
         require(
-            msg.sender == owner_address ||
+            msg.sender == ownerAddress ||
                 msg.sender == timelock_address ||
                 valid_migrators[msg.sender] == true,
             'You are not the owner, governance timelock, or a migrator'
@@ -171,7 +171,7 @@ contract StakingRewardsDualV2 is
         uint256 _pool_weight0,
         uint256 _pool_weight1
     ) Owned(_owner) {
-        owner_address = _owner;
+        ownerAddress = _owner;
         rewardsToken0 = ERC20(_rewardsToken0);
         rewardsToken1 = ERC20(_rewardsToken1);
         stakingToken = ERC20(_stakingToken);
@@ -219,7 +219,7 @@ contract StakingRewardsDualV2 is
             uint256(MULTIPLIER_BASE).add(
                 (
                     uint256(MULTIPLIER_BASE).sub(
-                        controller.global_collateral_ratio()
+                        controller.globalCollateralRatio()
                     )
                 )
                     .mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE))
@@ -805,7 +805,7 @@ contract StakingRewardsDualV2 is
             ); // Only Governance / Timelock can trigger a migration
         }
         // Only the owner address can ever receive the recovery withdrawal
-        ERC20(tokenAddress).transfer(owner_address, tokenAmount);
+        ERC20(tokenAddress).transfer(ownerAddress, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 
@@ -916,8 +916,8 @@ contract StakingRewardsDualV2 is
         token1_rewards_on = !token1_rewards_on;
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function setTimelock(address _new_timelock)

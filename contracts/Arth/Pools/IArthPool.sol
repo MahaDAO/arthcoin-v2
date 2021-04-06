@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 interface IArthPool {
-    function minting_fee() external returns (uint256);
+    function mintingFee() external returns (uint256);
 
-    function redemption_fee() external returns (uint256);
+    function redemptionFee() external returns (uint256);
 
-    function buyback_fee() external returns (uint256);
+    function buybackFee() external returns (uint256);
 
-    function recollat_fee() external returns (uint256);
+    function recollatFee() external returns (uint256);
 
     function collatDollarBalance() external view returns (uint256);
 
@@ -69,14 +69,14 @@ interface IArthPool {
     function setPoolParameters(
         uint256 new_ceiling,
         uint256 new_bonus_rate,
-        uint256 new_redemption_delay,
+        uint256 new_redemptionDelay,
         uint256 new_mint_fee,
         uint256 new_redeem_fee,
-        uint256 new_buyback_fee,
-        uint256 new_recollat_fee
+        uint256 new_buybackFee,
+        uint256 new_recollatFee
     ) external;
 
     function setTimelock(address new_timelock) external;
 
-    function setOwner(address _owner_address) external;
+    function setOwner(address _ownerAddress) external;
 }

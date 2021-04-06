@@ -66,7 +66,7 @@ contract StakingRewards is
     uint256 public rewardPerTokenStored = 0;
     uint256 public pool_weight; // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
 
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address; // Governance timelock address
 
     uint256 public locked_stake_max_multiplier = 3000000; // 6 decimals of precision. 1x = 1000000
@@ -118,7 +118,7 @@ contract StakingRewards is
         address _timelock_address,
         uint256 _pool_weight
     ) Owned(_owner) {
-        owner_address = _owner;
+        ownerAddress = _owner;
         rewardsToken = ERC20(_rewardsToken);
         stakingToken = ERC20(_stakingToken);
         ARTH = ARTHStablecoin(_arth_address);
@@ -161,7 +161,7 @@ contract StakingRewards is
             uint256(MULTIPLIER_BASE).add(
                 (
                     uint256(MULTIPLIER_BASE).sub(
-                        controller.global_collateral_ratio()
+                        controller.globalCollateralRatio()
                     )
                 )
                     .mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE))
@@ -567,7 +567,7 @@ contract StakingRewards is
     {
         // Admin cannot withdraw the staking token from the contract
         require(tokenAddress != address(stakingToken));
-        ERC20(tokenAddress).transfer(owner_address, tokenAmount);
+        ERC20(tokenAddress).transfer(ownerAddress, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 
@@ -654,7 +654,7 @@ contract StakingRewards is
         external
         onlyByOwnerOrGovernance
     {
-        owner_address = _new_owner;
+        ownerAddress = _new_owner;
         timelock_address = _new_timelock;
     }
 
@@ -677,7 +677,7 @@ contract StakingRewards is
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not the owner or the governance timelock'
         );
         _;

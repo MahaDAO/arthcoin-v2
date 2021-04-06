@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 /// @dev Fixed window oracle that recomputes the average price for the entire period once every period
 ///  Note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
 interface IUniswapPairOracle {
-    function setOwner(address _owner_address) external;
+    function setOwner(address _ownerAddress) external;
 
     function setTimelock(address _timelock_address) external;
 

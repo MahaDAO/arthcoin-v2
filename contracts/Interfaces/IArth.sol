@@ -23,7 +23,7 @@ interface IArth is IERC20 {
     // Remove a pool
     function removePool(address pool_address) external;
 
-    function setOwner(address _owner_address) external;
+    function setOwner(address _ownerAddress) external;
 
     function setTimelock(address new_timelock) external;
 

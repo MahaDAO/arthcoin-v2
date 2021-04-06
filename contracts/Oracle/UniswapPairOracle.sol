@@ -13,7 +13,7 @@ import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 contract UniswapPairOracle {
     using FixedPoint for *;
 
-    address owner_address;
+    address ownerAddress;
     address timelock_address;
 
     uint256 public PERIOD = 3600; // 1 hour TWAP (time-weighted average price)
@@ -32,7 +32,7 @@ contract UniswapPairOracle {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not an owner or the governance timelock'
         );
         _;
@@ -42,7 +42,7 @@ contract UniswapPairOracle {
         address factory,
         address tokenA,
         address tokenB,
-        address _owner_address,
+        address _ownerAddress,
         address _timelock_address
     ) {
         IUniswapV2Pair _pair =
@@ -60,12 +60,12 @@ contract UniswapPairOracle {
             'UniswapPairOracle: NO_RESERVES'
         ); // Ensure that there's liquidity in the pair
 
-        owner_address = _owner_address;
+        ownerAddress = _ownerAddress;
         timelock_address = _timelock_address;
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function setTimelock(address _timelock_address)

@@ -26,7 +26,7 @@ contract PIDController {
     address public arth_contract_address;
     address public arthx_contract_address;
 
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address;
 
     address public reserve_tracker_address;
@@ -48,7 +48,7 @@ contract PIDController {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not the owner, controller, or the governance timelock'
         );
         _;
@@ -65,7 +65,7 @@ contract PIDController {
     ) {
         arth_contract_address = _arth_contract_address;
         arthx_contract_address = _arthx_contract_address;
-        owner_address = _creator_address;
+        ownerAddress = _creator_address;
         timelock_address = _timelock_address;
         reserve_tracker_address = _reserve_tracker_address;
         reserve_tracker = ReserveTracker(reserve_tracker_address);
@@ -105,9 +105,9 @@ contract PIDController {
             'internal cooldown not passed'
         );
         uint256 arthx_reserves = reserve_tracker.getARTHXReserves();
-        uint256 arthx_price = reserve_tracker.getARTHXPrice();
+        uint256 arthxPrice = reserve_tracker.getARTHXPrice();
 
-        uint256 arthx_liquidity = (arthx_reserves.mul(arthx_price)); // Has 6 decimals of precision
+        uint256 arthx_liquidity = (arthx_reserves.mul(arthxPrice)); // Has 6 decimals of precision
 
         uint256 arth_supply = ARTH.totalSupply();
         //uint256 arth_price = reserve_tracker.getARTHPrice(); // Using Uniswap
@@ -127,7 +127,7 @@ contract PIDController {
 
         uint256 new_growth_ratio = arthx_liquidity.div(arth_supply); // (E18 + E6) / E18
 
-        uint256 last_collateral_ratio = controller.global_collateral_ratio();
+        uint256 last_collateral_ratio = controller.globalCollateralRatio();
         uint256 new_collateral_ratio = last_collateral_ratio;
 
         // First, check if the price is out of the band
@@ -221,8 +221,8 @@ contract PIDController {
         ARTH_bottom_band = _bottom_band;
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function setTimelock(address new_timelock)

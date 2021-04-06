@@ -10,25 +10,25 @@ contract Pool_6DEC is ArthPool {
     constructor(
         address _arth_contract_address,
         address _arthx_contract_address,
-        address _collateral_address,
+        address _collateralAddress,
         address _creator_address,
         address _timelock_address,
-        address _stability_fee_token,
+        address _stabilityFeeToken,
         address _arth_stability_token_oracle,
         uint256 _pool_ceiling
     )
         ArthPool(
             _arth_contract_address,
             _arthx_contract_address,
-            _collateral_address,
+            _collateralAddress,
             _creator_address,
             _timelock_address,
-            _stability_fee_token,
+            _stabilityFeeToken,
             _arth_stability_token_oracle,
             _pool_ceiling
         )
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _6DEC_address = _collateral_address;
+        _6DEC_address = _collateralAddress;
     }
 }

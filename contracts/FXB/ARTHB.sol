@@ -23,7 +23,7 @@ contract ArthBond is ERC20Custom, AccessControl {
     string public symbol;
     string public name;
     uint8 public constant decimals = 18;
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address; // Governance timelock address
     address public controller_address; // Controller contract to dynamically adjust system parameters automatically
 
@@ -53,7 +53,7 @@ contract ArthBond is ERC20Custom, AccessControl {
 
     modifier onlyByOwnerControllerOrGovernance() {
         require(
-            msg.sender == owner_address ||
+            msg.sender == ownerAddress ||
                 msg.sender == timelock_address ||
                 msg.sender == controller_address,
             'You are not the owner, controller, or the governance timelock'
@@ -63,7 +63,7 @@ contract ArthBond is ERC20Custom, AccessControl {
 
     modifier onlyByOwnerOrTimelock() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -74,18 +74,18 @@ contract ArthBond is ERC20Custom, AccessControl {
     constructor(
         string memory _name,
         string memory _symbol,
-        address _owner_address,
+        address _ownerAddress,
         address _timelock_address,
         address _controller_address
     ) {
         name = _name;
         symbol = _symbol;
-        owner_address = _owner_address;
+        ownerAddress = _ownerAddress;
         timelock_address = _timelock_address;
         controller_address = _controller_address;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _owner_address);
-        DEFAULT_ADMIN_ADDRESS = _owner_address;
+        _setupRole(DEFAULT_ADMIN_ROLE, _ownerAddress);
+        DEFAULT_ADMIN_ADDRESS = _ownerAddress;
     }
 
     /* ========== VIEWS ========== */
@@ -149,8 +149,8 @@ contract ArthBond is ERC20Custom, AccessControl {
 
     /* ========== HIGHLY RESTRICTED EXTERNAL FUNCTIONS [Owner and Timelock only]  ========== */
 
-    function setOwner(address _owner_address) external onlyByOwnerOrTimelock {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrTimelock {
+        ownerAddress = _ownerAddress;
     }
 
     function setTimelock(address new_timelock) external onlyByOwnerOrTimelock {
