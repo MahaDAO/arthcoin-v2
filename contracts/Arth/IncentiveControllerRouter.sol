@@ -11,6 +11,10 @@ contract IncentiveControllerRouter is AccessControl, IIncentive {
     mapping(address => address) public receiverMapping;
     mapping(address => address) public operatorMapping;
 
+    event SenderIncentive(address target, address controller);
+    event ReceiverIncentive(address target, address controller);
+    event OperatorIncentive(address target, address controller);
+
     modifier onlyAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
@@ -28,7 +32,8 @@ contract IncentiveControllerRouter is AccessControl, IIncentive {
         onlyAdmin
     {
         senderMapping[target] = controller;
-        // todo add event
+
+        emit SenderIncentive(target, controller);
     }
 
     function setRecieverIncentiveControllers(address target, address controller)
@@ -36,7 +41,8 @@ contract IncentiveControllerRouter is AccessControl, IIncentive {
         onlyAdmin
     {
         receiverMapping[target] = controller;
-        // todo add event
+
+        emit ReceiverIncentive(target, controller);
     }
 
     function setOperatorIncentiveControllers(address target, address controller)
@@ -44,7 +50,8 @@ contract IncentiveControllerRouter is AccessControl, IIncentive {
         onlyAdmin
     {
         operatorMapping[target] = controller;
-        // todo add event
+
+        emit OperatorIncentive(target, controller);
     }
 
     function incentivize(
