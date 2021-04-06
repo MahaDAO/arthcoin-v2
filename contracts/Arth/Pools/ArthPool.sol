@@ -50,6 +50,7 @@ contract ArthPool is AccessControl {
     uint256 public recollatFee;
     uint256 public redemptionFee;
     uint256 public stabilityFee = 1; // In %.
+    uint256 public buyBackCollateralBuffer = 20; // In %.
 
     uint256 public unclaimedPoolARTHX;
     uint256 public unclaimedPoolCollateral;
@@ -178,6 +179,15 @@ contract ArthPool is AccessControl {
         grantRole(COLLATERAL_PRICE_PAUSER, timelock_address);
     }
 
+    function setBuyBackCollateralBuffer(uint256 percent)
+        public
+        onlyAdminOrOwnerOrGovernance
+    {
+        require(percent <= 100, 'ArthPool: percent > 100');
+
+        buyBackCollateralBuffer = percent;
+    }
+
     function setStabilityFee(uint256 percent)
         public
         onlyAdminOrOwnerOrGovernance
@@ -236,10 +246,15 @@ contract ArthPool is AccessControl {
                 COLLATERAL_RATIO_PRECISION
             ); // Calculates collateral needed to back each 1 ARTH with $1 of collateral at current collat ratio
 
-        // todo: add a 10-20% buffer for volatile collaterals
-        if (globalCollatValue > required_collat_dollar_value_d18)
-            return globalCollatValue.sub(required_collat_dollar_value_d18);
-        else return 0;
+        // todo: add a 10-20% buffer for volatile collaterals.
+        if (globalCollatValue > required_collat_dollar_value_d18) {
+            uint256 excessCollateral =
+                globalCollatValue.sub(required_collat_dollar_value_d18);
+            uint256 bufferValue =
+                excessCollateral.mul(buyBackCollateralBuffer).div(100);
+
+            return excessCollateral.sub(bufferValue);
+        } else return 0;
     }
 
     /* ========== PUBLIC FUNCTIONS ========== */
@@ -286,7 +301,13 @@ contract ArthPool is AccessControl {
             "ArthPool: Repayer doesn't not have any debt"
         );
 
+        // TODO: check balance of the user; to avoid forcedao type bugs
+        require(
+            collateralToken.balanceOf(msg.sender) >= _amount,
+            'ArthPool: balance < required'
+        );
         collateralToken.transferFrom(msg.sender, address(this), _amount);
+
         borrowedCollateral[msg.sender] -= _amount;
         emit Repay(msg.sender, _amount);
     }
@@ -321,6 +342,11 @@ contract ArthPool is AccessControl {
             .div(1e6); //remove precision at the end
         require(ARTHOutMin <= arth_amount_d18, 'Slippage limit reached');
 
+        // TODO: check balance of the user; to avoid forcedao type bugs
+        require(
+            collateralToken.balanceOf(msg.sender) >= collateralAmount,
+            'ArthPool: balance < required'
+        );
         collateralToken.transferFrom(
             msg.sender,
             address(this),
@@ -402,6 +428,10 @@ contract ArthPool is AccessControl {
         require(arthx_needed <= arthxAmount, 'Not enough ARTHX inputted');
 
         ARTHX.poolBurnFrom(msg.sender, arthx_needed);
+        require(
+            collateralToken.balanceOf(msg.sender) >= collateralAmount,
+            'ArthPool: balance < require'
+        );
         collateralToken.transferFrom(
             msg.sender,
             address(this),
@@ -696,7 +726,10 @@ contract ArthPool is AccessControl {
         require(ARTHXOutMin <= arthx_paid_back, 'Slippage limit reached');
 
         // TODO: check balance of the user; to avoid forcedao type bugs
-
+        require(
+            collateralToken.balanceOf(msg.sender) >= collateral_units_precision,
+            'ArthPool: balance < required'
+        );
         collateralToken.transferFrom(
             msg.sender,
             address(this),
