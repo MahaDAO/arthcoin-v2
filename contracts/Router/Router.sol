@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
-import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
+
+import './IArthRouter.sol';
 import '../Uniswap/UniswapV2Library.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
-import './IArthRouter.sol';
 
-//import '../Math/SafeMath.sol'
-
-/// @title A Uniswap Router for FEI/ETH swaps
-/// @author Fei Protocol
+/// @title A Uniswap Router for FEI/ETH swaps.
+/// @author Fei Protocol.
 contract ArthRouter is IArthRouter {
     using SafeMath for uint256;
 
@@ -62,6 +62,7 @@ contract ArthRouter is IArthRouter {
             amountOut >= amountOutMin,
             'FeiRouter: Insufficient output amount'
         );
+
         // Convert sent ETH to wrapped ETH and assert successful transfer to pair
         IWETH(WETH).deposit{value: amountIn}();
         assert(IWETH(WETH).transfer(address(PAIR), amountIn));
