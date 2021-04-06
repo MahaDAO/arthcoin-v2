@@ -12,6 +12,7 @@ import '../../Arth/ArthController.sol';
 import '../../Oracle/ISimpleOracle.sol';
 import '../../Oracle/UniswapPairOracle.sol';
 import '../../Governance/AccessControl.sol';
+import './RecollateralizeDiscountCurve.sol';
 
 /**
  *  Original code written by:
@@ -36,6 +37,7 @@ contract ArthPool is AccessControl {
     ArthController private controller;
     ARTHShares private ARTHX;
     ARTHStablecoin private ARTH;
+    RecollateralizeDiscountCurve private recollateralizeDiscountCruve;
 
     address private timelock_address;
     address private arthx_contract_address;
@@ -72,9 +74,6 @@ contract ArthPool is AccessControl {
 
     // Number of decimals needed to get to 18
     uint256 private immutable missing_decimals;
-
-    // Bonus rate on ARTHX minted during recollateralizeARTH(); 6 decimals of precision, set to 0.75% on genesis
-    uint256 public bonus_rate = 7500;
 
     // Number of blocks to wait before being able to collectRedemption()
     uint256 public redemptionDelay = 1;
@@ -730,37 +729,6 @@ contract ArthPool is AccessControl {
         }
     }
 
-    function getTargetCollateralValue() public view returns (uint256) {
-        return
-            ARTH.totalSupply().mul(controller.globalCollateralRatio()).div(1e6);
-    }
-
-    // keep this in another function
-    function getCurveExponent() public view returns (uint256) {
-        uint256 targetCollatValue = getTargetCollateralValue();
-        uint256 currentCollatValue = controller.globalCollateralValue();
-
-        if (targetCollatValue <= currentCollatValue) return 0;
-
-        return
-            targetCollatValue
-                .sub(currentCollatValue)
-                .mul(1e6)
-                .div(targetCollatValue)
-                .div(1e6);
-    }
-
-    // TODO make this into another contract which handles the curve
-    function getCurvedDiscount() public view returns (uint256) {
-        uint256 exponent = getCurveExponent();
-        if (exponent == 0) return 0;
-
-        uint256 discount = (10**exponent).sub(1).div(10).mul(bonus_rate);
-
-        // Fail safe cap to bonus_rate.
-        return discount > bonus_rate ? bonus_rate : discount;
-    }
-
     // When the protocol is recollateralizing, we need to give a discount of ARTHX to hit the new CR target
     // Thus, if the target collateral ratio is higher than the actual value of collateral, minters get ARTHX for adding collateral
     // This function simply rewards anyone that sends collateral to a pool with the same amount of ARTHX + the bonus rate
@@ -792,7 +760,11 @@ contract ArthPool is AccessControl {
         // NEED to make sure that recollatFee is less than 1e6.
         uint256 arthx_paid_back =
             amount_to_recollat
-                .mul(uint256(1e6).add(getCurvedDiscount()).sub(recollatFee))
+                .mul(
+                uint256(1e6)
+                    .add(recollateralizeDiscountCruve.getCurvedDiscount())
+                    .sub(recollatFee)
+            )
                 .div(arthxPrice);
 
         require(ARTHXOutMin <= arthx_paid_back, 'Slippage limit reached');
@@ -880,7 +852,6 @@ contract ArthPool is AccessControl {
     // Combined into one function due to 24KiB contract memory limit
     function setPoolParameters(
         uint256 new_ceiling,
-        uint256 new_bonus_rate,
         uint256 new_redemptionDelay,
         uint256 new_mint_fee,
         uint256 new_redeem_fee,
@@ -888,7 +859,6 @@ contract ArthPool is AccessControl {
         uint256 new_recollatFee
     ) external onlyByOwnerOrGovernance {
         pool_ceiling = new_ceiling;
-        bonus_rate = new_bonus_rate;
         redemptionDelay = new_redemptionDelay;
         mintingFee = new_mint_fee;
         redemptionFee = new_redeem_fee;
