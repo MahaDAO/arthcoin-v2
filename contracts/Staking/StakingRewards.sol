@@ -19,7 +19,11 @@ import './RewardsDistributionRecipient.sol';
 import '../Arth/ArthController.sol';
 
 interface IStaking {
-    function stakeFor(address who, uint256 amount) external;
+    function stakeFor(
+        address who,
+        uint256 amount,
+        uint256 duration
+    ) external;
 }
 
 /**
@@ -260,14 +264,11 @@ contract StakingRewards is
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     // NOTE: should this be made private or internal?
-    function stakeFor(address who, uint256 amount)
-        public
-        override
-        nonReentrant
-        notPaused
-        onlyPool
-        updateReward(who)
-    {
+    function stakeFor(
+        address who,
+        uint256 amount,
+        uint256 duration
+    ) public override nonReentrant notPaused onlyPool updateReward(who) {
         require(amount > 0, 'Cannot stake 0');
         require(
             greylist[who] == false && greylist[msg.sender] == false,
