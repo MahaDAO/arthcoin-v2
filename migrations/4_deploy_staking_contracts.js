@@ -78,7 +78,7 @@ module.exports = async function (deployer, network, accounts) {
 
   const stakingInstance_ARTH_WETH = await StakingRewards_ARTH_WETH.deployed()
   const stakingInstance_ARTH_USDC = await StakingRewards_ARTH_USDC.deployed()
-  const stakingInstance_ARTH_ARTHX = await StakingRewards_ARTH_ARTHS.deployed()
+  const stakingInstance_ARTH_ARTHX = await StakingRewards_ARTH_ARTHX.deployed()
   const stakingInstance_ARTHX_WETH = await StakingRewards_ARTHX_WETH.deployed()
 
   console.log(chalk.yellow('\nTransfering ARTHX to staking contracts...'))
