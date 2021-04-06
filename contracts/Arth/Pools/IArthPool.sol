@@ -34,7 +34,7 @@ interface IArthPool {
         uint256 collateralAmount,
         uint256 arthxAmount,
         uint256 ARTHOutMin
-    ) external;
+    ) external returns (uint256);
 
     function redeem1t1ARTH(uint256 ARTH_amount, uint256 COLLATERAL_out_min)
         external;
@@ -51,7 +51,8 @@ interface IArthPool {
     function collectRedemption() external;
 
     function recollateralizeARTH(uint256 collateralAmount, uint256 ARTHXOutMin)
-        external;
+        external
+        returns (uint256);
 
     function buyBackARTHX(uint256 arthxAmount, uint256 COLLATERAL_out_min)
         external;

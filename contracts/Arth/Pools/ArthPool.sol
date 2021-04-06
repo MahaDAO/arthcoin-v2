@@ -320,7 +320,7 @@ contract ArthPool is AccessControl {
                 COLLATERAL_RATIO_PRECISION
             ); // Calculates collateral needed to back each 1 ARTH with $1 of collateral at current collat ratio
 
-        // todo: add a 10-20% buffer for volatile collaterals.
+        // todo: add a 10-20% buffer for volatile collaterals. - done
         if (globalCollatValue > required_collat_dollar_value_d18) {
             uint256 excessCollateral =
                 globalCollatValue.sub(required_collat_dollar_value_d18);
@@ -416,7 +416,7 @@ contract ArthPool is AccessControl {
             .div(1e6); //remove precision at the end
         require(ARTHOutMin <= arth_amount_d18, 'Slippage limit reached');
 
-        // TODO: check balance of the user; to avoid forcedao type bugs
+        // TODO: check balance of the user; to avoid forcedao type bugs - done
         require(
             collateralToken.balanceOf(msg.sender) >= collateralAmount,
             'ArthPool: balance < required'
@@ -769,7 +769,7 @@ contract ArthPool is AccessControl {
 
         require(ARTHXOutMin <= arthx_paid_back, 'Slippage limit reached');
 
-        // TODO: check balance of the user; to avoid forcedao type bugs
+        // TODO: check balance of the user; to avoid forcedao type bugs - done
         require(
             collateralToken.balanceOf(msg.sender) >= collateral_units_precision,
             'ArthPool: balance < required'
