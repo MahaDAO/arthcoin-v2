@@ -292,8 +292,8 @@ contract ArthPool is AccessControl {
     }
 
     // We separate out the 1t1, fractional and algorithmic minting functions for gas efficiency
-    function _mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
-        private
+    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
+        external
         notMintPaused
         returns (uint256)
     {
@@ -332,15 +332,9 @@ contract ArthPool is AccessControl {
         return arth_amount_d18;
     }
 
-    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
-        external
-    {
-        _mint1t1ARTH(collateralAmount, ARTHOutMin);
-    }
-
     // 0% collateral-backed
-    function _mintAlgorithmicARTH(uint256 arthxAmount_d18, uint256 ARTHOutMin)
-        private
+    function mintAlgorithmicARTH(uint256 arthxAmount_d18, uint256 ARTHOutMin)
+        external
         notMintPaused
         returns (uint256)
     {
@@ -366,21 +360,13 @@ contract ArthPool is AccessControl {
         return arth_amount_d18;
     }
 
-    // 0% collateral-backed
-    function mintAlgorithmicARTH(uint256 arthxAmount_d18, uint256 ARTHOutMin)
-        external
-        notMintPaused
-    {
-        _mintAlgorithmicARTH(arthxAmount_d18, ARTHOutMin);
-    }
-
     // Will fail if fully collateralized or fully algorithmic
     // > 0% and < 100% collateral-backed
-    function _mintFractionalARTH(
+    function mintFractionalARTH(
         uint256 collateralAmount,
         uint256 arthxAmount,
         uint256 ARTHOutMin
-    ) private notMintPaused returns (uint256) {
+    ) external notMintPaused returns (uint256) {
         uint256 arthxPrice = controller.arthxPrice();
         uint256 globalCollateralRatio = controller.globalCollateralRatio();
 
@@ -424,16 +410,6 @@ contract ArthPool is AccessControl {
         ARTH.poolMint(address(this), mint_amount);
 
         return mint_amount;
-    }
-
-    // Will fail if fully collateralized or fully algorithmic
-    // > 0% and < 100% collateral-backed
-    function mintFractionalARTH(
-        uint256 collateralAmount,
-        uint256 arthxAmount,
-        uint256 ARTHOutMin
-    ) external notMintPaused {
-        _mintFractionalARTH(collateralAmount, arthxAmount, ARTHOutMin);
     }
 
     function getARTHStabilityTokenOraclePrice() public view returns (uint256) {
@@ -672,6 +648,7 @@ contract ArthPool is AccessControl {
                 .div(1e6);
     }
 
+    // TODO make this into another contract which handles the curve
     function getCurvedDiscount() public view returns (uint256) {
         uint256 exponent = getCurveExponent();
         if (exponent == 0) return 0;
@@ -686,8 +663,8 @@ contract ArthPool is AccessControl {
     // Thus, if the target collateral ratio is higher than the actual value of collateral, minters get ARTHX for adding collateral
     // This function simply rewards anyone that sends collateral to a pool with the same amount of ARTHX + the bonus rate
     // Anyone can call this function to recollateralize the protocol and take the extra ARTHX value from the bonus rate as an arb opportunity
-    function _recollateralizeARTH(uint256 collateralAmount, uint256 ARTHXOutMin)
-        private
+    function recollateralizeARTH(uint256 collateralAmount, uint256 ARTHXOutMin)
+        external
         returns (uint256)
     {
         require(recollateralizePaused == false, 'Recollateralize is paused');
@@ -728,12 +705,6 @@ contract ArthPool is AccessControl {
 
         ARTHX.poolMint(msg.sender, arthx_paid_back);
         return arthx_paid_back;
-    }
-
-    function recollateralizeARTH(uint256 collateralAmount, uint256 ARTHXOutMin)
-        external
-    {
-        _recollateralizeARTH(collateralAmount, ARTHXOutMin);
     }
 
     // Function can be called by an ARTHX holder to have the protocol buy back ARTHX with excess collateral value from a desired collateral pool
@@ -830,6 +801,4 @@ contract ArthPool is AccessControl {
     function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
         ownerAddress = _ownerAddress;
     }
-
-    /* ========== EVENTS ========== */
 }
