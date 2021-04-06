@@ -12,7 +12,6 @@ import '../../Math/SafeMath.sol';
 import '../../Oracle/ISimpleOracle.sol';
 import '../../Oracle/UniswapPairOracle.sol';
 import '../../Governance/AccessControl.sol';
-import '../../Staking/IMintAndCallFallBack.sol';
 
 /**
  *  Original code written by:
@@ -25,18 +24,19 @@ contract ArthPool is AccessControl {
 
     /* ========== STATE VARIABLES ========== */
 
-    ERC20 private collateral_token;
-    ERC20 private stability_fee_token;
+    ERC20 private collateralToken;
+    ERC20 private stabilityFeeToken;
 
     // TODO: replace this oracle with chainlink oracle.
     ISimpleOracle public arth_stability_token_oracle;
 
-    address private owner_address;
-    address private collateral_address;
+    address private ownerAddress;
+    address private collateralAddress;
 
     ArthController private controller;
     ARTHShares private ARTHX;
     ARTHStablecoin private ARTH;
+
     address private timelock_address;
     address private arthx_contract_address;
     address private arth_contract_address;
@@ -45,11 +45,11 @@ contract ArthPool is AccessControl {
     address public collat_eth_oracle_address;
     UniswapPairOracle private collatEthOracle;
 
-    uint256 public buyback_fee;
-    uint256 public minting_fee;
-    uint256 public recollat_fee;
-    uint256 public redemption_fee;
-    uint256 public stability_fee = 1; // In %.
+    uint256 public buybackFee;
+    uint256 public mintingFee;
+    uint256 public recollatFee;
+    uint256 public redemptionFee;
+    uint256 public stabilityFee = 1; // In %.
 
     uint256 public unclaimedPoolARTHX;
     uint256 public unclaimedPoolCollateral;
@@ -76,7 +76,7 @@ contract ArthPool is AccessControl {
     uint256 public bonus_rate = 7500;
 
     // Number of blocks to wait before being able to collectRedemption()
-    uint256 public redemption_delay = 1;
+    uint256 public redemptionDelay = 1;
 
     // AccessControl Roles
     bytes32 private constant MINT_PAUSER = keccak256('MINT_PAUSER');
@@ -97,13 +97,13 @@ contract ArthPool is AccessControl {
 
     event Repay(address indexed from, uint256 amount);
     event Borrow(address indexed from, uint256 amount);
-    event StabilityFeesCharged(address indexed from, uint256 amount);
+    event StabilityFeesCharged(address indexed from, uint256 fee);
 
     /* ========== MODIFIERS ========== */
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == timelock_address || msg.sender == owner_address,
+            msg.sender == timelock_address || msg.sender == ownerAddress,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -121,7 +121,7 @@ contract ArthPool is AccessControl {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) ||
                 msg.sender == timelock_address ||
-                msg.sender == owner_address,
+                msg.sender == ownerAddress,
             'ArthPool: forbidden'
         );
         _;
@@ -147,10 +147,10 @@ contract ArthPool is AccessControl {
     constructor(
         address _arth_contract_address,
         address _arthx_contract_address,
-        address _collateral_address,
+        address _collateralAddress,
         address _creator_address,
         address _timelock_address,
-        address _stability_fee_token,
+        address _stabilityFeeToken,
         address _arth_stability_token_oracle,
         uint256 _pool_ceiling
     ) {
@@ -158,14 +158,14 @@ contract ArthPool is AccessControl {
         ARTHX = ARTHShares(_arthx_contract_address);
         arth_contract_address = _arth_contract_address;
         arthx_contract_address = _arthx_contract_address;
-        collateral_address = _collateral_address;
+        collateralAddress = _collateralAddress;
         timelock_address = _timelock_address;
-        owner_address = _creator_address;
-        collateral_token = ERC20(_collateral_address);
+        ownerAddress = _creator_address;
+        collateralToken = ERC20(_collateralAddress);
         pool_ceiling = _pool_ceiling;
-        missing_decimals = uint256(18).sub(collateral_token.decimals());
+        missing_decimals = uint256(18).sub(collateralToken.decimals());
 
-        stability_fee_token = ERC20(_stability_fee_token);
+        stabilityFeeToken = ERC20(_stabilityFeeToken);
         arth_stability_token_oracle = ISimpleOracle(
             _arth_stability_token_oracle
         );
@@ -184,7 +184,7 @@ contract ArthPool is AccessControl {
     {
         require(percent <= 100, 'ArthPool: percent > 100');
 
-        stability_fee = percent;
+        stabilityFee = percent;
     }
 
     /* ========== VIEWS ========== */
@@ -194,7 +194,7 @@ contract ArthPool is AccessControl {
         if (collateralPricePaused == true) {
             return
                 (
-                    collateral_token.balanceOf(address(this)).sub(
+                    collateralToken.balanceOf(address(this)).sub(
                         unclaimedPoolCollateral
                     )
                 )
@@ -213,7 +213,7 @@ contract ArthPool is AccessControl {
                 eth_usd_price.mul(PRICE_PRECISION).div(eth_collat_price);
             return
                 (
-                    collateral_token.balanceOf(address(this)).sub(
+                    collateralToken.balanceOf(address(this)).sub(
                         unclaimedPoolCollateral
                     )
                 )
@@ -226,17 +226,19 @@ contract ArthPool is AccessControl {
     // Returns the value of excess collateral held in this Arth pool, compared to what is needed to maintain the global collateral ratio
     function availableExcessCollatDV() public view returns (uint256) {
         uint256 total_supply = ARTH.totalSupply();
-        uint256 global_collateral_ratio = controller.global_collateral_ratio();
-        uint256 global_collat_value = controller.globalCollateralValue();
+        uint256 globalCollateralRatio = controller.globalCollateralRatio();
+        uint256 globalCollatValue = controller.globalCollateralValue();
 
-        if (global_collateral_ratio > COLLATERAL_RATIO_PRECISION)
-            global_collateral_ratio = COLLATERAL_RATIO_PRECISION; // Handles an overcollateralized contract with CR > 1
+        if (globalCollateralRatio > COLLATERAL_RATIO_PRECISION)
+            globalCollateralRatio = COLLATERAL_RATIO_PRECISION; // Handles an overcollateralized contract with CR > 1
         uint256 required_collat_dollar_value_d18 =
-            (total_supply.mul(global_collateral_ratio)).div(
+            (total_supply.mul(globalCollateralRatio)).div(
                 COLLATERAL_RATIO_PRECISION
             ); // Calculates collateral needed to back each 1 ARTH with $1 of collateral at current collat ratio
-        if (global_collat_value > required_collat_dollar_value_d18)
-            return global_collat_value.sub(required_collat_dollar_value_d18);
+
+        // todo: add a 10-20% buffer for volatile collaterals
+        if (globalCollatValue > required_collat_dollar_value_d18)
+            return globalCollatValue.sub(required_collat_dollar_value_d18);
         else return 0;
     }
 
@@ -269,11 +271,11 @@ contract ArthPool is AccessControl {
 
     function borrow(uint256 _amount) external onlyAMOS {
         require(
-            collateral_token.balanceOf(address(this)) > _amount,
+            collateralToken.balanceOf(address(this)) > _amount,
             'ArthPool: Insufficent funds in the pool'
         );
 
-        collateral_token.transfer(msg.sender, _amount);
+        collateralToken.transfer(msg.sender, _amount);
         borrowedCollateral[msg.sender] += _amount;
         emit Borrow(msg.sender, _amount);
     }
@@ -284,7 +286,7 @@ contract ArthPool is AccessControl {
             "ArthPool: Repayer doesn't not have any debt"
         );
 
-        collateral_token.transferFrom(msg.sender, address(this), _amount);
+        collateralToken.transferFrom(msg.sender, address(this), _amount);
         borrowedCollateral[msg.sender] -= _amount;
         emit Repay(msg.sender, _amount);
     }
@@ -299,11 +301,11 @@ contract ArthPool is AccessControl {
             collateral_amount * (10**missing_decimals);
 
         require(
-            controller.global_collateral_ratio() >= COLLATERAL_RATIO_MAX,
+            controller.globalCollateralRatio() >= COLLATERAL_RATIO_MAX,
             'Collateral ratio must be >= 1'
         );
         require(
-            (collateral_token.balanceOf(address(this)))
+            (collateralToken.balanceOf(address(this)))
                 .sub(unclaimedPoolCollateral)
                 .add(collateral_amount) <= pool_ceiling,
             "[Pool's Closed]: Ceiling reached"
@@ -315,11 +317,11 @@ contract ArthPool is AccessControl {
                 collateral_amount_d18
             ); //1 ARTH for each $1 worth of collateral
 
-        arth_amount_d18 = (arth_amount_d18.mul(uint256(1e6).sub(minting_fee)))
+        arth_amount_d18 = (arth_amount_d18.mul(uint256(1e6).sub(mintingFee)))
             .div(1e6); //remove precision at the end
         require(ARTH_out_min <= arth_amount_d18, 'Slippage limit reached');
 
-        collateral_token.transferFrom(
+        collateralToken.transferFrom(
             msg.sender,
             address(this),
             collateral_amount
@@ -336,48 +338,24 @@ contract ArthPool is AccessControl {
         _mint1t1ARTH(collateral_amount, ARTH_out_min);
     }
 
-    function mint1t1ARTHAndCall(
-        uint256 collateral_amount,
-        uint256 ARTH_out_min,
-        IMintAndCallFallBack _spender,
-        bytes memory _extraData,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external {
-        uint256 amountToStake = _mint1t1ARTH(collateral_amount, ARTH_out_min);
-
-        ARTH.permit(
-            msg.sender,
-            address(_spender),
-            uint256(int256(-1)), //amountToStake,
-            block.timestamp,
-            v,
-            r,
-            s
-        );
-
-        _spender.receiveMint(msg.sender, amountToStake, _extraData);
-    }
-
     // 0% collateral-backed
     function _mintAlgorithmicARTH(
         uint256 arthx_amount_d18,
         uint256 ARTH_out_min
     ) private notMintPaused returns (uint256) {
-        uint256 arthx_price = controller.arthx_price();
+        uint256 arthxPrice = controller.arthxPrice();
         require(
-            controller.global_collateral_ratio() == 0,
+            controller.globalCollateralRatio() == 0,
             'Collateral ratio must be 0'
         );
 
         uint256 arth_amount_d18 =
             ArthPoolLibrary.calcMintAlgorithmicARTH(
-                arthx_price, // X ARTHX / 1 USD
+                arthxPrice, // X ARTHX / 1 USD
                 arthx_amount_d18
             );
 
-        arth_amount_d18 = (arth_amount_d18.mul(uint256(1e6).sub(minting_fee)))
+        arth_amount_d18 = (arth_amount_d18.mul(uint256(1e6).sub(mintingFee)))
             .div(1e6);
         require(ARTH_out_min <= arth_amount_d18, 'Slippage limit reached');
 
@@ -395,32 +373,6 @@ contract ArthPool is AccessControl {
         _mintAlgorithmicARTH(arthx_amount_d18, ARTH_out_min);
     }
 
-    // 0% collateral-backed
-    function mintAlgorithmicARTHAndCall(
-        uint256 arthx_amount_d18,
-        uint256 ARTH_out_min,
-        IMintAndCallFallBack _spender,
-        bytes memory _extraData,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external {
-        uint256 amountToStake =
-            _mintAlgorithmicARTH(arthx_amount_d18, ARTH_out_min);
-
-        ARTH.permit(
-            msg.sender,
-            address(_spender),
-            uint256(int256(-1)),
-            block.timestamp,
-            v,
-            r,
-            s
-        );
-
-        _spender.receiveMint(msg.sender, amountToStake, _extraData);
-    }
-
     // Will fail if fully collateralized or fully algorithmic
     // > 0% and < 100% collateral-backed
     function _mintFractionalARTH(
@@ -428,16 +380,16 @@ contract ArthPool is AccessControl {
         uint256 arthx_amount,
         uint256 ARTH_out_min
     ) private notMintPaused returns (uint256) {
-        uint256 arthx_price = controller.arthx_price();
-        uint256 global_collateral_ratio = controller.global_collateral_ratio();
+        uint256 arthxPrice = controller.arthxPrice();
+        uint256 globalCollateralRatio = controller.globalCollateralRatio();
 
         require(
-            global_collateral_ratio < COLLATERAL_RATIO_MAX &&
-                global_collateral_ratio > 0,
+            globalCollateralRatio < COLLATERAL_RATIO_MAX &&
+                globalCollateralRatio > 0,
             'Collateral ratio needs to be between .000001 and .999999'
         );
         require(
-            collateral_token
+            collateralToken
                 .balanceOf(address(this))
                 .sub(unclaimedPoolCollateral)
                 .add(collateral_amount) <= pool_ceiling,
@@ -448,22 +400,22 @@ contract ArthPool is AccessControl {
             collateral_amount * (10**missing_decimals);
         ArthPoolLibrary.MintFF_Params memory input_params =
             ArthPoolLibrary.MintFF_Params(
-                arthx_price,
+                arthxPrice,
                 getCollateralPrice(),
                 arthx_amount,
                 collateral_amount_d18,
-                global_collateral_ratio
+                globalCollateralRatio
             );
 
         (uint256 mint_amount, uint256 arthx_needed) =
             ArthPoolLibrary.calcMintFractionalARTH(input_params);
 
-        mint_amount = (mint_amount.mul(uint256(1e6).sub(minting_fee))).div(1e6);
+        mint_amount = (mint_amount.mul(uint256(1e6).sub(mintingFee))).div(1e6);
         require(ARTH_out_min <= mint_amount, 'Slippage limit reached');
         require(arthx_needed <= arthx_amount, 'Not enough ARTHX inputted');
 
         ARTHX.poolBurnFrom(msg.sender, arthx_needed);
-        collateral_token.transferFrom(
+        collateralToken.transferFrom(
             msg.sender,
             address(this),
             collateral_amount
@@ -483,32 +435,6 @@ contract ArthPool is AccessControl {
         _mintFractionalARTH(collateral_amount, arthx_amount, ARTH_out_min);
     }
 
-    function mintFractionalARTHAndCall(
-        uint256 collateral_amount,
-        uint256 arthx_amount,
-        uint256 ARTH_out_min,
-        IMintAndCallFallBack _spender,
-        bytes memory _extraData,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external notMintPaused {
-        uint256 amountToStake =
-            _mintFractionalARTH(collateral_amount, arthx_amount, ARTH_out_min);
-
-        ARTH.permit(
-            msg.sender,
-            address(_spender),
-            uint256(int256(-1)),
-            block.timestamp,
-            v,
-            r,
-            s
-        );
-
-        _spender.receiveMint(msg.sender, amountToStake, _extraData);
-    }
-
     function getARTHStabilityTokenOraclePrice() public view returns (uint256) {
         return arth_stability_token_oracle.getPrice();
     }
@@ -516,17 +442,17 @@ contract ArthPool is AccessControl {
     function _chargeStabilityFee(uint256 amount) internal {
         require(amount > 0, 'ArthPool: amount = 0');
 
-        if (stability_fee > 0) {
-            uint256 stability_fee_in_ARTH = amount.mul(stability_fee).div(100);
+        if (stabilityFee > 0) {
+            uint256 stabilityFee_in_ARTH = amount.mul(stabilityFee).div(100);
 
-            uint256 stability_fee_to_charge =
+            uint256 stabilityFee_to_charge =
                 getARTHStabilityTokenOraclePrice()
-                    .mul(stability_fee_in_ARTH)
+                    .mul(stabilityFee_in_ARTH)
                     .div(1e18); // NOTE: this is might change asper ARTH's decimals and price precision.
 
-            stability_fee_token.burnFrom(msg.sender, stability_fee_to_charge);
+            stabilityFeeToken.burnFrom(msg.sender, stabilityFee_to_charge);
 
-            emit StabilityFeesCharged(msg.sender, stability_fee_to_charge);
+            emit StabilityFeesCharged(msg.sender, stabilityFee_to_charge);
         }
 
         return;
@@ -538,7 +464,7 @@ contract ArthPool is AccessControl {
         notRedeemPaused
     {
         require(
-            controller.global_collateral_ratio() == COLLATERAL_RATIO_MAX,
+            controller.globalCollateralRatio() == COLLATERAL_RATIO_MAX,
             'Collateral ratio must be == 1'
         );
 
@@ -551,12 +477,12 @@ contract ArthPool is AccessControl {
             );
 
         collateral_needed = (
-            collateral_needed.mul(uint256(1e6).sub(redemption_fee))
+            collateral_needed.mul(uint256(1e6).sub(redemptionFee))
         )
             .div(1e6);
         require(
             collateral_needed <=
-                collateral_token.balanceOf(address(this)).sub(
+                collateralToken.balanceOf(address(this)).sub(
                     unclaimedPoolCollateral
                 ),
             'Not enough collateral in pool'
@@ -588,35 +514,35 @@ contract ArthPool is AccessControl {
         uint256 ARTHX_out_min,
         uint256 COLLATERAL_out_min
     ) external notRedeemPaused {
-        uint256 arthx_price = controller.arthx_price();
-        uint256 global_collateral_ratio = controller.global_collateral_ratio();
+        uint256 arthxPrice = controller.arthxPrice();
+        uint256 globalCollateralRatio = controller.globalCollateralRatio();
 
         require(
-            global_collateral_ratio < COLLATERAL_RATIO_MAX &&
-                global_collateral_ratio > 0,
+            globalCollateralRatio < COLLATERAL_RATIO_MAX &&
+                globalCollateralRatio > 0,
             'Collateral ratio needs to be between .000001 and .999999'
         );
         uint256 col_price_usd = getCollateralPrice();
 
         uint256 ARTH_amount_post_fee =
-            (ARTH_amount.mul(uint256(1e6).sub(redemption_fee))).div(
+            (ARTH_amount.mul(uint256(1e6).sub(redemptionFee))).div(
                 PRICE_PRECISION
             );
 
         uint256 arthx_dollar_value_d18 =
             ARTH_amount_post_fee.sub(
-                ARTH_amount_post_fee.mul(global_collateral_ratio).div(
+                ARTH_amount_post_fee.mul(globalCollateralRatio).div(
                     PRICE_PRECISION
                 )
             );
         uint256 arthx_amount =
-            arthx_dollar_value_d18.mul(PRICE_PRECISION).div(arthx_price);
+            arthx_dollar_value_d18.mul(PRICE_PRECISION).div(arthxPrice);
 
         // Need to adjust for decimals of collateral
         uint256 ARTH_amount_precision =
             ARTH_amount_post_fee.div(10**missing_decimals);
         uint256 collateral_dollar_value =
-            ARTH_amount_precision.mul(global_collateral_ratio).div(
+            ARTH_amount_precision.mul(globalCollateralRatio).div(
                 PRICE_PRECISION
             );
         uint256 collateral_amount =
@@ -624,7 +550,7 @@ contract ArthPool is AccessControl {
 
         require(
             collateral_amount <=
-                collateral_token.balanceOf(address(this)).sub(
+                collateralToken.balanceOf(address(this)).sub(
                     unclaimedPoolCollateral
                 ),
             'Not enough collateral in pool'
@@ -658,19 +584,19 @@ contract ArthPool is AccessControl {
         external
         notRedeemPaused
     {
-        uint256 arthx_price = controller.arthx_price();
-        uint256 global_collateral_ratio = controller.global_collateral_ratio();
+        uint256 arthxPrice = controller.arthxPrice();
+        uint256 globalCollateralRatio = controller.globalCollateralRatio();
 
-        require(global_collateral_ratio == 0, 'Collateral ratio must be 0');
+        require(globalCollateralRatio == 0, 'Collateral ratio must be 0');
         uint256 arthx_dollar_value_d18 = ARTH_amount;
 
         arthx_dollar_value_d18 = (
-            arthx_dollar_value_d18.mul(uint256(1e6).sub(redemption_fee))
+            arthx_dollar_value_d18.mul(uint256(1e6).sub(redemptionFee))
         )
-            .div(PRICE_PRECISION); //apply fees
+            .div(PRICE_PRECISION); // apply fees
 
         uint256 arthx_amount =
-            arthx_dollar_value_d18.mul(PRICE_PRECISION).div(arthx_price);
+            arthx_dollar_value_d18.mul(PRICE_PRECISION).div(arthxPrice);
 
         redeemARTHXBalances[msg.sender] = redeemARTHXBalances[msg.sender].add(
             arthx_amount
@@ -693,8 +619,8 @@ contract ArthPool is AccessControl {
     // to take out ARTH/collateral from the system, use an AMM to trade the new price, and then mint back into the system.
     function collectRedemption() external {
         require(
-            (lastRedeemed[msg.sender].add(redemption_delay)) <= block.number,
-            'Must wait for redemption_delay blocks before collecting redemption'
+            (lastRedeemed[msg.sender].add(redemptionDelay)) <= block.number,
+            'Must wait for redemptionDelay blocks before collecting redemption'
         );
         bool sendARTHX = false;
         bool sendCollateral = false;
@@ -724,17 +650,16 @@ contract ArthPool is AccessControl {
             ARTHX.transfer(msg.sender, ARTHXAmount);
         }
         if (sendCollateral == true) {
-            collateral_token.transfer(msg.sender, CollateralAmount);
+            collateralToken.transfer(msg.sender, CollateralAmount);
         }
     }
 
     function getTargetCollateralValue() public view returns (uint256) {
         return
-            ARTH.totalSupply().mul(controller.global_collateral_ratio()).div(
-                1e6
-            );
+            ARTH.totalSupply().mul(controller.globalCollateralRatio()).div(1e6);
     }
 
+    // keep this in another function
     function getCurveExponent() public view returns (uint256) {
         uint256 targetCollatValue = getTargetCollateralValue();
         uint256 currentCollatValue = controller.globalCollateralValue();
@@ -770,38 +695,40 @@ contract ArthPool is AccessControl {
         require(recollateralizePaused == false, 'Recollateralize is paused');
         uint256 collateral_amount_d18 =
             collateral_amount * (10**missing_decimals);
-        uint256 arthx_price = controller.arthx_price();
+        uint256 arthxPrice = controller.arthxPrice();
         uint256 arth_total_supply = ARTH.totalSupply();
-        uint256 global_collateral_ratio = controller.global_collateral_ratio();
-        uint256 global_collat_value = controller.globalCollateralValue();
+        uint256 globalCollateralRatio = controller.globalCollateralRatio();
+        uint256 globalCollatValue = controller.globalCollateralValue();
 
         (uint256 collateral_units, uint256 amount_to_recollat) =
             ArthPoolLibrary.calcRecollateralizeARTHInner(
                 collateral_amount_d18,
                 getCollateralPrice(),
-                global_collat_value,
+                globalCollatValue,
                 arth_total_supply,
-                global_collateral_ratio
+                globalCollateralRatio
             );
 
         uint256 collateral_units_precision =
             collateral_units.div(10**missing_decimals);
 
-        // NEED to make sure that recollat_fee is less than 1e6.
+        // NEED to make sure that recollatFee is less than 1e6.
         uint256 arthx_paid_back =
             amount_to_recollat
-                .mul(uint256(1e6).add(getCurvedDiscount()).sub(recollat_fee))
-                .div(arthx_price);
+                .mul(uint256(1e6).add(getCurvedDiscount()).sub(recollatFee))
+                .div(arthxPrice);
 
         require(ARTHX_out_min <= arthx_paid_back, 'Slippage limit reached');
-        collateral_token.transferFrom(
+
+        // TODO: check balance of the user; to avoid forcedao type bugs
+
+        collateralToken.transferFrom(
             msg.sender,
             address(this),
             collateral_units_precision
         );
 
         ARTHX.poolMint(msg.sender, arthx_paid_back);
-
         return arthx_paid_back;
     }
 
@@ -812,50 +739,25 @@ contract ArthPool is AccessControl {
         _recollateralizeARTH(collateral_amount, ARTHX_out_min);
     }
 
-    function recollateralizeARTHAndCall(
-        uint256 collateral_amount,
-        uint256 ARTHX_out_min,
-        IMintAndCallFallBack _spender,
-        bytes memory _extraData,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external {
-        uint256 amountToStake =
-            _recollateralizeARTH(collateral_amount, ARTHX_out_min);
-
-        ARTHX.permit(
-            msg.sender,
-            address(_spender),
-            uint256(int256(-1)),
-            block.timestamp,
-            v,
-            r,
-            s
-        );
-
-        _spender.receiveMint(msg.sender, amountToStake, _extraData);
-    }
-
     // Function can be called by an ARTHX holder to have the protocol buy back ARTHX with excess collateral value from a desired collateral pool
     // This can also happen if the collateral ratio > 1
     function buyBackARTHX(uint256 ARTHX_amount, uint256 COLLATERAL_out_min)
         external
     {
         require(buyBackPaused == false, 'Buyback is paused');
-        uint256 arthx_price = controller.arthx_price();
+        uint256 arthxPrice = controller.arthxPrice();
 
         ArthPoolLibrary.BuybackARTHX_Params memory input_params =
             ArthPoolLibrary.BuybackARTHX_Params(
                 availableExcessCollatDV(),
-                arthx_price,
+                arthxPrice,
                 getCollateralPrice(),
                 ARTHX_amount
             );
 
         uint256 collateral_equivalent_d18 =
             (ArthPoolLibrary.calcBuyBackARTHX(input_params))
-                .mul(uint256(1e6).sub(buyback_fee))
+                .mul(uint256(1e6).sub(buybackFee))
                 .div(1e6);
         uint256 collateral_precision =
             collateral_equivalent_d18.div(10**missing_decimals);
@@ -866,7 +768,7 @@ contract ArthPool is AccessControl {
         );
         // Give the sender their desired collateral and burn the ARTHX
         ARTHX.poolBurnFrom(msg.sender, ARTHX_amount);
-        collateral_token.transfer(msg.sender, collateral_precision);
+        collateralToken.transfer(msg.sender, collateral_precision);
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
@@ -906,19 +808,19 @@ contract ArthPool is AccessControl {
     function setPoolParameters(
         uint256 new_ceiling,
         uint256 new_bonus_rate,
-        uint256 new_redemption_delay,
+        uint256 new_redemptionDelay,
         uint256 new_mint_fee,
         uint256 new_redeem_fee,
-        uint256 new_buyback_fee,
-        uint256 new_recollat_fee
+        uint256 new_buybackFee,
+        uint256 new_recollatFee
     ) external onlyByOwnerOrGovernance {
         pool_ceiling = new_ceiling;
         bonus_rate = new_bonus_rate;
-        redemption_delay = new_redemption_delay;
-        minting_fee = new_mint_fee;
-        redemption_fee = new_redeem_fee;
-        buyback_fee = new_buyback_fee;
-        recollat_fee = new_recollat_fee;
+        redemptionDelay = new_redemptionDelay;
+        mintingFee = new_mint_fee;
+        redemptionFee = new_redeem_fee;
+        buybackFee = new_buybackFee;
+        recollatFee = new_recollatFee;
     }
 
     function setTimelock(address new_timelock)
@@ -928,8 +830,8 @@ contract ArthPool is AccessControl {
         timelock_address = new_timelock;
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     /* ========== EVENTS ========== */
