@@ -633,12 +633,12 @@ contract('ARTH', async (accounts) => {
 		console.log("6DEC price:", collateral_price);
 
 		// Need to approve first so the pool contract can use transferFrom
-		const collateral_amount = new BigNumber("100e6");
-		await col_instance_6DEC.approve(pool_instance_6DEC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		const collateralAmount = new BigNumber("100e6");
+		await col_instance_6DEC.approve(pool_instance_6DEC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 		// Mint some ARTH
 		console.log("accounts[0] mint1t1ARTH() with 100 6DEC; slippage limit of 1%");
-		const ARTH_out_min = new BigNumber(collateral_amount.times(collateral_price).times(0.99)); // 1% slippage
-		await pool_instance_6DEC.mint1t1ARTH(collateral_amount, ARTH_out_min, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		const ARTHOutMin = new BigNumber(collateralAmount.times(collateral_price).times(0.99)); // 1% slippage
+		await pool_instance_6DEC.mint1t1ARTH(collateralAmount, ARTHOutMin, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
 		// Note the collateral and ARTH amounts after minting
 		const arth_after = new BigNumber(await arthInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHS_OWNER)).div(BIG18);
@@ -804,12 +804,12 @@ contract('ARTH', async (accounts) => {
 		console.log("pool_bal_6dec: ", pool_bal_6dec.toNumber());
 
 		// Need to approve first so the pool contract can use transferFrom
-		const arthx_amount = new BigNumber("500e18");
-		await arthxInstance.approve(pool_instance_6DEC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-		const collateral_amount = new BigNumber("100e6");
-		await col_instance_6DEC.approve(pool_instance_6DEC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		const arthxAmount = new BigNumber("500e18");
+		await arthxInstance.approve(pool_instance_6DEC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		const collateralAmount = new BigNumber("100e6");
+		await col_instance_6DEC.approve(pool_instance_6DEC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
-		await pool_instance_6DEC.mintFractionalARTH(collateral_amount, arthx_amount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		await pool_instance_6DEC.mintFractionalARTH(collateralAmount, arthxAmount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 		console.log("accounts[0] mintFractionalARTH() with 100 6DEC and 500 ARTHS");
 
 		// Note the ARTHS, ARTH, and FAKE amounts after minting
@@ -1017,11 +1017,11 @@ contract('ARTH', async (accounts) => {
 		console.log("accounts[0] ARTH balance before:", arth_before.toNumber());
 
 		// Need to approve first so the pool contract can use transferFrom
-		const arthx_amount = new BigNumber("10000e18");
-		await arthxInstance.approve(pool_instance_6DEC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		const arthxAmount = new BigNumber("10000e18");
+		await arthxInstance.approve(pool_instance_6DEC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
 		// Mint some ARTH
-		await pool_instance_6DEC.mintAlgorithmicARTH(arthx_amount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		await pool_instance_6DEC.mintAlgorithmicARTH(arthxAmount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 		console.log("accounts[0] mintAlgorithmicARTH() using 10,000 ARTHS");
 
 		// Note the ARTHX and ARTH amounts after minting
@@ -1125,8 +1125,8 @@ contract('ARTH', async (accounts) => {
 		console.log("buyback_available: $", buyback_available.toNumber());
 
 		// Need to approve first so the pool contract can use transfer
-		const arthx_amount = new BigNumber("40000e18");
-		await arthxInstance.approve(pool_instance_6DEC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		const arthxAmount = new BigNumber("40000e18");
+		await arthxInstance.approve(pool_instance_6DEC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
 		// ARTHX price
 		const arthxPrice = new BigNumber(await arthInstance.arthxPrice()).div(BIG6);
@@ -1134,7 +1134,7 @@ contract('ARTH', async (accounts) => {
 
 		// Buy back some ARTH
 		console.log("accounts[0] buyBackARTHX() using 40,000 ARTHS");
-		await pool_instance_6DEC.buyBackARTHX(arthx_amount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+		await pool_instance_6DEC.buyBackARTHX(arthxAmount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
 
 

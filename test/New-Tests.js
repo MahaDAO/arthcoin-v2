@@ -970,13 +970,13 @@ contract('ARTH', async (accounts) => {
     console.log("pool_bal_usdc: ", pool_bal_usdc.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const collateral_amount = new BigNumber("100e6");
-    await col_instance_USDC.approve(pool_instance_USDC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const collateralAmount = new BigNumber("100e6");
+    await col_instance_USDC.approve(pool_instance_USDC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     // Mint some ARTH
     console.log("accounts[1] mint1t1ARTH() with 100 USDC; slippage limit of 1%");
     const collateral_price = (new BigNumber(await pool_instance_USDC.getCollateralPrice.call()).div(BIG6)).toNumber()
-    const ARTH_out_min = new BigNumber(collateral_amount.times(collateral_price).times(0.99)); // 1% slippage
-    await pool_instance_USDC.mint1t1ARTH(collateral_amount, ARTH_out_min, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const ARTHOutMin = new BigNumber(collateralAmount.times(collateral_price).times(0.99)); // 1% slippage
+    await pool_instance_USDC.mint1t1ARTH(collateralAmount, ARTHOutMin, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // Note the collateral and ARTH amounts after minting
     const arth_after = new BigNumber(await arthInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHS_OWNER)).div(BIG18);
@@ -1149,12 +1149,12 @@ contract('ARTH', async (accounts) => {
     console.log("pool_bal_usdc: ", pool_bal_usdc.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const arthx_amount = new BigNumber("500e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const collateral_amount = new BigNumber("100e6");
-    await col_instance_USDC.approve(pool_instance_USDC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("500e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const collateralAmount = new BigNumber("100e6");
+    await col_instance_USDC.approve(pool_instance_USDC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
-    await pool_instance_USDC.mintFractionalARTH(collateral_amount, arthx_amount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await pool_instance_USDC.mintFractionalARTH(collateralAmount, arthxAmount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     console.log("accounts[1] mintFractionalARTH() with 100 USDC and 500 ARTHS");
 
     // Note the ARTHS, ARTH, and FAKE amounts after minting
@@ -1219,13 +1219,13 @@ contract('ARTH', async (accounts) => {
     console.log("pool_bal_usdc: ", pool_bal_usdc.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const arthx_amount = new BigNumber("1e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const collateral_amount = new BigNumber("100e6");
-    await col_instance_USDC.approve(pool_instance_USDC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("1e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const collateralAmount = new BigNumber("100e6");
+    await col_instance_USDC.approve(pool_instance_USDC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
 
-    await expectRevert.unspecified(pool_instance_USDC.mintFractionalARTH(collateral_amount, arthx_amount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }));
+    await expectRevert.unspecified(pool_instance_USDC.mintFractionalARTH(collateralAmount, arthxAmount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }));
     console.log("accounts[1] mintFractionalARTH() with 100 USDC and 5 ARTHS");
 
     // Note the ARTHS, ARTH, and FAKE amounts after minting
@@ -1341,12 +1341,12 @@ contract('ARTH', async (accounts) => {
     console.log("pool_bal_usdc: ", pool_bal_usdc.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const arthx_amount = new BigNumber("50000e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const collateral_amount = new BigNumber("10000e6");
-    await col_instance_USDC.approve(pool_instance_USDC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("50000e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const collateralAmount = new BigNumber("10000e6");
+    await col_instance_USDC.approve(pool_instance_USDC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
-    await pool_instance_USDC.mintFractionalARTH(collateral_amount, arthx_amount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await pool_instance_USDC.mintFractionalARTH(collateralAmount, arthxAmount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     console.log("accounts[1] mintFractionalARTH() with 10,000 USDC and 50,000 ARTHS");
 
     // Note the ARTHS, ARTH, and FAKE amounts after minting
@@ -1499,11 +1499,11 @@ contract('ARTH', async (accounts) => {
     console.log("accounts[1] ARTH balance before:", arth_before.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const arthx_amount = new BigNumber("10000e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("10000e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // Mint some ARTH
-    await pool_instance_USDC.mintAlgorithmicARTH(arthx_amount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await pool_instance_USDC.mintAlgorithmicARTH(arthxAmount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     console.log("accounts[1] mintAlgorithmicARTH() using 10,000 ARTHS");
 
     // Note the ARTHX and ARTH amounts after minting
@@ -1612,8 +1612,8 @@ contract('ARTH', async (accounts) => {
     // console.log("buyback_available_in_arthx: ", buyback_available_in_arthx.toNumber(), " ARTHS");
 
     // Need to approve first so the pool contract can use transfer
-    const arthx_amount = new BigNumber("40000e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("40000e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // ARTHX price
     const arthxPrice = new BigNumber(await arthInstance.arthxPrice()).div(BIG6);
@@ -1621,7 +1621,7 @@ contract('ARTH', async (accounts) => {
 
     // Buy back some ARTH
     console.log("accounts[1] buyBackARTHX() using 40,000 ARTHS");
-    await pool_instance_USDC.buyBackARTHX(arthx_amount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await pool_instance_USDC.buyBackARTHX(arthxAmount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // Note the ARTHX and FAKE amounts after buying back
     const arthx_after = new BigNumber(await arthxInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHS_OWNER)).div(BIG18);

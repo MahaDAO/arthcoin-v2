@@ -23,7 +23,7 @@ contract TestDriftingReserves {
     uint256 drift_refresh_period;
 
     // Example reserve update flow
-    function mint(uint256 arthx_amount) external {
+    function mint(uint256 arthxAmount) external {
         // Get current reserves
         (
             uint256 current_arthx_virtual_reserves,
@@ -35,14 +35,14 @@ contract TestDriftingReserves {
         // Calc reserve updates
         uint256 total_arth_mint =
             getAmountOut(
-                arthx_amount,
+                arthxAmount,
                 current_arthx_virtual_reserves,
                 current_collat_virtual_reserves
             );
 
         // Call _update with new reserves and average over last period
         _update(
-            current_arthx_virtual_reserves.add(arthx_amount),
+            current_arthx_virtual_reserves.add(arthxAmount),
             current_collat_virtual_reserves.sub(total_arth_mint),
             average_arthx_virtual_reserves,
             average_collat_virtual_reserves

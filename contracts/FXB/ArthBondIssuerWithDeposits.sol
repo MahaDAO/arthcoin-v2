@@ -279,7 +279,7 @@ contract ArthBondIssuerWithDeposits is AccessControl {
     //         require(amm_price >= floor_price(), "[buyARTHBfromAMM]: floor price reached");
     //     }
     // }
-    // function sellARTHBintoAMM(uint256 arthb_amount, uint256 arth_out_min, bool sell_excess_at_floor) external notSellingPaused returns (uint256 arthb_at_market_price, uint256 arthb_at_floor_price, uint256 arth_out, uint256 arth_fee_amt) {
+    // function sellARTHBintoAMM(uint256 arthb_amount, uint256 ARTHOutMin, bool sell_excess_at_floor) external notSellingPaused returns (uint256 arthb_at_market_price, uint256 arthb_at_floor_price, uint256 arth_out, uint256 arth_fee_amt) {
     //     require(isInEpoch(), 'Not in an epoch');
     //     // Sell as much as you can at market prices, then the rest at the floor price, unless !sell_excess_at_floor
     //     arthb_at_market_price = 0;
@@ -307,8 +307,8 @@ contract ArthBondIssuerWithDeposits is AccessControl {
     //     // Apply the normal selling fee
     //     arth_fee_amt = arth_out.mul(selling_fee).div(PRICE_PRECISION);
     //     arth_out = arth_out.sub(arth_fee_amt);
-    //     // Check arth_out_min
-    //     require(arth_out >= arth_out_min, "[sellARTHBintoAMM arth_out_min]: Slippage limit reached");
+    //     // Check ARTHOutMin
+    //     require(arth_out >= ARTHOutMin, "[sellARTHBintoAMM ARTHOutMin]: Slippage limit reached");
     //     // Take ARTHB from the sender
     //     ARTHB.transferFrom(msg.sender, address(this), arthb_amount);
     //     // Give ARTH to sender

@@ -462,7 +462,7 @@ contract CurveAMO is AccessControl {
         ARTHX.poolBurnFrom(address(this), amount);
     }
 
-    function metapoolDeposit(uint256 _arth_amount, uint256 _collateral_amount)
+    function metapoolDeposit(uint256 _arth_amount, uint256 _collateralAmount)
         public
         onlyByOwnerOrGovernance
         returns (uint256 metapool_LP_received)
@@ -476,13 +476,13 @@ contract CurveAMO is AccessControl {
         );
 
         // Approve the collateral to be added to 3pool
-        collateralToken.approve(address(three_pool), _collateral_amount);
+        collateralToken.approve(address(three_pool), _collateralAmount);
 
         // Convert collateral into 3pool
         uint256[3] memory three_pool_collaterals;
         three_pool_collaterals[
             uint256(uint128(THREE_POOL_COIN_INDEX))
-        ] = _collateral_amount;
+        ] = _collateralAmount;
         three_pool.add_liquidity(three_pool_collaterals, 0);
 
         // Approve the 3pool for the metapool

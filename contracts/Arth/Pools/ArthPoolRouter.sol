@@ -31,23 +31,21 @@ contract ArthPoolRouter {
 
     function mint1t1ARTHAndStake(
         uint256 collateralAmount,
-        uint256 ARTH_out_min,
+        uint256 ARTHOutMin,
         uint256 lockDuration
     ) public {
         collateral.transferFrom(msg.sender, address(this), collateralAmount);
-        uint256 arthOut = pool.mint1t1ARTH(collateralAmount, ARTH_out_min);
+        uint256 arthOut = pool.mint1t1ARTH(collateralAmount, ARTHOutMin);
         ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
 
-        if (lockDuration == 0) {
+        if (lockDuration == 0)
             stakingPoolARTH.stakeForLocked(msg.sender, arthOut, lockDuration);
-        } else {
-            stakingPoolARTH.stakeFor(msg.sender, arthOut, lockDuration);
-        }
+        else stakingPoolARTH.stakeFor(msg.sender, arthOut, lockDuration);
     }
 
     function mint1t1ARTHAndStakeWithPermit(
-        uint256 collateral_amount,
-        uint256 ARTH_out_min,
+        uint256 collateralAmount,
+        uint256 ARTHOutMin,
         uint256 lockDuration,
         uint8 v,
         bytes32 r,
@@ -58,7 +56,7 @@ contract ArthPoolRouter {
         //     ...
         // );
 
-        mint1t1ARTHAndStake(collateral_amount, ARTH_out_min, lockDuration);
+        mint1t1ARTHAndStake(collateralAmount, ARTHOutMin, lockDuration);
     }
 
     // 0% collateral-backed
@@ -89,17 +87,17 @@ contract ArthPoolRouter {
     }
 
     function mintFractionalARTHAndStake(
-        uint256 collateral_amount,
-        uint256 arthx_amount,
-        uint256 ARTH_out_min
+        uint256 collateralAmount,
+        uint256 arthxAmount,
+        uint256 ARTHOutMin
     ) external {
         // TODO
     }
 
     function mintFractionalARTHAndStakeWithPermit(
-        uint256 collateral_amount,
-        uint256 arthx_amount,
-        uint256 ARTH_out_min,
+        uint256 collateralAmount,
+        uint256 arthxAmount,
+        uint256 ARTHOutMin,
         uint8 v,
         bytes32 r,
         bytes32 s
@@ -108,15 +106,15 @@ contract ArthPoolRouter {
     }
 
     function recollateralizeARTHAndStake(
-        uint256 collateral_amount,
-        uint256 ARTHX_out_min
+        uint256 collateralAmount,
+        uint256 ARTHXOutMin
     ) external {
         // TODO
     }
 
     function recollateralizeARTHAndStakeWithPermit(
-        uint256 collateral_amount,
-        uint256 ARTHX_out_min,
+        uint256 collateralAmount,
+        uint256 ARTHXOutMin,
         uint8 v,
         bytes32 r,
         bytes32 s

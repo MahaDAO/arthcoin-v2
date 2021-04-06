@@ -433,9 +433,9 @@
 //     /* ========== PUBLIC FUNCTIONS ========== */
 
 //     function mintFractionalARTH(
-//         uint256 collateral_amount,
-//         uint256 arthx_amount,
-//         uint256 ARTH_out_min
+//         uint256 collateralAmount,
+//         uint256 arthxAmount,
+//         uint256 ARTHOutMin
 //     )
 //         public
 //         notMintPaused
@@ -454,20 +454,20 @@
 //         uint256 arthx_needed;
 //         if (globalCollateralRatio == 1e6) {
 //             // 1-to-1
-//             total_arth_mint = collateral_amount.mul(10**missing_decimals);
-//             collat_needed = collateral_amount;
+//             total_arth_mint = collateralAmount.mul(10**missing_decimals);
+//             collat_needed = collateralAmount;
 //             arthx_needed = 0;
 //         } else if (globalCollateralRatio == 0) {
 //             // Algorithmic
 //             // Assumes 1 collat = 1 ARTH at all times
 //             total_arth_mint = getAmountOut(
-//                 arthx_amount,
+//                 arthxAmount,
 //                 arthx_virtual_reserves,
 //                 collat_virtual_reserves,
 //                 mintingFee
 //             );
 //             _update(
-//                 arthx_virtual_reserves.add(arthx_amount),
+//                 arthx_virtual_reserves.add(arthxAmount),
 //                 collat_virtual_reserves.sub(total_arth_mint),
 //                 arthx_virtual_reserves,
 //                 collat_virtual_reserves
@@ -475,19 +475,19 @@
 
 //             total_arth_mint = total_arth_mint.mul(10**missing_decimals);
 //             collat_needed = 0;
-//             arthx_needed = arthx_amount;
+//             arthx_needed = arthxAmount;
 //         } else {
 //             // Fractional
 //             // Assumes 1 collat = 1 ARTH at all times
 //             uint256 arth_mint_from_arthx =
 //                 getAmountOut(
-//                     arthx_amount,
+//                     arthxAmount,
 //                     arthx_virtual_reserves,
 //                     collat_virtual_reserves,
 //                     mintingFee
 //                 );
 //             _update(
-//                 arthx_virtual_reserves.add(arthx_amount),
+//                 arthx_virtual_reserves.add(arthxAmount),
 //                 collat_virtual_reserves.sub(arth_mint_from_arthx),
 //                 arthx_virtual_reserves,
 //                 collat_virtual_reserves
@@ -497,7 +497,7 @@
 //                 uint256(1e6).sub(globalCollateralRatio)
 //             ); // find collat needed at collateral ratio
 //             require(
-//                 collat_needed <= collateral_amount,
+//                 collat_needed <= collateralAmount,
 //                 'Not enough collateral inputted'
 //             );
 
@@ -507,10 +507,10 @@
 //                 10**missing_decimals
 //             );
 //             total_arth_mint = arth_mint_from_arthx.add(arth_mint_from_collat);
-//             arthx_needed = arthx_amount;
+//             arthx_needed = arthxAmount;
 //         }
 
-//         require(total_arth_mint >= ARTH_out_min, 'Slippage limit reached');
+//         require(total_arth_mint >= ARTHOutMin, 'Slippage limit reached');
 //         require(
 //             collateralToken
 //                 .balanceOf(address(this))
@@ -529,7 +529,7 @@
 //         // Assumes $1 collateral (USDC, USDT, DAI, etc)
 //         require(
 //             total_arth_mint <=
-//                 collateral_amount
+//                 collateralAmount
 //                     .mul(10**missing_decimals)
 //                     .mul(uint256(1e6).add(max_drift_band))
 //                     .div(globalCollateralRatio),
@@ -542,7 +542,7 @@
 
 //     function redeemFractionalARTH(
 //         uint256 ARTH_amount,
-//         uint256 arthx_out_min,
+//         uint256 ARTHXOutMin,
 //         uint256 collateral_out_min
 //     )
 //         public
@@ -617,7 +617,7 @@
 //             collat_out >= collateral_out_min,
 //             'Slippage limit reached [collateral]'
 //         );
-//         require(arthx_out >= arthx_out_min, 'Slippage limit reached [ARTHS]');
+//         require(arthx_out >= ARTHXOutMin, 'Slippage limit reached [ARTHS]');
 
 //         // Sanity check to make sure the collat amount is close to the expected amount from the ARTH input
 //         // This check is redundant since collat_out is essentially supplied by the user
@@ -698,13 +698,13 @@
 //     }
 
 //     function recollateralizeARTH(
-//         uint256 collateral_amount,
+//         uint256 collateralAmount,
 //         uint256 ARTHS_out_min
 //     ) external returns (uint256, uint256) {
 //         require(recollateralizePaused == false, 'Recollateralize is paused');
 //         uint256 arthx_out =
 //             getAmountOut(
-//                 collateral_amount,
+//                 collateralAmount,
 //                 collat_virtual_reserves,
 //                 arthx_virtual_reserves,
 //                 recollatFee
@@ -712,7 +712,7 @@
 
 //         _update(
 //             arthx_virtual_reserves.sub(arthx_out),
-//             collat_virtual_reserves.add(collateral_amount),
+//             collat_virtual_reserves.add(collateralAmount),
 //             arthx_virtual_reserves,
 //             collat_virtual_reserves
 //         );
@@ -726,14 +726,14 @@
 //         require(
 //             target_collat_value >=
 //                 globalCollatValue +
-//                     collateral_amount.mul(10**missing_decimals),
+//                     collateralAmount.mul(10**missing_decimals),
 //             'Too much recollateralize inputted'
 //         );
 
 //         collateralToken.transferFrom(
 //             msg.sender,
 //             address(this),
-//             collateral_amount
+//             collateralAmount
 //         );
 
 //         // Sanity check to make sure the value of the outgoing ARTHX amount is close to the expected amount based on the collateral input
@@ -744,7 +744,7 @@
 //             arthxUSDCOracle.consult(arthx_contract_address, 1e18); // comes out e6
 //         require(
 //             arthx_out.mul(arthxPrice).div(1e6) <=
-//                 collateral_amount
+//                 collateralAmount
 //                     .mul(10**missing_decimals)
 //                     .mul(uint256(1e6).add(max_drift_band))
 //                     .div(1e6),
@@ -756,7 +756,7 @@
 
 //         ARTHS.poolMint(msg.sender, arthx_out);
 
-//         return (collateral_amount, arthx_out);
+//         return (collateralAmount, arthx_out);
 //     }
 
 //     function buyBackARTHX(uint256 ARTHS_amount, uint256 COLLATERAL_out_min)

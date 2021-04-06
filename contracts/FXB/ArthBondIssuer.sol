@@ -454,7 +454,7 @@ contract ArthBondIssuer is AccessControl {
         }
     }
 
-    function sellARTHBintoAMM(uint256 arthb_in, uint256 arth_out_min)
+    function sellARTHBintoAMM(uint256 arthb_in, uint256 ARTHOutMin)
         external
         notSellingPaused
         returns (
@@ -527,10 +527,10 @@ contract ArthBondIssuer is AccessControl {
             arth_out += arth_out_under_floor;
         }
 
-        // Check arth_out_min
+        // Check ARTHOutMin
         require(
-            arth_out >= arth_out_min,
-            '[sellARTHBintoAMM arth_out_min]: Slippage limit reached'
+            arth_out >= ARTHOutMin,
+            '[sellARTHBintoAMM ARTHOutMin]: Slippage limit reached'
         );
 
         // Take ARTHB from the sender and increase the virtual balance

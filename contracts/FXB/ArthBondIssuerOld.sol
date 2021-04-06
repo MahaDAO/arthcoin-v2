@@ -260,7 +260,7 @@ contract ArthBondIssuerOld is AccessControl {
     //         }
     //     }
     // }
-    // function sellARTHBintoAMM(uint256 arthb_amount, uint256 arth_out_min) external notSellingPaused returns (uint256 arthb_bought_above_floor, uint256 arthb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
+    // function sellARTHBintoAMM(uint256 arthb_amount, uint256 ARTHOutMin) external notSellingPaused returns (uint256 arthb_bought_above_floor, uint256 arthb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
     //     require(isInEpoch(), 'Not in an epoch');
     //     arthb_bought_above_floor = arthb_amount;
     //     arthb_sold_under_floor = 0;
@@ -300,8 +300,8 @@ contract ArthBondIssuerOld is AccessControl {
     //         arth_fee_amt += fee_below_floor;
     //         arth_out += arth_out_under_floor;
     //     }
-    //     // Check arth_out_min
-    //     require(arth_out >= arth_out_min, "[sellARTHBintoAMM arth_out_min]: Slippage limit reached");
+    //     // Check ARTHOutMin
+    //     require(arth_out >= ARTHOutMin, "[sellARTHBintoAMM ARTHOutMin]: Slippage limit reached");
     //     // Take ARTHB from the sender
     //     ARTHB.transferFrom(msg.sender, address(this), arthb_amount);
     //     // Give ARTH to sender from the AMM pool
