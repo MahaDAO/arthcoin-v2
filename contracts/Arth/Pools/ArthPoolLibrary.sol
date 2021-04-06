@@ -13,35 +13,35 @@ library ArthPoolLibrary {
     // ================ Structs ================
     // Needed to lower stack size
     struct MintFF_Params {
-        uint256 arthx_price_usd;
+        uint256 arthxPrice_usd;
         uint256 col_price_usd;
-        uint256 arthx_amount;
-        uint256 collateral_amount;
+        uint256 arthxAmount;
+        uint256 collateralAmount;
         uint256 col_ratio;
     }
 
     struct BuybackARTHX_Params {
         uint256 excess_collateral_dollar_value_d18;
-        uint256 arthx_price_usd;
+        uint256 arthxPrice_usd;
         uint256 col_price_usd;
-        uint256 ARTHX_amount;
+        uint256 arthxAmount;
     }
 
     // ================ Functions ================
 
-    function calcMint1t1ARTH(uint256 col_price, uint256 collateral_amount_d18)
+    function calcMint1t1ARTH(uint256 col_price, uint256 collateralAmount_d18)
         public
         pure
         returns (uint256)
     {
-        return (collateral_amount_d18.mul(col_price)).div(1e6);
+        return (collateralAmount_d18.mul(col_price)).div(1e6);
     }
 
     function calcMintAlgorithmicARTH(
-        uint256 arthx_price_usd,
-        uint256 arthx_amount_d18
+        uint256 arthxPrice_usd,
+        uint256 arthxAmount_d18
     ) public pure returns (uint256) {
-        return arthx_amount_d18.mul(arthx_price_usd).div(1e6);
+        return arthxAmount_d18.mul(arthxPrice_usd).div(1e6);
     }
 
     // Must be internal because of the struct
@@ -59,11 +59,11 @@ library ArthPoolLibrary {
         {
             // USD amounts of the collateral and the ARTHX
             arthx_dollar_value_d18 = params
-                .arthx_amount
-                .mul(params.arthx_price_usd)
+                .arthxAmount
+                .mul(params.arthxPrice_usd)
                 .div(1e6);
             c_dollar_value_d18 = params
-                .collateral_amount
+                .collateralAmount
                 .mul(params.col_price_usd)
                 .div(1e6);
         }
@@ -74,7 +74,7 @@ library ArthPoolLibrary {
 
         uint256 calculated_arthx_needed =
             calculated_arthx_dollar_value_d18.mul(1e6).div(
-                params.arthx_price_usd
+                params.arthxPrice_usd
             );
 
         return (
@@ -105,7 +105,7 @@ library ArthPoolLibrary {
 
         // Make sure not to take more than is available
         uint256 arthx_dollar_value_d18 =
-            params.ARTHX_amount.mul(params.arthx_price_usd).div(1e6);
+            params.arthxAmount.mul(params.arthxPrice_usd).div(1e6);
         require(
             arthx_dollar_value_d18 <= params.excess_collateral_dollar_value_d18,
             'You are trying to buy back more than the excess!'
@@ -114,7 +114,7 @@ library ArthPoolLibrary {
         // Get the equivalent amount of collateral based on the market value of ARTHX provided
         uint256 collateral_equivalent_d18 =
             arthx_dollar_value_d18.mul(1e6).div(params.col_price_usd);
-        //collateral_equivalent_d18 = collateral_equivalent_d18.sub((collateral_equivalent_d18.mul(params.buyback_fee)).div(1e6));
+        //collateral_equivalent_d18 = collateral_equivalent_d18.sub((collateral_equivalent_d18.mul(params.buybackFee)).div(1e6));
 
         return (collateral_equivalent_d18);
     }
@@ -122,30 +122,30 @@ library ArthPoolLibrary {
     // Returns value of collateral that must increase to reach recollateralization target (if 0 means no recollateralization)
     function recollateralizeAmount(
         uint256 total_supply,
-        uint256 global_collateral_ratio,
-        uint256 global_collat_value
+        uint256 globalCollateralRatio,
+        uint256 globalCollatValue
     ) public pure returns (uint256) {
         uint256 target_collat_value =
-            total_supply.mul(global_collateral_ratio).div(1e6); // We want 18 decimals of precision so divide by 1e6; total_supply is 1e18 and global_collateral_ratio is 1e6
+            total_supply.mul(globalCollateralRatio).div(1e6); // We want 18 decimals of precision so divide by 1e6; total_supply is 1e18 and globalCollateralRatio is 1e6
         // Subtract the current value of collateral from the target value needed, if higher than 0 then system needs to recollateralize
-        return target_collat_value.sub(global_collat_value); // If recollateralization is not needed, throws a subtraction underflow
+        return target_collat_value.sub(globalCollatValue); // If recollateralization is not needed, throws a subtraction underflow
         // return(recollateralization_left);
     }
 
     function calcRecollateralizeARTHInner(
-        uint256 collateral_amount,
+        uint256 collateralAmount,
         uint256 col_price,
-        uint256 global_collat_value,
+        uint256 globalCollatValue,
         uint256 arth_total_supply,
-        uint256 global_collateral_ratio
+        uint256 globalCollateralRatio
     ) public pure returns (uint256, uint256) {
         uint256 collat_value_attempted =
-            collateral_amount.mul(col_price).div(1e6);
+            collateralAmount.mul(col_price).div(1e6);
         uint256 effective_collateral_ratio =
-            global_collat_value.mul(1e6).div(arth_total_supply); //returns it in 1e6
+            globalCollatValue.mul(1e6).div(arth_total_supply); //returns it in 1e6
         uint256 recollat_possible =
             (
-                global_collateral_ratio.mul(arth_total_supply).sub(
+                globalCollateralRatio.mul(arth_total_supply).sub(
                     arth_total_supply.mul(effective_collateral_ratio)
                 )
             )

@@ -330,9 +330,9 @@ contract('ARTH', async (accounts) => {
     let arth_price_from_ARTH_WETH = (new BigNumber(await oracle_instance_ARTH_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
     let arth_price_from_ARTH_USDC = (new BigNumber(await oracle_instance_ARTH_USDC.consult.call(arthInstance.address, new BigNumber("1e18")))).div(BIG6);
     let arth_price_from_ARTH_USDT = (new BigNumber(await oracle_instance_ARTH_USDT.consult.call(arthInstance.address, new BigNumber("1e18")))).div(BIG6);
-    let arthx_price_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
-    let arthx_price_from_ARTHS_USDC = (new BigNumber(await oracle_instance_ARTHS_USDC.consult.call(arthxInstance.address, new BigNumber("1e18")))).div(BIG6);
-    let arthx_price_from_ARTHS_USDT = (new BigNumber(await oracle_instance_ARTHS_USDT.consult.call(arthxInstance.address, new BigNumber("1e18")))).div(BIG6);
+    let arthxPrice_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
+    let arthxPrice_from_ARTHS_USDC = (new BigNumber(await oracle_instance_ARTHS_USDC.consult.call(arthxInstance.address, new BigNumber("1e18")))).div(BIG6);
+    let arthxPrice_from_ARTHS_USDT = (new BigNumber(await oracle_instance_ARTHS_USDT.consult.call(arthxInstance.address, new BigNumber("1e18")))).div(BIG6);
     let USDT_price_from_USDT_WETH = (new BigNumber(await oracle_instance_USDT_WETH.consult.call(WETH.address, new BigNumber("1e18")))).div(BIG6);
     let USDC_price_from_USDC_WETH = (new BigNumber(await oracle_instance_USDC_WETH.consult.call(WETH.address, new BigNumber("1e18")))).div(BIG6);
 
@@ -340,9 +340,9 @@ contract('ARTH', async (accounts) => {
     console.log("arth_price_from_ARTH_WETH: ", arth_price_from_ARTH_WETH.toString(), " ARTH = 1 WETH");
     console.log("arth_price_from_ARTH_USDC: ", arth_price_from_ARTH_USDC.toString(), " ARTH = 1 USDC");
     console.log("arth_price_from_ARTH_USDT: ", arth_price_from_ARTH_USDT.toString(), " ARTH = 1 USDT");
-    console.log("arthx_price_from_ARTHS_WETH: ", arthx_price_from_ARTHS_WETH.toString(), " ARTHX = 1 WETH");
-    console.log("arthx_price_from_ARTHS_USDC: ", arthx_price_from_ARTHS_USDC.toString(), " ARTHX = 1 USDC");
-    console.log("arthx_price_from_ARTHS_USDT: ", arthx_price_from_ARTHS_USDT.toString(), " ARTHX = 1 USDT");
+    console.log("arthxPrice_from_ARTHS_WETH: ", arthxPrice_from_ARTHS_WETH.toString(), " ARTHX = 1 WETH");
+    console.log("arthxPrice_from_ARTHS_USDC: ", arthxPrice_from_ARTHS_USDC.toString(), " ARTHX = 1 USDC");
+    console.log("arthxPrice_from_ARTHS_USDT: ", arthxPrice_from_ARTHS_USDT.toString(), " ARTHX = 1 USDT");
     console.log("USDT_price_from_USDT_WETH: ", USDT_price_from_USDT_WETH.toString(), " USDT = 1 WETH");
     console.log("USDC_price_from_USDC_WETH: ", USDC_price_from_USDC_WETH.toString(), " USDC = 1 WETH");
 
@@ -364,9 +364,9 @@ contract('ARTH', async (accounts) => {
     arth_price_from_ARTH_WETH = (new BigNumber(await oracle_instance_ARTH_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
     arth_price_from_ARTH_USDC = (new BigNumber(await oracle_instance_ARTH_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
     arth_price_from_ARTH_USDT = (new BigNumber(await oracle_instance_ARTH_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
-    arthx_price_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
-    arthx_price_from_ARTHS_USDC = (new BigNumber(await oracle_instance_ARTHS_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
-    arthx_price_from_ARTHS_USDT = (new BigNumber(await oracle_instance_ARTHS_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
+    arthxPrice_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber();
+    arthxPrice_from_ARTHS_USDC = (new BigNumber(await oracle_instance_ARTHS_USDC.consult.call(FakeCollateral_USDC.address, 1e6))).div(BIG6).toNumber();
+    arthxPrice_from_ARTHS_USDT = (new BigNumber(await oracle_instance_ARTHS_USDT.consult.call(FakeCollateral_USDT.address, 1e6))).div(BIG6).toNumber();
     USDT_price_from_USDT_WETH = (new BigNumber(await oracle_instance_USDT_WETH.consult.call(WETH.address, new BigNumber("1e18")))).div(BIG6);
     USDC_price_from_USDC_WETH = (new BigNumber(await oracle_instance_USDC_WETH.consult.call(WETH.address, new BigNumber("1e18")))).div(BIG6);
 
@@ -377,9 +377,9 @@ contract('ARTH', async (accounts) => {
     console.log("ARTH-USD price from Chainlink, Uniswap:", (new BigNumber(await arthInstance.arth_price.call())).div(1e6).toString(), "ARTH = 1 USD");
     //console.log("arth_price_from_ARTH_USDC: ", arth_price_from_ARTH_USDC.toString(), "ARTH = 1 USDC");
     //console.log("arth_price_from_ARTH_USDT: ", arth_price_from_ARTH_USDT.toString(), "ARTH = 1 USDT");
-    console.log("arthx_price_from_ARTHS_WETH: ", arthx_price_from_ARTHS_WETH.toString(), "ARTHX = 1 WETH");
-    //console.log("arthx_price_from_ARTHS_USDC: ", arthx_price_from_ARTHS_USDC.toString(), "ARTHX = 1 USDC");
-    //console.log("arthx_price_from_ARTHS_USDT: ", arthx_price_from_ARTHS_USDT.toString(), "ARTHX = 1 USDT");
+    console.log("arthxPrice_from_ARTHS_WETH: ", arthxPrice_from_ARTHS_WETH.toString(), "ARTHX = 1 WETH");
+    //console.log("arthxPrice_from_ARTHS_USDC: ", arthxPrice_from_ARTHS_USDC.toString(), "ARTHX = 1 USDC");
+    //console.log("arthxPrice_from_ARTHS_USDT: ", arthxPrice_from_ARTHS_USDT.toString(), "ARTHX = 1 USDT");
     console.log("USDT_price_from_USDT_WETH: ", USDT_price_from_USDT_WETH.toString(), "USDT = 1 WETH");
     console.log("USDC_price_from_USDC_WETH: ", USDC_price_from_USDC_WETH.toString(), "USDC = 1 WETH");
     console.log("USDT_price_from_pool: ", (new BigNumber(await pool_instance_USDT.getCollateralPrice.call())).div(1e6).toString(), "USDT = 1 USD");
@@ -401,7 +401,7 @@ contract('ARTH', async (accounts) => {
   // 	const totalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18);
   // 	console.log("totalCollateralValue: ", totalCollateralValue.toNumber());
 
-  // 	const collateral_ratio_refreshed = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+  // 	const collateral_ratio_refreshed = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
   // 	console.log("collateral_ratio_refreshed: ", collateral_ratio_refreshed.toNumber());
   // 	col_rat = collateral_ratio_refreshed;
   // });
@@ -747,8 +747,8 @@ contract('ARTH', async (accounts) => {
     console.log("Latest block: ", latestBlock);
 
     // Print the minting fee beforehand
-    let minting_fee_before = (new BigNumber(await arthInstance.minting_fee.call())).div(BIG6).toNumber();
-    console.log("minting_fee_before: ", minting_fee_before);
+    let mintingFee_before = (new BigNumber(await arthInstance.mintingFee.call())).div(BIG6).toNumber();
+    console.log("mintingFee_before: ", mintingFee_before);
 
     // https://github.com/compound-finance/compound-protocol/blob/master/tests/Governance/GovernorAlpha/ProposeTest.js
     await governanceInstance.propose(
@@ -827,8 +827,8 @@ contract('ARTH', async (accounts) => {
     await time.advanceBlock();
 
     // Print the minting fee afterwards
-    let minting_fee_after = (new BigNumber(await arthInstance.minting_fee.call())).div(BIG6).toNumber();
-    console.log("minting_fee_after: ", minting_fee_after);
+    let mintingFee_after = (new BigNumber(await arthInstance.mintingFee.call())).div(BIG6).toNumber();
+    console.log("mintingFee_after: ", mintingFee_after);
 
     // Set the voting period back to 17280 blocks
     await governanceInstance.__setVotingPeriod(17280, { from: GOVERNOR_GUARDIAN_ADDRESS });
@@ -850,8 +850,8 @@ contract('ARTH', async (accounts) => {
     console.log("Latest block: ", latestBlock);
 
     // Print the minting fee beforehand
-    let minting_fee_before = (new BigNumber(await arthInstance.minting_fee.call())).div(BIG6).toNumber();
-    console.log("minting_fee_before: ", minting_fee_before);
+    let mintingFee_before = (new BigNumber(await arthInstance.mintingFee.call())).div(BIG6).toNumber();
+    console.log("mintingFee_before: ", mintingFee_before);
 
     // https://github.com/compound-finance/compound-protocol/blob/master/tests/Governance/GovernorAlpha/ProposeTest.js
     await governanceInstance.propose(
@@ -930,8 +930,8 @@ contract('ARTH', async (accounts) => {
     await time.advanceBlock();
 
     // Print the minting fee afterwards
-    let minting_fee_after = (new BigNumber(await arthInstance.minting_fee.call())).div(BIG6).toNumber();
-    console.log("minting_fee_after: ", minting_fee_after);
+    let mintingFee_after = (new BigNumber(await arthInstance.mintingFee.call())).div(BIG6).toNumber();
+    console.log("mintingFee_after: ", mintingFee_after);
 
     // Set the voting period back to 17280 blocks
     await governanceInstance.__setVotingPeriod(17280, { from: GOVERNOR_GUARDIAN_ADDRESS });
@@ -943,10 +943,10 @@ contract('ARTH', async (accounts) => {
     console.log("=========================mint1t1ARTH=========================");
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -954,7 +954,7 @@ contract('ARTH', async (accounts) => {
     console.log("");
 
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the collateral and ARTH amounts before minting
@@ -970,13 +970,13 @@ contract('ARTH', async (accounts) => {
     console.log("pool_bal_usdc: ", pool_bal_usdc.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const collateral_amount = new BigNumber("100e6");
-    await col_instance_USDC.approve(pool_instance_USDC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const collateralAmount = new BigNumber("100e6");
+    await col_instance_USDC.approve(pool_instance_USDC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     // Mint some ARTH
     console.log("accounts[1] mint1t1ARTH() with 100 USDC; slippage limit of 1%");
     const collateral_price = (new BigNumber(await pool_instance_USDC.getCollateralPrice.call()).div(BIG6)).toNumber()
-    const ARTH_out_min = new BigNumber(collateral_amount.times(collateral_price).times(0.99)); // 1% slippage
-    await pool_instance_USDC.mint1t1ARTH(collateral_amount, ARTH_out_min, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const ARTHOutMin = new BigNumber(collateralAmount.times(collateral_price).times(0.99)); // 1% slippage
+    await pool_instance_USDC.mint1t1ARTH(collateralAmount, ARTHOutMin, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // Note the collateral and ARTH amounts after minting
     const arth_after = new BigNumber(await arthInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHS_OWNER)).div(BIG18);
@@ -990,7 +990,7 @@ contract('ARTH', async (accounts) => {
     console.log("ARTH_pool_USDC collateral change: ", pool_collateral_after.toNumber() - pool_collateral_before.toNumber());
 
     // Note the new collateral ratio
-    const collateral_ratio_after = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_after = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_after: ", collateral_ratio_after.toNumber());
 
   });
@@ -1000,10 +1000,10 @@ contract('ARTH', async (accounts) => {
     // Advance 1 hr so the collateral ratio can be recalculated
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1015,7 +1015,7 @@ contract('ARTH', async (accounts) => {
     await col_instance_USDT.transfer(pool_instance_USDT.address, THREE_THOUSAND_DEC6, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the collateral and ARTH amounts before redeeming
@@ -1052,7 +1052,7 @@ contract('ARTH', async (accounts) => {
     console.log("ARTH_pool_USDC change: ", pool_collateral_after.toNumber() - pool_collateral_before.toNumber());
 
     // Note the new collateral ratio
-    const collateral_ratio_after = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_after = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_after: ", collateral_ratio_after.toNumber());
   });
 
@@ -1106,7 +1106,7 @@ contract('ARTH', async (accounts) => {
       await time.increase(3600 + 1);
       await time.advanceBlock();
       await arthInstance.refreshCollateralRatio();
-      console.log("global_collateral_ratio:", (new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6)).toNumber());
+      console.log("globalCollateralRatio:", (new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6)).toNumber());
     }
 
   });
@@ -1119,10 +1119,10 @@ contract('ARTH', async (accounts) => {
     console.log("=========================mintFractionalARTH=========================");
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1131,7 +1131,7 @@ contract('ARTH', async (accounts) => {
 
     console.log("accounts[1] votes initial:", (new BigNumber(await arthxInstance.getCurrentVotes(COLLATERAL_ARTH_AND_ARTHS_OWNER))).div(BIG18).toString());
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the ARTHS, ARTH, and FAKE amounts before minting
@@ -1149,12 +1149,12 @@ contract('ARTH', async (accounts) => {
     console.log("pool_bal_usdc: ", pool_bal_usdc.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const arthx_amount = new BigNumber("500e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const collateral_amount = new BigNumber("100e6");
-    await col_instance_USDC.approve(pool_instance_USDC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("500e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const collateralAmount = new BigNumber("100e6");
+    await col_instance_USDC.approve(pool_instance_USDC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
-    await pool_instance_USDC.mintFractionalARTH(collateral_amount, arthx_amount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await pool_instance_USDC.mintFractionalARTH(collateralAmount, arthxAmount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     console.log("accounts[1] mintFractionalARTH() with 100 USDC and 500 ARTHS");
 
     // Note the ARTHS, ARTH, and FAKE amounts after minting
@@ -1169,7 +1169,7 @@ contract('ARTH', async (accounts) => {
     console.log("ARTH_pool_USDC balance change: ", pool_collateral_after.toNumber() - pool_collateral_before.toNumber());
 
     // Note the new collateral ratio
-    const collateral_ratio_after = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_after = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_after: ", collateral_ratio_after.toNumber());
 
   });
@@ -1190,10 +1190,10 @@ contract('ARTH', async (accounts) => {
 
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1201,7 +1201,7 @@ contract('ARTH', async (accounts) => {
     console.log("");
 
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the ARTHS, ARTH, and FAKE amounts before minting
@@ -1219,13 +1219,13 @@ contract('ARTH', async (accounts) => {
     console.log("pool_bal_usdc: ", pool_bal_usdc.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const arthx_amount = new BigNumber("1e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const collateral_amount = new BigNumber("100e6");
-    await col_instance_USDC.approve(pool_instance_USDC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("1e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const collateralAmount = new BigNumber("100e6");
+    await col_instance_USDC.approve(pool_instance_USDC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
 
-    await expectRevert.unspecified(pool_instance_USDC.mintFractionalARTH(collateral_amount, arthx_amount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }));
+    await expectRevert.unspecified(pool_instance_USDC.mintFractionalARTH(collateralAmount, arthxAmount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER }));
     console.log("accounts[1] mintFractionalARTH() with 100 USDC and 5 ARTHS");
 
     // Note the ARTHS, ARTH, and FAKE amounts after minting
@@ -1239,7 +1239,7 @@ contract('ARTH', async (accounts) => {
     console.log("ARTH_pool_USDC balance change: ", pool_collateral_after.toNumber() - pool_collateral_before.toNumber());
 
     // Note the new collateral ratio
-    const collateral_ratio_after = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_after = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_after: ", collateral_ratio_after.toNumber());
 
   });
@@ -1248,10 +1248,10 @@ contract('ARTH', async (accounts) => {
     console.log("=========================redeemFractionalARTH=========================");
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1261,7 +1261,7 @@ contract('ARTH', async (accounts) => {
     console.log("accounts[1] votes initial:", (new BigNumber(await arthxInstance.getCurrentVotes(COLLATERAL_ARTH_AND_ARTHS_OWNER))).div(BIG18).toString());
 
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the ARTHS, ARTH, and FAKE amounts before redeeming
@@ -1303,7 +1303,7 @@ contract('ARTH', async (accounts) => {
     console.log("ARTH_pool_USDC balance change:", pool_collateral_after.toNumber() - pool_collateral_before.toNumber());
 
     // Note the new collateral ratio
-    const collateral_ratio_after = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_after = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_after: ", collateral_ratio_after.toNumber());
 
   });
@@ -1312,10 +1312,10 @@ contract('ARTH', async (accounts) => {
     console.log("=========================mintFractionalARTH=========================");
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1323,7 +1323,7 @@ contract('ARTH', async (accounts) => {
     console.log("");
 
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the ARTHS, ARTH, and FAKE amounts before minting
@@ -1341,12 +1341,12 @@ contract('ARTH', async (accounts) => {
     console.log("pool_bal_usdc: ", pool_bal_usdc.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const arthx_amount = new BigNumber("50000e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
-    const collateral_amount = new BigNumber("10000e6");
-    await col_instance_USDC.approve(pool_instance_USDC.address, collateral_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("50000e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const collateralAmount = new BigNumber("10000e6");
+    await col_instance_USDC.approve(pool_instance_USDC.address, collateralAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
-    await pool_instance_USDC.mintFractionalARTH(collateral_amount, arthx_amount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await pool_instance_USDC.mintFractionalARTH(collateralAmount, arthxAmount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     console.log("accounts[1] mintFractionalARTH() with 10,000 USDC and 50,000 ARTHS");
 
     // Note the ARTHS, ARTH, and FAKE amounts after minting
@@ -1360,7 +1360,7 @@ contract('ARTH', async (accounts) => {
     console.log("ARTH_pool_USDC balance change: ", pool_collateral_after.toNumber() - pool_collateral_before.toNumber());
 
     // Note the new collateral ratio
-    const collateral_ratio_after = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_after = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_after: ", collateral_ratio_after.toNumber());
   });
 
@@ -1370,10 +1370,10 @@ contract('ARTH', async (accounts) => {
     console.log("=========================recollateralizeARTH=========================");
     let totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     let totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    let globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    let globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     let globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1383,7 +1383,7 @@ contract('ARTH', async (accounts) => {
     // Note the new collateral ratio
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
 
     console.log("effective collateral ratio before:", globalCollateralValue / totalSupplyARTH);
@@ -1405,11 +1405,11 @@ contract('ARTH', async (accounts) => {
     // Get the amount of recollateralization available
     const arth_info = await arthInstance.arth_info.call();
     const arth_total_supply = (new BigNumber(arth_info[2]));
-    const global_collateral_ratio = (new BigNumber(arth_info[3]));
-    const global_collat_value = (new BigNumber(arth_info[4]));
-    const effective_collateral_ratio_E6 = (global_collat_value.multipliedBy(1e6).div(arth_total_supply)).toNumber(); // Returns it in 1e6
+    const globalCollateralRatio = (new BigNumber(arth_info[3]));
+    const globalCollatValue = (new BigNumber(arth_info[4]));
+    const effective_collateral_ratio_E6 = (globalCollatValue.multipliedBy(1e6).div(arth_total_supply)).toNumber(); // Returns it in 1e6
     const effective_collateral_ratio = effective_collateral_ratio_E6 / 1e6;
-    let available_to_recollat = ((global_collateral_ratio.multipliedBy(arth_total_supply).minus(arth_total_supply.multipliedBy(effective_collateral_ratio_E6))).div(1e6).div(1e18)).toNumber();
+    let available_to_recollat = ((globalCollateralRatio.multipliedBy(arth_total_supply).minus(arth_total_supply.multipliedBy(effective_collateral_ratio_E6))).div(1e6).div(1e18)).toNumber();
     if (available_to_recollat < 0) available_to_recollat = 0;
     console.log("AVAILABLE TO RECOLLATERALIZE: ", available_to_recollat);
 
@@ -1436,7 +1436,7 @@ contract('ARTH', async (accounts) => {
     // Note the new collateral ratio
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
 
     console.log("effective collateral ratio after:", globalCollateralValue / totalSupplyARTH);
@@ -1454,7 +1454,7 @@ contract('ARTH', async (accounts) => {
       await time.advanceBlock();
       await arthInstance.refreshCollateralRatio();
       if (i % 20 == 0) {
-        console.log("global_collateral_ratio:", (new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6)).toNumber());
+        console.log("globalCollateralRatio:", (new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6)).toNumber());
       }
     }
 
@@ -1471,10 +1471,10 @@ contract('ARTH', async (accounts) => {
 
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1487,7 +1487,7 @@ contract('ARTH', async (accounts) => {
     //console.log(chalk.red("IF YOU ARE RUNNING TESTS, YOU NEED TO COMMENT OUT THE RELEVANT PART IN THE DEPLOY SCRIPT!"));
 
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the ARTHX and ARTH amounts before minting
@@ -1499,11 +1499,11 @@ contract('ARTH', async (accounts) => {
     console.log("accounts[1] ARTH balance before:", arth_before.toNumber());
 
     // Need to approve first so the pool contract can use transferFrom
-    const arthx_amount = new BigNumber("10000e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("10000e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // Mint some ARTH
-    await pool_instance_USDC.mintAlgorithmicARTH(arthx_amount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await pool_instance_USDC.mintAlgorithmicARTH(arthxAmount, new BigNumber("10e18"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
     console.log("accounts[1] mintAlgorithmicARTH() using 10,000 ARTHS");
 
     // Note the ARTHX and ARTH amounts after minting
@@ -1513,7 +1513,7 @@ contract('ARTH', async (accounts) => {
     console.log("accounts[1] ARTH balance after:", arth_after.toNumber() - arth_before.toNumber());
 
     // Note the new collateral ratio
-    const collateral_ratio_after = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_after = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_after: ", collateral_ratio_after.toNumber());
   });
 
@@ -1525,10 +1525,10 @@ contract('ARTH', async (accounts) => {
     // Advance 1 hr so the collateral ratio can be recalculated
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1536,7 +1536,7 @@ contract('ARTH', async (accounts) => {
     console.log("");
 
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the ARTHS, ARTH, and FAKE amounts before minting
@@ -1576,10 +1576,10 @@ contract('ARTH', async (accounts) => {
     // Advance 1 hr so the collateral ratio can be recalculated
     totalSupplyARTH = new BigNumber(await arthInstance.totalSupply.call()).div(BIG18).toNumber();
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber();
-    globalCollateralRatio = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6).toNumber();
+    globalCollateralRatio = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6).toNumber();
     globalCollateralValue = new BigNumber(await arthInstance.globalCollateralValue.call()).div(BIG18).toNumber();
     console.log("ARTH price (USD): ", (new BigNumber(await arthInstance.arth_price.call()).div(BIG6)).toNumber());
-    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthx_price.call()).div(BIG6)).toNumber());
+    console.log("ARTHX price (USD): ", (new BigNumber(await arthInstance.arthxPrice.call()).div(BIG6)).toNumber());
     console.log("totalSupplyARTH: ", totalSupplyARTH);
     console.log("totalSupplyARTHS: ", totalSupplyARTHS);
     console.log("globalCollateralRatio: ", globalCollateralRatio);
@@ -1588,7 +1588,7 @@ contract('ARTH', async (accounts) => {
 
     // This will push the collateral ratio below 1
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber());
 
     // Note the ARTHX and FAKE amounts before buying back
@@ -1612,16 +1612,16 @@ contract('ARTH', async (accounts) => {
     // console.log("buyback_available_in_arthx: ", buyback_available_in_arthx.toNumber(), " ARTHS");
 
     // Need to approve first so the pool contract can use transfer
-    const arthx_amount = new BigNumber("40000e18");
-    await arthxInstance.approve(pool_instance_USDC.address, arthx_amount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    const arthxAmount = new BigNumber("40000e18");
+    await arthxInstance.approve(pool_instance_USDC.address, arthxAmount, { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // ARTHX price
-    const arthx_price = new BigNumber(await arthInstance.arthx_price()).div(BIG6);
-    console.log("arthx_price: $", arthx_price.toNumber());
+    const arthxPrice = new BigNumber(await arthInstance.arthxPrice()).div(BIG6);
+    console.log("arthxPrice: $", arthxPrice.toNumber());
 
     // Buy back some ARTH
     console.log("accounts[1] buyBackARTHX() using 40,000 ARTHS");
-    await pool_instance_USDC.buyBackARTHX(arthx_amount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
+    await pool_instance_USDC.buyBackARTHX(arthxAmount, new BigNumber("10e6"), { from: COLLATERAL_ARTH_AND_ARTHS_OWNER });
 
     // Note the ARTHX and FAKE amounts after buying back
     const arthx_after = new BigNumber(await arthxInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHS_OWNER)).div(BIG18);
@@ -1634,7 +1634,7 @@ contract('ARTH', async (accounts) => {
     console.log("global_collateral_value change: ", global_pool_collateral_after.toNumber() - global_pool_collateral_before.toNumber());
 
     // Note the new collateral ratio
-    const collateral_ratio_after = new BigNumber(await arthInstance.global_collateral_ratio.call()).div(BIG6);
+    const collateral_ratio_after = new BigNumber(await arthInstance.globalCollateralRatio.call()).div(BIG6);
     console.log("collateral_ratio_after: ", collateral_ratio_after.toNumber());
     console.log("getCollateralPrice() from ARTH_pool_USDC: ", (new BigNumber(await pool_instance_USDC.getCollateralPrice.call()).div(BIG6)).toNumber());
   });

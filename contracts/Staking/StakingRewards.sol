@@ -19,6 +19,12 @@ import './RewardsDistributionRecipient.sol';
 import '../Arth/ArthController.sol';
 
 interface IStaking {
+    function stakeLockedFor(
+        address who,
+        uint256 amount,
+        uint256 duration
+    ) external;
+
     function stakeFor(address who, uint256 amount) external;
 }
 
@@ -66,7 +72,7 @@ contract StakingRewards is
     uint256 public rewardPerTokenStored = 0;
     uint256 public pool_weight; // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
 
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address; // Governance timelock address
 
     uint256 public locked_stake_max_multiplier = 3000000; // 6 decimals of precision. 1x = 1000000
@@ -118,7 +124,7 @@ contract StakingRewards is
         address _timelock_address,
         uint256 _pool_weight
     ) {
-        owner_address = _owner;
+        ownerAddress = _owner;
         rewardsToken = ERC20(_rewardsToken);
         stakingToken = ERC20(_stakingToken);
         ARTH = ARTHStablecoin(_arth_address);
@@ -161,7 +167,7 @@ contract StakingRewards is
             uint256(MULTIPLIER_BASE).add(
                 (
                     uint256(MULTIPLIER_BASE).sub(
-                        controller.global_collateral_ratio()
+                        controller.globalCollateralRatio()
                     )
                 )
                     .mul(cr_boost_max_multiplier.sub(MULTIPLIER_BASE))
@@ -260,24 +266,39 @@ contract StakingRewards is
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     // NOTE: should this be made private or internal?
-    function stakeFor(address who, uint256 amount)
-        public
-        override
+    function stakeLockedFor(
+        address who,
+        uint256 amount,
+        uint256 duration
+    ) external override onlyPool {
+        _stakeLocked(who, amount, duration);
+    }
+
+    function stakeFor(address who, uint256 amount) external override onlyPool {
+        _stake(who, amount);
+    }
+
+    function stake(uint256 amount) external override {
+        _stake(msg.sender, amount);
+    }
+
+    function stakeLocked(uint256 amount, uint256 secs) external {
+        _stakeLocked(msg.sender, amount, secs);
+    }
+
+    function _stake(address who, uint256 amount)
+        internal
         nonReentrant
         notPaused
-        onlyPool
         updateReward(who)
     {
         require(amount > 0, 'Cannot stake 0');
-        require(
-            greylist[who] == false && greylist[msg.sender] == false,
-            'addresses has been greylisted'
-        );
+        require(greylist[who] == false, 'address has been greylisted');
 
-        // Pull the tokens from the staker.
+        // Pull the tokens from the staker
         TransferHelper.safeTransferFrom(
             address(stakingToken),
-            who, // The msg.sender in POOLS *AndCall funcs.
+            msg.sender,
             address(this),
             amount
         );
@@ -295,58 +316,14 @@ contract StakingRewards is
         emit Staked(who, amount);
     }
 
-    function stake(uint256 amount)
-        external
-        override
-        nonReentrant
-        notPaused
-        updateReward(msg.sender)
-    {
-        require(amount > 0, 'Cannot stake 0');
-        require(greylist[msg.sender] == false, 'address has been greylisted');
-
-        // Pull the tokens from the staker
-        TransferHelper.safeTransferFrom(
-            address(stakingToken),
-            msg.sender,
-            address(this),
-            amount
-        );
-
-        // Staking token supply and boosted supply
-        _staking_token_supply = _staking_token_supply.add(amount);
-        _staking_token_boosted_supply = _staking_token_boosted_supply.add(
-            amount
-        );
-
-        // Staking token balance and boosted balance
-        _unlocked_balances[msg.sender] = _unlocked_balances[msg.sender].add(
-            amount
-        );
-        _boosted_balances[msg.sender] = _boosted_balances[msg.sender].add(
-            amount
-        );
-
-        emit Staked(msg.sender, amount);
-    }
-
-    function receiveMint(
+    function _stakeLocked(
         address who,
         uint256 amount,
-        bytes memory data
-    ) external override nonReentrant notPaused onlyPool {
-        stakeFor(who, amount);
-    }
-
-    function stakeLocked(uint256 amount, uint256 secs)
-        external
-        nonReentrant
-        notPaused
-        updateReward(msg.sender)
-    {
+        uint256 secs
+    ) internal nonReentrant notPaused updateReward(who) {
         require(amount > 0, 'Cannot stake 0');
         require(secs > 0, 'Cannot wait for a negative number');
-        require(greylist[msg.sender] == false, 'address has been greylisted');
+        require(greylist[who] == false, 'address has been greylisted');
         require(
             secs >= locked_stake_min_time,
             StringHelpers.strConcat(
@@ -362,11 +339,9 @@ contract StakingRewards is
 
         uint256 multiplier = stakingMultiplier(secs);
         uint256 boostedAmount = amount.mul(multiplier).div(PRICE_PRECISION);
-        lockedStakes[msg.sender].push(
+        lockedStakes[who].push(
             LockedStake(
-                keccak256(
-                    abi.encodePacked(msg.sender, block.timestamp, amount)
-                ),
+                keccak256(abi.encodePacked(who, block.timestamp, amount)),
                 block.timestamp,
                 amount,
                 block.timestamp.add(secs),
@@ -374,7 +349,7 @@ contract StakingRewards is
             )
         );
 
-        // Pull the tokens from the staker
+        // Pull the tokens from the staker or the operator
         TransferHelper.safeTransferFrom(
             address(stakingToken),
             msg.sender,
@@ -389,12 +364,10 @@ contract StakingRewards is
         );
 
         // Staking token balance and boosted balance
-        _locked_balances[msg.sender] = _locked_balances[msg.sender].add(amount);
-        _boosted_balances[msg.sender] = _boosted_balances[msg.sender].add(
-            boostedAmount
-        );
+        _locked_balances[who] = _locked_balances[who].add(amount);
+        _boosted_balances[who] = _boosted_balances[who].add(boostedAmount);
 
-        emit StakeLocked(msg.sender, amount, secs);
+        emit StakeLocked(who, amount, secs);
     }
 
     function withdraw(uint256 amount)
@@ -567,7 +540,7 @@ contract StakingRewards is
     {
         // Admin cannot withdraw the staking token from the contract
         require(tokenAddress != address(stakingToken));
-        ERC20(tokenAddress).transfer(owner_address, tokenAmount);
+        ERC20(tokenAddress).transfer(ownerAddress, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 
@@ -654,7 +627,7 @@ contract StakingRewards is
         external
         onlyByOwnerOrGovernance
     {
-        owner_address = _new_owner;
+        ownerAddress = _new_owner;
         timelock_address = _new_timelock;
     }
 
@@ -677,7 +650,7 @@ contract StakingRewards is
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not the owner or the governance timelock'
         );
         _;

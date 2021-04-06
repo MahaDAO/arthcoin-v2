@@ -32,7 +32,7 @@ contract CurveAMO is AccessControl {
     ARTHStablecoin private ARTH;
     IArthPool private pool;
     ARTHShares private ARTHX;
-    ERC20 private collateral_token;
+    ERC20 private collateralToken;
     ERC20 private CRV = ERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
     ArthController private controller;
 
@@ -43,9 +43,9 @@ contract CurveAMO is AccessControl {
     address public crv_minter_address;
     address public arth_contract_address;
     address public arthx_contract_address;
-    address public collateral_token_address;
+    address public collateralToken_address;
     address public timelock_address;
-    address public owner_address;
+    address public ownerAddress;
     address public custodian_address;
     address public pool_address;
 
@@ -86,7 +86,7 @@ contract CurveAMO is AccessControl {
     constructor(
         address _arth_contract_address,
         address _arthx_contract_address,
-        address _collateral_address,
+        address _collateralAddress,
         address _creator_address,
         address _custodian_address,
         address _timelock_address
@@ -95,20 +95,20 @@ contract CurveAMO is AccessControl {
         ARTHX = ARTHShares(_arthx_contract_address);
         arth_contract_address = _arth_contract_address;
         arthx_contract_address = _arthx_contract_address;
-        collateral_token = ERC20(_collateral_address);
-        missing_decimals = uint256(18).sub(collateral_token.decimals());
+        collateralToken = ERC20(_collateralAddress);
+        missing_decimals = uint256(18).sub(collateralToken.decimals());
         timelock_address = _timelock_address;
-        owner_address = _creator_address;
+        ownerAddress = _creator_address;
         custodian_address = _custodian_address;
 
-        missing_decimals = uint256(18).sub(collateral_token.decimals());
+        missing_decimals = uint256(18).sub(collateralToken.decimals());
     }
 
     /* ========== MODIFIERS ========== */
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == timelock_address || msg.sender == owner_address,
+            msg.sender == timelock_address || msg.sender == ownerAddress,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -137,14 +137,14 @@ contract CurveAMO is AccessControl {
 
         uint256 arth_withdrawable =
             (collat_info[0])
-                .mul(controller.global_collateral_ratio())
+                .mul(controller.globalCollateralRatio())
                 .mul(ARTH.balanceOf(arth3crv_metapool_address))
                 .div(collat_info[1])
                 .div(uint256(1e6));
 
         allocations[0] = ARTH.balanceOf(address(this)); // Unallocated ARTH
         allocations[1] = arth_withdrawable; // ARTH withdrawable from the metapool LP
-        allocations[2] = collateral_token.balanceOf(address(this)); // Free collateral
+        allocations[2] = collateralToken.balanceOf(address(this)); // Free collateral
         allocations[3] = collat_info[3]; // Collateral withdrawable from the metapool LP
         allocations[4] = freeCRV(); // Free CRV
         allocations[5] = 0; // TODO: Staked CRV
@@ -176,7 +176,7 @@ contract CurveAMO is AccessControl {
         lp_owned = lp_owned.add(gauge_arth3crv.balanceOf(address(this)));
 
         // ------------3pool Withdrawable------------
-        // Linear approximation of metapool withdrawable amounts at floor price (global_collateral_ratio)
+        // Linear approximation of metapool withdrawable amounts at floor price (globalCollateralRatio)
         // TODO: Need to recreate metapool get_D() logic to simulate what would happen if ARTH price went to CR
         // threeCRV_withdrawable
         uint256 arth3crv_supply = arth3crv_metapool.totalSupply();
@@ -184,7 +184,7 @@ contract CurveAMO is AccessControl {
         uint256 _3pool_withdrawable;
         if (arth3crv_supply > 0) {
             _3pool_withdrawable = lp_owned
-                .mul(controller.global_collateral_ratio())
+                .mul(controller.globalCollateralRatio())
                 .mul(three_pool_erc20.balanceOf(arth3crv_metapool_address))
                 .div(arth3crv_supply)
                 .div(uint256(1e6));
@@ -192,7 +192,7 @@ contract CurveAMO is AccessControl {
 
         // ------------Collateral Balance------------
         // Free Collateral
-        uint256 usdc_owned = collateral_token.balanceOf(address(this));
+        uint256 usdc_owned = collateralToken.balanceOf(address(this));
 
         // Returns amount of USDC withdrawable if the contract redeemed all of its 3pool tokens from the base 3pool for USDC,
         // with the 3pool coming from ARTH3CRV-f-2 remove_liquidity()
@@ -202,7 +202,7 @@ contract CurveAMO is AccessControl {
 
         // // Placeholder; can be used for CR calculations - up to the AMO design
         // // arth_withdrawable
-        // return_arr[2] = return_arr[0].mul(uint(1e6)).mul(ARTH.balanceOf(arth3crv_metapool_address)).div(arth3crv_metapool.totalSupply()).div(ARTH.global_collateral_ratio());
+        // return_arr[2] = return_arr[0].mul(uint(1e6)).mul(ARTH.balanceOf(arth3crv_metapool_address)).div(arth3crv_metapool.totalSupply()).div(ARTH.globalCollateralRatio());
 
         return [lp_owned, arth3crv_supply, _3pool_withdrawable, usdc_owned];
     }
@@ -337,7 +337,7 @@ contract CurveAMO is AccessControl {
             uint256(1e18).div(three_pool.get_virtual_price());
 
         uint256 floor_price_arth =
-            uint256(1e18).mul(controller.global_collateral_ratio()).div(1e6);
+            uint256(1e18).mul(controller.globalCollateralRatio()).div(1e6);
 
         uint256 arth_received;
         for (uint256 i = 0; i < 256; i++) {
@@ -411,15 +411,15 @@ contract CurveAMO is AccessControl {
         onlyByOwnerOrGovernance
     {
         //require(allow_yearn || allow_aave || allow_compound, 'All strategies are currently off');
-        uint256 redemption_fee = pool.redemption_fee();
+        uint256 redemptionFee = pool.redemptionFee();
         uint256 col_price_usd = pool.getCollateralPrice();
-        uint256 global_collateral_ratio = controller.global_collateral_ratio();
+        uint256 globalCollateralRatio = controller.globalCollateralRatio();
         uint256 redeem_amount_E6 =
-            (arth_amount.mul(uint256(1e6).sub(redemption_fee))).div(1e6).div(
+            (arth_amount.mul(uint256(1e6).sub(redemptionFee))).div(1e6).div(
                 10**missing_decimals
             );
         uint256 expected_collat_amount =
-            redeem_amount_E6.mul(global_collateral_ratio).div(1e6);
+            redeem_amount_E6.mul(globalCollateralRatio).div(1e6);
         expected_collat_amount = expected_collat_amount.mul(1e6).div(
             col_price_usd
         );
@@ -447,7 +447,7 @@ contract CurveAMO is AccessControl {
 
     // Give USDC profits back
     function giveCollatBack(uint256 amount) public onlyByOwnerOrGovernance {
-        collateral_token.transfer(address(pool), amount);
+        collateralToken.transfer(address(pool), amount);
         returned_collat_historical = returned_collat_historical.add(amount);
     }
 
@@ -462,7 +462,7 @@ contract CurveAMO is AccessControl {
         ARTHX.poolBurnFrom(address(this), amount);
     }
 
-    function metapoolDeposit(uint256 _arth_amount, uint256 _collateral_amount)
+    function metapoolDeposit(uint256 _arth_amount, uint256 _collateralAmount)
         public
         onlyByOwnerOrGovernance
         returns (uint256 metapool_LP_received)
@@ -476,13 +476,13 @@ contract CurveAMO is AccessControl {
         );
 
         // Approve the collateral to be added to 3pool
-        collateral_token.approve(address(three_pool), _collateral_amount);
+        collateralToken.approve(address(three_pool), _collateralAmount);
 
         // Convert collateral into 3pool
         uint256[3] memory three_pool_collaterals;
         three_pool_collaterals[
             uint256(uint128(THREE_POOL_COIN_INDEX))
-        ] = _collateral_amount;
+        ] = _collateralAmount;
         three_pool.add_liquidity(three_pool_collaterals, 0);
 
         // Approve the 3pool for the metapool
@@ -500,7 +500,7 @@ contract CurveAMO is AccessControl {
 
         // Make sure the collateral ratio did not fall too much
         uint256 current_collateral_E18 =
-            (controller.global_collateral_ratio()).mul(10**missing_decimals);
+            (controller.globalCollateralRatio()).mul(10**missing_decimals);
         uint256 cur_arth_supply = ARTH.totalSupply();
         uint256 new_cr =
             (current_collateral_E18.mul(PRICE_PRECISION)).div(cur_arth_supply);
@@ -583,8 +583,8 @@ contract CurveAMO is AccessControl {
         timelock_address = new_timelock;
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function setMiscRewardsCustodian(address _custodian_address)

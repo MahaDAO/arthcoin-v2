@@ -25,7 +25,7 @@ contract ArthController is AccessControl {
     IUniswapPairOracle private arthxEthOracle;
     IncentiveController private incentiveController;
 
-    address public owner_address;
+    address public ownerAddress;
     address public creator_address;
     address public timelock_address; // Governance timelock address
     address public controller_address; // Controller contract to dynamically adjust system parameters automatically
@@ -50,9 +50,9 @@ contract ArthController is AccessControl {
     // Constants for various precisions
     uint256 private constant PRICE_PRECISION = 1e6;
 
-    uint256 public global_collateral_ratio; // 6 decimals of precision, e.g. 924102 = 0.924102
-    uint256 public redemption_fee; // 6 decimals of precision, divide by 1000000 in calculations for fee
-    uint256 public minting_fee; // 6 decimals of precision, divide by 1000000 in calculations for fee
+    uint256 public globalCollateralRatio; // 6 decimals of precision, e.g. 924102 = 0.924102
+    uint256 public redemptionFee; // 6 decimals of precision, divide by 1000000 in calculations for fee
+    uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee
     uint256 public arth_step; // Amount to change the collateralization ratio by upon refreshCollateralRatio()
     uint256 public refresh_cooldown; // Seconds to wait before being able to run refreshCollateralRatio() again
     uint256 public price_target; // The price of ARTH at which the collateral ratio will respond to; this value is only used for the collateral ratio mechanism and not for minting and redeeming which are hardcoded at $1
@@ -88,7 +88,7 @@ contract ArthController is AccessControl {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address ||
+            msg.sender == ownerAddress ||
                 msg.sender == timelock_address ||
                 msg.sender == controller_address,
             'You are not the owner, controller, or the governance timelock'
@@ -98,7 +98,7 @@ contract ArthController is AccessControl {
 
     modifier onlyByOwnerGovernanceOrPool() {
         require(
-            msg.sender == owner_address ||
+            msg.sender == ownerAddress ||
                 msg.sender == timelock_address ||
                 arth_pools[msg.sender] == true,
             'You are not the owner, the governance timelock, or a pool'
@@ -117,13 +117,13 @@ contract ArthController is AccessControl {
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         DEFAULT_ADMIN_ADDRESS = _msgSender();
-        owner_address = _creator_address;
+        ownerAddress = _creator_address;
 
         grantRole(COLLATERAL_RATIO_PAUSER, creator_address);
         grantRole(COLLATERAL_RATIO_PAUSER, timelock_address);
 
         arth_step = 2500; // 6 decimals of precision, equal to 0.25%
-        global_collateral_ratio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision)
+        globalCollateralRatio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision)
         refresh_cooldown = 3600; // Refresh cooldown period is set to 1 hour (3600 seconds) at genesis
         price_target = 1000000; // Collateral ratio will adjust according to the $1 price target at genesis
         price_band = 5000; // Collateral ratio will not adjust if between $0.995 and $1.005 at genesis
@@ -163,7 +163,7 @@ contract ArthController is AccessControl {
     }
 
     // Returns X ARTHX = 1 USD
-    function arthx_price() public view returns (uint256) {
+    function arthxPrice() public view returns (uint256) {
         return oracle_price(PriceChoice.ARTHX);
     }
 
@@ -192,12 +192,12 @@ contract ArthController is AccessControl {
     {
         return (
             oracle_price(PriceChoice.ARTH), // arth_price()
-            oracle_price(PriceChoice.ARTHX), // arthx_price()
+            oracle_price(PriceChoice.ARTHX), // arthxPrice()
             arth.totalSupply(), // totalSupply()
-            global_collateral_ratio, // global_collateral_ratio()
+            globalCollateralRatio, // globalCollateralRatio()
             globalCollateralValue(), // globalCollateralValue
-            minting_fee, // minting_fee()
-            redemption_fee, // redemption_fee()
+            mintingFee, // mintingFee()
+            redemptionFee, // redemptionFee()
             uint256(eth_usd_pricer.getLatestPrice()).mul(PRICE_PRECISION).div(
                 uint256(10)**eth_usd_pricer_decimals
             ) //eth_usd_price
@@ -248,11 +248,11 @@ contract ArthController is AccessControl {
 
     /* ========== PUBLIC FUNCTIONS ========== */
 
-    function setGlobalCollateralRatio(uint256 _global_collateral_ratio)
+    function setGlobalCollateralRatio(uint256 _globalCollateralRatio)
         public
         onlyAdmin
     {
-        global_collateral_ratio = _global_collateral_ratio;
+        globalCollateralRatio = _globalCollateralRatio;
     }
 
     // There needs to be a time interval that this can be called. Otherwise it can be called multiple times per expansion.
@@ -273,22 +273,18 @@ contract ArthController is AccessControl {
 
         if (arth_price_cur > price_target.add(price_band)) {
             //decrease collateral ratio
-            if (global_collateral_ratio <= arth_step) {
+            if (globalCollateralRatio <= arth_step) {
                 //if within a step of 0, go to 0
-                global_collateral_ratio = 0;
+                globalCollateralRatio = 0;
             } else {
-                global_collateral_ratio = global_collateral_ratio.sub(
-                    arth_step
-                );
+                globalCollateralRatio = globalCollateralRatio.sub(arth_step);
             }
         } else if (arth_price_cur < price_target.sub(price_band)) {
             //increase collateral ratio
-            if (global_collateral_ratio.add(arth_step) >= 1000000) {
-                global_collateral_ratio = 1000000; // cap collateral ratio at 1.000000
+            if (globalCollateralRatio.add(arth_step) >= 1000000) {
+                globalCollateralRatio = 1000000; // cap collateral ratio at 1.000000
             } else {
-                global_collateral_ratio = global_collateral_ratio.add(
-                    arth_step
-                );
+                globalCollateralRatio = globalCollateralRatio.add(arth_step);
             }
         }
 
@@ -297,16 +293,16 @@ contract ArthController is AccessControl {
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function setRedemptionFee(uint256 red_fee) public onlyByOwnerOrGovernance {
-        redemption_fee = red_fee;
+        redemptionFee = red_fee;
     }
 
     function setMintingFee(uint256 min_fee) public onlyByOwnerOrGovernance {
-        minting_fee = min_fee;
+        mintingFee = min_fee;
     }
 
     function setArthStep(uint256 _new_step) public onlyByOwnerOrGovernance {

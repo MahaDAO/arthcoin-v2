@@ -111,8 +111,8 @@ module.exports = async function (deployer, network, accounts) {
   const ONE_BILLION_DEC18 = new BigNumber("1000000000e18");
   const COLLATERAL_SEED_DEC18 = new BigNumber(508500e18);
 
-  const REDEMPTION_FEE = 400; // 0.04%
-  const MINTING_FEE = 300; // 0.03%
+  const redemptionFee = 400; // 0.04%
+  const mintingFee = 300; // 0.03%
   const COLLATERAL_PRICE = 1040000; // $1.04
   const ARTH_PRICE = 980000; // $0.98
   const ARTHS_PRICE = 210000; // $0.21
@@ -264,20 +264,20 @@ module.exports = async function (deployer, network, accounts) {
   let arth_price_from_ARTH_USDT = (new BigNumber(await oracle_instance_ARTH_USDT.consult.call(arthInstance.address, new BigNumber("1e18")))).div(BIG6);
   let arth_price_from_ARTH_ARTHX = (new BigNumber(await oracle_instance_ARTH_ARTHS.consult.call(arthxInstance.address, 1e6))).div(BIG6);
 
-  let arthx_price_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
+  let arthxPrice_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
   let USDC_price_from_USDC_WETH = (new BigNumber(await oracle_instance_USDC_WETH.consult.call(wethInstance.address, new BigNumber("1e18")))).div(BIG6);
 
   const arth_price_initial = new BigNumber(await arthInstance.arth_price({ from: METAMASK_ADDRESS })).div(BIG6);
-  const arthx_price_initial = new BigNumber(await arthInstance.arthx_price({ from: METAMASK_ADDRESS })).div(BIG6);
+  const arthxPrice_initial = new BigNumber(await arthInstance.arthxPrice({ from: METAMASK_ADDRESS })).div(BIG6);
 
   // Print the new prices
   console.log("arth_price_initial: ", arth_price_initial.toString(), "USD = 1 ARTH");
-  console.log("arthx_price_initial: ", arthx_price_initial.toString(), "USD = 1 ARTHS");
+  console.log("arthxPrice_initial: ", arthxPrice_initial.toString(), "USD = 1 ARTHS");
   console.log("arth_price_from_ARTH_WETH: ", arth_price_from_ARTH_WETH.toString(), "ARTH = 1 WETH");
   console.log("arth_price_from_ARTH_USDC: ", arth_price_from_ARTH_USDC.toString(), "ARTH = 1 USDC");
   console.log("arth_price_from_ARTH_USDT: ", arth_price_from_ARTH_USDT.toString(), "ARTH = 1 USDT");
   console.log("arth_price_from_ARTH_ARTHS: ", arth_price_from_ARTH_ARTHS.toString(), "ARTH = 1 ARTHS");
-  console.log("arthx_price_from_ARTHS_WETH: ", arthx_price_from_ARTHS_WETH.toString(), "ARTHX = 1 WETH");
+  console.log("arthxPrice_from_ARTHS_WETH: ", arthxPrice_from_ARTHS_WETH.toString(), "ARTHX = 1 WETH");
   console.log("USDC_price_from_USDC_WETH: ", USDC_price_from_USDC_WETH.toString(), "USDC = 1 WETH");
 
   // ======== Transfer some tokens and ETH to Metamask ========

@@ -25,7 +25,7 @@ contract ReserveTracker {
 
     address public arth_contract_address;
     address public arthx_contract_address;
-    address public owner_address;
+    address public ownerAddress;
     address public timelock_address;
 
     // The pair of which to get ARTHX price from
@@ -46,7 +46,7 @@ contract ReserveTracker {
 
     // The pair of which to get ARTH price from
     address public arth_price_oracle_address;
-    address public arth_pair_collateral_address;
+    address public arth_pair_collateralAddress;
     uint256 public arth_pair_collateral_decimals;
     UniswapPairOracle public arth_price_oracle;
     address public arth_metapool_address;
@@ -56,7 +56,7 @@ contract ReserveTracker {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not the owner or the governance timelock'
         );
         _;
@@ -72,7 +72,7 @@ contract ReserveTracker {
     ) {
         arth_contract_address = _arth_contract_address;
         arthx_contract_address = _arthx_contract_address;
-        owner_address = _creator_address;
+        ownerAddress = _creator_address;
         timelock_address = _timelock_address;
     }
 
@@ -147,11 +147,11 @@ contract ReserveTracker {
     // Get the pair of which to price ARTH from
     function setARTHPriceOracle(
         address _arth_price_oracle_address,
-        address _arth_pair_collateral_address,
+        address _arth_pair_collateralAddress,
         uint256 _arth_pair_collateral_decimals
     ) public onlyByOwnerOrGovernance {
         arth_price_oracle_address = _arth_price_oracle_address;
-        arth_pair_collateral_address = _arth_pair_collateral_address;
+        arth_pair_collateralAddress = _arth_pair_collateralAddress;
         arth_pair_collateral_decimals = _arth_pair_collateral_decimals;
         arth_price_oracle = UniswapPairOracle(arth_price_oracle_address);
         CONSULT_ARTH_DEC =
@@ -216,8 +216,8 @@ contract ReserveTracker {
         }
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function setTimelock(address new_timelock)

@@ -19,7 +19,7 @@ contract ArthBondIssuerOld is AccessControl {
     // enum DirectionChoice { BELOW_TO_FLOOR_ARTH_IN, ABOVE_TO_FLOOR }
     // ARTHStablecoin private ARTH;
     // ArthBond private ARTHB;
-    // address public owner_address;
+    // address public ownerAddress;
     // address public timelock_address;
     // uint256 private constant PRICE_PRECISION = 1e6;
     // // Minimum cooldown period before a new epoch, in seconds
@@ -36,7 +36,7 @@ contract ArthBondIssuerOld is AccessControl {
     // uint256 public issue_fee = 500; // 0.05% initially
     // uint256 public buying_fee = 1500; // 0.15% initially
     // uint256 public selling_fee = 1500; // 0.15% initially
-    // uint256 public redemption_fee = 500; // 0.05% initially
+    // uint256 public redemptionFee = 500; // 0.05% initially
     // // Epoch start and end times
     // uint256 public epoch_start;
     // uint256 public epoch_end;
@@ -59,7 +59,7 @@ contract ArthBondIssuerOld is AccessControl {
     // bool public useDefaultInitialDiscount = false;
     // /* ========== MODIFIERS ========== */
     // modifier onlyByOwnerOrGovernance() {
-    //     require(msg.sender == timelock_address || msg.sender == owner_address, "You are not the owner or the governance timelock");
+    //     require(msg.sender == timelock_address || msg.sender == ownerAddress, "You are not the owner or the governance timelock");
     //     _;
     // }
     // modifier notIssuingPaused() {
@@ -82,28 +82,28 @@ contract ArthBondIssuerOld is AccessControl {
     // constructor(
     //     address _arth_contract_address,
     //     address _arthb_contract_address,
-    //     address _owner_address,
+    //     address _ownerAddress,
     //     address _timelock_address,
     //     address _custodian_address
     // ) public {
     //     ARTH = ARTHStablecoin(_arth_contract_address);
     //     ARTHB = ArthBond(_arthb_contract_address);
-    //     owner_address = _owner_address;
+    //     ownerAddress = _ownerAddress;
     //     timelock_address = _timelock_address;
     //     // Needed for initialization
     //     epoch_start = (block.timestamp).sub(cooldown_period).sub(epoch_length);
     //     epoch_end = (block.timestamp).sub(cooldown_period);
     //     _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     //     DEFAULT_ADMIN_ADDRESS = _msgSender();
-    //     grantRole(ISSUING_PAUSER, _owner_address);
+    //     grantRole(ISSUING_PAUSER, _ownerAddress);
     //     grantRole(ISSUING_PAUSER, _timelock_address);
-    //     grantRole(BUYING_PAUSER, _owner_address);
+    //     grantRole(BUYING_PAUSER, _ownerAddress);
     //     grantRole(BUYING_PAUSER, _timelock_address);
-    //     grantRole(SELLING_PAUSER, _owner_address);
+    //     grantRole(SELLING_PAUSER, _ownerAddress);
     //     grantRole(SELLING_PAUSER, _timelock_address);
-    //     grantRole(REDEEMING_PAUSER, _owner_address);
+    //     grantRole(REDEEMING_PAUSER, _ownerAddress);
     //     grantRole(REDEEMING_PAUSER, _timelock_address);
-    //     grantRole(DEFAULT_DISCOUNT_TOGGLER, _owner_address);
+    //     grantRole(DEFAULT_DISCOUNT_TOGGLER, _ownerAddress);
     //     grantRole(DEFAULT_DISCOUNT_TOGGLER, _timelock_address);
     // }
     // /* ========== VIEWS ========== */
@@ -113,7 +113,7 @@ contract ArthBondIssuerOld is AccessControl {
     //         issue_fee,
     //         buying_fee,
     //         selling_fee,
-    //         redemption_fee,
+    //         redemptionFee,
     //         issuable_arthb,
     //         epoch_start,
     //         epoch_end,
@@ -260,7 +260,7 @@ contract ArthBondIssuerOld is AccessControl {
     //         }
     //     }
     // }
-    // function sellARTHBintoAMM(uint256 arthb_amount, uint256 arth_out_min) external notSellingPaused returns (uint256 arthb_bought_above_floor, uint256 arthb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
+    // function sellARTHBintoAMM(uint256 arthb_amount, uint256 ARTHOutMin) external notSellingPaused returns (uint256 arthb_bought_above_floor, uint256 arthb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
     //     require(isInEpoch(), 'Not in an epoch');
     //     arthb_bought_above_floor = arthb_amount;
     //     arthb_sold_under_floor = 0;
@@ -300,8 +300,8 @@ contract ArthBondIssuerOld is AccessControl {
     //         arth_fee_amt += fee_below_floor;
     //         arth_out += arth_out_under_floor;
     //     }
-    //     // Check arth_out_min
-    //     require(arth_out >= arth_out_min, "[sellARTHBintoAMM arth_out_min]: Slippage limit reached");
+    //     // Check ARTHOutMin
+    //     require(arth_out >= ARTHOutMin, "[sellARTHBintoAMM ARTHOutMin]: Slippage limit reached");
     //     // Take ARTHB from the sender
     //     ARTHB.transferFrom(msg.sender, address(this), arthb_amount);
     //     // Give ARTH to sender from the AMM pool
@@ -319,7 +319,7 @@ contract ArthBondIssuerOld is AccessControl {
     //     // Take ARTHB from the sender
     //     ARTHB.transferFrom(msg.sender, address(this), arthb_amount);
     //     // Give 1 ARTH per 1 ARTHB, minus the redemption fee
-    //     arth_fee = arthb_amount.mul(redemption_fee).div(PRICE_PRECISION);
+    //     arth_fee = arthb_amount.mul(redemptionFee).div(PRICE_PRECISION);
     //     arth_out = arthb_amount.sub(arth_fee);
     //     // Give the ARTH to the redeemer
     //     ARTH.poolMint(msg.sender, arth_out);
@@ -439,8 +439,8 @@ contract ArthBondIssuerOld is AccessControl {
     // function setTimelock(address new_timelock) external onlyByOwnerOrGovernance {
     //     timelock_address = new_timelock;
     // }
-    // function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-    //     owner_address = _owner_address;
+    // function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+    //     ownerAddress = _ownerAddress;
     // }
     // function setMaxARTHBOutstanding(uint256 _max_arthb_outstanding) external onlyByOwnerOrGovernance {
     //     max_arthb_outstanding = _max_arthb_outstanding;
@@ -454,11 +454,11 @@ contract ArthBondIssuerOld is AccessControl {
     //     }
     //     issuable_arthb = _issuable_arthb;
     // }
-    // function setFees(uint256 _issue_fee, uint256 _buying_fee, uint256 _selling_fee, uint256 _redemption_fee) external onlyByOwnerOrGovernance {
+    // function setFees(uint256 _issue_fee, uint256 _buying_fee, uint256 _selling_fee, uint256 _redemptionFee) external onlyByOwnerOrGovernance {
     //     issue_fee = _issue_fee;
     //     buying_fee = _buying_fee;
     //     selling_fee = _selling_fee;
-    //     redemption_fee = _redemption_fee;
+    //     redemptionFee = _redemptionFee;
     // }
     // function setCooldownPeriod(uint256 _cooldown_period) external onlyByOwnerOrGovernance {
     //     cooldown_period = _cooldown_period;

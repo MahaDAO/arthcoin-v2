@@ -95,8 +95,8 @@ module.exports = async function (deployer, network, accounts) {
   const ARTH_SEED_AMOUNT_DEC18 = new BigNumber("10000e18")
   const ARTHS_SEED_AMOUNT_DEC18 = new BigNumber("10000e18")
 
-  const REDEMPTION_FEE = 400 // 0.04%
-  const MINTING_FEE = 300 // 0.03%
+  const redemptionFee = 400 // 0.04%
+  const mintingFee = 300 // 0.03%
   const COLLATERAL_PRICE = 1040000 // $1.04
   const TIMELOCK_DELAY = 2 * 86400 // 2 days
   const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666"

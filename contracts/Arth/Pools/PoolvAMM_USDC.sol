@@ -10,7 +10,7 @@
 //     constructor(
 //         address _arth_contract_address,
 //         address _arthx_contract_address,
-//         address _collateral_address,
+//         address _collateralAddress,
 //         address _creator_address,
 //         address _timelock_address,
 //         address _uniswap_factory_address,
@@ -20,7 +20,7 @@
 //         ArthPoolvAMM(
 //             _arth_contract_address,
 //             _arthx_contract_address,
-//             _collateral_address,
+//             _collateralAddress,
 //             _creator_address,
 //             _timelock_address,
 //             _uniswap_factory_address,
@@ -29,6 +29,6 @@
 //         )
 //     {
 //         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-//         USDC_address = _collateral_address;
+//         USDC_address = _collateralAddress;
 //     }
 // }

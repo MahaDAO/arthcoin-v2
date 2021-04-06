@@ -24,24 +24,24 @@
 // contract ArthPoolvAMM is AccessControl {
 //     using SafeMath for uint256;
 
-//     ERC20 private collateral_token;
+//     ERC20 private collateralToken;
 //     ARTHStablecoin private ARTH;
 //     ARTHShares private ARTHS;
 //     UniswapPairOracle private arthxUSDCOracle;
 
-//     address private collateral_address;
+//     address private collateralAddress;
 //     address private arth_contract_address;
 //     address private arthx_contract_address;
 //     address public arthx_usdc_oracle_address;
 //     address private uniswap_factory;
 
-//     address private owner_address;
+//     address private ownerAddress;
 //     address private timelock_address;
 
-//     uint256 public minting_fee;
-//     uint256 public redemption_fee;
-//     uint256 public buyback_fee;
-//     uint256 public recollat_fee;
+//     uint256 public mintingFee;
+//     uint256 public redemptionFee;
+//     uint256 public buybackFee;
+//     uint256 public recollatFee;
 
 //     // Mint check tolerance
 //     uint256 public max_drift_band;
@@ -66,7 +66,7 @@
 //     // Bonus rate on ARTHX minted during recollateralizeARTH(); 6 decimals of precision
 //     uint256 public bonus_rate;
 //     // Number of blocks to wait before being able to collectRedemption()
-//     uint256 public redemption_delay;
+//     uint256 public redemptionDelay;
 //     // Number of seconds to wait before refreshing virtual AMM reserves
 //     uint256 public reserve_refresh_cooldown;
 //     // Last reserve refresh
@@ -102,8 +102,8 @@
 //     uint256 drift_arthx_negative = 0;
 //     uint256 drift_collat_positive = 0;
 //     uint256 drift_collat_negative = 0;
-//     uint256 public arthx_price_cumulative = 0;
-//     uint256 public arthx_price_cumulative_prev = 0;
+//     uint256 public arthxPrice_cumulative = 0;
+//     uint256 public arthxPrice_cumulative_prev = 0;
 //     uint256 public last_drift_refresh = 0;
 //     uint256 public drift_refresh_period = 0;
 //     uint256 public k_virtual_amm = 0;
@@ -112,7 +112,7 @@
 
 //     modifier onlyByOwnerOrGovernance() {
 //         require(
-//             msg.sender == timelock_address || msg.sender == owner_address,
+//             msg.sender == timelock_address || msg.sender == ownerAddress,
 //             'You are not the owner or the governance timelock'
 //         );
 //         _;
@@ -141,7 +141,7 @@
 //     constructor(
 //         address _arth_contract_address,
 //         address _arthx_contract_address,
-//         address _collateral_address,
+//         address _collateralAddress,
 //         address _creator_address,
 //         address _timelock_address,
 //         address _uniswap_factory_address,
@@ -152,23 +152,23 @@
 //         ARTHX = ARTHShares(_arthx_contract_address);
 //         arth_contract_address = _arth_contract_address;
 //         arthx_contract_address = _arthx_contract_address;
-//         collateral_address = _collateral_address;
+//         collateralAddress = _collateralAddress;
 //         timelock_address = _timelock_address;
-//         owner_address = _creator_address;
-//         collateral_token = ERC20(_collateral_address);
+//         ownerAddress = _creator_address;
+//         collateralToken = ERC20(_collateralAddress);
 //         pool_ceiling = _pool_ceiling;
 //         uniswap_factory = _uniswap_factory_address;
 
-//         missing_decimals = uint256(18).sub(collateral_token.decimals());
+//         missing_decimals = uint256(18).sub(collateralToken.decimals());
 //         pool_ceiling = 100000e6;
 //         pausedPrice = 0;
 //         bonus_rate = 0;
-//         redemption_delay = 2;
+//         redemptionDelay = 2;
 //         reserve_refresh_cooldown = 3600;
-//         minting_fee = 4500;
-//         redemption_fee = 4500;
-//         buyback_fee = 4500;
-//         recollat_fee = 4500;
+//         mintingFee = 4500;
+//         redemptionFee = 4500;
+//         buybackFee = 4500;
+//         recollatFee = 4500;
 //         max_drift_band = 50000; // 5%. Also used to potentially curtail sandwich attacks
 
 //         drift_refresh_period = 900;
@@ -304,7 +304,7 @@
 //         // Calculate the reserves at the average internal price over the last period and the current K
 //         uint256 time_elapsed = block.timestamp - last_drift_refresh;
 //         uint256 average_period_price_arthx =
-//             (arthx_price_cumulative - arthx_price_cumulative_prev).div(
+//             (arthxPrice_cumulative - arthxPrice_cumulative_prev).div(
 //                 time_elapsed
 //             );
 //         uint256 internal_k =
@@ -350,7 +350,7 @@
 //                 .div(drift_refresh_period);
 //         }
 
-//         arthx_price_cumulative_prev = arthx_price_cumulative;
+//         arthxPrice_cumulative_prev = arthxPrice_cumulative;
 //         last_drift_refresh = block.timestamp;
 //         drift_end_time = block.timestamp.add(drift_refresh_period);
 //     }
@@ -374,7 +374,7 @@
 //     function collatDollarBalance() public view returns (uint256) {
 //         return
 //             (
-//                 collateral_token
+//                 collateralToken
 //                     .balanceOf(address(this))
 //                     .add(collateral_invested)
 //                     .sub(unclaimedPoolCollateral)
@@ -384,14 +384,14 @@
 
 //     function availableExcessCollatDV() public view returns (uint256) {
 //         uint256 total_supply = ARTH.totalSupply();
-//         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
-//         uint256 global_collat_value = ARTH.globalCollateralValue();
+//         uint256 globalCollateralRatio = ARTH.globalCollateralRatio();
+//         uint256 globalCollatValue = ARTH.globalCollateralValue();
 
 //         uint256 target_collat_value =
-//             total_supply.mul(global_collateral_ratio).div(1e6);
+//             total_supply.mul(globalCollateralRatio).div(1e6);
 
-//         if (global_collat_value > target_collat_value) {
-//             return global_collat_value.sub(target_collat_value);
+//         if (globalCollatValue > target_collat_value) {
+//             return globalCollatValue.sub(target_collat_value);
 //         } else {
 //             return 0;
 //         }
@@ -399,7 +399,7 @@
 
 //     function availableForInvestment() public view returns (uint256 max_invest) {
 //         uint256 curr_pool_bal =
-//             collateral_token
+//             collateralToken
 //                 .balanceOf(address(this))
 //                 .add(collateral_invested)
 //                 .sub(unclaimedPoolCollateral);
@@ -420,7 +420,7 @@
 //     ) private {
 //         uint256 time_elapsed = block.timestamp - last_update_time;
 //         if (time_elapsed > 0) {
-//             arthx_price_cumulative += average_arthx_virtual_reserves
+//             arthxPrice_cumulative += average_arthx_virtual_reserves
 //                 .mul(1e18)
 //                 .div(average_collat_virtual_reserves)
 //                 .mul(time_elapsed);
@@ -433,9 +433,9 @@
 //     /* ========== PUBLIC FUNCTIONS ========== */
 
 //     function mintFractionalARTH(
-//         uint256 collateral_amount,
-//         uint256 arthx_amount,
-//         uint256 ARTH_out_min
+//         uint256 collateralAmount,
+//         uint256 arthxAmount,
+//         uint256 ARTHOutMin
 //     )
 //         public
 //         notMintPaused
@@ -445,29 +445,29 @@
 //             uint256
 //         )
 //     {
-//         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
+//         uint256 globalCollateralRatio = ARTH.globalCollateralRatio();
 
 //         // Do not need to equalize decimals between ARTHX and collateral, getAmountOut & reserves takes care of it
 //         // Still need to adjust for ARTH (18 decimals) and collateral (not always 18 decimals)
 //         uint256 total_arth_mint;
 //         uint256 collat_needed;
 //         uint256 arthx_needed;
-//         if (global_collateral_ratio == 1e6) {
+//         if (globalCollateralRatio == 1e6) {
 //             // 1-to-1
-//             total_arth_mint = collateral_amount.mul(10**missing_decimals);
-//             collat_needed = collateral_amount;
+//             total_arth_mint = collateralAmount.mul(10**missing_decimals);
+//             collat_needed = collateralAmount;
 //             arthx_needed = 0;
-//         } else if (global_collateral_ratio == 0) {
+//         } else if (globalCollateralRatio == 0) {
 //             // Algorithmic
 //             // Assumes 1 collat = 1 ARTH at all times
 //             total_arth_mint = getAmountOut(
-//                 arthx_amount,
+//                 arthxAmount,
 //                 arthx_virtual_reserves,
 //                 collat_virtual_reserves,
-//                 minting_fee
+//                 mintingFee
 //             );
 //             _update(
-//                 arthx_virtual_reserves.add(arthx_amount),
+//                 arthx_virtual_reserves.add(arthxAmount),
 //                 collat_virtual_reserves.sub(total_arth_mint),
 //                 arthx_virtual_reserves,
 //                 collat_virtual_reserves
@@ -475,29 +475,29 @@
 
 //             total_arth_mint = total_arth_mint.mul(10**missing_decimals);
 //             collat_needed = 0;
-//             arthx_needed = arthx_amount;
+//             arthx_needed = arthxAmount;
 //         } else {
 //             // Fractional
 //             // Assumes 1 collat = 1 ARTH at all times
 //             uint256 arth_mint_from_arthx =
 //                 getAmountOut(
-//                     arthx_amount,
+//                     arthxAmount,
 //                     arthx_virtual_reserves,
 //                     collat_virtual_reserves,
-//                     minting_fee
+//                     mintingFee
 //                 );
 //             _update(
-//                 arthx_virtual_reserves.add(arthx_amount),
+//                 arthx_virtual_reserves.add(arthxAmount),
 //                 collat_virtual_reserves.sub(arth_mint_from_arthx),
 //                 arthx_virtual_reserves,
 //                 collat_virtual_reserves
 //             );
 
 //             collat_needed = arth_mint_from_arthx.mul(1e6).div(
-//                 uint256(1e6).sub(global_collateral_ratio)
+//                 uint256(1e6).sub(globalCollateralRatio)
 //             ); // find collat needed at collateral ratio
 //             require(
-//                 collat_needed <= collateral_amount,
+//                 collat_needed <= collateralAmount,
 //                 'Not enough collateral inputted'
 //             );
 
@@ -507,12 +507,12 @@
 //                 10**missing_decimals
 //             );
 //             total_arth_mint = arth_mint_from_arthx.add(arth_mint_from_collat);
-//             arthx_needed = arthx_amount;
+//             arthx_needed = arthxAmount;
 //         }
 
-//         require(total_arth_mint >= ARTH_out_min, 'Slippage limit reached');
+//         require(total_arth_mint >= ARTHOutMin, 'Slippage limit reached');
 //         require(
-//             collateral_token
+//             collateralToken
 //                 .balanceOf(address(this))
 //                 .add(collateral_invested)
 //                 .sub(unclaimedPoolCollateral)
@@ -521,7 +521,7 @@
 //         );
 
 //         ARTHS.poolBurnFrom(msg.sender, arthx_needed);
-//         collateral_token.transferFrom(msg.sender, address(this), collat_needed);
+//         collateralToken.transferFrom(msg.sender, address(this), collat_needed);
 
 //         // Sanity check to make sure the ARTH mint amount is close to the expected amount from the collateral input
 //         // Using collateral_needed here could cause problems if the reserves are off
@@ -529,10 +529,10 @@
 //         // Assumes $1 collateral (USDC, USDT, DAI, etc)
 //         require(
 //             total_arth_mint <=
-//                 collateral_amount
+//                 collateralAmount
 //                     .mul(10**missing_decimals)
 //                     .mul(uint256(1e6).add(max_drift_band))
-//                     .div(global_collateral_ratio),
+//                     .div(globalCollateralRatio),
 //             '[max_drift_band] Too much ARTH being minted'
 //         );
 //         ARTH.poolMint(msg.sender, total_arth_mint);
@@ -542,7 +542,7 @@
 
 //     function redeemFractionalARTH(
 //         uint256 ARTH_amount,
-//         uint256 arthx_out_min,
+//         uint256 ARTHXOutMin,
 //         uint256 collateral_out_min
 //     )
 //         public
@@ -553,24 +553,24 @@
 //             uint256
 //         )
 //     {
-//         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
+//         uint256 globalCollateralRatio = ARTH.globalCollateralRatio();
 
 //         uint256 collat_out;
 //         uint256 arthx_out;
 
 //         uint256 collat_equivalent = ARTH_amount.div(10**missing_decimals);
 
-//         if (global_collateral_ratio == 1e6) {
+//         if (globalCollateralRatio == 1e6) {
 //             // 1-to-1
 //             collat_out = collat_equivalent;
 //             arthx_out = 0;
-//         } else if (global_collateral_ratio == 0) {
+//         } else if (globalCollateralRatio == 0) {
 //             // Algorithmic
 //             arthx_out = getAmountOut(
 //                 collat_equivalent,
 //                 collat_virtual_reserves,
 //                 arthx_virtual_reserves,
-//                 redemption_fee
+//                 redemptionFee
 //             ); // switch ARTH to units of collateral and swap
 //             collat_out = 0;
 
@@ -582,23 +582,23 @@
 //             );
 //         } else {
 //             // Fractional
-//             collat_out = collat_equivalent.mul(global_collateral_ratio).div(
+//             collat_out = collat_equivalent.mul(globalCollateralRatio).div(
 //                 1e6
 //             );
 //             arthx_out = getAmountOut(
 //                 collat_equivalent
-//                     .mul((uint256(1e6).sub(global_collateral_ratio)))
+//                     .mul((uint256(1e6).sub(globalCollateralRatio)))
 //                     .div(1e6),
 //                 collat_virtual_reserves,
 //                 arthx_virtual_reserves,
-//                 redemption_fee
+//                 redemptionFee
 //             );
 
 //             _update(
 //                 arthx_virtual_reserves.sub(arthx_out),
 //                 collat_virtual_reserves.add(
 //                     collat_equivalent
-//                         .mul((uint256(1e6).sub(global_collateral_ratio)))
+//                         .mul((uint256(1e6).sub(globalCollateralRatio)))
 //                         .div(1e6)
 //                 ),
 //                 arthx_virtual_reserves,
@@ -608,7 +608,7 @@
 
 //         require(
 //             collat_out <=
-//                 collateral_token.balanceOf(address(this)).sub(
+//                 collateralToken.balanceOf(address(this)).sub(
 //                     unclaimedPoolCollateral
 //                 ),
 //             'Not enough collateral in pool'
@@ -617,7 +617,7 @@
 //             collat_out >= collateral_out_min,
 //             'Slippage limit reached [collateral]'
 //         );
-//         require(arthx_out >= arthx_out_min, 'Slippage limit reached [ARTHS]');
+//         require(arthx_out >= ARTHXOutMin, 'Slippage limit reached [ARTHS]');
 
 //         // Sanity check to make sure the collat amount is close to the expected amount from the ARTH input
 //         // This check is redundant since collat_out is essentially supplied by the user
@@ -630,7 +630,7 @@
 //         require(
 //             collat_out.mul(10**missing_decimals) <=
 //                 ARTH_amount
-//                     .mul(global_collateral_ratio)
+//                     .mul(globalCollateralRatio)
 //                     .mul(uint256(1e6).add(max_drift_band))
 //                     .div(1e12),
 //             '[max_drift_band] Too much collateral being released'
@@ -660,8 +660,8 @@
 //     // to take out ARTH/collateral from the system, use an AMM to trade the new price, and then mint back into the system.
 //     function collectRedemption() external returns (uint256, uint256) {
 //         require(
-//             (lastRedeemed[msg.sender].add(redemption_delay)) <= block.number,
-//             'Must wait for redemption_delay blocks before collecting redemption'
+//             (lastRedeemed[msg.sender].add(redemptionDelay)) <= block.number,
+//             'Must wait for redemptionDelay blocks before collecting redemption'
 //         );
 //         bool sendARTHX = false;
 //         bool sendCollateral = false;
@@ -691,60 +691,60 @@
 //             ARTHS.transfer(msg.sender, ARTHSAmount);
 //         }
 //         if (sendCollateral == true) {
-//             collateral_token.transfer(msg.sender, CollateralAmount);
+//             collateralToken.transfer(msg.sender, CollateralAmount);
 //         }
 
 //         return (CollateralAmount, ARTHSAmount);
 //     }
 
 //     function recollateralizeARTH(
-//         uint256 collateral_amount,
+//         uint256 collateralAmount,
 //         uint256 ARTHS_out_min
 //     ) external returns (uint256, uint256) {
 //         require(recollateralizePaused == false, 'Recollateralize is paused');
 //         uint256 arthx_out =
 //             getAmountOut(
-//                 collateral_amount,
+//                 collateralAmount,
 //                 collat_virtual_reserves,
 //                 arthx_virtual_reserves,
-//                 recollat_fee
+//                 recollatFee
 //             );
 
 //         _update(
 //             arthx_virtual_reserves.sub(arthx_out),
-//             collat_virtual_reserves.add(collateral_amount),
+//             collat_virtual_reserves.add(collateralAmount),
 //             arthx_virtual_reserves,
 //             collat_virtual_reserves
 //         );
 //         require(arthx_out >= ARTHS_out_min, 'Slippage limit reached');
 
 //         uint256 total_supply = ARTH.totalSupply();
-//         uint256 global_collateral_ratio = ARTH.global_collateral_ratio();
-//         uint256 global_collat_value = ARTH.globalCollateralValue();
-//         uint256 target_collat_value = total_supply.mul(global_collateral_ratio);
+//         uint256 globalCollateralRatio = ARTH.globalCollateralRatio();
+//         uint256 globalCollatValue = ARTH.globalCollateralValue();
+//         uint256 target_collat_value = total_supply.mul(globalCollateralRatio);
 
 //         require(
 //             target_collat_value >=
-//                 global_collat_value +
-//                     collateral_amount.mul(10**missing_decimals),
+//                 globalCollatValue +
+//                     collateralAmount.mul(10**missing_decimals),
 //             'Too much recollateralize inputted'
 //         );
 
-//         collateral_token.transferFrom(
+//         collateralToken.transferFrom(
 //             msg.sender,
 //             address(this),
-//             collateral_amount
+//             collateralAmount
 //         );
 
 //         // Sanity check to make sure the value of the outgoing ARTHX amount is close to the expected amount based on the collateral input
 //         // Ignores the bonus, as it will be added in later
 //         // Useful in case of a sandwich attack or some other fault with the virtual reserves
 //         // Assumes $1 collateral (USDC, USDT, DAI, etc)
-//         uint256 arthx_price =
+//         uint256 arthxPrice =
 //             arthxUSDCOracle.consult(arthx_contract_address, 1e18); // comes out e6
 //         require(
-//             arthx_out.mul(arthx_price).div(1e6) <=
-//                 collateral_amount
+//             arthx_out.mul(arthxPrice).div(1e6) <=
+//                 collateralAmount
 //                     .mul(10**missing_decimals)
 //                     .mul(uint256(1e6).add(max_drift_band))
 //                     .div(1e6),
@@ -756,7 +756,7 @@
 
 //         ARTHS.poolMint(msg.sender, arthx_out);
 
-//         return (collateral_amount, arthx_out);
+//         return (collateralAmount, arthx_out);
 //     }
 
 //     function buyBackARTHX(uint256 ARTHS_amount, uint256 COLLATERAL_out_min)
@@ -771,7 +771,7 @@
 //                 ARTHS_amount,
 //                 arthx_virtual_reserves,
 //                 collat_virtual_reserves,
-//                 buyback_fee
+//                 buybackFee
 //             );
 
 //         require(buyback_available > 0, 'Zero buyback available');
@@ -792,18 +792,18 @@
 //         // Sanity check to make sure the value of the outgoing collat amount is close to the expected amount based on the ARTHX input
 //         // Useful in case of a sandwich attack or some other fault with the virtual reserves
 //         // Assumes $1 collateral (USDC, USDT, DAI, etc)
-//         uint256 arthx_price =
+//         uint256 arthxPrice =
 //             arthxUSDCOracle.consult(arthx_contract_address, 1e18); // comes out e6
 //         require(
 //             collat_out.mul(10**missing_decimals) <=
 //                 ARTHS_amount
-//                     .mul(arthx_price)
+//                     .mul(arthxPrice)
 //                     .mul(uint256(1e6).add(max_drift_band))
 //                     .div(1e12),
 //             '[max_drift_band] Too much collateral being released'
 //         );
 
-//         collateral_token.transfer(msg.sender, collat_out);
+//         collateralToken.transfer(msg.sender, collat_out);
 
 //         return (ARTHS_amount, collat_out);
 //     }
@@ -816,7 +816,7 @@
 //             'Investment cap reached'
 //         );
 //         collateral_invested = collateral_invested.add(amount);
-//         collateral_token.transfer(investor_contract_address, amount);
+//         collateralToken.transfer(investor_contract_address, amount);
 //     }
 
 //     // Deposit collateral back to this contract
@@ -825,7 +825,7 @@
 //         if (amount < collateral_invested)
 //             collateral_invested = collateral_invested.sub(amount);
 //         else collateral_invested = 0;
-//         collateral_token.transferFrom(
+//         collateralToken.transferFrom(
 //             investor_contract_address,
 //             address(this),
 //             amount
@@ -879,21 +879,21 @@
 //     function setPoolParameters(
 //         uint256 new_ceiling,
 //         uint256 new_bonus_rate,
-//         uint256 new_redemption_delay,
+//         uint256 new_redemptionDelay,
 //         uint256 new_mint_fee,
 //         uint256 new_redeem_fee,
-//         uint256 new_buyback_fee,
-//         uint256 new_recollat_fee,
+//         uint256 new_buybackFee,
+//         uint256 new_recollatFee,
 //         uint256 _reserve_refresh_cooldown,
 //         uint256 _max_drift_band
 //     ) external onlyByOwnerOrGovernance {
 //         pool_ceiling = new_ceiling;
 //         bonus_rate = new_bonus_rate;
-//         redemption_delay = new_redemption_delay;
-//         minting_fee = new_mint_fee;
-//         redemption_fee = new_redeem_fee;
-//         buyback_fee = new_buyback_fee;
-//         recollat_fee = new_recollat_fee;
+//         redemptionDelay = new_redemptionDelay;
+//         mintingFee = new_mint_fee;
+//         redemptionFee = new_redeem_fee;
+//         buybackFee = new_buybackFee;
+//         recollatFee = new_recollatFee;
 //         reserve_refresh_cooldown = _reserve_refresh_cooldown;
 //         max_drift_band = _max_drift_band;
 //     }
@@ -914,8 +914,8 @@
 //         timelock_address = new_timelock;
 //     }
 
-//     function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-//         owner_address = _owner_address;
+//     function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+//         ownerAddress = _ownerAddress;
 //     }
 
 //     function setInvestorParameters(

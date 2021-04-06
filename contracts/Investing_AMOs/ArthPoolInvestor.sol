@@ -16,11 +16,11 @@ import '../Arth/Pools/ArthPoolvAMM.sol';
 
 //     /* ========== STATE VARIABLES ========== */
 
-//     ERC20 private collateral_token;
+//     ERC20 private collateralToken;
 //     ArthPoolvAMM private pool;
-//     address public collateral_address;
+//     address public collateralAddress;
 //     address public pool_address;
-//     address public owner_address;
+//     address public ownerAddress;
 //     address public timelock_address;
 
 //     // AccessControl Roles
@@ -36,7 +36,7 @@ import '../Arth/Pools/ArthPoolvAMM.sol';
 //     /* ========== MODIFIERS ========== */
 
 //     modifier onlyByOwnerOrGovernance() {
-//         require(msg.sender == timelock_address || msg.sender == owner_address, "You are not the owner or the governance timelock");
+//         require(msg.sender == timelock_address || msg.sender == ownerAddress, "You are not the owner or the governance timelock");
 //         _;
 //     }
 
@@ -49,21 +49,21 @@ import '../Arth/Pools/ArthPoolvAMM.sol';
 
 //     constructor(
 //         address _pool_address,
-//         address _collateral_address,
+//         address _collateralAddress,
 //         address _creator_address,
 //         address _timelock_address
 //     ) public {
 //         pool_address = _pool_address;
 //         pool = ArthPoolvAMM(_pool_address);
-//         collateral_address = _collateral_address;
-//         collateral_token = ERC20(_collateral_address);
+//         collateralAddress = _collateralAddress;
+//         collateralToken = ERC20(_collateralAddress);
 //         timelock_address = _timelock_address;
-//         owner_address = _creator_address;
-//         missing_decimals = uint(18).sub(collateral_token.decimals());
+//         ownerAddress = _creator_address;
+//         missing_decimals = uint(18).sub(collateralToken.decimals());
 
 //         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 //         grantRole(WITHDRAWAL_PAUSER, timelock_address);
-//         grantRole(WITHDRAWAL_PAUSER, owner_address);
+//         grantRole(WITHDRAWAL_PAUSER, ownerAddress);
 //     }
 
 //     /* ========== VIEWS ========== */
@@ -83,8 +83,8 @@ import '../Arth/Pools/ArthPoolvAMM.sol';
 //         timelock_address = new_timelock;
 //     }
 
-//     function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-//         owner_address = _owner_address;
+//     function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+//         ownerAddress = _ownerAddress;
 //     }
 
 //     function setPool(address _pool_address) external onlyByOwnerOrGovernance {

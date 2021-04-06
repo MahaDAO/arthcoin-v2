@@ -63,7 +63,7 @@
     // ========================================================================================
 
 
-    function sellARTHBintoAMM(uint256 arthb_amount, uint256 arth_out_min) external notSellingPaused returns (uint256 arthb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
+    function sellARTHBintoAMM(uint256 arthb_amount, uint256 ARTHOutMin) external notSellingPaused returns (uint256 arthb_sold_under_floor, uint256 arth_out, uint256 arth_fee_amt) {
         require(isInEpoch(), 'Not in an epoch');
 
         uint256 the_floor_price = floor_price();
@@ -88,8 +88,8 @@
         arth_fee_amt = arth_out.mul(selling_fee).div(PRICE_PRECISION);
         arth_out = arth_out.sub(arth_fee_amt);
 
-        // Check arth_out_min
-        require(arth_out >= arth_out_min, "[sellARTHBintoAMM arth_out_min]: Slippage limit reached");
+        // Check ARTHOutMin
+        require(arth_out >= ARTHOutMin, "[sellARTHBintoAMM ARTHOutMin]: Slippage limit reached");
 
         // AMM will never allow an effective sale price above 1
         {

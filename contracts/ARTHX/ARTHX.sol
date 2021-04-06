@@ -30,7 +30,7 @@ contract ARTHShares is AnyswapV4Token {
 
     uint256 public constant genesis_supply = 10000e18; // 10k is printed upon genesis
 
-    address public owner_address;
+    address public ownerAddress;
     address public oracle_address;
     address public timelock_address; // Governance timelock address
     ARTHStablecoin private ARTH;
@@ -48,7 +48,7 @@ contract ARTHShares is AnyswapV4Token {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == owner_address || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelock_address,
             'You are not an owner or the governance timelock'
         );
         _;
@@ -60,16 +60,16 @@ contract ARTHShares is AnyswapV4Token {
         string memory _name,
         string memory _symbol,
         address _oracle_address,
-        address _owner_address,
+        address _ownerAddress,
         address _timelock_address
     ) AnyswapV4Token(_name) {
         name = _name;
         symbol = _symbol;
-        owner_address = _owner_address;
+        ownerAddress = _ownerAddress;
         oracle_address = _oracle_address;
         timelock_address = _timelock_address;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _mint(owner_address, genesis_supply);
+        _mint(ownerAddress, genesis_supply);
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
@@ -92,8 +92,8 @@ contract ARTHShares is AnyswapV4Token {
         ARTH = ARTHStablecoin(arth_contract_address);
     }
 
-    function setOwner(address _owner_address) external onlyByOwnerOrGovernance {
-        owner_address = _owner_address;
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+        ownerAddress = _ownerAddress;
     }
 
     function mint(address to, uint256 amount) public onlyPools {

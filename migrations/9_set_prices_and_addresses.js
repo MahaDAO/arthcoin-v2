@@ -43,10 +43,15 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSome oracle prices are: '))
   const arth_price_initial = new BigNumber(await arthInstance.arth_price({ from: DEPLOYER_ADDRESS })).div(BIG6)
-  const arthx_price_initial = new BigNumber(await arthInstance.arthx_price({ from: DEPLOYER_ADDRESS })).div(BIG6)
+  const arthxPrice_initial = new BigNumber(await arthInstance.arthxPrice({ from: DEPLOYER_ADDRESS })).div(BIG6)
   const arth_price_from_ARTH_WETH = (new BigNumber(await oracle_instance_ARTH_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6)
+<<<<<<< HEAD
   const arth_price_from_ARTH_ARTHX = (new BigNumber(await oracle_instance_ARTH_ARTHX.consult.call(arthxInstance.address, 1e6))).div(BIG6)
   const arthx_price_from_ARTHX_WETH = (new BigNumber(await oracle_instance_ARTHX_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6)
+=======
+  const arth_price_from_ARTH_ARTHX = (new BigNumber(await oracle_instance_ARTH_ARTHS.consult.call(arthxInstance.address, 1e6))).div(BIG6)
+  const arthxPrice_from_ARTHS_WETH = (new BigNumber(await oracle_instance_ARTHS_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6)
+>>>>>>> 70a81bd83e4c852943cbd03f42a8ee09adf74207
   const arth_price_from_ARTH_USDC = (new BigNumber(await oracle_instance_ARTH_USDC.consult.call(arthInstance.address, new BigNumber("1e18")))).div(BIG6)
   const arth_price_from_ARTH_USDT = (new BigNumber(await oracle_instance_ARTH_USDT.consult.call(arthInstance.address, new BigNumber("1e18")))).div(BIG6)
   const USDC_price_from_USDC_WETH = (new BigNumber(await oracle_instance_USDC_WETH.consult.call(wethInstance.address, new BigNumber("1e18")))).div(BIG6)

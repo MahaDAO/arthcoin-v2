@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 interface IArthPool {
-    function minting_fee() external returns (uint256);
+    function mintingFee() external returns (uint256);
 
-    function redemption_fee() external returns (uint256);
+    function redemptionFee() external returns (uint256);
 
-    function buyback_fee() external returns (uint256);
+    function buybackFee() external returns (uint256);
 
-    function recollat_fee() external returns (uint256);
+    function recollatFee() external returns (uint256);
 
     function collatDollarBalance() external view returns (uint256);
 
@@ -22,16 +22,15 @@ interface IArthPool {
         address _weth_address
     ) external;
 
-    function mint1t1ARTH(uint256 collateral_amount, uint256 ARTH_out_min)
-        external;
+    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin) external;
 
-    function mintAlgorithmicARTH(uint256 arthx_amount_d18, uint256 ARTH_out_min)
+    function mintAlgorithmicARTH(uint256 arthxAmount_d18, uint256 ARTHOutMin)
         external;
 
     function mintFractionalARTH(
-        uint256 collateral_amount,
-        uint256 arthx_amount,
-        uint256 ARTH_out_min
+        uint256 collateralAmount,
+        uint256 arthxAmount,
+        uint256 ARTHOutMin
     ) external;
 
     function redeem1t1ARTH(uint256 ARTH_amount, uint256 COLLATERAL_out_min)
@@ -39,21 +38,19 @@ interface IArthPool {
 
     function redeemFractionalARTH(
         uint256 ARTH_amount,
-        uint256 ARTHX_out_min,
+        uint256 ARTHXOutMin,
         uint256 COLLATERAL_out_min
     ) external;
 
-    function redeemAlgorithmicARTH(uint256 ARTH_amount, uint256 ARTHX_out_min)
+    function redeemAlgorithmicARTH(uint256 ARTH_amount, uint256 ARTHXOutMin)
         external;
 
     function collectRedemption() external;
 
-    function recollateralizeARTH(
-        uint256 collateral_amount,
-        uint256 ARTHX_out_min
-    ) external;
+    function recollateralizeARTH(uint256 collateralAmount, uint256 ARTHXOutMin)
+        external;
 
-    function buyBackARTHX(uint256 ARTHX_amount, uint256 COLLATERAL_out_min)
+    function buyBackARTHX(uint256 arthxAmount, uint256 COLLATERAL_out_min)
         external;
 
     function toggleMinting() external;
@@ -69,14 +66,14 @@ interface IArthPool {
     function setPoolParameters(
         uint256 new_ceiling,
         uint256 new_bonus_rate,
-        uint256 new_redemption_delay,
+        uint256 new_redemptionDelay,
         uint256 new_mint_fee,
         uint256 new_redeem_fee,
-        uint256 new_buyback_fee,
-        uint256 new_recollat_fee
+        uint256 new_buybackFee,
+        uint256 new_recollatFee
     ) external;
 
     function setTimelock(address new_timelock) external;
 
-    function setOwner(address _owner_address) external;
+    function setOwner(address _ownerAddress) external;
 }

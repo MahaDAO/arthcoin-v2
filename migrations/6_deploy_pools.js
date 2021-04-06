@@ -17,8 +17,8 @@ const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPa
 
 module.exports = async function (deployer, network, accounts) {
 
-  const REDEMPTION_FEE = 400 // 0.04%
-  const MINTING_FEE = 300 // 0.03%
+  const redemptionFee = 400 // 0.04%
+  const mintingFee = 300 // 0.03%
   const DEPLOYER_ADDRESS = accounts[0]
   const FIVE_MILLION = new BigNumber("500000e6")
   const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
@@ -68,8 +68,8 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSetting minting and redemtion fee...'))
   await Promise.all([
-    arthInstance.setMintingFee(MINTING_FEE, { from: DEPLOYER_ADDRESS }),
-    arthInstance.setRedemptionFee(REDEMPTION_FEE, { from: DEPLOYER_ADDRESS })
+    arthInstance.setMintingFee(mintingFee, { from: DEPLOYER_ADDRESS }),
+    arthInstance.setRedemptionFee(redemptionFee, { from: DEPLOYER_ADDRESS })
   ])
 
   console.log(chalk.yellow('\nRefreshing pool params...'))

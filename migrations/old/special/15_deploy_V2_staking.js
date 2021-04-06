@@ -111,8 +111,8 @@ module.exports = async function (deployer, network, accounts) {
   const ONE_BILLION_DEC18 = new BigNumber("1000000000e18");
   const COLLATERAL_SEED_DEC18 = new BigNumber(508500e18);
 
-  const REDEMPTION_FEE = 400; // 0.04%
-  const MINTING_FEE = 300; // 0.03%
+  const redemptionFee = 400; // 0.04%
+  const mintingFee = 300; // 0.03%
   const COLLATERAL_PRICE = 1040000; // $1.04
   const ARTH_PRICE = 980000; // $0.98
   const ARTHS_PRICE = 210000; // $0.21
@@ -266,4 +266,3 @@ module.exports = async function (deployer, network, accounts) {
   }
   console.log("NEW STAKING CONTRACTS: ", NEW_STAKING_CONTRACTS);
 };
-

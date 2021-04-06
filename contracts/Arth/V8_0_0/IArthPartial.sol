@@ -24,7 +24,7 @@ interface IArthPartial {
         uint256 amount
     ) external returns (bool);
 
-    function owner_address() external returns (address);
+    function ownerAddress() external returns (address);
 
     function creator_address() external returns (address);
 
@@ -48,11 +48,11 @@ interface IArthPartial {
 
     function arth_pools(address a) external returns (bool);
 
-    function global_collateral_ratio() external returns (uint256);
+    function globalCollateralRatio() external returns (uint256);
 
-    function redemption_fee() external returns (uint256);
+    function redemptionFee() external returns (uint256);
 
-    function minting_fee() external returns (uint256);
+    function mintingFee() external returns (uint256);
 
     function arth_step() external returns (uint256);
 
@@ -79,7 +79,7 @@ interface IArthPartial {
     /* ========== VIEWS ========== */
     function arth_price() external returns (uint256);
 
-    function arthx_price() external returns (uint256);
+    function arthxPrice() external returns (uint256);
 
     function eth_usd_price() external returns (uint256);
 

@@ -11,14 +11,14 @@ contract UniswapPairOracle_ARTH_USDC is UniswapPairOracle {
         address factory,
         address tokenA,
         address tokenB,
-        address owner_address,
+        address ownerAddress,
         address timelock_address
     )
         UniswapPairOracle(
             factory,
             tokenA,
             tokenB,
-            owner_address,
+            ownerAddress,
             timelock_address
         )
     {}

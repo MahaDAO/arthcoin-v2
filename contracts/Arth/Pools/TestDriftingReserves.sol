@@ -16,14 +16,14 @@ contract TestDriftingReserves {
     uint256 drift_arthx_negative;
     uint256 drift_collat_positive;
     uint256 drift_collat_negative;
-    uint256 arthx_price_cumulative;
-    uint256 arthx_price_cumulative_prev;
-    uint256 minting_fee;
+    uint256 arthxPrice_cumulative;
+    uint256 arthxPrice_cumulative_prev;
+    uint256 mintingFee;
     uint256 last_drift_refresh;
     uint256 drift_refresh_period;
 
     // Example reserve update flow
-    function mint(uint256 arthx_amount) external {
+    function mint(uint256 arthxAmount) external {
         // Get current reserves
         (
             uint256 current_arthx_virtual_reserves,
@@ -35,14 +35,14 @@ contract TestDriftingReserves {
         // Calc reserve updates
         uint256 total_arth_mint =
             getAmountOut(
-                arthx_amount,
+                arthxAmount,
                 current_arthx_virtual_reserves,
                 current_collat_virtual_reserves
             );
 
         // Call _update with new reserves and average over last period
         _update(
-            current_arthx_virtual_reserves.add(arthx_amount),
+            current_arthx_virtual_reserves.add(arthxAmount),
             current_collat_virtual_reserves.sub(total_arth_mint),
             average_arthx_virtual_reserves,
             average_collat_virtual_reserves
@@ -70,7 +70,7 @@ contract TestDriftingReserves {
         // Calculate the reserves at the average internal price over the last period and the current K
         uint256 time_elapsed = block.timestamp - last_drift_refresh;
         uint256 average_period_price_arthx =
-            (arthx_price_cumulative - arthx_price_cumulative_prev).div(
+            (arthxPrice_cumulative - arthxPrice_cumulative_prev).div(
                 time_elapsed
             );
         uint256 internal_k =
@@ -112,7 +112,7 @@ contract TestDriftingReserves {
                 .div(drift_refresh_period);
         }
 
-        arthx_price_cumulative_prev = arthx_price_cumulative;
+        arthxPrice_cumulative_prev = arthxPrice_cumulative;
         last_drift_refresh = block.timestamp;
         end_dift = block.timestamp.add(drift_refresh_period);
     }
@@ -134,7 +134,7 @@ contract TestDriftingReserves {
     ) private {
         uint256 time_elapsed = block.timestamp - last_update_time;
         if (time_elapsed > 0) {
-            arthx_price_cumulative += average_arthx_virtual_reserves
+            arthxPrice_cumulative += average_arthx_virtual_reserves
                 .mul(1e18)
                 .div(average_collat_virtual_reserves)
                 .mul(time_elapsed);
@@ -214,7 +214,7 @@ contract TestDriftingReserves {
             reserveIn > 0 && reserveOut > 0,
             'ARTH_vAMM: INSUFFICIENT_LIQUIDITY'
         );
-        uint256 amountInWithFee = amountIn.mul(uint256(1e6).sub(minting_fee));
+        uint256 amountInWithFee = amountIn.mul(uint256(1e6).sub(mintingFee));
         uint256 numerator = amountInWithFee.mul(reserveOut);
         uint256 denominator = (reserveIn.mul(1e6)).add(amountInWithFee);
         amountOut = numerator / denominator;

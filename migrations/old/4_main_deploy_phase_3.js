@@ -123,8 +123,8 @@
 //   const ARTH_SEED_AMOUNT_DEC18 = new BigNumber("10000e18");
 //   const ARTHS_SEED_AMOUNT_DEC18 = new BigNumber("10000e18");
 
-//   const REDEMPTION_FEE = 400; // 0.04%
-//   const MINTING_FEE = 300; // 0.03%
+//   const redemptionFee = 400; // 0.04%
+//   const mintingFee = 300; // 0.03%
 //   const COLLATERAL_PRICE = 1040000; // $1.04
 //   const TIMELOCK_DELAY = 2 * 86400; // 2 days
 //   const DUMP_ADDRESS = "0x6666666666666666666666666666666666666666";
@@ -413,8 +413,8 @@
 //   // Set the redemption fee to 0.04%
 //   // Set the minting fee to 0.03%
 //   await Promise.all([
-//     arthInstance.setRedemptionFee(REDEMPTION_FEE, { from: METAMASK_ADDRESS }),
-//     arthInstance.setMintingFee(MINTING_FEE, { from: METAMASK_ADDRESS })
+//     arthInstance.setRedemptionFee(redemptionFee, { from: METAMASK_ADDRESS }),
+//     arthInstance.setMintingFee(mintingFee, { from: METAMASK_ADDRESS })
 //   ])
 
 //   // ============= Set the pool parameters so the minting and redemption fees get set ========
