@@ -7,6 +7,7 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 
+import './IUniswapLiquidityRouter.sol';
 import '../Uniswap/UniswapV2Library.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
@@ -15,7 +16,7 @@ import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
  * @title A Uniswap Router for managing liquidity.
  * @author MahaDAO.
  */
-contract UniswapLiquidityRouter {
+contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
     using SafeMath for uint256;
 
     IWETH public immutable WETH;
@@ -106,7 +107,9 @@ contract UniswapLiquidityRouter {
         address to,
         uint256 deadline
     )
-        public
+        external
+        virtual
+        override
         ensure(deadline)
         returns (
             uint256 amountA,
@@ -140,8 +143,10 @@ contract UniswapLiquidityRouter {
         address to,
         uint256 deadline
     )
-        public
+        external
         payable
+        virtual
+        override
         ensure(deadline)
         returns (
             uint256 amountToken,
