@@ -7,7 +7,7 @@ import './IARTHPool.sol';
 import '../../ARTHX/IARTHX.sol';
 import '../../ERC20/IERC20.sol';
 import '../../Oracle/ISimpleOracle.sol';
-import '../../Staking/StakingRewards.sol';
+import '../../Staking/IStakingRewards.sol';
 
 contract ArthPoolRouter {
     /**
@@ -18,8 +18,8 @@ contract ArthPoolRouter {
     IARTHX private _ARTHX;
     IARTHPool private _POOL;
     IERC20 private _COLLATEAL;
-    StakingRewards private _arthStakingPool;
-    StakingRewards private _arthxStakingPool;
+    IStakingRewards private _arthStakingPool;
+    IStakingRewards private _arthxStakingPool;
 
     /**
      * Constructor.
@@ -27,9 +27,9 @@ contract ArthPoolRouter {
     constructor(
         IARTHPool __POOL,
         IARTHX __ARTHX,
-        ARTHStablecoin __ARTH,
-        StakingRewards __arthStakingPool,
-        StakingRewards __arthxStakingPool
+        IARTH __ARTH,
+        IStakingRewards __arthStakingPool,
+        IStakingRewards __arthxStakingPool
     ) {
         _POOL = __POOL;
         _ARTH = __ARTH;
@@ -50,7 +50,7 @@ contract ArthPoolRouter {
         _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
 
         uint256 arthOut = _POOL.mint1t1ARTH(collateralAmount, arthOutMin);
-        ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
+        _ARTH.approve(address(_arthStakingPool), uint256(arthOut));
 
         if (lockDuration != 0)
             _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
@@ -65,9 +65,9 @@ contract ArthPoolRouter {
         bytes32 r,
         bytes32 s
     ) external {
-        ARTH.permit(
+        _ARTH.permit(
             msg.sender,
-            address(stakingPoolARTH),
+            address(_arthStakingPool),
             uint256(int256(-1)),
             block.timestamp,
             v,
@@ -87,9 +87,9 @@ contract ArthPoolRouter {
         uint256 arthOutMin,
         uint256 lockDuration
     ) external {
-        ARTHX.transferFrom(msg.sender, address(this), arthxAmountD18);
+        _ARTHX.transferFrom(msg.sender, address(this), arthxAmountD18);
         uint256 arthOut = _POOL.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
-        ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
+        _ARTH.approve(address(_arthStakingPool), uint256(arthOut));
 
         if (lockDuration != 0) {
             _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
@@ -106,9 +106,9 @@ contract ArthPoolRouter {
         bytes32 r,
         bytes32 s
     ) external {
-        ARTH.permit(
+        _ARTH.permit(
             msg.sender,
-            address(stakingPoolARTH),
+            address(_arthStakingPool),
             uint256(int256(-1)),
             block.timestamp,
             v,
@@ -130,11 +130,11 @@ contract ArthPoolRouter {
         uint256 lockDuration
     ) external {
         _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
-        ARTHX.transferFrom(msg.sender, address(this), arthxAmount);
+        _ARTHX.transferFrom(msg.sender, address(this), arthxAmount);
 
         uint256 arthOut =
             _POOL.mintFractionalARTH(collateralAmount, arthxAmount, arthOutMin);
-        ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
+        _ARTH.approve(address(_arthStakingPool), uint256(arthOut));
 
         if (lockDuration != 0)
             _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
@@ -150,9 +150,9 @@ contract ArthPoolRouter {
         bytes32 r,
         bytes32 s
     ) external {
-        ARTH.permit(
+        _ARTH.permit(
             msg.sender,
-            address(stakingPoolARTH),
+            address(_arthStakingPool),
             uint256(int256(-1)),
             block.timestamp,
             v,
@@ -176,7 +176,7 @@ contract ArthPoolRouter {
         _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
         uint256 arthxOut =
             _POOL.recollateralizeARTH(collateralAmount, ARTHXOutMin);
-        ARTHX.approve(address(stakingPoolARTHX), uint256(arthxOut));
+        _ARTHX.approve(address(_arthxStakingPool), uint256(arthxOut));
 
         if (lockDuration != 0)
             _arthxStakingPool.stakeLockedFor(
@@ -195,9 +195,9 @@ contract ArthPoolRouter {
         bytes32 r,
         bytes32 s
     ) external {
-        ARTHX.permit(
+        _ARTHX.permit(
             msg.sender,
-            address(stakingPoolARTHX),
+            address(_arthxStakingPool),
             uint256(int256(-1)),
             block.timestamp,
             v,
