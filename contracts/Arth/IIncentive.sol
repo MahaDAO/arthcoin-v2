@@ -6,9 +6,7 @@ pragma solidity ^0.8.0;
 /// @author Fei Protocol
 /// @notice Called by FEI token contract when transferring with an incentivized address
 /// @dev should be appointed as a Minter or Burner as needed
-interface IIncentive {
-    // ----------- Fei only state changing api -----------
-
+interface IIncentiveController {
     /// @notice apply incentives on transfer
     /// @param sender the sender address of the FEI
     /// @param receiver the receiver address of the FEI

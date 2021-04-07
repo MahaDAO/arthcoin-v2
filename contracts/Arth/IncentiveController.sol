@@ -6,17 +6,16 @@ pragma experimental ABIEncoderV2;
 import '@openzeppelin/contracts/utils/math/SafeCast.sol';
 import '@openzeppelin/contracts/utils/math/SignedSafeMath.sol';
 
+import './IARTH.sol';
 import '../Math//Math.sol';
 import '../Math/SafeMath.sol';
-import './IIncentive.sol';
+import '../Oracle/IChainlinkOracle.sol';
 import '../Governance/AccessControl.sol';
-//import '../Oracle/UniswapPairOracle.sol';
 import '../Interfaces/IUniswapPairOracle.sol';
-import {ARTHStablecoin} from './Arth.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
-import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
+import {IIncentiveController} from './IIncentive.sol';
 
-contract IncentiveController is AccessControl, IIncentive {
+contract IncentiveController is AccessControl, IIncentiveController {
     using SafeCast for int256;
     using SafeMath for uint256;
     using SignedSafeMath for int256;
@@ -32,24 +31,29 @@ contract IncentiveController is AccessControl, IIncentive {
         bool active;
     }
 
-    TimeWeightInfo private timeWeightInfo;
-    IUniswapPairOracle public arthETHOracle;
-    ChainlinkETHUSDPriceConsumer public ethGMUPricer;
-
     /**
      * State varaibles.
      */
 
-    address public arthAddr;
-    address public uniswapPairAddr;
+    IARTH public ARTH;
+    IChainlinkOracle public ethGMUPricer;
+    IUniswapPairOracle public arthETHOracle;
+    TimeWeightInfo private _timeWeightInfo;
 
-    uint8 private ethGMUPricerDecimals;
+    address public uniswapPairAddress;
     uint256 public targetPrice = 1000000; // i.e 1e6.
-    uint256 private constant PRICE_PRECISION = 1e6;
+
     /// @notice the granularity of the time weight and growth rate
     uint32 public constant TIME_WEIGHT_GRANULARITY = 100_000;
 
+    uint8 private _ethGMUPricerDecimals;
+    uint256 private constant _PRICE_PRECISION = 1e6;
+
     mapping(address => bool) private _exempt;
+
+    /**
+     * Modifiers.
+     */
 
     modifier onlyAdmin() {
         require(
@@ -59,29 +63,36 @@ contract IncentiveController is AccessControl, IIncentive {
         _;
     }
 
+    /**
+     * Constructor.
+     */
+
     constructor(
+        IARTH ARTH_,
         address arthETHOracle_,
         address ethGMUPricer_,
         address arthAddr_,
-        address uniswapPairAddr_
+        address uniswapPairAddress_
     ) {
-        arthAddr = arthAddr_;
-        uniswapPairAddr = uniswapPairAddr_;
+        ARTH = ARTH_;
+        uniswapPairAddress = uniswapPairAddress_;
 
+        ethGMUPricer = IChainlinkOracle(ethGMUPricer_);
+        _ethGMUPricerDecimals = ethGMUPricer.getDecimals();
         arthETHOracle = IUniswapPairOracle(arthETHOracle_);
-        ethGMUPricer = ChainlinkETHUSDPriceConsumer(ethGMUPricer_);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        ethGMUPricerDecimals = ethGMUPricer.getDecimals();
     }
 
     function getReserves() public view returns (uint256, uint256) {
-        address token0 = IUniswapV2Pair(uniswapPairAddr).token0();
+        address token0 = IUniswapV2Pair(uniswapPairAddress).token0();
         (uint256 reserve0, uint256 reserve1, ) =
-            IUniswapV2Pair(uniswapPairAddr).getReserves();
+            IUniswapV2Pair(uniswapPairAddress).getReserves();
 
         (uint256 arthReserves, uint256 tokenReserves) =
-            arthAddr == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
+            address(ARTH) == token0
+                ? (reserve0, reserve1)
+                : (reserve1, reserve0);
 
         return (arthReserves, tokenReserves);
     }
@@ -89,19 +100,19 @@ contract IncentiveController is AccessControl, IIncentive {
     function _getUniswapPrice() internal view returns (uint256) {
         (uint256 reserveARTH, uint256 reserveOther) = getReserves();
 
-        return reserveARTH.mul(PRICE_PRECISION).div(reserveOther);
+        return reserveARTH.mul(_PRICE_PRECISION).div(reserveOther);
     }
 
     function getCurrentArthPrice() internal view returns (uint256) {
         // Get the ETH/GMU price first, and cut it down to 1e6 precision.
         uint256 ethToGMUPrice =
-            uint256(ethGMUPricer.getLatestPrice()).mul(PRICE_PRECISION).div(
-                uint256(10)**ethGMUPricerDecimals
+            uint256(ethGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
+                uint256(10)**_ethGMUPricerDecimals
             );
 
         uint256 arthEthPrice = _getUniswapPrice();
 
-        return ethToGMUPrice.mul(arthEthPrice).div(PRICE_PRECISION);
+        return ethToGMUPrice.mul(arthEthPrice).div(_PRICE_PRECISION);
     }
 
     function isExemptAddress(address account) public view returns (bool) {
@@ -113,19 +124,19 @@ contract IncentiveController is AccessControl, IIncentive {
     }
 
     function _isPair(address account) internal view returns (bool) {
-        return address(uniswapPairAddr) == account;
+        return address(uniswapPairAddress) == account;
     }
 
     function getGrowthRate() public view returns (uint32) {
-        return timeWeightInfo.growthRate;
+        return _timeWeightInfo.growthRate;
     }
 
     function isTimeWeightActive() public view returns (bool) {
-        return timeWeightInfo.active;
+        return _timeWeightInfo.active;
     }
 
     function getTimeWeight() public view returns (uint32) {
-        TimeWeightInfo memory tw = timeWeightInfo;
+        TimeWeightInfo memory tw = _timeWeightInfo;
         if (!tw.active) return 0;
 
         uint32 blockDelta = uint32(uint256(block.number).sub(tw.blockNo));
@@ -139,13 +150,13 @@ contract IncentiveController is AccessControl, IIncentive {
     ) internal {
         uint32 blockNo = uint32(block.number);
 
-        timeWeightInfo = TimeWeightInfo(blockNo, weight, growthRate, active);
+        _timeWeightInfo = TimeWeightInfo(blockNo, weight, growthRate, active);
     }
 
     function setTimeWeightGrowth(uint32 growthRate) public onlyAdmin {
-        TimeWeightInfo memory tw = timeWeightInfo;
+        TimeWeightInfo memory tw = _timeWeightInfo;
 
-        timeWeightInfo = TimeWeightInfo(
+        _timeWeightInfo = TimeWeightInfo(
             tw.blockNo,
             tw.weight,
             growthRate,
@@ -218,10 +229,7 @@ contract IncentiveController is AccessControl, IIncentive {
                 'UniswapIncentive: Burn exceeds trade size'
             );
 
-            ARTHStablecoin(arthAddr).burnFrom(
-                address(uniswapPairAddr),
-                penalty
-            );
+            ARTH.burnFrom(address(uniswapPairAddress), penalty);
         }
     }
 
@@ -266,8 +274,8 @@ contract IncentiveController is AccessControl, IIncentive {
         // Partial buy should update time weight.
         if (initialDeviation > finalDeviation) {
             uint256 remainingRatio =
-                finalDeviation.mul(PRICE_PRECISION).div(initialDeviation).div(
-                    PRICE_PRECISION
+                finalDeviation.mul(_PRICE_PRECISION).div(initialDeviation).div(
+                    _PRICE_PRECISION
                 );
 
             updatedWeight = remainingRatio.mul(uint256(currentWeight));
@@ -299,8 +307,7 @@ contract IncentiveController is AccessControl, IIncentive {
 
         _updateTimeWeight(weight, finalDeviation, initialDeviation);
 
-        if (incentive != 0)
-            ARTHStablecoin(arthAddr).poolMint(target, incentive); // poolMint? or create seperate mint for controller?
+        if (incentive != 0) ARTH.poolMint(target, incentive); // poolMint? or create seperate mint for controller?
     }
 
     function _getFinalPrice(
@@ -320,15 +327,15 @@ contract IncentiveController is AccessControl, IIncentive {
         uint256 adjustedReserveOther = k.div(adjustedReserveARTH);
 
         return
-            adjustedReserveARTH.mul(PRICE_PRECISION).div(adjustedReserveOther);
+            adjustedReserveARTH.mul(_PRICE_PRECISION).div(adjustedReserveOther);
     }
 
     function _deviationBelowPeg(uint256 price) internal view returns (uint256) {
         if (price > targetPrice) return 0;
 
         return
-            targetPrice.sub(price).mul(PRICE_PRECISION).div(targetPrice).div(
-                PRICE_PRECISION
+            targetPrice.sub(price).mul(_PRICE_PRECISION).div(targetPrice).div(
+                _PRICE_PRECISION
             );
     }
 
@@ -362,8 +369,7 @@ contract IncentiveController is AccessControl, IIncentive {
         view
         returns (uint256)
     {
-        uint256 missingDecimals =
-            uint256(ARTHStablecoin(arthAddr).decimals()).sub(6);
+        uint256 missingDecimals = uint256(ARTH.decimals()).sub(6);
         uint256 radicand =
             targetPrice.mul(reserveTarget).mul(reserveOther).mul(
                 10**missingDecimals
