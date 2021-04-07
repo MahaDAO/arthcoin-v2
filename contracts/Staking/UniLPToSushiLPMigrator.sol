@@ -3,27 +3,27 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-//import './Owned.sol';
 import './Pausable.sol';
-import '../Arth/Arth.sol';
 import '../Math/Math.sol';
-import '../ERC20/ERC20.sol';
+import '../ARTH/IARTH.sol';
+import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
 import './IStakingRewards.sol';
 import '../ERC20/SafeERC20.sol';
 import '../Utils/StringHelpers.sol';
-import '../Uniswap/UniswapV2Pair.sol';
 import '../Utils/ReentrancyGuard.sol';
 import '../Uniswap/TransferHelper.sol';
 import './RewardsDistributionRecipient.sol';
 import './IStakingRewardsDualForMigrator.sol';
+import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 import '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
 /**
+ * @title  UniLPToSushiLPMigrator
+ * @author MahaDAO.
+ *
  *  Original code written by:
  *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
- *  Code modified by:
- *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
  */
 contract UniLPToSushiLPMigrator is
     IStakingRewards,
@@ -34,112 +34,130 @@ contract UniLPToSushiLPMigrator is
     using SafeMath for uint256;
     using SafeERC20 for ERC20;
 
-    /* ========== DUPLICATE VARIABLES (NEEDED FOR DELEGATECALL) ========== */
+    /**
+     * State variables.
+     * NOTE: DUPLICATE VARIABLES (NEEDED FOR DELEGATECALL)
+     */
 
-    ARTHStablecoin private ARTH;
-    ERC20 public rewardsToken;
-    ERC20 public stakingToken;
+    IERC20 public rewardsToken;
+    IERC20 public stakingToken;
+    IUniswapV2Pair public DestLPPair;
+    IUniswapV2Pair public SourceLPPair;
+    IStakingRewardsDualForMigrator public SourceStakingContract;
+    IStakingRewardsDualForMigrator public DestStakingContract;
+
+    IUniswapV2Router02 internal constant _UniswapRouter =
+        IUniswapV2Router02(UNISWAP_ROUTER_ADDRESS);
+    IUniswapV2Router02 internal constant _SushiSwapRouter =
+        IUniswapV2Router02(SUSHISWAP_ROUTER_ADDRESS);
+    IARTH private _ARTH;
+
     uint256 public periodFinish;
-
-    // Constant for various precisions
-    uint256 private constant PRICE_PRECISION = 1e6;
-    uint256 private constant MULTIPLIER_BASE = 1e6;
-
     // Max reward per second
     uint256 public rewardRate;
+    uint256 public ADD_LIQUIDITY_SLIPPAGE = 950; // will be .div(1000)
 
+    // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
+    uint256 public poolWeight;
+    uint256 public lastUpdateTime;
     // uint256 public rewardsDuration = 86400 hours;
     uint256 public rewardsDuration = 604800; // 7 * 86400  (7 days)
-
-    uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored = 0;
-    uint256 public pool_weight; // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
 
-    address public ownerAddress;
-    address public timelock_address; // Governance timelock address
-
-    uint256 public locked_stake_max_multiplier = 3000000; // 6 decimals of precision. 1x = 1000000
-    uint256 public locked_stake_time_for_max_multiplier = 3 * 365 * 86400; // 3 years
-    uint256 public locked_stake_min_time = 604800; // 7 * 86400  (7 days)
-    string private locked_stake_min_time_str = '604800'; // 7 days on genesis
+    uint256 public lockedStakeMaxMultiplier = 3000000; // 6 decimals of precision. 1x = 1000000
+    uint256 public lockedStakeTimeForMaxMultiplier = 3 * 365 * 86400; // 3 years
+    uint256 public lockedStakeMinTime = 604800; // 7 * 86400  (7 days)
 
     uint256 public cr_boost_max_multiplier = 3000000; // 6 decimals of precision. 1x = 1000000
 
-    mapping(address => uint256) public userRewardPerTokenPaid;
-    mapping(address => uint256) public rewards;
+    uint256 private _stakingTokenSupply = 0;
+    uint256 private _stakingTokenBoostedSupply = 0;
 
-    uint256 private _staking_token_supply = 0;
-    uint256 private _staking_token_boosted_supply = 0;
-    mapping(address => uint256) private _unlocked_balances;
-    mapping(address => uint256) private _locked_balances;
-    mapping(address => uint256) private _boosted_balances;
-
-    mapping(address => IStakingRewardsDualForMigrator.ILockedStake[])
-        private lockedStakes;
-
-    mapping(address => bool) public greylist;
-
-    bool public unlockedStakes; // Release lock stakes in case of system migration
-
-    /* ========== STATE VARIABLES ========== */
-
-    // ARTHStablecoin private ARTH;
-    IStakingRewardsDualForMigrator public SourceStakingContract;
-    IStakingRewardsDualForMigrator public DestStakingContract;
-    UniswapV2Pair public SourceLPPair;
-    UniswapV2Pair public DestLPPair;
-
-    // address public ownerAddress;
-    // address public timelock_address; // Governance timelock address
+    address public destLPPairAddr;
+    address public sourceLPPairAddr;
+    address public destStakingContractAddr;
+    address public sourceStakingContractAddr;
     address payable public constant UNISWAP_ROUTER_ADDRESS =
         payable(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     address payable public constant SUSHISWAP_ROUTER_ADDRESS =
         payable(0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F);
-    address public source_staking_contract_addr;
-    address public source_lp_pair_addr;
-    address public dest_staking_contract_addr;
-    address public dest_lp_pair_addr;
 
-    IUniswapV2Router02 internal constant UniswapRouter =
-        IUniswapV2Router02(UNISWAP_ROUTER_ADDRESS);
-    IUniswapV2Router02 internal constant SushiSwapRouter =
-        IUniswapV2Router02(SUSHISWAP_ROUTER_ADDRESS);
+    bool public isUnlockedStakes; // Release lock stakes in case of system migration
 
-    uint256 public ADD_LIQUIDITY_SLIPPAGE = 950; // will be .div(1000)
+    address public ownerAddress;
+    address public timelockAddress; // Governance timelock address
 
-    /* ========== CONSTRUCTOR ========== */
+    mapping(address => bool) public greylist;
+    mapping(address => uint256) public rewards;
+    mapping(address => uint256) public userRewardPerTokenPaid;
+
+    // Constant for various precisions
+    uint256 private constant _PRICE_PRECISION = 1e6;
+    uint256 private constant _MULTIPLIER_BASE = 1e6;
+    string private _lockedStakeMinTimeStr = '604800'; // 7 days on genesis
+
+    mapping(address => uint256) private _lockedBalances;
+    mapping(address => uint256) private _boostedBalances;
+    mapping(address => uint256) private _unlockedBalances;
+
+    mapping(address => IStakingRewardsDualForMigrator.ILockedStake[])
+        private _lockedStakes;
+
+    /**
+     * Modifiers.
+     */
+
+    modifier onlyByOwnerOrGovernance() {
+        require(
+            msg.sender == ownerAddress || msg.sender == timelockAddress,
+            'You are not the owner or the governance timelock'
+        );
+        _;
+    }
+
+    /**
+     * Events.
+     */
+
+    event Recovered(address token, uint256 amount);
+    event Migrated(address indexed user, address sourceAddr, address destAddr);
+
+    /**
+     * Constructor.
+     */
 
     constructor(
         address _owner,
-        address _source_staking_contract_addr,
-        address _dest_staking_contract_addr
+        address _sourceStakingContractAddr,
+        address _destStakingContractAddr
     ) {
         ownerAddress = _owner;
-        source_staking_contract_addr = _source_staking_contract_addr;
-        dest_staking_contract_addr = _dest_staking_contract_addr;
+        sourceStakingContractAddr = _sourceStakingContractAddr;
+        destStakingContractAddr = _destStakingContractAddr;
 
         SourceStakingContract = IStakingRewardsDualForMigrator(
-            source_staking_contract_addr
+            sourceStakingContractAddr
         );
         DestStakingContract = IStakingRewardsDualForMigrator(
-            dest_staking_contract_addr
+            destStakingContractAddr
         );
 
-        source_lp_pair_addr = address(SourceStakingContract.stakingToken());
-        dest_lp_pair_addr = address(DestStakingContract.stakingToken());
+        sourceLPPairAddr = address(SourceStakingContract.stakingToken());
+        destLPPairAddr = address(DestStakingContract.stakingToken());
 
-        SourceLPPair = UniswapV2Pair(source_lp_pair_addr);
-        DestLPPair = UniswapV2Pair(dest_lp_pair_addr);
+        SourceLPPair = IUniswapV2Pair(sourceLPPairAddr);
+        DestLPPair = IUniswapV2Pair(destLPPairAddr);
     }
 
-    /* ========== VIEWS ========== */
+    /**
+     * External.
+     */
 
-    /* ========== MUTATIVE FUNCTIONS ========== */
-
-    function delegatecall_stake() external {
+    function delegatecallStake() external {
         // (bool success, bytes memory result) = address(SourceStakingContract).delegatecall(
         //     abi.encodeWithSignature("stake(uint256)", 1e18)
         // );
+
         (bool success, bytes memory result) =
             address(SourceStakingContract).delegatecall(
                 abi.encode(
@@ -155,10 +173,10 @@ contract UniLPToSushiLPMigrator is
                 revert();
             }
         }
-        require(success, 'delegatecall_stake failed');
+        require(success, 'delegatecallStake failed');
     }
 
-    function delegatecall_getReward() external {
+    function delegatecallGetReward() external {
         (bool success, bytes memory result) =
             address(SourceStakingContract).delegatecall(
                 abi.encodeWithSignature('getReward()')
@@ -170,25 +188,26 @@ contract UniLPToSushiLPMigrator is
                 revert();
             }
         }
-        require(success, 'delegatecall_getReward failed');
+        require(success, 'delegatecallGetReward failed');
     }
 
-    function normal_getReward() external {
+    function normalGetReward() external {
         SourceStakingContract.getReward();
     }
 
-    function migrate_unlocked() external {}
+    function migrateUnlocked() external {}
 
-    function migrate_one_locked(bytes32 kek_id) external {}
+    function migrateOneLocked(bytes32 kekId) external {}
 
-    function migrate_all_locked() external {
+    function migrateAllLocked() external {
         // Unlock the stakes
         SourceStakingContract.unlockStakes();
 
         // Loop through the locked stakes
-        IStakingRewardsDualForMigrator.ILockedStake[] memory locked_stakes =
+        IStakingRewardsDualForMigrator.ILockedStake[] memory lockedStakes =
             SourceStakingContract.lockedStakesOf(msg.sender);
-        for (uint256 i = 0; i < locked_stakes.length; i++) {
+
+        for (uint256 i = 0; i < lockedStakes.length; i++) {
             // Withdraw the locked Uni LP tokens [delegatecall]
             // ----------------------------------------------------------
             {
@@ -196,7 +215,7 @@ contract UniLPToSushiLPMigrator is
                     address(SourceStakingContract).delegatecall(
                         abi.encodeWithSignature(
                             'withdrawLocked(bytes32)',
-                            locked_stakes[i].kek_id
+                            lockedStakes[i].kekId
                         )
                     );
                 if (!success) {
@@ -217,7 +236,7 @@ contract UniLPToSushiLPMigrator is
                         abi.encodeWithSignature(
                             'approve(address,uint256)',
                             UNISWAP_ROUTER_ADDRESS,
-                            locked_stakes[i].amount
+                            lockedStakes[i].amount
                         )
                     );
                 require(success, 'Approve Uni LP for Uniswap failed');
@@ -229,19 +248,19 @@ contract UniLPToSushiLPMigrator is
             uint256 token1_returned;
             {
                 (bool success, bytes memory data) =
-                    address(UniswapRouter).delegatecall(
+                    address(_UniswapRouter).delegatecall(
                         abi.encodeWithSignature(
                             'removeLiquidity(address,address,uint,uint,uint,address,uint)',
                             SourceLPPair.token0(),
                             SourceLPPair.token1(),
-                            locked_stakes[i].amount,
+                            lockedStakes[i].amount,
                             0,
                             0,
                             msg.sender,
                             2105300114
                         )
                     );
-                require(success, 'UniswapRouter removeLiquidity failed');
+                require(success, '_UniswapRouter removeLiquidity failed');
                 (token0_returned, token1_returned) = abi.decode(
                     data,
                     (uint256, uint256)
@@ -287,7 +306,7 @@ contract UniLPToSushiLPMigrator is
             uint256 slp_returned;
             {
                 (bool success, bytes memory data) =
-                    address(SushiSwapRouter).delegatecall(
+                    address(_SushiSwapRouter).delegatecall(
                         abi.encodeWithSignature(
                             'addLiquidity(address,address,uint,uint,uint,uint,address,uint)',
                             SourceLPPair.token0(),
@@ -304,7 +323,7 @@ contract UniLPToSushiLPMigrator is
                             2105300114 // A long time from now
                         )
                     );
-                require(success, 'SushiSwapRouter addLiquidity failed');
+                require(success, '_SushiSwapRouter addLiquidity failed');
                 (, , slp_returned) = abi.decode(
                     data,
                     (uint256, uint256, uint256)
@@ -322,7 +341,7 @@ contract UniLPToSushiLPMigrator is
                         abi.encodeWithSignature(
                             'stakeLocked(uint,uint)',
                             slp_returned,
-                            (locked_stakes[i].ending_timestamp).sub(
+                            (lockedStakes[i].endingTimestamp).sub(
                                 block.timestamp
                             )
                         )
@@ -337,31 +356,33 @@ contract UniLPToSushiLPMigrator is
 
         emit Migrated(
             msg.sender,
-            source_staking_contract_addr,
-            dest_staking_contract_addr
+            sourceStakingContractAddr,
+            destStakingContractAddr
         );
     }
-
-    /* ========== RESTRICTED FUNCTIONS ========== */
 
     // Added to support recovering LP Rewards and other mistaken tokens from other systems to be distributed to holders
     function recoverERC20(address tokenAddress, uint256 tokenAmount)
         external
         onlyByOwnerOrGovernance
     {
-        ERC20(tokenAddress).transfer(ownerAddress, tokenAmount);
+        IERC20(tokenAddress).transfer(ownerAddress, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 
-    function setOwnerAndTimelock(address _new_owner, address _new_timelock)
+    function setOwnerAndTimelock(address _newOwner, address _newTimelock)
         external
         onlyByOwnerOrGovernance
     {
-        ownerAddress = _new_owner;
-        timelock_address = _new_timelock;
+        ownerAddress = _newOwner;
+        timelockAddress = _newTimelock;
     }
 
-    /* ========== NEEDED FOR DELEGATECALL ========== */
+    function stake(uint256 amount) external override {}
+
+    function withdraw(uint256 amount) external override {}
+
+    function getReward() external override {}
 
     function lastTimeRewardApplicable()
         external
@@ -371,6 +392,18 @@ contract UniLPToSushiLPMigrator is
     {
         return 0;
     }
+
+    function stakeLockedFor(
+        address who,
+        uint256 amount,
+        uint256 duration
+    ) external override {}
+
+    function stakeFor(address who, uint256 amount) external override {}
+
+    function stakeLocked(uint256 amount, uint256 secs) external override {}
+
+    function withdrawLocked(bytes32 kekId) external override {}
 
     function rewardPerToken() external pure override returns (uint256) {
         return 0;
@@ -396,31 +429,4 @@ contract UniLPToSushiLPMigrator is
     {
         return 0;
     }
-
-    // Mutative
-
-    function stake(uint256 amount) external override {}
-
-    function withdraw(uint256 amount) external override {}
-
-    function getReward() external override {}
-
-    /* ========== MODIFIERS ========== */
-
-    modifier onlyByOwnerOrGovernance() {
-        require(
-            msg.sender == ownerAddress || msg.sender == timelock_address,
-            'You are not the owner or the governance timelock'
-        );
-        _;
-    }
-
-    /* ========== EVENTS ========== */
-
-    event Recovered(address token, uint256 amount);
-    event Migrated(
-        address indexed user,
-        address source_addr,
-        address dest_addr
-    );
 }

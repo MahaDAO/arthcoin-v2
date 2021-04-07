@@ -7,10 +7,10 @@ import '../ERC20/ERC20.sol';
 
 interface IStakingRewardsDualForMigrator {
     struct ILockedStake {
-        bytes32 kek_id;
-        uint256 start_timestamp;
+        bytes32 kekId;
+        uint256 startTimestamp;
         uint256 amount;
-        uint256 ending_timestamp;
+        uint256 endingTimestamp;
         uint256 multiplier; // 6 decimals of precision, 1x = 1000000.
     }
 
@@ -20,7 +20,7 @@ interface IStakingRewardsDualForMigrator {
 
     function withdraw(uint256 amount) external;
 
-    function withdrawLocked(bytes32 kek_id) external;
+    function withdrawLocked(bytes32 kekId) external;
 
     function getReward() external;
 

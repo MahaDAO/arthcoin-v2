@@ -133,7 +133,7 @@ contract StakingRewardsDualV2 is
     event RewardPaid(
         address indexed user,
         uint256 reward,
-        address token_address,
+        address tokenAddress,
         address destinationAddress
     );
     event RewardsDurationUpdated(uint256 newDuration);
@@ -362,75 +362,76 @@ contract StakingRewardsDualV2 is
     }
 
     function setRewardRates(
-        uint256 _new_rate0,
-        uint256 _new_rate1,
+        uint256 _newRate,
+        uint256 _newRate1,
         bool sync_too
     ) external onlyByOwnerOrGovernance {
-        rewardRate0 = _new_rate0;
-        rewardRate1 = _new_rate1;
+        rewardRate0 = _newRate;
+        rewardRate1 = _newRate1;
 
         if (sync_too) {
             sync();
         }
     }
 
-    // Migrator can stake for someone else (they won't be able to withdraw it back though, only staker_address can)
-    function migrator_stake_for(address staker_address, uint256 amount)
+    // Migrator can stake for someone else (they won't be able to withdraw it back though, only stakerAddress can)
+    function migratorStakeFor(address stakerAddress, uint256 amount)
         external
         isMigrating
     {
         require(
-            migratorApprovedForStaker(staker_address, msg.sender),
+            migratorApprovedForStaker(stakerAddress, msg.sender),
             'msg.sender is either an invalid migrator or the staker has not approved them'
         );
-        _stake(staker_address, msg.sender, amount);
+
+        _stake(stakerAddress, msg.sender, amount);
     }
 
-    // Migrator can stake for someone else (they won't be able to withdraw it back though, only staker_address can).
-    function migrator_stakeLocked_for(
-        address staker_address,
+    // Migrator can stake for someone else (they won't be able to withdraw it back though, only stakerAddress can).
+    function migratorStakeLockedFor(
+        address stakerAddress,
         uint256 amount,
         uint256 secs
     ) external isMigrating {
         require(
-            migratorApprovedForStaker(staker_address, msg.sender),
+            migratorApprovedForStaker(stakerAddress, msg.sender),
             'msg.sender is either an invalid migrator or the staker has not approved them'
         );
-        _stakeLocked(staker_address, msg.sender, amount, secs);
+
+        _stakeLocked(stakerAddress, msg.sender, amount, secs);
     }
 
     // Used for migrations
-    function migrator_withdraw_unlocked(address staker_address)
+    function migratorWithdrawUnlocked(address stakerAddress)
         external
         isMigrating
     {
         require(
-            migratorApprovedForStaker(staker_address, msg.sender),
+            migratorApprovedForStaker(stakerAddress, msg.sender),
             'msg.sender is either an invalid migrator or the staker has not approved them'
         );
-        _withdraw(
-            staker_address,
-            msg.sender,
-            _unlockedBalances[staker_address]
-        );
+
+        _withdraw(stakerAddress, msg.sender, _unlockedBalances[stakerAddress]);
     }
 
     // Used for migrations
-    function migrator_withdraw_locked(address staker_address, bytes32 kekId)
+    function migratorWithdrawLocked(address stakerAddress, bytes32 kekId)
         external
         isMigrating
     {
         require(
-            migratorApprovedForStaker(staker_address, msg.sender),
+            migratorApprovedForStaker(stakerAddress, msg.sender),
             'msg.sender is either an invalid migrator or the staker has not approved them'
         );
-        _withdrawLocked(staker_address, msg.sender, kekId);
+
+        _withdrawLocked(stakerAddress, msg.sender, kekId);
     }
 
     function toggleToken1Rewards() external onlyByOwnerOrGovernance {
         if (token1RewardsOn) {
             rewardRate1 = 0;
         }
+
         token1RewardsOn = !token1RewardsOn;
     }
 
@@ -438,11 +439,11 @@ contract StakingRewardsDualV2 is
         ownerAddress = _ownerAddress;
     }
 
-    function setTimelock(address _new_timelock)
+    function setTimelock(address _newTimelock)
         external
         onlyByOwnerOrGovernance
     {
-        timelockAddress = _new_timelock;
+        timelockAddress = _newTimelock;
     }
 
     function renewIfApplicable() external {
@@ -606,14 +607,14 @@ contract StakingRewardsDualV2 is
     }
 
     function migratorApprovedForStaker(
-        address staker_address,
-        address migrator_address
+        address stakerAddress,
+        address migratorAddress
     ) public view returns (bool) {
         // Migrator is not a valid one
-        if (validMigrators[migrator_address] == false) return false;
+        if (validMigrators[migratorAddress] == false) return false;
 
         // Staker has to have approved this particular migrator
-        if (stakerAllowedMigrators[staker_address][migrator_address] == true)
+        if (stakerAllowedMigrators[stakerAddress][migratorAddress] == true)
             return true;
 
         // Otherwise, return false
@@ -621,27 +622,27 @@ contract StakingRewardsDualV2 is
     }
 
     // Staker can allow a migrator
-    function stakerAllowMigrator(address migrator_address) public {
+    function stakerAllowMigrator(address migratorAddress) public {
         require(
-            stakerAllowedMigrators[msg.sender][migrator_address] == false,
+            stakerAllowedMigrators[msg.sender][migratorAddress] == false,
             'Address already exists'
         );
-        require(validMigrators[migrator_address], 'Invalid migrator address');
-        stakerAllowedMigrators[msg.sender][migrator_address] = true;
+        require(validMigrators[migratorAddress], 'Invalid migrator address');
+        stakerAllowedMigrators[msg.sender][migratorAddress] = true;
     }
 
     // Staker can disallow a previously-allowed migrator
-    function stakerDisallowMigrator(address migrator_address) public {
+    function stakerDisallowMigrator(address migratorAddress) public {
         require(
-            stakerAllowedMigrators[msg.sender][migrator_address] == true,
+            stakerAllowedMigrators[msg.sender][migratorAddress] == true,
             "Address doesn't exist already"
         );
 
         // Redundant
-        // require(validMigrators[migrator_address], "Invalid migrator address");
+        // require(validMigrators[migratorAddress], "Invalid migrator address");
 
         // Delete from the mapping
-        delete stakerAllowedMigrators[msg.sender][migrator_address];
+        delete stakerAllowedMigrators[msg.sender][migratorAddress];
     }
 
     // Two different getReward functions are needed because of delegateCall and msg.sender issues (important for migration)
@@ -661,34 +662,34 @@ contract StakingRewardsDualV2 is
     }
 
     // Adds supported migrator address
-    function addMigrator(address migrator_address)
+    function addMigrator(address migratorAddress)
         public
         onlyByOwnerOrGovernance
     {
         require(
-            validMigrators[migrator_address] == false,
+            validMigrators[migratorAddress] == false,
             'address already exists'
         );
-        validMigrators[migrator_address] = true;
-        validMigratorsArray.push(migrator_address);
+        validMigrators[migratorAddress] = true;
+        validMigratorsArray.push(migratorAddress);
     }
 
     // Remove a migrator address
-    function removeMigrator(address migrator_address)
+    function removeMigrator(address migratorAddress)
         public
         onlyByOwnerOrGovernance
     {
         require(
-            validMigrators[migrator_address] == true,
+            validMigrators[migratorAddress] == true,
             "address doesn't exist already"
         );
 
         // Delete from the mapping
-        delete validMigrators[migrator_address];
+        delete validMigrators[migratorAddress];
 
         // 'Delete' from the array by setting the address to 0x0
         for (uint256 i = 0; i < validMigratorsArray.length; i++) {
-            if (validMigratorsArray[i] == migrator_address) {
+            if (validMigratorsArray[i] == migratorAddress) {
                 validMigratorsArray[i] = address(0); // This will leave a null in the array and keep the indices the same
                 break;
             }
@@ -700,12 +701,12 @@ contract StakingRewardsDualV2 is
      */
 
     // If this were not internal, and sourceAddress had an infinite approve, this could be exploitable
-    // (pull funds from sourceAddress and stake for an arbitrary staker_address)
+    // (pull funds from sourceAddress and stake for an arbitrary stakerAddress)
     function _stake(
-        address staker_address,
+        address stakerAddress,
         address sourceAddress,
         uint256 amount
-    ) internal nonReentrant updateReward(staker_address) {
+    ) internal nonReentrant updateReward(stakerAddress) {
         require(
             (paused == false && migrationsOn == false) ||
                 validMigrators[msg.sender] == true,
@@ -713,7 +714,7 @@ contract StakingRewardsDualV2 is
         );
         require(amount > 0, 'Cannot stake 0');
         require(
-            greylist[staker_address] == false,
+            greylist[stakerAddress] == false,
             'address has been greylisted'
         );
 
@@ -730,23 +731,24 @@ contract StakingRewardsDualV2 is
         _stakingTokenBoostedSupply = _stakingTokenBoostedSupply.add(amount);
 
         // Staking token balance and boosted balance
-        _unlockedBalances[staker_address] = _unlockedBalances[staker_address]
-            .add(amount);
-        _boostedBalances[staker_address] = _boostedBalances[staker_address].add(
+        _unlockedBalances[stakerAddress] = _unlockedBalances[stakerAddress].add(
+            amount
+        );
+        _boostedBalances[stakerAddress] = _boostedBalances[stakerAddress].add(
             amount
         );
 
-        emit Staked(staker_address, amount, sourceAddress);
+        emit Staked(stakerAddress, amount, sourceAddress);
     }
 
     // If this were not internal, and sourceAddress had an infinite approve, this could be exploitable
-    // (pull funds from sourceAddress and stake for an arbitrary staker_address)
+    // (pull funds from sourceAddress and stake for an arbitrary stakerAddress)
     function _stakeLocked(
-        address staker_address,
+        address stakerAddress,
         address sourceAddress,
         uint256 amount,
         uint256 secs
-    ) internal nonReentrant updateReward(staker_address) {
+    ) internal nonReentrant updateReward(stakerAddress) {
         require(
             (paused == false && migrationsOn == false) ||
                 validMigrators[msg.sender] == true,
@@ -755,7 +757,7 @@ contract StakingRewardsDualV2 is
         require(amount > 0, 'Cannot stake 0');
         require(secs > 0, 'Cannot wait for a negative number');
         require(
-            greylist[staker_address] == false,
+            greylist[stakerAddress] == false,
             'address has been greylisted'
         );
         require(
@@ -773,10 +775,10 @@ contract StakingRewardsDualV2 is
 
         uint256 multiplier = stakingMultiplier(secs);
         uint256 boostedAmount = amount.mul(multiplier).div(_PRICE_PRECISION);
-        _lockedStakes[staker_address].push(
+        _lockedStakes[stakerAddress].push(
             LockedStake(
                 keccak256(
-                    abi.encodePacked(staker_address, block.timestamp, amount)
+                    abi.encodePacked(stakerAddress, block.timestamp, amount)
                 ),
                 block.timestamp,
                 amount,
@@ -800,29 +802,30 @@ contract StakingRewardsDualV2 is
         );
 
         // Staking token balance and boosted balance
-        _lockedBalances[staker_address] = _lockedBalances[staker_address].add(
+        _lockedBalances[stakerAddress] = _lockedBalances[stakerAddress].add(
             amount
         );
-        _boostedBalances[staker_address] = _boostedBalances[staker_address].add(
+        _boostedBalances[stakerAddress] = _boostedBalances[stakerAddress].add(
             boostedAmount
         );
 
-        emit StakeLocked(staker_address, amount, secs, sourceAddress);
+        emit StakeLocked(stakerAddress, amount, secs, sourceAddress);
     }
 
     // No withdrawer == msg.sender check needed since this is only internally callable and the checks are done in the wrapper
-    // functions like withdraw(), migrator_withdraw_unlocked() and migrator_withdraw_locked()
+    // functions like withdraw(), migratorWithdrawUnlocked() and migratorWithdrawLocked()
     function _withdraw(
-        address staker_address,
+        address stakerAddress,
         address destinationAddress,
         uint256 amount
-    ) internal nonReentrant notWithdrawalsPaused updateReward(staker_address) {
+    ) internal nonReentrant notWithdrawalsPaused updateReward(stakerAddress) {
         require(amount > 0, 'Cannot withdraw 0');
 
         // Staking token balance and boosted balance
-        _unlockedBalances[staker_address] = _unlockedBalances[staker_address]
-            .sub(amount);
-        _boostedBalances[staker_address] = _boostedBalances[staker_address].sub(
+        _unlockedBalances[stakerAddress] = _unlockedBalances[stakerAddress].sub(
+            amount
+        );
+        _boostedBalances[stakerAddress] = _boostedBalances[stakerAddress].sub(
             amount
         );
 
@@ -832,22 +835,22 @@ contract StakingRewardsDualV2 is
 
         // Give the tokens to the destinationAddress
         stakingToken.safeTransfer(destinationAddress, amount);
-        emit Withdrawn(staker_address, amount, destinationAddress);
+        emit Withdrawn(stakerAddress, amount, destinationAddress);
     }
 
     // No withdrawer == msg.sender check needed since this is only internally callable and the checks are done in the wrapper
-    // functions like withdraw(), migrator_withdraw_unlocked() and migrator_withdraw_locked()
+    // functions like withdraw(), migratorWithdrawUnlocked() and migratorWithdrawLocked()
     function _withdrawLocked(
-        address staker_address,
+        address stakerAddress,
         address destinationAddress,
         bytes32 kekId
-    ) internal nonReentrant notWithdrawalsPaused updateReward(staker_address) {
+    ) internal nonReentrant notWithdrawalsPaused updateReward(stakerAddress) {
         LockedStake memory thisStake;
         thisStake.amount = 0;
         uint256 theIndex;
-        for (uint256 i = 0; i < _lockedStakes[staker_address].length; i++) {
-            if (kekId == _lockedStakes[staker_address][i].kekId) {
-                thisStake = _lockedStakes[staker_address][i];
+        for (uint256 i = 0; i < _lockedStakes[stakerAddress].length; i++) {
+            if (kekId == _lockedStakes[stakerAddress][i].kekId) {
+                thisStake = _lockedStakes[stakerAddress][i];
                 theIndex = i;
                 break;
             }
@@ -865,9 +868,10 @@ contract StakingRewardsDualV2 is
             theAmount.mul(thisStake.multiplier).div(_PRICE_PRECISION);
         if (theAmount > 0) {
             // Staking token balance and boosted balance
-            _lockedBalances[staker_address] = _lockedBalances[staker_address]
-                .sub(theAmount);
-            _boostedBalances[staker_address] = _boostedBalances[staker_address]
+            _lockedBalances[stakerAddress] = _lockedBalances[stakerAddress].sub(
+                theAmount
+            );
+            _boostedBalances[stakerAddress] = _boostedBalances[stakerAddress]
                 .sub(boostedAmount);
 
             // Staking token supply and boosted supply
@@ -877,13 +881,13 @@ contract StakingRewardsDualV2 is
             );
 
             // Remove the stake from the array
-            delete _lockedStakes[staker_address][theIndex];
+            delete _lockedStakes[stakerAddress][theIndex];
 
             // Give the tokens to the destinationAddress
             stakingToken.safeTransfer(destinationAddress, theAmount);
 
             emit WithdrawnLocked(
-                staker_address,
+                stakerAddress,
                 theAmount,
                 kekId,
                 destinationAddress
@@ -934,7 +938,7 @@ contract StakingRewardsDualV2 is
         // This keeps the reward rate in the right range, preventing overflows due to
         // very high values of rewardRate in the earned and rewardsPerToken functions;
         // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        uint256 num_periods_elapsed =
+        uint256 numPeriodsElapsed =
             uint256(block.timestamp.sub(periodFinish)) / rewardsDuration; // Floor division to the nearest period
         uint256 balance0 = rewardsToken0.balanceOf(address(this));
         uint256 balance1 = rewardsToken1.balanceOf(address(this));
@@ -942,14 +946,14 @@ contract StakingRewardsDualV2 is
             rewardRate0
                 .mul(rewardsDuration)
                 .mul(crBoostMultiplier())
-                .mul(num_periods_elapsed + 1)
+                .mul(numPeriodsElapsed + 1)
                 .div(_PRICE_PRECISION) <= balance0,
             'Not enough ARTHX available for rewards!'
         );
 
         if (token1RewardsOn) {
             require(
-                rewardRate1.mul(rewardsDuration).mul(num_periods_elapsed + 1) <=
+                rewardRate1.mul(rewardsDuration).mul(numPeriodsElapsed + 1) <=
                     balance1,
                 'Not enough token1 available for rewards!'
             );
@@ -960,7 +964,7 @@ contract StakingRewardsDualV2 is
 
         // lastUpdateTime = periodFinish;
         periodFinish = periodFinish.add(
-            (num_periods_elapsed.add(1)).mul(rewardsDuration)
+            (numPeriodsElapsed.add(1)).mul(rewardsDuration)
         );
 
         (uint256 reward0, uint256 reward1) = rewardPerToken();
