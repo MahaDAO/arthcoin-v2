@@ -10,35 +10,41 @@ import '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import './IUniswapSwapRouter.sol';
 import '../Uniswap/UniswapV2Library.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 
 /**
- * @title  A Uniswap Router for tokens involving ARTH.
- * @author Original code written by FEI Protocol. Modified by MahaDAO.
+ * @title  A Uniswap Router for pairs involving ARTH.
+ * @author MahaDAO.
  */
 contract UniswapSwapRouter is IUniswapSwapRouter {
     using SafeMath for uint256;
 
-    // solhint-disable-next-line var-name-mixedcase
     IWETH public immutable WETH;
-    // solhint-disable-next-line var-name-mixedcase
-    IUniswapV2Pair public immutable PAIR;
+    IUniswapV2Factory public immutable FACTORY;
 
-    address public arthAddr;
+    address public arthAddress;
 
     modifier ensure(uint256 deadline) {
-        require(deadline >= block.timestamp, 'UniswapSwapRouter: Expired');
+        require(deadline >= block.timestamp, 'UniswapSwapRouter: EXPIRED');
+        _;
+    }
+
+    modifier ensureIsPair(address token) {
+        require(
+            FACTORY.getPair(token, arthAddress) != address(0),
+            'UniswapSwapRouter: invalid pair'
+        );
         _;
     }
 
     constructor(
-        IUniswapV2Pair pair_,
         IWETH weth_,
-        address arthAddr_
+        address arthAddress_,
+        IUniswapV2Factory FACTORY_
     ) {
         WETH = weth_;
-        PAIR = pair_;
-
-        arthAddr = arthAddr_;
+        FACTORY = FACTORY_;
+        arthAddress = arthAddress_;
     }
 
     receive() external payable {
@@ -60,7 +66,7 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         uint256 deadline
     ) external payable override ensure(deadline) returns (uint256 amountOut) {
         (uint256 reservesETH, uint256 reservesOther, bool isWETHPairToken0) =
-            _getReserves();
+            _getReserves(address(WETH));
 
         uint256 amountIn = msg.value;
         amountOut = UniswapV2Library.getAmountOut(
@@ -74,11 +80,14 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
             'UniswapSwapRouter: Insufficient output amount'
         );
 
+        IUniswapV2Pair pair =
+            IUniswapV2Pair(FACTORY.getPair(address(WETH), arthAddress));
+
         // Convert sent ETH to wrapped ETH and assert successful transfer to pair.
         IWETH(WETH).deposit{value: amountIn}();
-        assert(IWETH(WETH).transfer(address(PAIR), amountIn));
+        assert(IWETH(WETH).transfer(address(pair), amountIn));
 
-        address arth = isWETHPairToken0 ? PAIR.token1() : PAIR.token0();
+        address arth = isWETHPairToken0 ? pair.token1() : pair.token0();
 
         // Check ARTH balance of recipient before to compare against.
         uint256 arthBalanceBefore = IERC20(arth).balanceOf(to);
@@ -88,7 +97,66 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
                 ? (uint256(0), amountOut)
                 : (amountOut, uint256(0));
 
-        PAIR.swap(amount0Out, amount1Out, to, new bytes(0));
+        pair.swap(amount0Out, amount1Out, to, new bytes(0));
+
+        // Check that ARTH recipient got at least minReward on top of trade amount.
+        uint256 arthBalanceAfter = IERC20(arth).balanceOf(to);
+        uint256 reward = arthBalanceAfter.sub(arthBalanceBefore).sub(amountOut);
+        require(reward >= minReward, 'UniswapSwapRouter: Not enough reward');
+
+        return amountOut;
+    }
+
+    /**
+     * @notice             Buy ARTH for ERC20 with some protections.
+     * @param token        The ERC20 token address to sell.
+     * @param minReward    Minimum mint reward for purchasing.
+     * @param amountOutMin Minimum ARTH received.
+     * @param to           Address to send ARTH.
+     * @param deadline     Block timestamp after which trade is invalid.
+     */
+    function buyARTHForERC20(
+        address token,
+        uint256 amountIn,
+        uint256 minReward,
+        uint256 amountOutMin,
+        address to,
+        uint256 deadline
+    ) external override ensure(deadline) returns (uint256 amountOut) {
+        (uint256 reservesToken, uint256 reservesOther, bool isTokenPairToken0) =
+            _getReserves(token);
+
+        amountOut = UniswapV2Library.getAmountOut(
+            amountIn,
+            reservesToken,
+            reservesOther
+        );
+
+        require(
+            amountOut >= amountOutMin,
+            'UniswapSwapRouter: Insufficient output amount'
+        );
+
+        IUniswapV2Pair pair =
+            IUniswapV2Pair(FACTORY.getPair(token, arthAddress));
+        TransferHelper.safeTransferFrom(
+            token,
+            msg.sender,
+            address(pair),
+            amountIn
+        );
+
+        address arth = isTokenPairToken0 ? pair.token1() : pair.token0();
+
+        // Check ARTH balance of recipient before to compare against.
+        uint256 arthBalanceBefore = IERC20(arth).balanceOf(to);
+
+        (uint256 amount0Out, uint256 amount1Out) =
+            isTokenPairToken0
+                ? (uint256(0), amountOut)
+                : (amountOut, uint256(0));
+
+        pair.swap(amount0Out, amount1Out, to, new bytes(0));
 
         // Check that ARTH recipient got at least minReward on top of trade amount.
         uint256 arthBalanceAfter = IERC20(arth).balanceOf(to);
@@ -114,15 +182,17 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 amountOut) {
         (uint256 reservesETH, uint256 reservesOther, bool isWETHPairToken0) =
-            _getReserves();
+            _getReserves(address(WETH));
 
-        address arth = isWETHPairToken0 ? PAIR.token1() : PAIR.token0();
+        IUniswapV2Pair pair =
+            IUniswapV2Pair(FACTORY.getPair(address(WETH), arthAddress));
+        address arth = isWETHPairToken0 ? pair.token1() : pair.token0();
 
-        IERC20(arth).transferFrom(msg.sender, address(PAIR), amountIn);
+        IERC20(arth).transferFrom(msg.sender, address(pair), amountIn);
 
         // Figure out how much the PAIR actually received net of ARTH burn.
         uint256 effectiveAmountIn =
-            IERC20(arth).balanceOf(address(PAIR)).sub(reservesOther);
+            IERC20(arth).balanceOf(address(pair)).sub(reservesOther);
 
         // Check that burned fee-on-transfer is not more than the maxPenalty
         if (effectiveAmountIn < amountIn) {
@@ -148,7 +218,7 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
                 ? (amountOut, uint256(0))
                 : (uint256(0), amountOut);
 
-        PAIR.swap(amount0Out, amount1Out, address(this), new bytes(0));
+        pair.swap(amount0Out, amount1Out, address(this), new bytes(0));
 
         IWETH(WETH).withdraw(amountOut);
 
@@ -156,21 +226,25 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         return amountOut;
     }
 
-    function _getReserves()
+    function _getReserves(address token)
         internal
         view
+        ensureIsPair(token)
         returns (
-            uint256 reservesETH,
+            uint256 reservesToken,
             uint256 reservesOther,
-            bool isWETHPairToken0
+            bool isTokenPairToken0
         )
     {
-        (uint256 reserves0, uint256 reserves1, ) = PAIR.getReserves();
-        isWETHPairToken0 = PAIR.token0() == address(WETH);
+        IUniswapV2Pair pair =
+            IUniswapV2Pair(FACTORY.getPair(address(token), arthAddress));
+
+        (uint256 reserves0, uint256 reserves1, ) = pair.getReserves();
+        isTokenPairToken0 = pair.token0() == address(token);
 
         return
-            isWETHPairToken0
-                ? (reserves0, reserves1, isWETHPairToken0)
-                : (reserves1, reserves0, isWETHPairToken0);
+            isTokenPairToken0
+                ? (reserves0, reserves1, isTokenPairToken0)
+                : (reserves1, reserves0, isTokenPairToken0);
     }
 }

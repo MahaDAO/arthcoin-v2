@@ -47,56 +47,6 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         arthAddr = arthAddr_;
     }
 
-    function _addLiquidity(
-        address tokenA,
-        address tokenB,
-        uint256 amountADesired,
-        uint256 amountBDesired,
-        uint256 amountAMin,
-        uint256 amountBMin
-    )
-        internal
-        virtual
-        ensureOneIsArth(tokenA, tokenB)
-        returns (uint256 amountA, uint256 amountB)
-    {
-        // Create the pair if it doesn't exist yet.
-        if (IUniswapV2Factory(FACTORY).getPair(tokenA, tokenB) == address(0)) {
-            IUniswapV2Factory(FACTORY).createPair(tokenA, tokenB);
-        }
-
-        (uint256 reserveA, uint256 reserveB) =
-            UniswapV2Library.getReserves(address(FACTORY), tokenA, tokenB);
-
-        if (reserveA == 0 && reserveB == 0) {
-            (amountA, amountB) = (amountADesired, amountBDesired);
-        } else {
-            uint256 amountBOptimal =
-                UniswapV2Library.quote(amountADesired, reserveA, reserveB);
-
-            if (amountBOptimal <= amountBDesired) {
-                require(
-                    amountBOptimal >= amountBMin,
-                    'UniswapLiquidityRouter: INSUFFICIENT AMOUNT B'
-                );
-
-                (amountA, amountB) = (amountADesired, amountBOptimal);
-            } else {
-                uint256 amountAOptimal =
-                    UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
-
-                assert(amountAOptimal <= amountADesired);
-
-                require(
-                    amountAOptimal >= amountAMin,
-                    'UniswapLiquidityRouter: INSUFFICIENT AMOUNT A'
-                );
-
-                (amountA, amountB) = (amountAOptimal, amountBDesired);
-            }
-        }
-    }
-
     function addLiquidity(
         address tokenA,
         address tokenB,
@@ -176,5 +126,55 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         // Refund dust eth, if any.
         if (msg.value > amountETH)
             TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
+    }
+
+    function _addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 amountADesired,
+        uint256 amountBDesired,
+        uint256 amountAMin,
+        uint256 amountBMin
+    )
+        internal
+        virtual
+        ensureOneIsArth(tokenA, tokenB)
+        returns (uint256 amountA, uint256 amountB)
+    {
+        // Create the pair if it doesn't exist yet.
+        if (IUniswapV2Factory(FACTORY).getPair(tokenA, tokenB) == address(0)) {
+            IUniswapV2Factory(FACTORY).createPair(tokenA, tokenB);
+        }
+
+        (uint256 reserveA, uint256 reserveB) =
+            UniswapV2Library.getReserves(address(FACTORY), tokenA, tokenB);
+
+        if (reserveA == 0 && reserveB == 0) {
+            (amountA, amountB) = (amountADesired, amountBDesired);
+        } else {
+            uint256 amountBOptimal =
+                UniswapV2Library.quote(amountADesired, reserveA, reserveB);
+
+            if (amountBOptimal <= amountBDesired) {
+                require(
+                    amountBOptimal >= amountBMin,
+                    'UniswapLiquidityRouter: INSUFFICIENT AMOUNT B'
+                );
+
+                (amountA, amountB) = (amountADesired, amountBOptimal);
+            } else {
+                uint256 amountAOptimal =
+                    UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
+
+                assert(amountAOptimal <= amountADesired);
+
+                require(
+                    amountAOptimal >= amountAMin,
+                    'UniswapLiquidityRouter: INSUFFICIENT AMOUNT A'
+                );
+
+                (amountA, amountB) = (amountAOptimal, amountBDesired);
+            }
+        }
     }
 }
