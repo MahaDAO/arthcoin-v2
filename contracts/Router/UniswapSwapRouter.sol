@@ -19,10 +19,18 @@ import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 contract UniswapSwapRouter is IUniswapSwapRouter {
     using SafeMath for uint256;
 
+    /**
+     * State variables.
+     */
+
     IWETH public immutable WETH;
     IUniswapV2Factory public immutable FACTORY;
 
     address public arthAddress;
+
+    /**
+     * Modifiers.
+     */
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, 'UniswapSwapRouter: EXPIRED');
@@ -37,6 +45,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         _;
     }
 
+    /**
+     * Constructor.
+     */
     constructor(
         IWETH weth_,
         address arthAddress_,
@@ -46,6 +57,10 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         FACTORY = FACTORY_;
         arthAddress = arthAddress_;
     }
+
+    /**
+     * External.
+     */
 
     receive() external payable {
         // Only accept ETH via fallback from the WETH contract.
@@ -299,6 +314,10 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
 
         return amountOut;
     }
+
+    /**
+     * Internal.
+     */
 
     function _getReserves(address token)
         internal

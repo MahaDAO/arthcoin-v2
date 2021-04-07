@@ -19,10 +19,18 @@ import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
     using SafeMath for uint256;
 
+    /**
+     * State variables.
+     */
+
     IWETH public immutable WETH;
     IUniswapV2Factory public immutable FACTORY;
 
     address public arthAddr;
+
+    /**
+     * Modifier.
+     */
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, 'UniswapLiquidityRouter: EXPIRED');
@@ -37,6 +45,10 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         _;
     }
 
+    /**
+     * Constructor.
+     */
+
     constructor(
         address arthAddr_,
         IUniswapV2Factory factory,
@@ -46,6 +58,10 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         FACTORY = factory;
         arthAddr = arthAddr_;
     }
+
+    /**
+     * External.
+     */
 
     function addLiquidity(
         address tokenA,
@@ -127,6 +143,10 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         if (msg.value > amountETH)
             TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
     }
+
+    /**
+     * Internal.
+     */
 
     function _addLiquidity(
         address tokenA,
