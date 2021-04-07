@@ -9,7 +9,7 @@ import '../Math/SafeMath.sol';
 import './Pools/IArthPool.sol';
 import '../Oracle/IChainlinkOracle.sol';
 import '../Governance/AccessControl.sol';
-import '../Interfaces/IUniswapPairOracle.sol';
+import '../Oracle/IUniswapPairOracle.sol';
 
 /**
  *  @title  ARTHStablecoin.

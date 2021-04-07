@@ -11,7 +11,7 @@ import '../Math//Math.sol';
 import '../Math/SafeMath.sol';
 import '../Oracle/IChainlinkOracle.sol';
 import '../Governance/AccessControl.sol';
-import '../Interfaces/IUniswapPairOracle.sol';
+import '../Oracle/IUniswapPairOracle.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 import {IIncentiveController} from './IIncentive.sol';
 
