@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import './IARTHController.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
-import './Pools/IArthPool.sol';
+import './Pools/IARTHPool.sol';
 import '../Oracle/IChainlinkOracle.sol';
 import '../Governance/AccessControl.sol';
 import '../Oracle/IUniswapPairOracle.sol';
@@ -358,7 +358,7 @@ contract ARTHController is AccessControl, IARTHController {
             // Exclude null addresses.
             if (arthPoolsArray[i] != address(0)) {
                 totalCollateralValueD18 = totalCollateralValueD18.add(
-                    IArthPool(arthPoolsArray[i]).getCollateralGMUBalance()
+                    IARTHPool(arthPoolsArray[i]).getCollateralGMUBalance()
                 );
             }
         }

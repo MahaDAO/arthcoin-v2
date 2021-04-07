@@ -7,7 +7,7 @@ import '../IARTH.sol';
 import './IARTHPool.sol';
 import '../../ERC20/IERC20.sol';
 import '../../ERC20/IERC20Burnable.sol';
-import '../../ARTHX/ARTHX.sol';
+import '../../ARTHX/IARTHX.sol';
 import '../../ERC20/ERC20.sol';
 import './ArthPoolLibrary.sol';
 import '../../Math/SafeMath.sol';
@@ -32,7 +32,7 @@ contract ARTHPool is AccessControl, IARTHPool {
      */
 
     IARTH private _ARTH;
-    ARTHShares private _ARTHX;
+    IARTHX private _ARTHX;
     IERC20 private _COLLATERAL;
     IERC20Burnable private _MAHA;
     ISimpleOracle private _ARTHMAHAOracle;
@@ -166,7 +166,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         _MAHA = IERC20Burnable(__MAHA);
         _ARTH = IARTH(__arthContractAddress);
         _COLLATERAL = IERC20(__collateralAddress);
-        _ARTHX = ARTHShares(__arthxContractAddress);
+        _ARTHX = IARTHX(__arthxContractAddress);
         _ARTHMAHAOracle = ISimpleOracle(__ARTHMAHAOracle);
 
         _ownerAddress = _creatorAddress;

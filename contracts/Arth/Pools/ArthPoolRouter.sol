@@ -2,22 +2,22 @@
 
 pragma solidity ^0.8.0;
 
-import './IARTH.sol';
+import '../IARTH.sol';
 import './IARTHPool.sol';
-import '../../ARTHX/ARTHX.sol';
+import '../../ARTHX/IARTHX.sol';
 import '../../ERC20/IERC20.sol';
 import '../../Oracle/ISimpleOracle.sol';
 import '../../Staking/StakingRewards.sol';
 
 contract ArthPoolRouter {
     /**
-     * State variables.
+     * @dev State variables.
      */
 
-    IARTH _ARTH;
+    IARTH private _ARTH;
+    IARTHX private _ARTHX;
     IARTHPool private _POOL;
     IERC20 private _COLLATEAL;
-    ARTHShares private _ARTHX;
     StakingRewards private _arthStakingPool;
     StakingRewards private _arthxStakingPool;
 
@@ -25,8 +25,8 @@ contract ArthPoolRouter {
      * Constructor.
      */
     constructor(
-        IArthPool __POOL,
-        ARTHShares __ARTHX,
+        IARTHPool __POOL,
+        IARTHX __ARTHX,
         ARTHStablecoin __ARTH,
         StakingRewards __arthStakingPool,
         StakingRewards __arthxStakingPool
