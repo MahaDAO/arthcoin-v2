@@ -11,6 +11,10 @@ interface IStakingRewards {
 
     function stakeFor(address who, uint256 amount) external;
 
+    function stakeLocked(uint256 amount, uint256 secs) external;
+
+    function withdrawLocked(bytes32 kekId) external;
+
     function getReward() external;
 
     function stake(uint256 amount) external;
