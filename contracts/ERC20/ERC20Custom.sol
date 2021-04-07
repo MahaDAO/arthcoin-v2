@@ -32,7 +32,7 @@ import '../Staking/Pausable.sol';
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20Custom is Pausable, IERC20 {
+abstract contract ERC20Custom is Pausable, IERC20 {
     using SafeMath for uint256;
 
     uint256 private _totalSupply;

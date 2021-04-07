@@ -2,18 +2,39 @@
 
 pragma solidity ^0.8.0;
 
-import '../Governance/AccessControl.sol';
 import '../Math/SafeMath.sol';
 import {ERC20} from './ERC20.sol';
 import {IERC20} from './IERC20.sol';
 import {Math} from '../Math/Math.sol';
+import '../Governance/AccessControl.sol';
 
+/**
+ * @title  PoolToken
+ * @author MahaDAO.
+ */
 contract PoolToken is AccessControl, ERC20 {
     using SafeMath for uint256;
 
-    bytes32 public constant GOVERNANCE_ROLE = keccak256('GOVERNANCE_ROLE');
+    /**
+     * State variables.
+     */
+
     IERC20[] public poolTokens;
     bool public enableWithdrawals = false;
+    bytes32 public constant GOVERNANCE_ROLE = keccak256('GOVERNANCE_ROLE');
+
+    /**
+     * Event.
+     */
+    event ToggleWithdrawals(bool state);
+    event TokenAdded(address indexed token);
+    event Withdraw(address indexed who, uint256 amount);
+    event TokenReplaced(address indexed token, uint256 index);
+    event TokensRetrieved(address indexed token, address who, uint256 amount);
+
+    /**
+     * Modifier.
+     */
 
     modifier onlyAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()));
@@ -25,15 +46,23 @@ contract PoolToken is AccessControl, ERC20 {
         _;
     }
 
+    /**
+     * Constructor.
+     */
     constructor(
         string memory tokenName,
         string memory tokenSymbol,
         IERC20[] memory poolTokens_
     ) ERC20(tokenName, tokenSymbol) {
         poolTokens = poolTokens_;
+
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(GOVERNANCE_ROLE, _msgSender());
     }
+
+    /**
+     * External.
+     */
 
     function addPoolToken(IERC20 token) external onlyGovernance {
         poolTokens.push(token);
@@ -83,10 +112,4 @@ contract PoolToken is AccessControl, ERC20 {
         token.transfer(msg.sender, balance);
         emit TokensRetrieved(address(token), msg.sender, balance);
     }
-
-    event TokenReplaced(address indexed token, uint256 index);
-    event TokensRetrieved(address indexed token, address who, uint256 amount);
-    event TokenAdded(address indexed token);
-    event Withdraw(address indexed who, uint256 amount);
-    event ToggleWithdrawals(bool state);
 }

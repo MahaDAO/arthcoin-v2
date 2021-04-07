@@ -23,7 +23,17 @@ interface ITransferReceiver {
     ) external returns (bool);
 }
 
-contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
+abstract contract AnyswapV4Token is
+    ERC20Custom,
+    AccessControl,
+    IAnyswapV4Token
+{
+    /**
+     * State variables.
+     */
+
+    bytes32 public immutable DOMAIN_SEPARATOR;
+
     bytes32 public constant BRIDGE_ROLE = keccak256('BRIDGE_ROLE');
     bytes32 public constant PERMIT_TYPEHASH =
         keccak256(
@@ -34,11 +44,25 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
             'Transfer(address owner,address to,uint256 value,uint256 nonce,uint256 deadline)'
         );
 
-    bytes32 public immutable DOMAIN_SEPARATOR;
-
     bool private _vaultOnly = false;
 
     mapping(address => uint256) public override nonces;
+
+    /**
+     * Events
+     */
+
+    event LogSwapin(
+        bytes32 indexed txhash,
+        address indexed account,
+        uint256 amount
+    );
+
+    event LogSwapout(
+        address indexed account,
+        address indexed bindaddr,
+        uint256 amount
+    );
 
     /**
      * Modifier.
@@ -80,101 +104,8 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
     }
 
     /**
-     * Mutations.
+     * External.
      */
-
-    function verifyEIP712(
-        address target,
-        bytes32 hashStruct,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal view returns (bool) {
-        bytes32 hash =
-            keccak256(
-                abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashStruct)
-            );
-        address signer = ecrecover(hash, v, r, s);
-
-        return (signer != address(0) && signer == target);
-    }
-
-    /// @dev Builds a prefixed hash to mimic the behavior of eth_sign.
-    function prefixed(bytes32 hash) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked('\x19Ethereum Signed Message:\n32', hash)
-            );
-    }
-
-    function verifyPersonalSign(
-        address target,
-        bytes32 hashStruct,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal pure returns (bool) {
-        bytes32 hash = prefixed(hashStruct);
-        address signer = ecrecover(hash, v, r, s);
-        return (signer != address(0) && signer == target);
-    }
-
-    function permit(
-        address target,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) public {
-        require(block.timestamp <= deadline, 'AnyswapV3ERC20: Expired permit');
-
-        bytes32 hashStruct =
-            keccak256(
-                abi.encode(
-                    PERMIT_TYPEHASH,
-                    target,
-                    spender,
-                    value,
-                    nonces[target]++,
-                    deadline
-                )
-            );
-
-        require(
-            verifyEIP712(target, hashStruct, v, r, s) ||
-                verifyPersonalSign(target, hashStruct, v, r, s)
-        );
-
-        _approve(target, spender, value);
-        emit Approval(target, spender, value);
-    }
-
-    /// @dev Only Auth needs to be implemented
-    function Swapin(
-        bytes32 txhash,
-        address account,
-        uint256 amount
-    ) public override onlyBridge returns (bool) {
-        _mint(account, amount);
-        emit LogSwapin(txhash, account, amount);
-        return true;
-    }
-
-    function Swapout(uint256 amount, address bindaddr)
-        public
-        override
-        onlyBridge
-        returns (bool)
-    {
-        require(!_vaultOnly, 'AnyswapV4ERC20: onlyAuth');
-        require(bindaddr != address(0), 'AnyswapV4ERC20: address(0x0)');
-
-        _burn(msg.sender, amount);
-        emit LogSwapout(msg.sender, bindaddr, amount);
-        return true;
-    }
 
     function approveAndCall(
         address spender,
@@ -227,8 +158,8 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
             );
 
         require(
-            verifyEIP712(target, hashStruct, v, r, s) ||
-                verifyPersonalSign(target, hashStruct, v, r, s)
+            _verifyEIP712(target, hashStruct, v, r, s) ||
+                _verifyPersonalSign(target, hashStruct, v, r, s)
         );
 
         // NOTE: is this check needed, was there in the refered contract.
@@ -240,5 +171,106 @@ contract AnyswapV4Token is ERC20Custom, AccessControl, IAnyswapV4Token {
 
         _transfer(target, to, value);
         return true;
+    }
+
+    /**
+     * Public
+     */
+
+    function permit(
+        address target,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public override {
+        require(block.timestamp <= deadline, 'AnyswapV3ERC20: Expired permit');
+
+        bytes32 hashStruct =
+            keccak256(
+                abi.encode(
+                    PERMIT_TYPEHASH,
+                    target,
+                    spender,
+                    value,
+                    nonces[target]++,
+                    deadline
+                )
+            );
+
+        require(
+            _verifyEIP712(target, hashStruct, v, r, s) ||
+                _verifyPersonalSign(target, hashStruct, v, r, s)
+        );
+
+        _approve(target, spender, value);
+        emit Approval(target, spender, value);
+    }
+
+    /// @dev Only Auth needs to be implemented
+    function Swapin(
+        bytes32 txhash,
+        address account,
+        uint256 amount
+    ) public override onlyBridge returns (bool) {
+        _mint(account, amount);
+        emit LogSwapin(txhash, account, amount);
+        return true;
+    }
+
+    function Swapout(uint256 amount, address bindaddr)
+        public
+        override
+        onlyBridge
+        returns (bool)
+    {
+        require(!_vaultOnly, 'AnyswapV4ERC20: onlyAuth');
+        require(bindaddr != address(0), 'AnyswapV4ERC20: address(0x0)');
+
+        _burn(msg.sender, amount);
+        emit LogSwapout(msg.sender, bindaddr, amount);
+        return true;
+    }
+
+    /**
+     * Internal.
+     */
+
+    function _verifyEIP712(
+        address target,
+        bytes32 hashStruct,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal view returns (bool) {
+        bytes32 hash =
+            keccak256(
+                abi.encodePacked('\x19\x01', DOMAIN_SEPARATOR, hashStruct)
+            );
+        address signer = ecrecover(hash, v, r, s);
+
+        return (signer != address(0) && signer == target);
+    }
+
+    /// @dev Builds a _prefixed hash to mimic the behavior of eth_sign.
+    function _prefixed(bytes32 hash) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encodePacked('\x19Ethereum Signed Message:\n32', hash)
+            );
+    }
+
+    function _verifyPersonalSign(
+        address target,
+        bytes32 hashStruct,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal pure returns (bool) {
+        bytes32 hash = _prefixed(hashStruct);
+        address signer = ecrecover(hash, v, r, s);
+        return (signer != address(0) && signer == target);
     }
 }
