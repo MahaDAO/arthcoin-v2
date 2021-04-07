@@ -55,14 +55,14 @@ library Address {
     function sendValue(address payable recipient, uint256 amount) internal {
         require(
             address(this).balance >= amount,
-            "Address: insufficient balance"
+            'Address: insufficient balance'
         );
 
         // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
-        (bool success, ) = recipient.call{value: amount}("");
+        (bool success, ) = recipient.call{value: amount}('');
         require(
             success,
-            "Address: unable to send value, recipient may have reverted"
+            'Address: unable to send value, recipient may have reverted'
         );
     }
 
@@ -88,7 +88,7 @@ library Address {
         internal
         returns (bytes memory)
     {
-        return functionCall(target, data, "Address: low-level call failed");
+        return functionCall(target, data, 'Address: low-level call failed');
     }
 
     /**
@@ -126,7 +126,7 @@ library Address {
                 target,
                 data,
                 value,
-                "Address: low-level call with value failed"
+                'Address: low-level call with value failed'
             );
     }
 
@@ -144,9 +144,9 @@ library Address {
     ) internal returns (bytes memory) {
         require(
             address(this).balance >= value,
-            "Address: insufficient balance for call"
+            'Address: insufficient balance for call'
         );
-        require(isContract(target), "Address: call to non-contract");
+        require(isContract(target), 'Address: call to non-contract');
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returndata) =
@@ -169,7 +169,7 @@ library Address {
             functionStaticCall(
                 target,
                 data,
-                "Address: low-level static call failed"
+                'Address: low-level static call failed'
             );
     }
 
@@ -184,7 +184,7 @@ library Address {
         bytes memory data,
         string memory errorMessage
     ) internal view returns (bytes memory) {
-        require(isContract(target), "Address: static call to non-contract");
+        require(isContract(target), 'Address: static call to non-contract');
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returndata) = target.staticcall(data);
@@ -205,7 +205,7 @@ library Address {
             functionDelegateCall(
                 target,
                 data,
-                "Address: low-level delegate call failed"
+                'Address: low-level delegate call failed'
             );
     }
 
@@ -220,7 +220,7 @@ library Address {
         bytes memory data,
         string memory errorMessage
     ) internal returns (bytes memory) {
-        require(isContract(target), "Address: delegate call to non-contract");
+        require(isContract(target), 'Address: delegate call to non-contract');
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returndata) = target.delegatecall(data);

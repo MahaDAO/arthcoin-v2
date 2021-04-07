@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import './Pausable.sol';
-import '../Arth/Arth.sol';
+import '../ARTH/IARTH.sol';
 import '../Math/Math.sol';
 import '../ERC20/ERC20.sol';
 import '../Math/SafeMath.sol';
@@ -18,16 +18,6 @@ import '../Governance/AccessControl.sol';
 import './RewardsDistributionRecipient.sol';
 import '../Arth/ArthController.sol';
 
-interface IStaking {
-    function stakeLockedFor(
-        address who,
-        uint256 amount,
-        uint256 duration
-    ) external;
-
-    function stakeFor(address who, uint256 amount) external;
-}
-
 /**
  *  Original code written by:
  *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
@@ -38,7 +28,6 @@ interface IStaking {
  */
 contract StakingRewards is
     AccessControl,
-    IStaking,
     IStakingRewards,
     IMintAndCallFallBack,
     RewardsDistributionRecipient,

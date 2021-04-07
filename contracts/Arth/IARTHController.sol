@@ -33,6 +33,9 @@ interface IARTHController {
         address _wethAddress
     ) external;
 
+    function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
+        external;
+
     function setArthStep(uint256 newStep) external;
 
     function setRedemptionFee(uint256 fee) external;
@@ -59,8 +62,7 @@ interface IARTHController {
 
     function getETHGMUPrice() external view returns (uint256);
 
-    function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
-        external;
+    function getGlobalCollateralRatio() external view returns (uint256);
 
     function getGlobalCollateralValue() external view returns (uint256);
 }

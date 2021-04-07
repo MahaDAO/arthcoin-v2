@@ -11,10 +11,21 @@ interface IStakingRewardsDualForMigrator {
         uint256 start_timestamp;
         uint256 amount;
         uint256 ending_timestamp;
-        uint256 multiplier; // 6 decimals of precision. 1x = 1000000
+        uint256 multiplier; // 6 decimals of precision, 1x = 1000000.
     }
 
-    // Views
+    function stake(uint256 amount) external;
+
+    function stakeLocked(uint256 amount, uint256 secs) external;
+
+    function withdraw(uint256 amount) external;
+
+    function withdrawLocked(bytes32 kek_id) external;
+
+    function getReward() external;
+
+    function unlockStakes() external;
+
     function stakingToken() external view returns (ERC20);
 
     function lockedStakesOf(address account)
@@ -34,19 +45,5 @@ interface IStakingRewardsDualForMigrator {
 
     function balanceOf(address account) external view returns (uint256);
 
-    // Mutative
-
-    function stake(uint256 amount) external;
-
-    function stakeLocked(uint256 amount, uint256 secs) external;
-
-    function withdraw(uint256 amount) external;
-
-    function withdrawLocked(bytes32 kek_id) external;
-
-    function getReward() external;
-
-    function unlockStakes() external;
-
-    //function exit() external;
+    // function exit() external;
 }

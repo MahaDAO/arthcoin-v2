@@ -351,6 +351,10 @@ contract ARTHController is AccessControl, IARTHController {
             );
     }
 
+    function getGlobalCollateralRatio() public view override returns (uint256) {
+        return globalCollateralRatio;
+    }
+
     function getGlobalCollateralValue() public view override returns (uint256) {
         uint256 totalCollateralValueD18 = 0;
 
