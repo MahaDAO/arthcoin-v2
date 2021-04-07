@@ -9,6 +9,10 @@ interface IStakingRewardsDual {
 
     function getReward() external;
 
+    function stakeLocked(uint256 amount, uint256 secs) external;
+
+    function withdrawLocked(bytes32 kekId) external;
+
     function lastTimeRewardApplicable() external view returns (uint256);
 
     function rewardPerToken() external view returns (uint256, uint256);

@@ -221,6 +221,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, Pausable {
 
     function stakeLocked(uint256 amount, uint256 secs)
         external
+        override
         nonReentrant
         notPaused
         updateReward(msg.sender)
@@ -397,6 +398,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, Pausable {
 
     function withdrawLocked(bytes32 kekId)
         external
+        override
         nonReentrant
         updateReward(msg.sender)
     {

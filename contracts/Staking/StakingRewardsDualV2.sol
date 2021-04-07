@@ -39,7 +39,7 @@ contract StakingRewardsDualV2 is
     ERC20 public rewardsToken0;
     ERC20 public rewardsToken1;
     ERC20 public stakingToken;
-    ArthController private controller;
+    IARTHController private controller;
     uint256 public periodFinish;
 
     // Constant for various precisions
