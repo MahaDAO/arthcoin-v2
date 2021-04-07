@@ -56,6 +56,8 @@ interface IARTHController {
 
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio) external;
 
+    function getRefreshCooldown() external view returns (uint256);
+
     function getARTHPrice() external view returns (uint256);
 
     function getARTHXPrice() external view returns (uint256);

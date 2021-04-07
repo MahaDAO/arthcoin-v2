@@ -336,6 +336,10 @@ contract ARTHController is AccessControl, IARTHController {
         timelockAddress = newTimelock;
     }
 
+    function getRefreshCooldown() external view override returns (uint256) {
+        return refreshCooldown;
+    }
+
     function getARTHPrice() public view override returns (uint256) {
         return _getOraclePrice(PriceChoice.ARTH);
     }
