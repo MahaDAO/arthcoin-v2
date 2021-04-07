@@ -32,4 +32,13 @@ interface IUniswapSwapRouter {
         address to,
         uint256 deadline
     ) external returns (uint256 amountOut);
+
+    function sellARTHForERC20(
+        address token,
+        uint256 maxPenalty,
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address to,
+        uint256 deadline
+    ) external returns (uint256 amountOut);
 }
