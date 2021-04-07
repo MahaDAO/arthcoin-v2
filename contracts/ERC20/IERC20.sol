@@ -15,7 +15,7 @@ interface IERC20 {
     /**
      * @dev Returns the number of decimals for token.
      */
-    function decimals() external view returns (uint256);
+    function decimals() external view returns (uint8);
 
     /**
      * @dev Returns the amount of tokens owned by `account`.
