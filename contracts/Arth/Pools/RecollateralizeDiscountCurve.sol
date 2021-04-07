@@ -3,29 +3,39 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../../ERC20/ERC20.sol';
+import '../IARTHController.sol';
+import '../../ERC20/IERC20.sol';
 import '../../Math/SafeMath.sol';
 import '../../Common/Ownable.sol';
-import '../../Arth/ArthController.sol';
 
 /**
- * @title RecollateralizeDiscountCruve.
+ * @title  RecollateralizeDiscountCruve.
  * @author MahaDAO.
  */
 contract RecollateralizeDiscountCurve is Ownable {
     using SafeMath for uint256;
 
-    ERC20 private _arth;
-    ArthController private _arthController;
+    /**
+     * State variables.
+     */
+
+    IERC20 private _ARTH;
+    IARTHController private _arthController;
 
     /// @notice Bonus rate on ARTHX minted when recollateralizing.
-    /// @dev    6 decimals of precision, is set to 0.75% on genesis.
-    uint256 public bonusRate = 7500;
+    uint256 public bonusRate = 7500; // 6 decimals of precision, is set to 0.75% on genesis.
 
-    constructor(ERC20 arth, ArthController arthController) {
-        _arth = arth;
-        _arthController = arthController;
+    /**
+     * Constructor.
+     */
+    constructor(IERC20 __ARTH, IARTHController __arthController) {
+        _ARTH = ___ARTH;
+        _arthController = __arthController;
     }
+
+    /**
+     * Public.
+     */
 
     function setBonusRate(uint256 rate) public onlyOwner {
         require(
@@ -38,7 +48,7 @@ contract RecollateralizeDiscountCurve is Ownable {
 
     function getTargetCollateralValue() public view returns (uint256) {
         return
-            _arth
+            _ARTH
                 .totalSupply()
                 .mul(_arthController.globalCollateralRatio())
                 .div(1e6);

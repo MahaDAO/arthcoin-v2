@@ -60,7 +60,7 @@ contract ARTHBridge is AccessControl {
      */
 
     /// @notice Needed for compatibility to use poolMint()
-    function collatDollarBalance() public pure returns (uint256) {
+    function getCollateralGMUBalance() public pure returns (uint256) {
         return 0;
     }
 

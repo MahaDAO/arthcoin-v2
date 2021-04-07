@@ -1781,8 +1781,8 @@ contract('ARTH', async (accounts) => {
       console.log("global_collateral_value: ", global_collateral_value.toNumber());
 
       // Available to buyback
-      const buyback_available = new BigNumber(await pool_instance_USDC.availableExcessCollatDV.call()).div(BIG18);
-      // const buyback_available_in_arthx = new BigNumber(await pool_instance_USDC.availableExcessCollatDVInARTHS.call()).div(BIG18);
+      const buyback_available = new BigNumber(await pool_instance_USDC.getAvailableExcessCollateralDV.call()).div(BIG18);
+      // const buyback_available_in_arthx = new BigNumber(await pool_instance_USDC.getAvailableExcessCollateralDVInARTHS.call()).div(BIG18);
       console.log("buyback_available: $", buyback_available.toNumber());
       // console.log("buyback_available_in_arthx: ", buyback_available_in_arthx.toNumber(), " ARTHS");
 

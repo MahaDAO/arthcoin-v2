@@ -181,7 +181,7 @@ contract ArthLendingAMO is AccessControl {
     /* ========== PUBLIC FUNCTIONS ========== */
 
     // Needed for the Arth contract to not brick
-    function collatDollarBalance() external pure returns (uint256) {
+    function getCollateralGMUBalance() external pure returns (uint256) {
         return 1e18; // 1 USDC
     }
 

@@ -159,7 +159,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
     /* ========== PUBLIC FUNCTIONS ========== */
 
     // Needed for the Arth contract to function
-    function collatDollarBalance() external view returns (uint256) {
+    function getCollateralGMUBalance() external view returns (uint256) {
         // Needs to mimic the ArthPool value and return in E18
         // Only thing different should be borrowed_balance vs balanceOf()
         if (pool.collateralPricePaused() == true) {

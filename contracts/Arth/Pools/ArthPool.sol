@@ -24,18 +24,18 @@ import {IIUniswapPairOracle} from '../../Oracle/IIUniswapPairOracle.sol';
  *  Original code written by:
  *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
-contract ARTHPool is AccessControl {
+contract ARTHPool is AccessControl, IARTHPool {
     using SafeMath for uint256;
 
     /**
      * State variables.
      */
 
-    ISimpleOracle public _ARTHMAHAOracle;
     IARTH private _ARTH;
     ARTHShares private _ARTHX;
     IERC20 private _COLLATERAL;
     IERC20Burnable private _MAHA;
+    ISimpleOracle private _ARTHMAHAOracle;
     IARTHController private _arthController;
     IUniswapPairOracle private _collateralETHOracle;
     RecollateralizeDiscountCurve private _recollateralizeDiscountCruve;
@@ -192,7 +192,8 @@ contract ARTHPool is AccessControl {
      */
 
     function setBuyBackCollateralBuffer(uint256 percent)
-        public
+        external
+        override
         onlyAdminOrOwnerOrGovernance
     {
         require(percent <= 100, 'ArthPool: percent > 100');
@@ -201,49 +202,56 @@ contract ARTHPool is AccessControl {
     }
 
     function toggleUseGlobalCRForMint(bool flag)
-        public
+        external
+        override
         onlyAdminOrOwnerOrGovernance
     {
         useGlobalCRForMint = flag;
     }
 
     function toggleUseGlobalCRForRedeem(bool flag)
-        public
+        external
+        override
         onlyAdminOrOwnerOrGovernance
     {
         useGlobalCRForRedeem = flag;
     }
 
     function toggleUseGlobalCRForRecollateralize(bool flag)
-        public
+        external
+        override
         onlyAdminOrOwnerOrGovernance
     {
         useGlobalCRForRecollateralize = flag;
     }
 
     function setMintCollateralRatio(uint256 val)
-        public
+        external
+        override
         onlyAdminOrOwnerOrGovernance
     {
         mintCollateralRatio = val;
     }
 
     function setRedeemCollateralRatio(uint256 val)
-        public
+        external
+        override
         onlyAdminOrOwnerOrGovernance
     {
         redeemCollateralRatio = val;
     }
 
     function setRecollateralizeCollateralRatio(uint256 val)
-        public
+        external
+        override
         onlyAdminOrOwnerOrGovernance
     {
         recollateralizeCollateralRatio = val;
     }
 
     function setStabilityFee(uint256 percent)
-        public
+        external
+        override
         onlyAdminOrOwnerOrGovernance
     {
         require(percent <= 100, 'ArthPool: percent > 100');
@@ -251,119 +259,83 @@ contract ARTHPool is AccessControl {
         stabilityFee = percent;
     }
 
-    /* ========== VIEWS ========== */
-
-    function getGlobalCR() public view returns (uint256) {
-        return _arthController.globalCollateralRatio();
-    }
-
-    function getCRForMint() public view returns (uint256) {
-        if (useGlobalCRForMint) return getGlobalCR();
-
-        return mintCollateralRatio;
-    }
-
-    function getCRForRedeem() public view returns (uint256) {
-        if (useGlobalCRForRedeem) return getGlobalCR();
-
-        return redeemCollateralRatio;
-    }
-
-    function getCRForRecollateralize() public view returns (uint256) {
-        if (useGlobalCRForRecollateralize) return getGlobalCR();
-
-        return recollateralizeCollateralRatio;
-    }
-
-    // Returns dollar value of collateral held in this Arth pool
-    function collatDollarBalance() public view returns (uint256) {
-        if (collateralPricePaused == true) {
-            return
-                (
-                    _COLLATERAL.balanceOf(address(this)).sub(
-                        unclaimedPoolCollateral
-                    )
-                )
-                    .mul(10**_missingDeciamls)
-                    .mul(pausedPrice)
-                    .div(_PRICE_PRECISION);
-        } else {
-            uint256 eth_usd_price = _arthController.eth_usd_price();
-            uint256 eth_collat_price =
-                _collateralETHOracle.consult(
-                    _wethAddress,
-                    _PRICE_PRECISION * (10**_missingDeciamls)
-                );
-
-            uint256 collat_usd_price =
-                eth_usd_price.mul(_PRICE_PRECISION).div(eth_collat_price);
-            return
-                (
-                    _COLLATERAL.balanceOf(address(this)).sub(
-                        unclaimedPoolCollateral
-                    )
-                )
-                    .mul(10**_missingDeciamls)
-                    .mul(collat_usd_price)
-                    .div(_PRICE_PRECISION); //.mul(getCollateralPrice()).div(1e6);
-        }
-    }
-
-    // Returns the value of excess collateral held in this Arth pool, compared to what is needed to maintain the global collateral ratio
-    function availableExcessCollatDV() public view returns (uint256) {
-        uint256 total_supply = _ARTH.totalSupply();
-        uint256 globalCollateralRatio = getGlobalCR();
-        uint256 globalCollatValue = _arthController.globalCollateralValue();
-
-        if (globalCollateralRatio > _COLLATERAL_RATIO_PRECISION)
-            globalCollateralRatio = _COLLATERAL_RATIO_PRECISION; // Handles an overcollateralized contract with CR > 1
-
-        uint256 required_collat_dollar_value_d18 =
-            (total_supply.mul(globalCollateralRatio)).div(
-                _COLLATERAL_RATIO_PRECISION
-            ); // Calculates collateral needed to back each 1 ARTH with $1 of collateral at current collat ratio
-
-        // todo: add a 10-20% buffer for volatile collaterals. - done
-        if (globalCollatValue > required_collat_dollar_value_d18) {
-            uint256 excessCollateral =
-                globalCollatValue.sub(required_collat_dollar_value_d18);
-            uint256 bufferValue =
-                excessCollateral.mul(buybackCollateralBuffer).div(100);
-
-            return excessCollateral.sub(bufferValue);
-        } else return 0;
-    }
-
-    /* ========== PUBLIC FUNCTIONS ========== */
-
-    // Returns the price of the pool collateral in USD
-    function getCollateralPrice() public view returns (uint256) {
-        if (collateralPricePaused == true) {
-            return pausedPrice;
-        } else {
-            uint256 eth_usd_price = _arthController.eth_usd_price();
-            return
-                eth_usd_price.mul(_PRICE_PRECISION).div(
-                    _collateralETHOracle.consult(
-                        _wethAddress,
-                        _PRICE_PRECISION * (10**_missingDeciamls)
-                    )
-                );
-        }
-    }
-
     function setCollatETHOracle(
-        address _collateral_weth_oracle_address,
+        address _collateralWETHOracleAddress,
         address __wethAddress
-    ) external onlyByOwnerOrGovernance {
-        collateralETHOracleAddress = _collateral_weth_oracle_address;
-        _collateralETHOracle = IUniswapPairOracle(
-            _collateral_weth_oracle_address
-        );
+    ) external override onlyByOwnerOrGovernance {
+        collateralETHOracleAddress = _collateralWETHOracleAddress;
+        _collateralETHOracle = IUniswapPairOracle(_collateralWETHOracleAddress);
         _wethAddress = __wethAddress;
     }
 
-    function borrow(uint256 _amount) external onlyAMOS {
+    function toggleMinting() external override {
+        require(hasRole(_MINT_PAUSER, msg.sender));
+
+        mintPaused = !mintPaused;
+    }
+
+    function toggleRedeeming() external override {
+        require(hasRole(_REDEEM_PAUSER, msg.sender));
+        redeemPaused = !redeemPaused;
+    }
+
+    function toggleRecollateralize() external override {
+        require(hasRole(_RECOLLATERALIZE_PAUSER, msg.sender));
+        recollateralizePaused = !recollateralizePaused;
+    }
+
+    function toggleBuyBack() external override {
+        require(hasRole(_BUYBACK_PAUSER, msg.sender));
+        buyBackPaused = !buyBackPaused;
+    }
+
+    function toggleCollateralPrice(uint256 newPrice) external override {
+        require(hasRole(_COLLATERAL_PRICE_PAUSER, msg.sender));
+
+        // If pausing, set paused price; else if unpausing, clear pausedPrice
+        if (collateralPricePaused == false) {
+            pausedPrice = newPrice;
+        } else {
+            pausedPrice = 0;
+        }
+
+        collateralPricePaused = !collateralPricePaused;
+    }
+
+    // Combined into one function due to 24KiB contract memory limit
+    function setPoolParameters(
+        uint256 newCeiling,
+        uint256 newRedemptionDelay,
+        uint256 newMintFee,
+        uint256 newRedeemFee,
+        uint256 newBuybackFee,
+        uint256 newRecollateralizeFee
+    ) external override onlyByOwnerOrGovernance {
+        poolCeiling = newCeiling;
+        redemptionDelay = newRedemptionDelay;
+        mintingFee = newMintFee;
+        redemptionFee = newRedeemFee;
+        buybackFee = newBuybackFee;
+        recollatFee = newRecollateralizeFee;
+    }
+
+    function setTimelock(address new_timelock)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        _timelockAddress = new_timelock;
+    }
+
+    function setOwner(address __ownerAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        _ownerAddress = __ownerAddress;
+    }
+
+    function borrow(uint256 _amount) external override onlyAMOS {
         require(
             _COLLATERAL.balanceOf(address(this)) > _amount,
             'ArthPool: Insufficent funds in the pool'
@@ -371,91 +343,98 @@ contract ARTHPool is AccessControl {
 
         _COLLATERAL.transfer(msg.sender, _amount);
         borrowedCollateral[msg.sender] += _amount;
+
         emit Borrow(msg.sender, _amount);
     }
 
-    function repay(uint256 _amount) external onlyAMOS {
+    function repay(uint256 amount) external override onlyAMOS {
         require(
             borrowedCollateral[msg.sender] > 0,
             "ArthPool: Repayer doesn't not have any debt"
         );
 
-        // TODO: check balance of the user; to avoid forcedao type bugs
         require(
-            _COLLATERAL.balanceOf(msg.sender) >= _amount,
+            _COLLATERAL.balanceOf(msg.sender) >= amount,
             'ArthPool: balance < required'
         );
-        _COLLATERAL.transferFrom(msg.sender, address(this), _amount);
+        _COLLATERAL.transferFrom(msg.sender, address(this), amount);
 
-        borrowedCollateral[msg.sender] -= _amount;
-        emit Repay(msg.sender, _amount);
+        borrowedCollateral[msg.sender] -= amount;
+
+        emit Repay(msg.sender, amount);
     }
 
-    // We separate out the 1t1, fractional and algorithmic minting functions for gas efficiency
-    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
+    function mint1t1ARTH(uint256 collateralAmount, uint256 arthOutMin)
         external
+        override
         notMintPaused
         returns (uint256)
     {
-        uint256 collateralAmount_d18 =
-            collateralAmount * (10**_missingDeciamls);
+        uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
 
         require(
             getCRForMint() >= _COLLATERAL_RATIO_MAX,
-            'Collateral ratio must be >= 1'
+            'ARHTPool: Collateral ratio < 1'
         );
         require(
             (_COLLATERAL.balanceOf(address(this)))
                 .sub(unclaimedPoolCollateral)
                 .add(collateralAmount) <= poolCeiling,
-            "[Pool's Closed]: Ceiling reached"
+            'ARTHPool: ceiling reached'
         );
 
-        uint256 arth_amount_d18 =
+        // 1 ARTH for each $1 worth of collateral.
+        uint256 arthAmountD18 =
             ArthPoolLibrary.calcMint1t1ARTH(
                 getCollateralPrice(),
-                collateralAmount_d18
-            ); //1 ARTH for each $1 worth of collateral
+                collateralAmountD18
+            );
+        // Remove precision at the end.
+        arthAmountD18 = (arthAmountD18.mul(uint256(1e6).sub(mintingFee))).div(
+            1e6
+        );
 
-        arth_amount_d18 = (arth_amount_d18.mul(uint256(1e6).sub(mintingFee)))
-            .div(1e6); //remove precision at the end
-        require(ARTHOutMin <= arth_amount_d18, 'Slippage limit reached');
+        require(
+            arthOutMin <= arthAmountD18,
+            'ARTHPool: Slippage limit reached'
+        );
 
-        // TODO: check balance of the user; to avoid forcedao type bugs - done
         require(
             _COLLATERAL.balanceOf(msg.sender) >= collateralAmount,
             'ArthPool: balance < required'
         );
         _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount);
 
-        _ARTH.poolMint(msg.sender, arth_amount_d18);
+        _ARTH.poolMint(msg.sender, arthAmountD18);
 
-        return arth_amount_d18;
+        return arthAmountD18;
     }
 
-    // 0% collateral-backed
-    function mintAlgorithmicARTH(uint256 arthxAmount_d18, uint256 ARTHOutMin)
+    function mintAlgorithmicARTH(uint256 arthxAmountD18, uint256 arthOutMin)
         external
+        override
         notMintPaused
         returns (uint256)
     {
         uint256 arthxPrice = _arthController.arthxPrice();
-        require(getCRForMint() == 0, 'Collateral ratio must be 0');
 
-        uint256 arth_amount_d18 =
+        require(getCRForMint() == 0, 'ARTHPool: Collateral ratio != 0');
+
+        uint256 arthAmountD18 =
             ArthPoolLibrary.calcMintAlgorithmicARTH(
                 arthxPrice, // X ARTHX / 1 USD
-                arthxAmount_d18
+                arthxAmountD18
             );
+        arthAmountD18 = (arthAmountD18.mul(uint256(1e6).sub(mintingFee))).div(
+            1e6
+        );
 
-        arth_amount_d18 = (arth_amount_d18.mul(uint256(1e6).sub(mintingFee)))
-            .div(1e6);
-        require(ARTHOutMin <= arth_amount_d18, 'Slippage limit reached');
+        require(arthOutMin <= arthAmountD18, 'Slippage limit reached');
 
-        _ARTHX.poolBurnFrom(msg.sender, arthxAmount_d18);
-        _ARTH.poolMint(msg.sender, arth_amount_d18);
+        _ARTH.poolMint(msg.sender, arthAmountD18);
+        _ARTHX.poolBurnFrom(msg.sender, arthxAmountD18);
 
-        return arth_amount_d18;
+        return arthAmountD18;
     }
 
     // Will fail if fully collateralized or fully algorithmic
@@ -463,79 +442,59 @@ contract ARTHPool is AccessControl {
     function mintFractionalARTH(
         uint256 collateralAmount,
         uint256 arthxAmount,
-        uint256 ARTHOutMin
-    ) external notMintPaused returns (uint256) {
+        uint256 arthOutMin
+    ) external override notMintPaused returns (uint256) {
         uint256 arthxPrice = _arthController.arthxPrice();
         uint256 collateralRatioForMint = getCRForMint();
 
         require(
             collateralRatioForMint < _COLLATERAL_RATIO_MAX &&
                 collateralRatioForMint > 0,
-            'Collateral ratio needs to be between .000001 and .999999'
+            'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
         );
         require(
             _COLLATERAL
                 .balanceOf(address(this))
                 .sub(unclaimedPoolCollateral)
                 .add(collateralAmount) <= poolCeiling,
-            'Pool ceiling reached, no more ARTH can be minted with this collateral'
+            'ARTHPool: ceiling reached.'
         );
 
-        uint256 collateralAmount_d18 =
-            collateralAmount * (10**_missingDeciamls);
-        ArthPoolLibrary.MintFF_Params memory input_params =
-            ArthPoolLibrary.MintFF_Params(
+        uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
+        ArthPoolLibrary.MintFAParams memory inputParams =
+            ArthPoolLibrary.MintFAParams(
                 arthxPrice,
                 getCollateralPrice(),
                 arthxAmount,
-                collateralAmount_d18,
+                collateralAmountD18,
                 collateralRatioForMint
             );
 
-        (uint256 mint_amount, uint256 arthx_needed) =
-            ArthPoolLibrary.calcMintFractionalARTH(input_params);
+        (uint256 mintAmount, uint256 arthxNeeded) =
+            ArthPoolLibrary.calcMintFractionalARTH(inputParams);
 
-        mint_amount = (mint_amount.mul(uint256(1e6).sub(mintingFee))).div(1e6);
-        require(ARTHOutMin <= mint_amount, 'Slippage limit reached');
-        require(arthx_needed <= arthxAmount, 'Not enough ARTHX inputted');
+        mintAmount = (mintAmount.mul(uint256(1e6).sub(mintingFee))).div(1e6);
 
-        _ARTHX.poolBurnFrom(msg.sender, arthx_needed);
+        require(arthOutMin <= mintAmount, 'ARTHPool: Slippage limit reached');
+        require(arthxNeeded <= arthxAmount, 'ARTHPool: ARTHX < required');
+
+        _ARTHX.poolBurnFrom(msg.sender, arthxNeeded);
+
         require(
             _COLLATERAL.balanceOf(msg.sender) >= collateralAmount,
             'ArthPool: balance < require'
         );
         _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount);
-        _ARTH.poolMint(address(this), mint_amount);
 
-        return mint_amount;
-    }
+        _ARTH.poolMint(address(this), mintAmount);
 
-    function getARTHStabilityTokenOraclePrice() public view returns (uint256) {
-        return _ARTHMAHAOracle.getPrice();
-    }
-
-    function _chargeStabilityFee(uint256 amount) internal {
-        require(amount > 0, 'ArthPool: amount = 0');
-
-        if (stabilityFee > 0) {
-            uint256 stabilityFee_in_ARTH = amount.mul(stabilityFee).div(100);
-
-            uint256 stabilityFee_to_charge =
-                getARTHStabilityTokenOraclePrice()
-                    .mul(stabilityFee_in_ARTH)
-                    .div(1e18); // NOTE: this is might change asper ARTH's decimals and price precision.
-
-            _MAHA.burnFrom(msg.sender, stabilityFee_to_charge);
-
-            emit StabilityFeesCharged(msg.sender, stabilityFee_to_charge);
-        }
-
-        return;
+        return mintAmount;
     }
 
     // Redeem collateral. 100% collateral-backed
-    function redeem1t1ARTH(uint256 ARTH_amount, uint256 COLLATERAL_out_min)
+    function redeem1t1ARTH(uint256 arthAmount, uint256 collateralOutMin)
         external
+        override
         notRedeemPaused
     {
         require(
@@ -544,84 +503,83 @@ contract ARTHPool is AccessControl {
         );
 
         // Need to adjust for decimals of collateral
-        uint256 ARTH_amount_precision = ARTH_amount.div(10**_missingDeciamls);
-        uint256 collateral_needed =
+        uint256 arthAmountPrecision = arthAmount.div(10**_missingDeciamls);
+        uint256 collateralNeeded =
             ArthPoolLibrary.calcRedeem1t1ARTH(
                 getCollateralPrice(),
-                ARTH_amount_precision
+                arthAmountPrecision
             );
 
-        collateral_needed = (
-            collateral_needed.mul(uint256(1e6).sub(redemptionFee))
+        collateralNeeded = (
+            collateralNeeded.mul(uint256(1e6).sub(redemptionFee))
         )
             .div(1e6);
+
         require(
-            collateral_needed <=
+            collateralNeeded <=
                 _COLLATERAL.balanceOf(address(this)).sub(
                     unclaimedPoolCollateral
                 ),
-            'Not enough collateral in pool'
+            'ARTHPool: Not enough collateral in pool'
         );
         require(
-            COLLATERAL_out_min <= collateral_needed,
-            'Slippage limit reached'
+            collateralOutMin <= collateralNeeded,
+            'ARTHPool: Slippage limit reached'
         );
 
         redeemCollateralBalances[msg.sender] = redeemCollateralBalances[
             msg.sender
         ]
-            .add(collateral_needed);
-        unclaimedPoolCollateral = unclaimedPoolCollateral.add(
-            collateral_needed
-        );
+            .add(collateralNeeded);
+        unclaimedPoolCollateral = unclaimedPoolCollateral.add(collateralNeeded);
         lastRedeemed[msg.sender] = block.number;
 
-        _chargeStabilityFee(ARTH_amount);
+        _chargeStabilityFee(arthAmount);
 
         // Move all external functions to the end
-        _ARTH.poolBurnFrom(msg.sender, ARTH_amount);
+        _ARTH.poolBurnFrom(msg.sender, arthAmount);
     }
 
     // Will fail if fully collateralized or algorithmic
     // Redeem ARTH for collateral and ARTHX. > 0% and < 100% collateral-backed
     function redeemFractionalARTH(
-        uint256 ARTH_amount,
-        uint256 ARTHXOutMin,
-        uint256 COLLATERAL_out_min
-    ) external notRedeemPaused {
+        uint256 arthAmount,
+        uint256 arthxOutMin,
+        uint256 collateralOutMin
+    ) external override notRedeemPaused {
         uint256 arthxPrice = _arthController.arthxPrice();
         uint256 collateralRatioForRedeem = getCRForRedeem();
 
         require(
             collateralRatioForRedeem < _COLLATERAL_RATIO_MAX &&
                 collateralRatioForRedeem > 0,
-            'Collateral ratio needs to be between .000001 and .999999'
+            'ARTHPool: Collateral ratio needs to be between .000001 and .999999'
         );
-        uint256 col_price_usd = getCollateralPrice();
 
-        uint256 ARTH_amount_post_fee =
-            (ARTH_amount.mul(uint256(1e6).sub(redemptionFee))).div(
+        uint256 collateralPriceGMU = getCollateralPrice();
+        uint256 arthAmountPostFee =
+            (arthAmount.mul(uint256(1e6).sub(redemptionFee))).div(
                 _PRICE_PRECISION
             );
 
-        uint256 arthx_dollar_value_d18 =
-            ARTH_amount_post_fee.sub(
-                ARTH_amount_post_fee.mul(collateralRatioForRedeem).div(
+        uint256 arthxGMUValueD18 =
+            arthAmountPostFee.sub(
+                arthAmountPostFee.mul(collateralRatioForRedeem).div(
                     _PRICE_PRECISION
                 )
             );
         uint256 arthxAmount =
-            arthx_dollar_value_d18.mul(_PRICE_PRECISION).div(arthxPrice);
+            arthxGMUValueD18.mul(_PRICE_PRECISION).div(arthxPrice);
 
         // Need to adjust for decimals of collateral
-        uint256 ARTH_amount_precision =
-            ARTH_amount_post_fee.div(10**_missingDeciamls);
-        uint256 collateral_dollar_value =
-            ARTH_amount_precision.mul(collateralRatioForRedeem).div(
+        uint256 arthAmountPrecision =
+            arthAmountPostFee.div(10**_missingDeciamls);
+        uint256 collateralDollatValue =
+            arthAmountPrecision.mul(collateralRatioForRedeem).div(
                 _PRICE_PRECISION
             );
         uint256 collateralAmount =
-            collateral_dollar_value.mul(_PRICE_PRECISION).div(col_price_usd);
+            collateralDollatValue.mul(_PRICE_PRECISION).div(collateralPriceGMU);
 
         require(
             collateralAmount <=
@@ -631,10 +589,10 @@ contract ARTHPool is AccessControl {
             'Not enough collateral in pool'
         );
         require(
-            COLLATERAL_out_min <= collateralAmount,
+            collateralOutMin <= collateralAmount,
             'Slippage limit reached [collateral]'
         );
-        require(ARTHXOutMin <= arthxAmount, 'Slippage limit reached [ARTHX]');
+        require(arthxOutMin <= arthxAmount, 'Slippage limit reached [ARTHX]');
 
         redeemCollateralBalances[msg.sender] += collateralAmount;
         unclaimedPoolCollateral += collateralAmount;
@@ -644,31 +602,32 @@ contract ARTHPool is AccessControl {
 
         lastRedeemed[msg.sender] = block.number;
 
-        _chargeStabilityFee(ARTH_amount);
+        _chargeStabilityFee(arthAmount);
 
         // Move all external functions to the end
-        _ARTH.poolBurnFrom(msg.sender, ARTH_amount);
+        _ARTH.poolBurnFrom(msg.sender, arthAmount);
         _ARTHX.poolMint(address(this), arthxAmount);
     }
 
     // Redeem ARTH for ARTHX. 0% collateral-backed
-    function redeemAlgorithmicARTH(uint256 ARTH_amount, uint256 ARTHXOutMin)
+    function redeemAlgorithmicARTH(uint256 arthAmount, uint256 arthxOutMin)
         external
+        override
         notRedeemPaused
     {
         uint256 arthxPrice = _arthController.arthxPrice();
         uint256 collateralRatioForRedeem = getCRForRedeem();
 
         require(collateralRatioForRedeem == 0, 'Collateral ratio must be 0');
-        uint256 arthx_dollar_value_d18 = ARTH_amount;
+        uint256 arthxGMUValueD18 = arthAmount;
 
-        arthx_dollar_value_d18 = (
-            arthx_dollar_value_d18.mul(uint256(1e6).sub(redemptionFee))
+        arthxGMUValueD18 = (
+            arthxGMUValueD18.mul(uint256(1e6).sub(redemptionFee))
         )
             .div(_PRICE_PRECISION); // apply fees
 
         uint256 arthxAmount =
-            arthx_dollar_value_d18.mul(_PRICE_PRECISION).div(arthxPrice);
+            arthxGMUValueD18.mul(_PRICE_PRECISION).div(arthxPrice);
 
         redeemARTHXBalances[msg.sender] = redeemARTHXBalances[msg.sender].add(
             arthxAmount
@@ -677,27 +636,28 @@ contract ARTHPool is AccessControl {
 
         lastRedeemed[msg.sender] = block.number;
 
-        require(ARTHXOutMin <= arthxAmount, 'Slippage limit reached');
+        require(arthxOutMin <= arthxAmount, 'Slippage limit reached');
 
-        _chargeStabilityFee(ARTH_amount);
+        _chargeStabilityFee(arthAmount);
 
         // Move all external functions to the end
-        _ARTH.poolBurnFrom(msg.sender, ARTH_amount);
+        _ARTH.poolBurnFrom(msg.sender, arthAmount);
         _ARTHX.poolMint(address(this), arthxAmount);
     }
 
     // After a redemption happens, transfer the newly minted ARTHX and owed collateral from this pool
     // contract to the user. Redemption is split into two functions to prevent flash loans from being able
     // to take out ARTH/collateral from the system, use an AMM to trade the new price, and then mint back into the system.
-    function collectRedemption() external {
+    function collectRedemption() external override {
         require(
             (lastRedeemed[msg.sender].add(redemptionDelay)) <= block.number,
             'Must wait for redemptionDelay blocks before collecting redemption'
         );
-        bool sendARTHX = false;
-        bool sendCollateral = false;
+
         uint256 ARTHXAmount;
         uint256 CollateralAmount;
+        bool sendARTHX = false;
+        bool sendCollateral = false;
 
         // Use Checks-Effects-Interactions pattern
         if (redeemARTHXBalances[msg.sender] > 0) {
@@ -730,33 +690,34 @@ contract ARTHPool is AccessControl {
     // Thus, if the target collateral ratio is higher than the actual value of collateral, minters get ARTHX for adding collateral
     // This function simply rewards anyone that sends collateral to a pool with the same amount of ARTHX + the bonus rate
     // Anyone can call this function to recollateralize the protocol and take the extra ARTHX value from the bonus rate as an arb opportunity
-    function recollateralizeARTH(uint256 collateralAmount, uint256 ARTHXOutMin)
+    function recollateralizeARTH(uint256 collateralAmount, uint256 arthxOutMin)
         external
+        override
         returns (uint256)
     {
         require(recollateralizePaused == false, 'Recollateralize is paused');
-        uint256 collateralAmount_d18 =
-            collateralAmount * (10**_missingDeciamls);
+
+        uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
         uint256 arthxPrice = _arthController.arthxPrice();
-        uint256 arth_total_supply = _ARTH.totalSupply();
+        uint256 arthTotalSupply = _ARTH.totalSupply();
         uint256 collateralRatioForRecollateralize = getCRForRecollateralize();
         uint256 globalCollatValue = _arthController.globalCollateralValue();
 
-        (uint256 collateral_units, uint256 amount_to_recollat) =
+        (uint256 collateralUnits, uint256 amountToRecollateralize) =
             ArthPoolLibrary.calcRecollateralizeARTHInner(
-                collateralAmount_d18,
+                collateralAmountD18,
                 getCollateralPrice(),
                 globalCollatValue,
-                arth_total_supply,
+                arthTotalSupply,
                 collateralRatioForRecollateralize
             );
 
-        uint256 collateral_units_precision =
-            collateral_units.div(10**_missingDeciamls);
+        uint256 collateralUnitsPrecision =
+            collateralUnits.div(10**_missingDeciamls);
 
         // NEED to make sure that recollatFee is less than 1e6.
-        uint256 arthx_paid_back =
-            amount_to_recollat
+        uint256 arthxPaidBack =
+            amountToRecollateralize
                 .mul(
                 uint256(1e6)
                     .add(_recollateralizeDiscountCruve.getCurvedDiscount())
@@ -764,113 +725,178 @@ contract ARTHPool is AccessControl {
             )
                 .div(arthxPrice);
 
-        require(ARTHXOutMin <= arthx_paid_back, 'Slippage limit reached');
-
-        // TODO: check balance of the user; to avoid forcedao type bugs - done
+        require(arthxOutMin <= arthxPaidBack, 'Slippage limit reached');
         require(
-            _COLLATERAL.balanceOf(msg.sender) >= collateral_units_precision,
+            _COLLATERAL.balanceOf(msg.sender) >= collateralUnitsPrecision,
             'ArthPool: balance < required'
         );
         _COLLATERAL.transferFrom(
             msg.sender,
             address(this),
-            collateral_units_precision
+            collateralUnitsPrecision
         );
 
-        _ARTHX.poolMint(msg.sender, arthx_paid_back);
-        return arthx_paid_back;
+        _ARTHX.poolMint(msg.sender, arthxPaidBack);
+
+        return arthxPaidBack;
     }
 
     // Function can be called by an ARTHX holder to have the protocol buy back ARTHX with excess collateral value from a desired collateral pool
     // This can also happen if the collateral ratio > 1
-    function buyBackARTHX(uint256 arthxAmount, uint256 COLLATERAL_out_min)
+    function buyBackARTHX(uint256 arthxAmount, uint256 collateralOutMin)
         external
+        override
     {
         require(buyBackPaused == false, 'Buyback is paused');
+
         uint256 arthxPrice = _arthController.arthxPrice();
 
-        ArthPoolLibrary.BuybackARTHX_Params memory input_params =
-            ArthPoolLibrary.BuybackARTHX_Params(
-                availableExcessCollatDV(),
+        ArthPoolLibrary.BuybackARTHXParams memory inputParams =
+            ArthPoolLibrary.BuybackARTHXParams(
+                getAvailableExcessCollateralDV(),
                 arthxPrice,
                 getCollateralPrice(),
                 arthxAmount
             );
 
-        uint256 collateral_equivalent_d18 =
-            (ArthPoolLibrary.calcBuyBackARTHX(input_params))
+        uint256 collateralEquivalentD18 =
+            (ArthPoolLibrary.calcBuyBackARTHX(inputParams))
                 .mul(uint256(1e6).sub(buybackFee))
                 .div(1e6);
-        uint256 collateral_precision =
-            collateral_equivalent_d18.div(10**_missingDeciamls);
+        uint256 collateralPrecision =
+            collateralEquivalentD18.div(10**_missingDeciamls);
 
         require(
-            COLLATERAL_out_min <= collateral_precision,
+            collateralOutMin <= collateralPrecision,
             'Slippage limit reached'
         );
+
         // Give the sender their desired collateral and burn the ARTHX
         _ARTHX.poolBurnFrom(msg.sender, arthxAmount);
-        _COLLATERAL.transfer(msg.sender, collateral_precision);
+        _COLLATERAL.transfer(msg.sender, collateralPrecision);
     }
 
-    /* ========== RESTRICTED FUNCTIONS ========== */
+    /**
+     * Public.
+     */
 
-    function toggleMinting() external {
-        require(hasRole(_MINT_PAUSER, msg.sender));
-        mintPaused = !mintPaused;
+    function getARTHMAHAPrice() public view returns (uint256) {
+        return _ARTHMAHAOracle.getPrice();
     }
 
-    function toggleRedeeming() external {
-        require(hasRole(_REDEEM_PAUSER, msg.sender));
-        redeemPaused = !redeemPaused;
+    function getGlobalCR() public view override returns (uint256) {
+        return _arthController.globalCollateralRatio();
     }
 
-    function toggleRecollateralize() external {
-        require(hasRole(_RECOLLATERALIZE_PAUSER, msg.sender));
-        recollateralizePaused = !recollateralizePaused;
+    function getCRForMint() public view override returns (uint256) {
+        if (useGlobalCRForMint) return getGlobalCR();
+
+        return mintCollateralRatio;
     }
 
-    function toggleBuyBack() external {
-        require(hasRole(_BUYBACK_PAUSER, msg.sender));
-        buyBackPaused = !buyBackPaused;
+    function getCRForRedeem() public view override returns (uint256) {
+        if (useGlobalCRForRedeem) return getGlobalCR();
+
+        return redeemCollateralRatio;
     }
 
-    function toggleCollateralPrice(uint256 _new_price) external {
-        require(hasRole(_COLLATERAL_PRICE_PAUSER, msg.sender));
-        // If pausing, set paused price; else if unpausing, clear pausedPrice
-        if (collateralPricePaused == false) {
-            pausedPrice = _new_price;
-        } else {
-            pausedPrice = 0;
+    function getCRForRecollateralize() public view override returns (uint256) {
+        if (useGlobalCRForRecollateralize) return getGlobalCR();
+
+        return recollateralizeCollateralRatio;
+    }
+
+    function getCollateralGMUBalance() public view override returns (uint256) {
+        if (collateralPricePaused) {
+            return
+                (
+                    _COLLATERAL.balanceOf(address(this)).sub(
+                        unclaimedPoolCollateral
+                    )
+                )
+                    .mul(10**_missingDeciamls)
+                    .mul(pausedPrice)
+                    .div(_PRICE_PRECISION);
         }
-        collateralPricePaused = !collateralPricePaused;
+
+        uint256 ethGMUPrice = _arthController.getETHGMUPrice();
+        uint256 ethCollateralPrice =
+            _collateralETHOracle.consult(
+                _wethAddress,
+                _PRICE_PRECISION * (10**_missingDeciamls)
+            );
+
+        uint256 collateralGMUPrice =
+            ethGMUPrice.mul(_PRICE_PRECISION).div(ethCollateralPrice);
+
+        return
+            (_COLLATERAL.balanceOf(address(this)).sub(unclaimedPoolCollateral))
+                .mul(10**_missingDeciamls)
+                .mul(collateralGMUPrice)
+                .div(_PRICE_PRECISION);
     }
 
-    // Combined into one function due to 24KiB contract memory limit
-    function setPoolParameters(
-        uint256 new_ceiling,
-        uint256 new_redemptionDelay,
-        uint256 new_mint_fee,
-        uint256 new_redeem_fee,
-        uint256 new_buybackFee,
-        uint256 new_recollatFee
-    ) external onlyByOwnerOrGovernance {
-        poolCeiling = new_ceiling;
-        redemptionDelay = new_redemptionDelay;
-        mintingFee = new_mint_fee;
-        redemptionFee = new_redeem_fee;
-        buybackFee = new_buybackFee;
-        recollatFee = new_recollatFee;
+    // Returns the value of excess collateral held in this Arth pool, compared to what is needed to maintain the global collateral ratio
+    function getAvailableExcessCollateralDV() public view returns (uint256) {
+        uint256 totalSupply = _ARTH.totalSupply();
+        uint256 globalCollateralRatio = getGlobalCR();
+        uint256 globalCollatValue = _arthController.globalCollateralValue();
+
+        // Check if overcollateralized contract with CR > 1.
+        if (globalCollateralRatio > _COLLATERAL_RATIO_PRECISION)
+            globalCollateralRatio = _COLLATERAL_RATIO_PRECISION;
+
+        // Calculates collateral needed to back each 1 ARTH with $1 of collateral at current CR.
+        uint256 reqCollateralGMUValue =
+            (totalSupply.mul(globalCollateralRatio)).div(
+                _COLLATERAL_RATIO_PRECISION
+            );
+
+        // TODO: add a 10-20% buffer for volatile collaterals.
+        if (globalCollatValue > reqCollateralGMUValue) {
+            uint256 excessCollateral =
+                globalCollatValue.sub(reqCollateralGMUValue);
+            uint256 bufferValue =
+                excessCollateral.mul(buybackCollateralBuffer).div(100);
+
+            return excessCollateral.sub(bufferValue);
+        }
+
+        return 0;
     }
 
-    function setTimelock(address new_timelock)
-        external
-        onlyByOwnerOrGovernance
-    {
-        _timelockAddress = new_timelock;
+    function getCollateralPrice() public view override returns (uint256) {
+        if (collateralPricePaused) return pausedPrice;
+
+        uint256 ethGMUPrice = _arthController.ethGMUPrice();
+
+        return
+            ethGMUPrice.mul(_PRICE_PRECISION).div(
+                _collateralETHOracle.consult(
+                    _wethAddress,
+                    _PRICE_PRECISION * (10**_missingDeciamls)
+                )
+            );
     }
 
-    function setOwner(address __ownerAddress) external onlyByOwnerOrGovernance {
-        _ownerAddress = __ownerAddress;
+    /**
+     * Internal.
+     */
+
+    function _chargeStabilityFee(uint256 amount) internal {
+        require(amount > 0, 'ArthPool: amount = 0');
+
+        if (stabilityFee > 0) {
+            uint256 stabilityFeeInARTH = amount.mul(stabilityFee).div(100);
+
+            uint256 stabilityFeeInMAHA =
+                getARTHMAHAPrice().mul(stabilityFeeInARTH).div(1e18); // NOTE: this is might change asper ARTH's decimals and price precision.
+
+            _MAHA.burnFrom(msg.sender, stabilityFeeInMAHA);
+
+            emit StabilityFeesCharged(msg.sender, stabilityFeeInMAHA);
+        }
+
+        return;
     }
 }

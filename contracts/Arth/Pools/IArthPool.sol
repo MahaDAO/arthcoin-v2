@@ -3,24 +3,30 @@
 pragma solidity ^0.8.0;
 
 interface IARTHPool {
-    function mintingFee() external returns (uint256);
+    function repay(uint256 _amount) external;
 
-    function redemptionFee() external returns (uint256);
+    function borrow(uint256 _amount) external;
 
-    function buybackFee() external returns (uint256);
+    function setStabilityFee(uint256 percent) external;
 
-    function recollatFee() external returns (uint256);
+    function setRecollateralizeCollateralRatio(uint256 val) external;
 
-    function collatDollarBalance() external view returns (uint256);
+    function setRedeemCollateralRatio(uint256 val) external;
 
-    function availableExcessCollatDV() external returns (uint256);
+    function setMintCollateralRatio(uint256 val) external;
 
-    function getCollateralPrice() external returns (uint256);
+    function toggleUseGlobalCRForRecollateralize(bool flag) external;
+
+    function toggleUseGlobalCRForRedeem(bool flag) external;
 
     function setCollatETHOracle(
-        address _collateral_weth_oracle_address,
-        address _weth_address
+        address _collateralWETHOracleAddress,
+        address _wethAddress
     ) external;
+
+    function toggleUseGlobalCRForMint(bool flag) external;
+
+    function setBuyBackCollateralBuffer(uint256 percent) external;
 
     function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
         external
@@ -80,4 +86,28 @@ interface IARTHPool {
     function setTimelock(address new_timelock) external;
 
     function setOwner(address _ownerAddress) external;
+
+    function getGlobalCR() external view returns (uint256);
+
+    function getCRForMint() external view returns (uint256);
+
+    function getCRForRedeem() external view returns (uint256);
+
+    function getCRForRecollateralize() external view returns (uint256);
+
+    function mintingFee() external returns (uint256);
+
+    function redemptionFee() external returns (uint256);
+
+    function buybackFee() external returns (uint256);
+
+    function recollatFee() external returns (uint256);
+
+    function getCollateralGMUBalance() external view returns (uint256);
+
+    function getAvailableExcessCollateralDV() external view returns (uint256);
+
+    function getCollateralPrice() external view returns (uint256);
+
+    function getARTHMAHAPrice() external view returns (uint256);
 }

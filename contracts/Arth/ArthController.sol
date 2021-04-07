@@ -358,7 +358,7 @@ contract ARTHController is AccessControl, IARTHController {
             // Exclude null addresses.
             if (arthPoolsArray[i] != address(0)) {
                 totalCollateralValueD18 = totalCollateralValueD18.add(
-                    IArthPool(arthPoolsArray[i]).collatDollarBalance()
+                    IArthPool(arthPoolsArray[i]).getCollateralGMUBalance()
                 );
             }
         }

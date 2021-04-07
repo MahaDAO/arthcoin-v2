@@ -133,7 +133,7 @@ contract CurveAMO is AccessControl {
         // Should ONLY be used externally, because it may fail if any one of the functions below fail
 
         // Get collateral info
-        uint256[4] memory collat_info = collatDollarBalanceExtended();
+        uint256[4] memory collat_info = getCollateralGMUBalanceExtended();
 
         uint256 arth_withdrawable =
             (collat_info[0])
@@ -162,7 +162,7 @@ contract CurveAMO is AccessControl {
         allocations[8] = sum_crv; // Total CRV possessed in various forms
     }
 
-    function collatDollarBalanceExtended()
+    function getCollateralGMUBalanceExtended()
         public
         view
         returns (uint256[4] memory return_arr)
@@ -207,8 +207,8 @@ contract CurveAMO is AccessControl {
         return [lp_owned, arth3crv_supply, _3pool_withdrawable, usdc_owned];
     }
 
-    function collatDollarBalance() public view returns (uint256) {
-        uint256[4] memory collat_info = collatDollarBalanceExtended();
+    function getCollateralGMUBalance() public view returns (uint256) {
+        uint256[4] memory collat_info = getCollateralGMUBalanceExtended();
         return (collat_info[3] * (10**missing_decimals));
     }
 

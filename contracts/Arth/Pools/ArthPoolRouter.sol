@@ -2,48 +2,64 @@
 
 pragma solidity ^0.8.0;
 
-import '../../Arth/Arth.sol';
-import './IArthPool.sol';
+import './IARTH.sol';
+import './IARTHPool.sol';
 import '../../ARTHX/ARTHX.sol';
-import '../../ERC20/ERC20.sol';
+import '../../ERC20/IERC20.sol';
 import '../../Oracle/ISimpleOracle.sol';
 import '../../Staking/StakingRewards.sol';
 
 contract ArthPoolRouter {
-    IArthPool public pool;
-    ERC20 private collateral;
-    ARTHShares private ARTHX;
-    ARTHStablecoin private ARTH;
-    StakingRewards private stakingPoolARTH;
-    StakingRewards private stakingPoolARTHX;
+    /**
+     * State variables.
+     */
 
+    IARTH _ARTH;
+    IARTHPool private _POOL;
+    IERC20 private _COLLATEAL;
+    ARTHShares private _ARTHX;
+    StakingRewards private _arthStakingPool;
+    StakingRewards private _arthxStakingPool;
+
+    /**
+     * Constructor.
+     */
     constructor(
-        IArthPool _pool,
-        ARTHShares _ARTHX,
-        ARTHStablecoin _ARTH
+        IArthPool __POOL,
+        ARTHShares __ARTHX,
+        ARTHStablecoin __ARTH,
+        StakingRewards __arthStakingPool,
+        StakingRewards __arthxStakingPool
     ) {
-        pool = _pool;
-        ARTH = _ARTH;
-        ARTHX = _ARTHX;
+        _POOL = __POOL;
+        _ARTH = __ARTH;
+        _ARTHX = __ARTHX;
+
+        _arthStakingPool = __arthStakingPool;
+        _arthxStakingPool = __arthxStakingPool;
     }
 
+    /**
+     * Public.
+     */
     function mint1t1ARTHAndStake(
         uint256 collateralAmount,
-        uint256 ARTHOutMin,
+        uint256 arthOutMin,
         uint256 lockDuration
     ) public {
-        collateral.transferFrom(msg.sender, address(this), collateralAmount);
-        uint256 arthOut = pool.mint1t1ARTH(collateralAmount, ARTHOutMin);
+        _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
+
+        uint256 arthOut = _POOL.mint1t1ARTH(collateralAmount, arthOutMin);
         ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
 
         if (lockDuration != 0)
-            stakingPoolARTH.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else stakingPoolARTH.stakeFor(msg.sender, arthOut);
+            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
+        else _arthStakingPool.stakeFor(msg.sender, arthOut);
     }
 
     function mint1t1ARTHAndStakeWithPermit(
         uint256 collateralAmount,
-        uint256 ARTHOutMin,
+        uint256 arthOutMin,
         uint256 lockDuration,
         uint8 v,
         bytes32 r,
@@ -59,11 +75,11 @@ contract ArthPoolRouter {
             s
         );
 
-        uint256 arthOut = pool.mint1t1ARTH(collateralAmount, ARTHOutMin);
+        uint256 arthOut = _POOL.mint1t1ARTH(collateralAmount, arthOutMin);
 
         if (lockDuration != 0)
-            stakingPoolARTH.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else stakingPoolARTH.stakeFor(msg.sender, arthOut);
+            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
+        else _arthStakingPool.stakeFor(msg.sender, arthOut);
     }
 
     function mintAlgorithmicARTHAndStake(
@@ -72,13 +88,13 @@ contract ArthPoolRouter {
         uint256 lockDuration
     ) external {
         ARTHX.transferFrom(msg.sender, address(this), arthxAmountD18);
-        uint256 arthOut = pool.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
+        uint256 arthOut = _POOL.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
         ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
 
         if (lockDuration != 0) {
-            stakingPoolARTH.stakeLockedFor(msg.sender, arthOut, lockDuration);
+            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
         } else {
-            stakingPoolARTH.stakeFor(msg.sender, arthOut);
+            _arthStakingPool.stakeFor(msg.sender, arthOut);
         }
     }
 
@@ -100,34 +116,35 @@ contract ArthPoolRouter {
             s
         );
 
-        uint256 arthOut = pool.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
+        uint256 arthOut = _POOL.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
 
         if (lockDuration != 0)
-            stakingPoolARTH.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else stakingPoolARTH.stakeFor(msg.sender, arthOut);
+            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
+        else _arthStakingPool.stakeFor(msg.sender, arthOut);
     }
 
     function mintFractionalARTHAndStake(
         uint256 collateralAmount,
         uint256 arthxAmount,
-        uint256 ARTHOutMin,
+        uint256 arthOutMin,
         uint256 lockDuration
     ) external {
-        collateral.transferFrom(msg.sender, address(this), collateralAmount);
+        _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
         ARTHX.transferFrom(msg.sender, address(this), arthxAmount);
+
         uint256 arthOut =
-            pool.mintFractionalARTH(collateralAmount, arthxAmount, ARTHOutMin);
+            _POOL.mintFractionalARTH(collateralAmount, arthxAmount, arthOutMin);
         ARTH.approve(address(stakingPoolARTH), uint256(arthOut));
 
         if (lockDuration != 0)
-            stakingPoolARTH.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else stakingPoolARTH.stakeFor(msg.sender, arthOut);
+            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
+        else _arthStakingPool.stakeFor(msg.sender, arthOut);
     }
 
     function mintFractionalARTHAndStakeWithPermit(
         uint256 collateralAmount,
         uint256 arthxAmount,
-        uint256 ARTHOutMin,
+        uint256 arthOutMin,
         uint256 lockDuration,
         uint8 v,
         bytes32 r,
@@ -144,11 +161,11 @@ contract ArthPoolRouter {
         );
 
         uint256 arthOut =
-            pool.mintFractionalARTH(collateralAmount, arthxAmount, ARTHOutMin);
+            _POOL.mintFractionalARTH(collateralAmount, arthxAmount, arthOutMin);
 
         if (lockDuration != 0)
-            stakingPoolARTH.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else stakingPoolARTH.stakeFor(msg.sender, arthOut);
+            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
+        else _arthStakingPool.stakeFor(msg.sender, arthOut);
     }
 
     function recollateralizeARTHAndStake(
@@ -156,14 +173,18 @@ contract ArthPoolRouter {
         uint256 ARTHXOutMin,
         uint256 lockDuration
     ) external {
-        collateral.transferFrom(msg.sender, address(this), collateralAmount);
+        _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
         uint256 arthxOut =
-            pool.recollateralizeARTH(collateralAmount, ARTHXOutMin);
+            _POOL.recollateralizeARTH(collateralAmount, ARTHXOutMin);
         ARTHX.approve(address(stakingPoolARTHX), uint256(arthxOut));
 
         if (lockDuration != 0)
-            stakingPoolARTHX.stakeLockedFor(msg.sender, arthxOut, lockDuration);
-        else stakingPoolARTHX.stakeFor(msg.sender, arthxOut);
+            _arthxStakingPool.stakeLockedFor(
+                msg.sender,
+                arthxOut,
+                lockDuration
+            );
+        else _arthxStakingPool.stakeFor(msg.sender, arthxOut);
     }
 
     function recollateralizeARTHAndStakeWithPermit(
@@ -185,10 +206,14 @@ contract ArthPoolRouter {
         );
 
         uint256 arthxOut =
-            pool.recollateralizeARTH(collateralAmount, ARTHXOutMin);
+            _POOL.recollateralizeARTH(collateralAmount, ARTHXOutMin);
 
         if (lockDuration != 0)
-            stakingPoolARTHX.stakeLockedFor(msg.sender, arthxOut, lockDuration);
-        else stakingPoolARTHX.stakeFor(msg.sender, arthxOut);
+            _arthxStakingPool.stakeLockedFor(
+                msg.sender,
+                arthxOut,
+                lockDuration
+            );
+        else _arthxStakingPool.stakeFor(msg.sender, arthxOut);
     }
 }

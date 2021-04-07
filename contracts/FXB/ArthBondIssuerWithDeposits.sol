@@ -123,7 +123,7 @@ contract ArthBondIssuerWithDeposits is AccessControl {
     // }
     // /* ========== VIEWS ========== */
     // // Needed for the Arth contract to function
-    // function collatDollarBalance() external view returns (uint256) {
+    // function getCollateralGMUBalance() external view returns (uint256) {
     //     return 1; // 1e0
     // }
     // function depositsOf(address account) external view returns (BondDeposit[] memory) {

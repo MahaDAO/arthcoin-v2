@@ -198,7 +198,7 @@ contract ArthBondIssuer is AccessControl {
     }
 
     // Needed for the Arth contract to function without bricking
-    function collatDollarBalance()
+    function getCollateralGMUBalance()
         external
         pure
         returns (uint256 dummy_dollar_balance)
