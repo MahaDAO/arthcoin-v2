@@ -8,6 +8,7 @@ import '../Oracle/IChainlinkOracle.sol';
 import '../Math/SafeMath.sol';
 import './BondingCurve.sol';
 import {IARTH} from '../Arth/IARTH.sol';
+import '../Arth/Pools/IARTHPool.sol'
 
 contract Genesis is ERC20 {
     using SafeMath for uint256;
@@ -50,7 +51,7 @@ contract Genesis is ERC20 {
     }
 
     function mintGenesisToken(uint256 _collateralAmount) public payable {
-        uint256 eth_2_usd_price =
+        uint256 ethUsdPrice =
             uint256(ethGMUPricer.getLatestPrice()).mul(PRICE_PRECISION).div(
                 uint256(10)**eth_usd_pricer_decimals
             );
@@ -58,7 +59,7 @@ contract Genesis is ERC20 {
         require(msg.value == _collateralAmount, 'Genesis: value mismatch');
         require(_collateralAmount != 0, 'Genesis: no value sent');
 
-        uint256 EthEvaluation = _collateralAmount.mul(eth_2_usd_price);
+        uint256 EthEvaluation = _collateralAmount.mul(ethUsdPrice);
         uint256 _ethRaised = ethRaised.add(_collateralAmount);
         uint256 genesisPrice =
             bondingCurve._getGenesisPrice(_ethRaised, hardcap);
@@ -92,6 +93,10 @@ contract Genesis is ERC20 {
         _burn(msg.sender, _genesisTokenAmount);
 
         arth.poolMint(msg.sender, _genesisTokenAmount);
+    }
+
+    function distributeEthToPool() public {
+        uint256 ethAmount = hardcap.mul(90).div(100);
     }
 
     receive() external payable {}
