@@ -3,18 +3,17 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './IMinter.sol';
-import '../ARTH/IARTH.sol';
-import '../ERC20/IERC20.sol';
-import '../ARTHX/IARTHX.sol';
-import '../Math/SafeMath.sol';
-import '../Math/SafeMath.sol';
-import './ILiquidityGauge.sol';
-import './IStableSwap3Pool.sol';
-import '../ARTH/IARTHController.sol';
-import '../ARTH/Pools/IARTHPool.sol';
-import './IMetaImplementationUSD.sol';
-import '../Governance/AccessControl.sol';
+import {IMinter} from './IMinter.sol';
+import {IARTH} from '../ARTH/IARTH.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
+import {IARTHX} from '../ARTHX/IARTHX.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {IARTHPool} from '../ARTH/Pools/IARTHPool.sol';
+import {ILiquidityGauge} from './ILiquidityGauge.sol';
+import {IStableSwap3Pool} from './IStableSwap3Pool.sol';
+import {IARTHController} from '../ARTH/IARTHController.sol';
+import {AccessControl} from '../Governance/AccessControl.sol';
+import {IMetaImplementationUSD} from './IMetaImplementationUSD.sol';
 
 /**
  * @title CurveAMO.

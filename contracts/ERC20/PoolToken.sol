@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import '../Math/SafeMath.sol';
 import {ERC20} from './ERC20.sol';
 import {IERC20} from './IERC20.sol';
 import {Math} from '../Math/Math.sol';
-import '../Governance/AccessControl.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {AccessControl} from '../Governance/AccessControl.sol';
 
 /**
  * @title  PoolToken

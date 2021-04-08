@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './ERC20Custom.sol';
-import './IAnyswapV4Token.sol';
-import '../Governance/AccessControl.sol';
+import {ERC20Custom} from './ERC20Custom.sol';
+import {IAnyswapV4Token} from './IAnyswapV4Token.sol';
+import {AccessControl} from '../Governance/AccessControl.sol';
 
 interface IApprovalReceiver {
     function onTokenApproval(

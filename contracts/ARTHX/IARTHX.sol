@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../ERC20/IERC20.sol';
-import '../ERC20/IAnyswapV4Token.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
+import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
 
 /**
  * @title  ARTHShares.
