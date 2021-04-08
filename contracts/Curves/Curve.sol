@@ -10,71 +10,51 @@ abstract contract Curve is ICurve, Ownable {
      * Events.
      */
 
-    event MinSupplyChanged(
-        address indexed operator,
-        uint256 _old,
-        uint256 _new
-    );
+    event MinXChanged(address indexed operator, uint256 old, uint256 curr);
 
-    event MaxSupplyChanged(
-        address indexed operator,
-        uint256 _old,
-        uint256 _new
-    );
+    event MaxXChanged(address indexed operator, uint256 old, uint256 curr);
 
-    event MinCeilingChanged(
-        address indexed operator,
-        uint256 _old,
-        uint256 _new
-    );
+    event MinYChanged(address indexed operator, uint256 old, uint256 curr);
 
-    event MaxCeilingChanged(
-        address indexed operator,
-        uint256 _old,
-        uint256 _new
-    );
+    event MaxYChanged(address indexed operator, uint256 old, uint256 curr);
 
     /**
      * State variables.
      */
 
-    uint256 public override minSupply;
-    uint256 public override maxSupply;
-    uint256 public override minCeiling;
-    uint256 public override maxCeiling;
+    uint256 public override minX;
+    uint256 public override maxX;
+    uint256 public override minY;
+    uint256 public override maxY;
+    uint256 public override fixedY; // Fixed Y(Price in some graphs) in case needed.
 
     /**
      * Public.
      */
 
-    function setMinSupply(uint256 _newMinSupply) public virtual onlyOwner {
-        uint256 oldMinSupply = minSupply;
-        minSupply = _newMinSupply;
-        emit MinSupplyChanged(msg.sender, oldMinSupply, _newMinSupply);
+    function setMinX(uint256 x) public virtual onlyOwner {
+        uint256 oldMinX = minX;
+        minX = x;
+        emit MinXChanged(msg.sender, oldMinX, minX);
     }
 
-    function setMaxSupply(uint256 _newMaxSupply) public virtual onlyOwner {
-        uint256 oldMaxSupply = maxSupply;
-        maxSupply = _newMaxSupply;
-        emit MaxSupplyChanged(msg.sender, oldMaxSupply, _newMaxSupply);
+    function setMaxX(uint256 x) public virtual onlyOwner {
+        uint256 oldMaxSupply = maxX;
+        maxX = x;
+        emit MaxXChanged(msg.sender, oldMaxSupply, maxX);
     }
 
-    function setMinCeiling(uint256 _newMinCeiling) public virtual onlyOwner {
-        uint256 oldMinCeiling = _newMinCeiling;
-        minCeiling = _newMinCeiling;
-        emit MinCeilingChanged(msg.sender, oldMinCeiling, _newMinCeiling);
+    function setMinY(uint256 y) public virtual onlyOwner {
+        uint256 oldMinY = minY;
+        minY = y;
+        emit MinYChanged(msg.sender, oldMinY, minY);
     }
 
-    function setMaxCeiling(uint256 _newMaxCeiling) public virtual onlyOwner {
-        uint256 oldMaxCeiling = _newMaxCeiling;
-        maxCeiling = _newMaxCeiling;
-        emit MaxCeilingChanged(msg.sender, oldMaxCeiling, _newMaxCeiling);
+    function setMaxY(uint256 y) public virtual onlyOwner {
+        uint256 oldMaxY = maxY;
+        maxY = y;
+        emit MaxYChanged(msg.sender, oldMaxY, maxY);
     }
 
-    function calcCeiling(uint256 _supply)
-        external
-        view
-        virtual
-        override
-        returns (uint256);
+    function getY(uint256 x) external view virtual override returns (uint256);
 }

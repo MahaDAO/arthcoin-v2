@@ -6,9 +6,9 @@ pragma experimental ABIEncoderV2;
 import {IARTH} from '../Arth/IARTH.sol';
 import {ERC20} from '../ERC20/ERC20.sol';
 import {IARTHX} from '../ARTHX/IARTHX.sol';
+import {ICurve} from '../Curves/ICurve.sol';
 import {Ownable} from '../Common/Ownable.sol';
 import {SafeMath} from '../Math/SafeMath.sol';
-import {IBondingCurve} from './IBondingCurve.sol';
 import {IERC20Mintable} from '../ERC20/IERC20Mintable.sol';
 
 contract Genesis is ERC20, Ownable {
@@ -20,8 +20,8 @@ contract Genesis is ERC20, Ownable {
 
     IARTH private _ARTH;
     IARTHX private _ARTHX;
+    ICurve private _CURVE;
     IERC20Mintable private _MAHA;
-    IBondingCurve private _CURVE;
 
     /**
      * State variables.
@@ -40,6 +40,7 @@ contract Genesis is ERC20, Ownable {
     address payable public arthETHPoolAddress;
     address payable public arthETHPairAddress;
     address payable public arthxETHPairAddress;
+
     /**
      * Events.
      */
@@ -87,12 +88,12 @@ contract Genesis is ERC20, Ownable {
      * Constructor.
      */
     constructor(
-        uint256 _startTime,
-        uint256 _duration,
         IARTH __ARTH,
         IARTHX __ARTHX,
+        ICurve __CURVE,
         IERC20Mintable __MAHA,
-        IBondingCurve __CURVE
+        uint256 _startTime,
+        uint256 _duration
     ) ERC20('ARTH Gen', 'ARTH-GEN') {
         duration = _duration;
         startTime = _startTime;
@@ -161,7 +162,7 @@ contract Genesis is ERC20, Ownable {
         arthxETHPairAddress = pairAddress;
     }
 
-    function setCurve(IBondingCurve curve) external onlyOwner {
+    function setCurve(ICurve curve) external onlyOwner {
         _CURVE = curve;
     }
 
@@ -202,16 +203,16 @@ contract Genesis is ERC20, Ownable {
 
         (bool poolSuccess, ) =
             arthETHPoolAddress.call{value: arthETHPoolAmount}('');
-        require(poolSuccess, 'Genesis: distribut pool failed');
+        require(poolSuccess, 'Genesis: distribute pool failed');
 
         (bool arthPairSuccess, ) =
             arthETHPairAddress.call{value: arthETHPairAmount}('');
-        require(arthPairSuccess, 'Genesis: distribut ARTH pair failed');
+        require(arthPairSuccess, 'Genesis: distribute ARTH pair failed');
         _ARTH.poolMint(arthETHPairAddress, arthETHPairAmount);
 
         (bool arthxPairSuccess, ) =
             arthxETHPairAddress.call{value: arthxETHPairAmount}('');
-        require(arthxPairSuccess, 'Genesis: distribut ARTHX pair failed');
+        require(arthxPairSuccess, 'Genesis: distribute ARTHX pair failed');
         _ARTHX.poolMint(arthxETHPairAddress, arthxETHPairAmount);
 
         emit Distribute(arthETHPoolAddress, arthETHPoolAmount, 0);
@@ -241,10 +242,9 @@ contract Genesis is ERC20, Ownable {
     }
 
     function getCurvePrice() public view returns (uint256) {
-        if (getIsRaisedBelowSoftCap())
-            return _CURVE.getCurvePrice(getPercentRaised());
+        if (getIsRaisedBelowSoftCap()) return _CURVE.getY(getPercentRaised());
 
-        return _CURVE.fixedPrice();
+        return _CURVE.fixedY();
     }
 
     /**
@@ -267,6 +267,7 @@ contract Genesis is ERC20, Ownable {
         _ARTH.poolMint(msg.sender, amount);
 
         // TODO: distribute MAHA.
+        // HOW?
         uint256 mahaAmount = 0;
 
         _MAHA.mint(msg.sender, mahaAmount);

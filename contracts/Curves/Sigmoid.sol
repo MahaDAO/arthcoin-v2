@@ -17,15 +17,15 @@ contract Sigmoid is Curve {
      */
 
     constructor(
-        uint256 _minSupply,
-        uint256 _maxSupply,
-        uint256 _minCeiling,
-        uint256 _maxCeiling
+        uint256 _minX,
+        uint256 _maxX,
+        uint256 _minY,
+        uint256 _maxY
     ) {
-        minSupply = _minSupply;
-        maxSupply = _maxSupply;
-        minCeiling = _minCeiling;
-        maxCeiling = _maxCeiling;
+        minX = _minX;
+        maxX = _maxX;
+        minY = _minY;
+        maxY = _maxY;
 
         slots[0] = 1000000000000000000;
         slots[1] = 994907149075715143;
@@ -56,52 +56,46 @@ contract Sigmoid is Curve {
      * Public.
      */
 
-    function setMinSupply(uint256 _newMinSupply) public override onlyOwner {
-        super.setMinSupply(_newMinSupply);
+    function setMinX(uint256 x) public override onlyOwner {
+        super.setMinX(x);
     }
 
-    function setMaxSupply(uint256 _newMaxSupply) public override onlyOwner {
-        super.setMaxSupply(_newMaxSupply);
+    function setMaxX(uint256 x) public override onlyOwner {
+        super.setMaxX(x);
     }
 
-    function setMinCeiling(uint256 _newMinCeiling) public override onlyOwner {
-        super.setMinCeiling(_newMinCeiling);
+    function setMinY(uint256 y) public override onlyOwner {
+        super.setMinY(y);
     }
 
-    function setMaxCeiling(uint256 _newMaxCeiling) public override onlyOwner {
-        super.setMaxCeiling(_newMaxCeiling);
+    function setMaxY(uint256 y) public override onlyOwner {
+        super.setMaxY(y);
     }
 
-    function calcCeiling(uint256 _supply)
-        public
-        view
-        override
-        returns (uint256)
-    {
-        if (_supply <= minSupply) {
-            return maxCeiling;
-        }
-        if (_supply >= maxSupply) {
-            return minCeiling;
+    function getY(uint256 x) public view override returns (uint256) {
+        // if (x <= minX) {
+        //     return maxY;
+        // }
+
+        // Fail safe to return after maxX.
+        if (x >= maxX) {
+            return maxY;
         }
 
-        uint256 slotWidth = maxSupply.sub(minSupply).div(slots.length);
-        uint256 xa = _supply.sub(minSupply).div(slotWidth);
+        uint256 slotWidth = maxX.sub(minX).div(slots.length);
+        uint256 xa = x.sub(minX).div(slotWidth);
         uint256 xb = Math.min(xa.add(1), slots.length.sub(1));
 
         uint256 slope = slots[xa].sub(slots[xb]).mul(1e18).div(slotWidth);
         uint256 wy = slots[xa].add(slope.mul(slotWidth.mul(xa)).div(1e18));
 
         uint256 percentage = 0;
-        if (wy > slope.mul(_supply).div(1e18)) {
-            percentage = wy.sub(slope.mul(_supply).div(1e18));
+        if (wy > slope.mul(x).div(1e18)) {
+            percentage = wy.sub(slope.mul(x).div(1e18));
         } else {
-            percentage = slope.mul(_supply).div(1e18).sub(wy);
+            percentage = slope.mul(x).div(1e18).sub(wy);
         }
 
-        return
-            minCeiling.add(
-                maxCeiling.sub(minCeiling).mul(percentage).div(1e18)
-            );
+        return minY.add(maxY.sub(minY).mul(percentage).div(1e18));
     }
 }

@@ -3,13 +3,15 @@
 pragma solidity ^0.8.0;
 
 interface ICurve {
-    function minSupply() external view returns (uint256);
+    function fixedY() external view returns (uint256);
 
-    function maxSupply() external view returns (uint256);
+    function minX() external view returns (uint256);
 
-    function minCeiling() external view returns (uint256);
+    function maxX() external view returns (uint256);
 
-    function maxCeiling() external view returns (uint256);
+    function minY() external view returns (uint256);
 
-    function calcCeiling(uint256 _supply) external view returns (uint256);
+    function maxY() external view returns (uint256);
+
+    function getY(uint256 x) external view returns (uint256);
 }
