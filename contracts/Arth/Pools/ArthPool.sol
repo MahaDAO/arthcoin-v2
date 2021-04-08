@@ -44,7 +44,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     bool public redeemPaused = false;
     bool public buyBackPaused = false;
     bool public recollateralizePaused = false;
-    bool public collateralPricePaused = false;
+    bool public override collateralPricePaused = false;
 
     bool public useGlobalCRForMint = true;
     bool public useGlobalCRForRedeem = true;

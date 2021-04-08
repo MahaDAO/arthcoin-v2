@@ -24,7 +24,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     /// @notice Governance timelock address.
     address public governance;
 
-    uint8 public constant decimals = 18;
+    uint8 public constant override decimals = 18;
     string public constant symbol = 'ARTH';
     string public constant name = 'ARTH Valuecoin';
 

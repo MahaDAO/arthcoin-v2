@@ -4,20 +4,24 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import './IMinter.sol';
-import '../Arth/Arth.sol';
-import '../ERC20/ERC20.sol';
-import '../ARTHX/ARTHX.sol';
+import '../ARTH/IARTH.sol';
+import '../ERC20/IERC20.sol';
+import '../ARTHX/IARTHX.sol';
 import '../Math/SafeMath.sol';
 import '../Math/SafeMath.sol';
 import './ILiquidityGauge.sol';
 import './IStableSwap3Pool.sol';
+import '../ARTH/IARTHController.sol';
+import '../ARTH/Pools/IARTHPool.sol';
 import './IMetaImplementationUSD.sol';
-import '../Arth/ArthController.sol';
-import '../Arth/Pools/IARTHPool.sol';
+import '../Governance/AccessControl.sol';
 
 /**
- *  Original code written by:
- *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ * @title CurveAMO.
+ * @author MahaDAO.
+ *
+ * Original code written by:
+ * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
 contract CurveAMO is AccessControl {
     using SafeMath for uint256;
@@ -28,13 +32,13 @@ contract CurveAMO is AccessControl {
     IStableSwap3Pool private three_pool;
     ILiquidityGauge private gauge_arth3crv;
     IMinter private crv_minter;
-    ERC20 private three_pool_erc20;
-    ARTHStablecoin private ARTH;
+    IERC20 private three_pool_erc20;
+    IARTH private ARTH;
     IARTHPool private pool;
-    ARTHShares private ARTHX;
-    ERC20 private collateralToken;
-    ERC20 private CRV = ERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
-    ArthController private controller;
+    IARTHX private ARTHX;
+    IERC20 private collateralToken;
+    IERC20 private CRV = IERC20(0xD533a949740bb3306d119CC777fa900bA034cd52);
+    IARTHController private controller;
 
     address public arth3crv_metapool_address;
     address public three_pool_address;
@@ -91,11 +95,11 @@ contract CurveAMO is AccessControl {
         address _custodian_address,
         address _timelock_address
     ) {
-        ARTH = ARTHStablecoin(_arth_contract_address);
-        ARTHX = ARTHShares(_arthx_contract_address);
+        ARTH = IARTH(_arth_contract_address);
+        ARTHX = IARTHX(_arthx_contract_address);
         arth_contract_address = _arth_contract_address;
         arthx_contract_address = _arthx_contract_address;
-        collateralToken = ERC20(_collateralAddress);
+        collateralToken = IERC20(_collateralAddress);
         missing_decimals = uint256(18).sub(collateralToken.decimals());
         timelock_address = _timelock_address;
         ownerAddress = _creator_address;
@@ -606,7 +610,7 @@ contract CurveAMO is AccessControl {
         three_pool_address = _three_pool_address;
         three_pool = IStableSwap3Pool(_three_pool_address);
         three_pool_token_address = _three_pool_token_address;
-        three_pool_erc20 = ERC20(_three_pool_token_address);
+        three_pool_erc20 = IERC20(_three_pool_token_address);
     }
 
     function setMetapool(address _metapool_address)
@@ -657,7 +661,7 @@ contract CurveAMO is AccessControl {
         // Can only be triggered by owner or governance, not custodian
         // Tokens are sent to the custodian, as a sort of safeguard
 
-        ERC20(tokenAddress).transfer(custodian_address, tokenAmount);
+        IERC20(tokenAddress).transfer(custodian_address, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 
