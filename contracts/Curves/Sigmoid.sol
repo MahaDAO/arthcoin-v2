@@ -70,6 +70,10 @@ contract Sigmoid is Curve {
         super.setMinY(y);
     }
 
+    function setFixedY(uint256 y) public override onlyOwner {
+        super.setFixedY(y);
+    }
+
     function setMaxY(uint256 y) public override onlyOwner {
         super.setMaxY(y);
     }

@@ -10,13 +10,15 @@ abstract contract Curve is ICurve, Ownable {
      * Events.
      */
 
-    event MinXChanged(address indexed operator, uint256 old, uint256 curr);
+    event MinXChanged(uint256 old, uint256 latest);
 
-    event MaxXChanged(address indexed operator, uint256 old, uint256 curr);
+    event MaxXChanged(uint256 old, uint256 latest);
 
-    event MinYChanged(address indexed operator, uint256 old, uint256 curr);
+    event MinYChanged(uint256 old, uint256 latest);
 
-    event MaxYChanged(address indexed operator, uint256 old, uint256 curr);
+    event MaxYChanged(uint256 old, uint256 latest);
+
+    event FixedYChanged(uint256 old, uint256 latest);
 
     /**
      * State variables.
@@ -35,25 +37,31 @@ abstract contract Curve is ICurve, Ownable {
     function setMinX(uint256 x) public virtual onlyOwner {
         uint256 oldMinX = minX;
         minX = x;
-        emit MinXChanged(msg.sender, oldMinX, minX);
+        emit MinXChanged(oldMinX, minX);
     }
 
     function setMaxX(uint256 x) public virtual onlyOwner {
-        uint256 oldMaxSupply = maxX;
+        uint256 oldMaxX = maxX;
         maxX = x;
-        emit MaxXChanged(msg.sender, oldMaxSupply, maxX);
+        emit MaxXChanged(oldMaxX, maxX);
+    }
+
+    function setFixedY(uint256 y) public virtual onlyOwner {
+        uint256 old = fixedY;
+        fixedY = y;
+        emit FixedYChanged(old, fixedY);
     }
 
     function setMinY(uint256 y) public virtual onlyOwner {
         uint256 oldMinY = minY;
         minY = y;
-        emit MinYChanged(msg.sender, oldMinY, minY);
+        emit MinYChanged(oldMinY, minY);
     }
 
     function setMaxY(uint256 y) public virtual onlyOwner {
         uint256 oldMaxY = maxY;
         maxY = y;
-        emit MaxYChanged(msg.sender, oldMaxY, maxY);
+        emit MaxYChanged(oldMaxY, maxY);
     }
 
     function getY(uint256 x) external view virtual override returns (uint256);

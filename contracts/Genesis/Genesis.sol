@@ -226,7 +226,8 @@ contract Genesis is ERC20, Ownable {
     }
 
     function getCurvePrice() public view returns (uint256) {
-        if (getIsRaisedBelowSoftCap()) return _CURVE.getY(getPercentRaised());
+        if (getIsRaisedBelowSoftCap())
+            return _CURVE.getY(getPercentRaised().mul(1e18).div(100));
 
         return _CURVE.fixedY();
     }
@@ -237,6 +238,7 @@ contract Genesis is ERC20, Ownable {
 
     function _distributeToWETHPool(uint256 amount) internal hasEnded {
         if (arthWETHPoolAddres == address(0)) return;
+        // require(arthWETHPoolAddres != address(0), 'Genesis: invalid address');
 
         // 1. Convert ETH to WETH.
         _WETH.deposit{value: amount}();
@@ -255,21 +257,26 @@ contract Genesis is ERC20, Ownable {
 
         // If the pair address is not set, then return;
         if (pair == address(0)) return;
+        // require(pair != address(0), 'Genesis: invalid pair');
 
+        // Check if pair is arth pair or arthx pair.
         if (pair == arthETHPairAddress) {
+            // If arth pair mint and approve ARTH for router to add liquidity.
             _ARTH.poolMint(address(this), amount);
-            _ARTH.approve(address(pair), amount);
+            _ARTH.approve(address(_ROUTER), amount);
 
             tokenAddress = address(_ARTH);
         } else {
+            // If arthx pair mint and approve ARTHX for router to add liquidity.
             _ARTHX.poolMint(address(this), amount);
-            _ARTHX.approve(address(pair), amount);
+            _ARTHX.approve(address(_ROUTER), amount);
 
             tokenAddress = address(_ARTHX);
         }
         // Fail safe check.
         require(tokenAddress != address(0), 'Genesis: invalid address');
 
+        // Add liquidity to pair.
         (uint256 amountToken, uint256 amountETH, uint256 liquidity) =
             _ROUTER.addLiquidityETH{value: amount}(
                 tokenAddress,
