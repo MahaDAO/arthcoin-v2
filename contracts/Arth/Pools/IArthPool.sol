@@ -3,65 +3,30 @@
 pragma solidity ^0.8.0;
 
 interface IARTHPool {
-    function repay(uint256 _amount) external;
+    function repay(uint256 amount) external;
 
-    function borrow(uint256 _amount) external;
+    function borrow(uint256 amount) external;
 
     function setStabilityFee(uint256 percent) external;
 
-    function setRecollateralizeCollateralRatio(uint256 val) external;
-
-    function setRedeemCollateralRatio(uint256 val) external;
-
     function setMintCollateralRatio(uint256 val) external;
-
-    function toggleUseGlobalCRForRecollateralize(bool flag) external;
 
     function toggleUseGlobalCRForRedeem(bool flag) external;
 
-    function setCollatETHOracle(
-        address _collateralWETHOracleAddress,
-        address _wethAddress
-    ) external;
+    function setRedeemCollateralRatio(uint256 val) external;
+
+    function setRecollateralizeCollateralRatio(uint256 val) external;
+
+    function toggleUseGlobalCRForRecollateralize(bool flag) external;
 
     function toggleUseGlobalCRForMint(bool flag) external;
 
     function setBuyBackCollateralBuffer(uint256 percent) external;
 
-    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
-        external
-        returns (uint256);
-
-    function mintAlgorithmicARTH(uint256 arthxAmount_d18, uint256 ARTHOutMin)
-        external
-        returns (uint256);
-
-    function mintFractionalARTH(
-        uint256 collateralAmount,
-        uint256 arthxAmount,
-        uint256 ARTHOutMin
-    ) external returns (uint256);
-
-    function redeem1t1ARTH(uint256 ARTH_amount, uint256 COLLATERAL_out_min)
-        external;
-
-    function redeemFractionalARTH(
-        uint256 ARTH_amount,
-        uint256 ARTHXOutMin,
-        uint256 COLLATERAL_out_min
+    function setCollatETHOracle(
+        address collateralWETHOracleAddress,
+        address wethAddress
     ) external;
-
-    function redeemAlgorithmicARTH(uint256 ARTH_amount, uint256 ARTHXOutMin)
-        external;
-
-    function collectRedemption() external;
-
-    function recollateralizeARTH(uint256 collateralAmount, uint256 ARTHXOutMin)
-        external
-        returns (uint256);
-
-    function buyBackARTHX(uint256 arthxAmount, uint256 COLLATERAL_out_min)
-        external;
 
     function toggleMinting() external;
 
@@ -71,7 +36,7 @@ interface IARTHPool {
 
     function toggleBuyBack() external;
 
-    function toggleCollateralPrice(uint256 _new_price) external;
+    function toggleCollateralPrice(uint256 newPrice) external;
 
     function setPoolParameters(
         uint256 newCeiling,
@@ -82,9 +47,44 @@ interface IARTHPool {
         uint256 newRecollateralizeFee
     ) external;
 
-    function setTimelock(address new_timelock) external;
+    function setTimelock(address newTimelock) external;
 
-    function setOwner(address _ownerAddress) external;
+    function setOwner(address ownerAddress) external;
+
+    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
+        external
+        returns (uint256);
+
+    function mintAlgorithmicARTH(uint256 arthxAmountD18, uint256 arthOutMin)
+        external
+        returns (uint256);
+
+    function mintFractionalARTH(
+        uint256 collateralAmount,
+        uint256 arthxAmount,
+        uint256 ARTHOutMin
+    ) external returns (uint256);
+
+    function redeem1t1ARTH(uint256 arthAmount, uint256 collateralOutMin)
+        external;
+
+    function redeemFractionalARTH(
+        uint256 arthAmount,
+        uint256 arthxOutMin,
+        uint256 collateralOutMin
+    ) external;
+
+    function redeemAlgorithmicARTH(uint256 arthAmounnt, uint256 arthxOutMin)
+        external;
+
+    function collectRedemption() external;
+
+    function recollateralizeARTH(uint256 collateralAmount, uint256 arthxOutMin)
+        external
+        returns (uint256);
+
+    function buyBackARTHX(uint256 arthxAmount, uint256 collateralOutMin)
+        external;
 
     function getGlobalCR() external view returns (uint256);
 

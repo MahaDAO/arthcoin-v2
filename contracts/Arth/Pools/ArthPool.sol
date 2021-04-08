@@ -3,19 +3,18 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../IARTH.sol';
-import './IARTHPool.sol';
-import '../../ERC20/IERC20.sol';
-import '../../ERC20/IERC20Burnable.sol';
-import '../../ARTHX/IARTHX.sol';
-import '../../ERC20/ERC20.sol';
-import './ArthPoolLibrary.sol';
-import '../../Math/SafeMath.sol';
-import '../IARTHController.sol';
-import '../../Oracle/ISimpleOracle.sol';
-import '../../Governance/AccessControl.sol';
-import './RecollateralizeDiscountCurve.sol';
+import {IARTH} from '../IARTH.sol';
+import {IARTHPool} from './IARTHPool.sol';
+import {IERC20} from '../../ERC20/IERC20.sol';
+import {IARTHX} from '../../ARTHX/IARTHX.sol';
+import {SafeMath} from '../../Math/SafeMath.sol';
+import {ARTHPoolLibrary} from './ARTHPoolLibrary.sol';
+import {IARTHController} from '../IARTHController.sol';
+import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
+import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
+import {AccessControl} from '../../Governance/AccessControl.sol';
 import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
+import {RecollateralizeDiscountCurve} from './RecollateralizeDiscountCurve.sol';
 
 /**
  * @title  ARTHPool.
@@ -26,6 +25,10 @@ import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
  */
 contract ARTHPool is AccessControl, IARTHPool {
     using SafeMath for uint256;
+
+    /**
+     * @dev Contract instances.
+     */
 
     IARTH private _ARTH;
     IARTHX private _ARTHX;
@@ -292,7 +295,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     function toggleCollateralPrice(uint256 newPrice) external override {
         require(hasRole(_COLLATERAL_PRICE_PAUSER, msg.sender));
 
-        // If pausing, set paused price; else if unpausing, clear pausedPrice
+        // If pausing, set paused price; else if unpausing, clear pausedPrice.
         if (collateralPricePaused == false) {
             pausedPrice = newPrice;
         } else {
@@ -385,7 +388,7 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         // 1 ARTH for each $1 worth of collateral.
         uint256 arthAmountD18 =
-            ArthPoolLibrary.calcMint1t1ARTH(
+            ARTHPoolLibrary.calcMint1t1ARTH(
                 getCollateralPrice(),
                 collateralAmountD18
             );
@@ -421,7 +424,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         require(getCRForMint() == 0, 'ARTHPool: Collateral ratio != 0');
 
         uint256 arthAmountD18 =
-            ArthPoolLibrary.calcMintAlgorithmicARTH(
+            ARTHPoolLibrary.calcMintAlgorithmicARTH(
                 arthxPrice, // X ARTHX / 1 USD
                 arthxAmountD18
             );
@@ -461,8 +464,8 @@ contract ARTHPool is AccessControl, IARTHPool {
         );
 
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
-        ArthPoolLibrary.MintFAParams memory inputParams =
-            ArthPoolLibrary.MintFAParams(
+        ARTHPoolLibrary.MintFAParams memory inputParams =
+            ARTHPoolLibrary.MintFAParams(
                 arthxPrice,
                 getCollateralPrice(),
                 arthxAmount,
@@ -471,7 +474,7 @@ contract ARTHPool is AccessControl, IARTHPool {
             );
 
         (uint256 mintAmount, uint256 arthxNeeded) =
-            ArthPoolLibrary.calcMintFractionalARTH(inputParams);
+            ARTHPoolLibrary.calcMintFractionalARTH(inputParams);
 
         mintAmount = (mintAmount.mul(uint256(1e6).sub(mintingFee))).div(1e6);
 
@@ -505,7 +508,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         // Need to adjust for decimals of collateral
         uint256 arthAmountPrecision = arthAmount.div(10**_missingDeciamls);
         uint256 collateralNeeded =
-            ArthPoolLibrary.calcRedeem1t1ARTH(
+            ARTHPoolLibrary.calcRedeem1t1ARTH(
                 getCollateralPrice(),
                 arthAmountPrecision
             );
@@ -704,7 +707,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
         (uint256 collateralUnits, uint256 amountToRecollateralize) =
-            ArthPoolLibrary.calcRecollateralizeARTHInner(
+            ARTHPoolLibrary.calcRecollateralizeARTHInner(
                 collateralAmountD18,
                 getCollateralPrice(),
                 globalCollatValue,
@@ -751,8 +754,8 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
-        ArthPoolLibrary.BuybackARTHXParams memory inputParams =
-            ArthPoolLibrary.BuybackARTHXParams(
+        ARTHPoolLibrary.BuybackARTHXParams memory inputParams =
+            ARTHPoolLibrary.BuybackARTHXParams(
                 getAvailableExcessCollateralDV(),
                 arthxPrice,
                 getCollateralPrice(),
@@ -760,7 +763,7 @@ contract ARTHPool is AccessControl, IARTHPool {
             );
 
         uint256 collateralEquivalentD18 =
-            (ArthPoolLibrary.calcBuyBackARTHX(inputParams))
+            (ARTHPoolLibrary.calcBuyBackARTHX(inputParams))
                 .mul(uint256(1e6).sub(buybackFee))
                 .div(1e6);
         uint256 collateralPrecision =

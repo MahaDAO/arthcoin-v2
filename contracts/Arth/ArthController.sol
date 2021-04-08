@@ -3,17 +3,17 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './IARTHController.sol';
-import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
-import './Pools/IARTHPool.sol';
-import '../Oracle/IChainlinkOracle.sol';
-import '../Governance/AccessControl.sol';
-import '../Oracle/IUniswapPairOracle.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {IARTHPool} from './Pools/IARTHPool.sol';
+import {IARTHController} from './IARTHController.sol';
+import {AccessControl} from '../Governance/AccessControl.sol';
+import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
+import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 
 /**
- *  @title  ARTHStablecoin.
- *  @author MahaDAO.
+ * @title  ARTHStablecoin.
+ * @author MahaDAO.
  */
 contract ARTHController is AccessControl, IARTHController {
     using SafeMath for uint256;

@@ -3,17 +3,19 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import '@openzeppelin/contracts/utils/math/SignedSafeMath.sol';
+import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
+import {
+    SignedSafeMath
+} from '@openzeppelin/contracts/utils/math/SignedSafeMath.sol';
 
-import './IARTH.sol';
-import '../Math//Math.sol';
-import '../Math/SafeMath.sol';
-import '../Oracle/IChainlinkOracle.sol';
-import '../Governance/AccessControl.sol';
-import '../Oracle/IUniswapPairOracle.sol';
-import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import {IARTH} from './IARTH.sol';
+import {Math} from '../Math//Math.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
 import {IIncentiveController} from './IIncentive.sol';
+import {AccessControl} from '../Governance/AccessControl.sol';
+import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
+import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
+import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 
 contract IncentiveController is AccessControl, IIncentiveController {
     using SafeCast for int256;

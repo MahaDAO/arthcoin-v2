@@ -4,15 +4,15 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {IARTH} from './IARTH.sol';
-import '../ERC20/AnyswapV4Token.sol';
 import {IIncentiveController} from './IIncentive.sol';
+import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 
 /**
- *  @title  ARTHStablecoin.
- *  @author MahaDAO.
+ * @title  ARTHStablecoin.
+ * @author MahaDAO.
  *
- *  Original code written by:
- *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ * Original code written by:
+ * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
 contract ARTHStablecoin is AnyswapV4Token, IARTH {
     /**

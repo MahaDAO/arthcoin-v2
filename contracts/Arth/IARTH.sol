@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import '../ERC20/IERC20.sol';
-import '../ERC20/IAnyswapV4Token.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
 import {IIncentiveController} from './IIncentive.sol';
+import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
 
 interface IARTH is IERC20, IAnyswapV4Token {
     function addPool(address pool) external;

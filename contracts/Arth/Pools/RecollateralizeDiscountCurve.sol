@@ -3,10 +3,10 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../IARTHController.sol';
-import '../../ERC20/IERC20.sol';
-import '../../Math/SafeMath.sol';
-import '../../Common/Ownable.sol';
+import {IERC20} from '../../ERC20/IERC20.sol';
+import {SafeMath} from '../../Math/SafeMath.sol';
+import {Ownable} from '../../Common/Ownable.sol';
+import {IARTHController} from '../IARTHController.sol';
 
 /**
  * @title  RecollateralizeDiscountCruve.
@@ -14,6 +14,10 @@ import '../../Common/Ownable.sol';
  */
 contract RecollateralizeDiscountCurve is Ownable {
     using SafeMath for uint256;
+
+    /**
+     * @dev Contract instances.
+     */
 
     IERC20 private _ARTH;
     IARTHController private _arthController;

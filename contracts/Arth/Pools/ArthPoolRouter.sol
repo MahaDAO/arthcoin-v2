@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-import '../IARTH.sol';
-import './IARTHPool.sol';
-import '../../ARTHX/IARTHX.sol';
-import '../../ERC20/IERC20.sol';
-import '../../Oracle/ISimpleOracle.sol';
-import '../../Staking/IStakingRewards.sol';
+import {IARTH} from '../IARTH.sol';
+import {IARTHPool} from './IARTHPool.sol';
+import {IARTHX} from '../../ARTHX/IARTHX.sol';
+import {IERC20} from '../../ERC20/IERC20.sol';
+import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
+import {IStakingRewards} from '../../Staking/IStakingRewards.sol';
 
-contract ArthPoolRouter {
+contract ARTHPoolRouter {
     /**
-     * @dev State variables.
+     * @dev Contract instances.
      */
 
     IARTH private _ARTH;
@@ -42,6 +42,7 @@ contract ArthPoolRouter {
     /**
      * Public.
      */
+
     function mint1t1ARTHAndStake(
         uint256 collateralAmount,
         uint256 arthOutMin,
