@@ -3,160 +3,274 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import '../Oracle/IChainlinkOracle.sol';
-import '../Math/SafeMath.sol';
-import './BondingCurve.sol';
 import {IARTH} from '../Arth/IARTH.sol';
+import {ERC20} from '../ERC20/ERC20.sol';
+import {IARTHX} from '../ARTHX/IARTHX.sol';
 import {Ownable} from '../Common/Ownable.sol';
-
-//import '../Arth/Pools/Pool_'
+import {SafeMath} from '../Math/SafeMath.sol';
+import {IBondingCurve} from './IBondingCurve.sol';
+import {IERC20Mintable} from '../ERC20/IERC20Mintable.sol';
 
 contract Genesis is ERC20, Ownable {
     using SafeMath for uint256;
 
-    uint256 public hardcap;
-    uint256 public softcap = 0;
-    // uint256 public EthPrice = 2000;
-    uint256 public ethRaised;
-    uint8 private eth_usd_pricer_decimals;
-    uint256 private constant PRICE_PRECISION = 1e6;
+    /**
+     * @dev Contract instances.
+     */
 
-    IChainlinkOracle private ethGMUPricer;
-    BondingCurve private bondingCurve;
-    IARTH private arth;
+    IARTH private _ARTH;
+    IARTHX private _ARTHX;
+    IERC20Mintable private _MAHA;
+    IBondingCurve private _CURVE;
 
-    address payable private arthPoolAddress;
-    address payable private uniswapARTHETHPoolAddress;
-    address payable private uniswapARTHXETHPoolAddress;
+    /**
+     * State variables.
+     */
 
-    bool private saleClosed = false;
+    uint256 public softCap = 100e18;
+    uint256 public hardCap = 100e18;
 
+    uint256 public arthETHPoolPercent = 90; // In %.
+    uint256 public arthETHPairPercent = 5; // In %.
+    uint256 public arthxETHPairPercent = 5; // In %.
+
+    uint256 public duration;
+    uint256 public startTime;
+
+    address payable public arthETHPoolAddress;
+    address payable public arthETHPairAddress;
+    address payable public arthxETHPairAddress;
+    /**
+     * Events.
+     */
+
+    event Mint(address indexed account, uint256 ethAmount, uint256 genAmount);
+    event RedeemARTH(address indexed account, uint256 amount);
+    event RedeemARTHAndMAHA(
+        address indexed account,
+        uint256 arthAmount,
+        uint256 mahaAmount
+    );
+    event Distribute(
+        address indexed account,
+        uint256 ethAMount,
+        uint256 tokenAmount
+    );
+
+    /**
+     * Modifiers.
+     */
+
+    modifier hasStarted() {
+        require(block.timestamp >= startTime, 'Genesis: not started');
+        _;
+    }
+
+    modifier isActive() {
+        require(
+            block.timestamp >= startTime &&
+                block.timestamp <= startTime.add(duration),
+            'Genesis: not active'
+        );
+        _;
+    }
+
+    modifier hasEnded() {
+        require(
+            block.timestamp >= startTime.add(duration),
+            'Genesis: still active'
+        );
+        _;
+    }
+
+    /**
+     * Constructor.
+     */
     constructor(
-        BondingCurve _bondingCurve,
-        IARTH _arth,
-        IChainlinkOracle _ethGMUPricer,
-        address payable _arthPoolAddress,
-        uint256 _hardcap,
-        uint256 _softcap
-    ) ERC20('Arth Genesis Token', 'ARTHG') {
-        bondingCurve = _bondingCurve;
-        arth = _arth;
-        ethGMUPricer = _ethGMUPricer;
-        arthPoolAddress = _arthPoolAddress;
-        hardcap = _hardcap;
-        softcap = _softcap;
+        uint256 _startTime,
+        uint256 _duration,
+        IARTH __ARTH,
+        IARTHX __ARTHX,
+        IERC20Mintable __MAHA,
+        IBondingCurve __CURVE
+    ) ERC20('ARTH Gen', 'ARTH-GEN') {
+        duration = _duration;
+        startTime = _startTime;
+
+        _ARTH = __ARTH;
+        _MAHA = __MAHA;
+        _ARTHX = __ARTHX;
+        _CURVE = __CURVE;
     }
 
-    function setUniswapARTHETHPoolAddress(address payable _poolAddress)
-        public
+    receive() external payable {
+        mint(msg.value);
+    }
+
+    /**
+     * External.
+     */
+
+    function setDuration(uint256 _duration) external onlyOwner {
+        duration = _duration;
+    }
+
+    function setPoolAndPairs(
+        address payable _arthETHPool,
+        address payable _arthETHPair,
+        address payable _arthxETHPair
+    ) external onlyOwner {
+        arthETHPoolAddress = _arthETHPool;
+        arthETHPairAddress = _arthETHPair;
+        arthxETHPairAddress = _arthxETHPair;
+    }
+
+    function setCaps(uint256 _softCap, uint256 _hardCap) external onlyOwner {
+        softCap = _softCap;
+        hardCap = _hardCap;
+    }
+
+    function setARTHETHPoolAddress(address payable poolAddress)
+        external
         onlyOwner
     {
-        uniswapARTHETHPoolAddress = _poolAddress;
+        arthETHPoolAddress = poolAddress;
     }
 
-    function setUniswapARTHxETHPoolAddress(address payable _poolAddress)
-        public
+    function setARTHETHPairAddress(address payable pairAddress)
+        external
         onlyOwner
     {
-        uniswapARTHXETHPoolAddress = _poolAddress;
+        arthETHPairAddress = pairAddress;
     }
 
-    function setSaleState(bool _state) public onlyOwner returns (bool) {
-        saleClosed = _state;
-        return saleClosed;
+    function setDistributionPercents(
+        uint256 poolPercent,
+        uint256 arthPairPercent,
+        uint256 arthxPairPercent
+    ) external onlyOwner {
+        arthETHPoolPercent = poolPercent;
+        arthETHPairPercent = arthPairPercent;
+        arthxETHPairPercent = arthxPairPercent;
     }
 
-    function getSaleState(bool _state) public returns (bool) {
-        return saleClosed;
+    function setARTHXETHPairAddress(address payable pairAddress)
+        external
+        onlyOwner
+    {
+        arthxETHPairAddress = pairAddress;
     }
 
-    function mintGenesisToken(uint256 _collateralAmount) public payable {
-        uint256 ethUsdPrice =
-            uint256(ethGMUPricer.getLatestPrice()).mul(PRICE_PRECISION).div(
-                uint256(10)**eth_usd_pricer_decimals
-            );
-
-        require(msg.value == _collateralAmount, 'Genesis: value mismatch');
-        require(_collateralAmount != 0, 'Genesis: no value sent');
-
-        uint256 EthEvaluation = _collateralAmount.mul(ethUsdPrice);
-        uint256 _ethRaised = ethRaised.add(_collateralAmount);
-        uint256 genesisPrice =
-            bondingCurve._getGenesisPrice(_ethRaised, hardcap);
-        uint256 genesisTokenAmount = EthEvaluation.div(genesisPrice);
-
-        // address(this).transfer(msg.value);
-        _mint(msg.sender, genesisTokenAmount);
+    function setCurve(IBondingCurve curve) external onlyOwner {
+        _CURVE = curve;
     }
 
-    function reedemOnlyArth(uint256 _genesisTokenAmount) public payable {
-        require(
-            balanceOf(msg.sender) >= _genesisTokenAmount,
-            'Genesis: Insufficent genesis funds'
+    /**
+     * Public.
+     */
+
+    function mint(uint256 amount) public payable isActive {
+        require(amount > 0, 'Genesis: amount = 0');
+        require(msg.value == amount, 'Genesis: INVALID INPUT');
+
+        // Example:
+        // Curve price is 0.37(37e16 in 1e18 precision).
+        // Hence the amount to be minted becomes 1.37 i.e 137e16(1e18 + 37e16).
+        uint256 mintRateWithDiscount = uint256(1e18).add(getCurvePrice());
+        // Restore the precision to 1e18.
+        uint256 mintAmount = amount.mul(mintRateWithDiscount).div(1e18);
+
+        _mint(msg.sender, mintAmount);
+
+        emit Mint(msg.sender, amount, mintAmount);
+    }
+
+    function redeem(uint256 amount) public {
+        if (block.timestamp >= startTime.add(duration))
+            _redeemARTHAndMAHA(amount);
+        else _redeemARTH(amount);
+    }
+
+    function distribute() public onlyOwner hasEnded {
+        uint256 balance = address(this).balance;
+
+        // reuire(balance >= hardCap, 'Genesis: not enough raised');
+
+        uint256 arthETHPoolAmount = balance.mul(arthETHPoolPercent).div(100);
+        uint256 arthETHPairAmount = balance.mul(arthETHPairPercent).div(100);
+        uint256 arthxETHPairAmount = balance.mul(arthxETHPairPercent).div(100);
+
+        (bool poolSuccess, ) =
+            arthETHPoolAddress.call{value: arthETHPoolAmount}('');
+        require(poolSuccess, 'Genesis: distribut pool failed');
+
+        (bool arthPairSuccess, ) =
+            arthETHPairAddress.call{value: arthETHPairAmount}('');
+        require(arthPairSuccess, 'Genesis: distribut ARTH pair failed');
+        _ARTH.poolMint(arthETHPairAddress, arthETHPairAmount);
+
+        (bool arthxPairSuccess, ) =
+            arthxETHPairAddress.call{value: arthxETHPairAmount}('');
+        require(arthxPairSuccess, 'Genesis: distribut ARTHX pair failed');
+        _ARTHX.poolMint(arthxETHPairAddress, arthxETHPairAmount);
+
+        emit Distribute(arthETHPoolAddress, arthETHPoolAmount, 0);
+        emit Distribute(
+            arthETHPairAddress,
+            arthETHPoolAmount,
+            arthETHPairAmount
         );
-
-        require(!saleClosed, 'Genesis: Sale Closed');
-
-        _burn(msg.sender, _genesisTokenAmount);
-
-        arth.poolMint(msg.sender, _genesisTokenAmount);
-    }
-
-    function reedemWithMaha(uint256 _genesisTokenAmount) public payable {
-        require(
-            balanceOf(msg.sender) >= _genesisTokenAmount,
-            'Genesis: Insufficent genesis funds'
-        );
-
-        require(saleClosed, 'Genesis: Sale Open');
-
-        _burn(msg.sender, _genesisTokenAmount);
-
-        arth.poolMint(msg.sender, _genesisTokenAmount);
-
-        // distribute Maha
-    }
-
-    function distributeEthToPool() public payable onlyOwner {
-        uint256 ethAmount = hardcap.mul(90).div(100);
-
-        require(
-            address(this).balance >= ethAmount,
-            'Genesis: Not Enough Funds raised yet'
-        );
-        (bool success, ) = arthPoolAddress.call{value: ethAmount}('');
-
-        require(success, 'Genesis: Issue with ETH distribution to pool');
-    }
-
-    function distrubuteToUniswapArthETH() public payable onlyOwner {
-        uint256 ethAmount = hardcap.mul(5).div(100);
-
-        require(
-            address(this).balance >= ethAmount,
-            'Genesis: Not Enough Funds raised yet'
-        );
-        (bool success, ) = arthPoolAddress.call{value: ethAmount}('');
-
-        require(
-            success,
-            'Genesis: Issue with ETH distribution to uniswap ARTH/ETH pool'
+        emit Distribute(
+            arthxETHPairAddress,
+            arthETHPoolAmount,
+            arthxETHPairAmount
         );
     }
 
-    function distrubuteToUniswapArthxETH() public payable onlyOwner {
-        uint256 ethAmount = hardcap.mul(5).div(100);
+    function getIsRaisedBelowSoftCap() public view returns (bool) {
+        return address(this).balance <= softCap;
+    }
 
-        require(
-            address(this).balance >= ethAmount,
-            'Genesis: Not Enough Funds raised yet'
-        );
-        (bool success, ) = arthPoolAddress.call{value: ethAmount}('');
+    function getIsRaisedBetweenCaps() public view returns (bool) {
+        return
+            address(this).balance > softCap && address(this).balance <= hardCap;
+    }
 
-        require(
-            success,
-            'Genesis: Issue with ETH distribution to uniswap ARTHX/ETH pool'
-        );
+    function getPercentRaised() public view returns (uint256) {
+        return address(this).balance.mul(100).div(hardCap);
+    }
+
+    function getCurvePrice() public view returns (uint256) {
+        if (getIsRaisedBelowSoftCap())
+            return _CURVE.getCurvePrice(getPercentRaised());
+
+        return _CURVE.fixedPrice();
+    }
+
+    /**
+     * Internal.
+     */
+
+    function _redeemARTH(uint256 amount) internal isActive {
+        require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
+
+        _burn(msg.sender, amount);
+        _ARTH.poolMint(msg.sender, amount);
+
+        emit RedeemARTH(msg.sender, amount);
+    }
+
+    function _redeemARTHAndMAHA(uint256 amount) internal hasEnded {
+        require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
+
+        _burn(msg.sender, amount);
+        _ARTH.poolMint(msg.sender, amount);
+
+        // TODO: distribute MAHA.
+        uint256 mahaAmount = 0;
+
+        _MAHA.mint(msg.sender, mahaAmount);
+
+        emit RedeemARTHAndMAHA(msg.sender, amount, mahaAmount);
     }
 }

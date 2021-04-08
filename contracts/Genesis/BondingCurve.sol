@@ -3,30 +3,62 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../Math/SafeMath.sol';
+import {Ownable} from '../Common/Ownable.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {IBondingCurve} from './IBondingCurve.sol';
 
-contract BondingCurve {
+contract BondingCurve is IBondingCurve, Ownable {
     using SafeMath for uint256;
 
-    function _getGenesisPrice(uint256 _ethRaised, uint256 hardcap)
-        public
-        pure
-        returns (uint256)
-    {
-        uint256 genesisPrice;
-        uint256 ethRaised = _ethRaised.mul(100).div(hardcap);
-        genesisPrice = _curve(ethRaised);
+    /**
+     * State variable.
+     */
 
-        return genesisPrice;
+    uint256 public override fixedPrice;
+
+    uint256 public variableA = 5;
+    uint256 public variableB = 8500; // 0.85 with 1e6 precision.
+    uint256 public startPrice = 5e5; // 0.5 with 1e6 precision
+
+    uint256 private constant _PRICE_PRECISION = 1e6;
+
+    constructor(uint256 _fixedPrice) {
+        fixedPrice = _fixedPrice;
     }
 
-    // _startingPrice = 0.5
-    function _curve(uint256 _percent) public pure returns (uint256) {
-        uint256 price =
-            (uint256(5).div(10)).add(
-                (5**_percent).sub(1).div(5).mul(uint256(85).div(100))
-            );
+    /**
+     * External.
+     */
 
-        return price;
+    function setA(uint256 val) external override onlyOwner {
+        variableA = val;
+    }
+
+    function setB(uint256 val) external override onlyOwner {
+        variableB = val;
+    }
+
+    function setStartPrice(uint256 price) external override onlyOwner {
+        startPrice = price;
+    }
+
+    function setFixedPrice(uint256 price) external override onlyOwner {
+        fixedPrice = price;
+    }
+
+    /**
+     * Public.
+     */
+
+    function getCurvePrice(uint256 percentRaised)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        uint256 exponentTerm = (variableA**percentRaised).sub(1); // (B$14^A2 - 1).
+        uint256 curvedTerm = exponentTerm.div(variableA).mul(variableB); // (B$14^A2 - 1) / B$14 * B$15.
+
+        return startPrice.add(curvedTerm);
     }
 }
