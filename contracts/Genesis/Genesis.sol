@@ -8,22 +8,27 @@ import '../Oracle/IChainlinkOracle.sol';
 import '../Math/SafeMath.sol';
 import './BondingCurve.sol';
 import {IARTH} from '../Arth/IARTH.sol';
-import '../Arth/Pools/IARTHPool.sol'
+import {Ownable} from '../Common/Ownable.sol';
 
-contract Genesis is ERC20 {
+//import '../Arth/Pools/Pool_'
+
+contract Genesis is ERC20, Ownable {
     using SafeMath for uint256;
 
     uint256 public hardcap;
     uint256 public softcap = 0;
     // uint256 public EthPrice = 2000;
     uint256 public ethRaised;
+    uint8 private eth_usd_pricer_decimals;
+    uint256 private constant PRICE_PRECISION = 1e6;
 
     IChainlinkOracle private ethGMUPricer;
     BondingCurve private bondingCurve;
     IARTH private arth;
 
-    uint8 private eth_usd_pricer_decimals;
-    uint256 private constant PRICE_PRECISION = 1e6;
+    address payable private arthPoolAddress;
+    address payable private uniswapARTHETHPoolAddress;
+    address payable private uniswapARTHXETHPoolAddress;
 
     bool private saleClosed = false;
 
@@ -31,17 +36,33 @@ contract Genesis is ERC20 {
         BondingCurve _bondingCurve,
         IARTH _arth,
         IChainlinkOracle _ethGMUPricer,
+        address payable _arthPoolAddress,
         uint256 _hardcap,
         uint256 _softcap
-    ) public ERC20('Arth Genesis Token', 'ARTHG') {
+    ) ERC20('Arth Genesis Token', 'ARTHG') {
         bondingCurve = _bondingCurve;
         arth = _arth;
         ethGMUPricer = _ethGMUPricer;
+        arthPoolAddress = _arthPoolAddress;
         hardcap = _hardcap;
         softcap = _softcap;
     }
 
-    function setSaleState(bool _state) public returns (bool) {
+    function setUniswapARTHETHPoolAddress(address payable _poolAddress)
+        public
+        onlyOwner
+    {
+        uniswapARTHETHPoolAddress = _poolAddress;
+    }
+
+    function setUniswapARTHxETHPoolAddress(address payable _poolAddress)
+        public
+        onlyOwner
+    {
+        uniswapARTHXETHPoolAddress = _poolAddress;
+    }
+
+    function setSaleState(bool _state) public onlyOwner returns (bool) {
         saleClosed = _state;
         return saleClosed;
     }
@@ -93,11 +114,49 @@ contract Genesis is ERC20 {
         _burn(msg.sender, _genesisTokenAmount);
 
         arth.poolMint(msg.sender, _genesisTokenAmount);
+
+        // distribute Maha
     }
 
-    function distributeEthToPool() public {
+    function distributeEthToPool() public payable onlyOwner {
         uint256 ethAmount = hardcap.mul(90).div(100);
+
+        require(
+            address(this).balance >= ethAmount,
+            'Genesis: Not Enough Funds raised yet'
+        );
+        (bool success, ) = arthPoolAddress.call{value: ethAmount}('');
+
+        require(success, 'Genesis: Issue with ETH distribution to pool');
     }
 
-    receive() external payable {}
+    function distrubuteToUniswapArthETH() public payable onlyOwner {
+        uint256 ethAmount = hardcap.mul(5).div(100);
+
+        require(
+            address(this).balance >= ethAmount,
+            'Genesis: Not Enough Funds raised yet'
+        );
+        (bool success, ) = arthPoolAddress.call{value: ethAmount}('');
+
+        require(
+            success,
+            'Genesis: Issue with ETH distribution to uniswap ARTH/ETH pool'
+        );
+    }
+
+    function distrubuteToUniswapArthxETH() public payable onlyOwner {
+        uint256 ethAmount = hardcap.mul(5).div(100);
+
+        require(
+            address(this).balance >= ethAmount,
+            'Genesis: Not Enough Funds raised yet'
+        );
+        (bool success, ) = arthPoolAddress.call{value: ethAmount}('');
+
+        require(
+            success,
+            'Genesis: Issue with ETH distribution to uniswap ARTHX/ETH pool'
+        );
+    }
 }
