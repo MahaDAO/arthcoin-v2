@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../Arth/IArth.sol';
+import '../Arth/IARTH.sol';
 import '../ARTHX/IARTHX.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
