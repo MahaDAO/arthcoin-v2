@@ -7,7 +7,7 @@ import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
 import '../Oracle/IChainlinkOracle.sol';
 import '../Math/SafeMath.sol';
 import './BondingCurve.sol';
-import { IARTH } from '../Arth/IARTH.sol';
+import {IARTH} from '../Arth/IARTH.sol';
 
 contract Genesis is ERC20 {
     using SafeMath for uint256;
@@ -78,7 +78,7 @@ contract Genesis is ERC20 {
 
         _burn(msg.sender, _genesisTokenAmount);
 
-        _arth.poolMint(msg.sender, _genesisTokenAmount);
+        arth.poolMint(msg.sender, _genesisTokenAmount);
     }
 
     function reedemWithMaha(uint256 _genesisTokenAmount) public payable {
@@ -91,7 +91,7 @@ contract Genesis is ERC20 {
 
         _burn(msg.sender, _genesisTokenAmount);
 
-        _arth.poolMint(msg.sender, _genesisTokenAmount);
+        arth.poolMint(msg.sender, _genesisTokenAmount);
     }
 
     receive() external payable {}

@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import './ARTHPool.sol';
+import './ArthPool.sol';
 
-contract Pool_USDC is ARTHPool {
+contract Pool_USDC is ArthPool {
     /**
      * State variable.
      */
@@ -23,7 +23,7 @@ contract Pool_USDC is ARTHPool {
         address _arthMAHAOracle,
         uint256 _poolCeiling
     )
-        ARTHPool(
+        ArthPool(
             _arthContractAddres,
             _arthxContractAddres,
             _collateralAddress,

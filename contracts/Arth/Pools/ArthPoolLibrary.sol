@@ -4,7 +4,7 @@ pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../../Math/SafeMath.sol';
 
-library ARTHPoolLibrary {
+library ArthPoolLibrary {
     using SafeMath for uint256;
 
     /**

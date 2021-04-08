@@ -8,7 +8,7 @@ import {IARTHPool} from './IARTHPool.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {IARTHX} from '../../ARTHX/IARTHX.sol';
 import {SafeMath} from '../../Math/SafeMath.sol';
-import {ARTHPoolLibrary} from './ARTHPoolLibrary.sol';
+import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
 import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
@@ -23,7 +23,7 @@ import {RecollateralizeDiscountCurve} from './RecollateralizeDiscountCurve.sol';
  *  Original code written by:
  *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
-contract ARTHPool is AccessControl, IARTHPool {
+contract ArthPool is AccessControl, IARTHPool {
     using SafeMath for uint256;
 
     /**
@@ -388,7 +388,7 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         // 1 ARTH for each $1 worth of collateral.
         uint256 arthAmountD18 =
-            ARTHPoolLibrary.calcMint1t1ARTH(
+            ArthPoolLibrary.calcMint1t1ARTH(
                 getCollateralPrice(),
                 collateralAmountD18
             );
@@ -424,7 +424,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         require(getCRForMint() == 0, 'ARTHPool: Collateral ratio != 0');
 
         uint256 arthAmountD18 =
-            ARTHPoolLibrary.calcMintAlgorithmicARTH(
+            ArthPoolLibrary.calcMintAlgorithmicARTH(
                 arthxPrice, // X ARTHX / 1 USD
                 arthxAmountD18
             );
@@ -464,8 +464,8 @@ contract ARTHPool is AccessControl, IARTHPool {
         );
 
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
-        ARTHPoolLibrary.MintFAParams memory inputParams =
-            ARTHPoolLibrary.MintFAParams(
+        ArthPoolLibrary.MintFAParams memory inputParams =
+            ArthPoolLibrary.MintFAParams(
                 arthxPrice,
                 getCollateralPrice(),
                 arthxAmount,
@@ -474,7 +474,7 @@ contract ARTHPool is AccessControl, IARTHPool {
             );
 
         (uint256 mintAmount, uint256 arthxNeeded) =
-            ARTHPoolLibrary.calcMintFractionalARTH(inputParams);
+            ArthPoolLibrary.calcMintFractionalARTH(inputParams);
 
         mintAmount = (mintAmount.mul(uint256(1e6).sub(mintingFee))).div(1e6);
 
@@ -508,7 +508,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         // Need to adjust for decimals of collateral
         uint256 arthAmountPrecision = arthAmount.div(10**_missingDeciamls);
         uint256 collateralNeeded =
-            ARTHPoolLibrary.calcRedeem1t1ARTH(
+            ArthPoolLibrary.calcRedeem1t1ARTH(
                 getCollateralPrice(),
                 arthAmountPrecision
             );
@@ -707,7 +707,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
         (uint256 collateralUnits, uint256 amountToRecollateralize) =
-            ARTHPoolLibrary.calcRecollateralizeARTHInner(
+            ArthPoolLibrary.calcRecollateralizeARTHInner(
                 collateralAmountD18,
                 getCollateralPrice(),
                 globalCollatValue,
@@ -754,8 +754,8 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
-        ARTHPoolLibrary.BuybackARTHXParams memory inputParams =
-            ARTHPoolLibrary.BuybackARTHXParams(
+        ArthPoolLibrary.BuybackARTHXParams memory inputParams =
+            ArthPoolLibrary.BuybackARTHXParams(
                 getAvailableExcessCollateralDV(),
                 arthxPrice,
                 getCollateralPrice(),
@@ -763,7 +763,7 @@ contract ARTHPool is AccessControl, IARTHPool {
             );
 
         uint256 collateralEquivalentD18 =
-            (ARTHPoolLibrary.calcBuyBackARTHX(inputParams))
+            (ArthPoolLibrary.calcBuyBackARTHX(inputParams))
                 .mul(uint256(1e6).sub(buybackFee))
                 .div(1e6);
         uint256 collateralPrecision =

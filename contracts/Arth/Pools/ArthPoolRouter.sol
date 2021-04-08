@@ -9,7 +9,7 @@ import {IERC20} from '../../ERC20/IERC20.sol';
 import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
 import {IStakingRewards} from '../../Staking/IStakingRewards.sol';
 
-contract ARTHPoolRouter {
+contract ArthPoolRouter {
     /**
      * @dev Contract instances.
      */
