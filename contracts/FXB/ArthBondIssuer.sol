@@ -435,7 +435,7 @@ contract ArthBondIssuer is AccessControl {
         );
 
         // Burn ARTH from the sender and increase the virtual balance
-        ARTH.burnFrom(msg.sender, arth_in);
+        // ARTH.burnFrom(msg.sender, arth_in);
         vBal_ARTH = vBal_ARTH.add(arth_in);
 
         // Mint ARTHB to the sender and decrease the virtual balance

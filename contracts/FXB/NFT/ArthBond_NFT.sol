@@ -17,8 +17,7 @@ contract ArthBond_NFT is ERC721, AccessControl {
 
     /* ========== STATE VARIABLES ========== */
 
-    IARTH private ARTH =
-        IArthPartial(0x853d955aCEf822Db058eb8505911ED77F175b99e);
+    IARTH private ARTH = IARTH(0x853d955aCEf822Db058eb8505911ED77F175b99e);
 
     address public controller_address; // Controller contract to dynamically adjust system parameters automatically
     address public timelock_address; // Governance timelock address
@@ -211,7 +210,7 @@ contract ArthBond_NFT is ERC721, AccessControl {
         ARTH.transferFrom(msg.sender, address(this), purchase_price);
 
         // Burn the ARTH
-        ARTH.burn(purchase_price);
+        // ARTH.burn(purchase_price);
 
         // Create the struct
         bondData[serial_number] = BondData({

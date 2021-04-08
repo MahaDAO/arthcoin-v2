@@ -74,13 +74,12 @@ interface IARTHPool {
     function toggleCollateralPrice(uint256 _new_price) external;
 
     function setPoolParameters(
-        uint256 new_ceiling,
-        uint256 new_bonus_rate,
-        uint256 new_redemptionDelay,
-        uint256 new_mint_fee,
-        uint256 new_redeem_fee,
-        uint256 new_buybackFee,
-        uint256 new_recollatFee
+        uint256 newCeiling,
+        uint256 newRedemptionDelay,
+        uint256 newMintFee,
+        uint256 newRedeemFee,
+        uint256 newBuybackFee,
+        uint256 newRecollateralizeFee
     ) external;
 
     function setTimelock(address new_timelock) external;

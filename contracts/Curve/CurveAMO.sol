@@ -141,7 +141,7 @@ contract CurveAMO is AccessControl {
 
         uint256 arth_withdrawable =
             (collat_info[0])
-                .mul(controller.globalCollateralRatio())
+                .mul(controller.getGlobalCollateralRatio())
                 .mul(ARTH.balanceOf(arth3crv_metapool_address))
                 .div(collat_info[1])
                 .div(uint256(1e6));
@@ -188,7 +188,7 @@ contract CurveAMO is AccessControl {
         uint256 _3pool_withdrawable;
         if (arth3crv_supply > 0) {
             _3pool_withdrawable = lp_owned
-                .mul(controller.globalCollateralRatio())
+                .mul(controller.getGlobalCollateralRatio())
                 .mul(three_pool_erc20.balanceOf(arth3crv_metapool_address))
                 .div(arth3crv_supply)
                 .div(uint256(1e6));
@@ -341,7 +341,7 @@ contract CurveAMO is AccessControl {
             uint256(1e18).div(three_pool.get_virtual_price());
 
         uint256 floor_price_arth =
-            uint256(1e18).mul(controller.globalCollateralRatio()).div(1e6);
+            uint256(1e18).mul(controller.getGlobalCollateralRatio()).div(1e6);
 
         uint256 arth_received;
         for (uint256 i = 0; i < 256; i++) {
@@ -417,7 +417,7 @@ contract CurveAMO is AccessControl {
         //require(allow_yearn || allow_aave || allow_compound, 'All strategies are currently off');
         uint256 redemptionFee = pool.redemptionFee();
         uint256 col_price_usd = pool.getCollateralPrice();
-        uint256 globalCollateralRatio = controller.globalCollateralRatio();
+        uint256 globalCollateralRatio = controller.getGlobalCollateralRatio();
         uint256 redeem_amount_E6 =
             (arth_amount.mul(uint256(1e6).sub(redemptionFee))).div(1e6).div(
                 10**missing_decimals
@@ -457,7 +457,7 @@ contract CurveAMO is AccessControl {
 
     // Burn unneeded or excess ARTH
     function burnARTH(uint256 arth_amount) public onlyByOwnerOrGovernance {
-        ARTH.burn(arth_amount);
+        // ARTH.burn(arth_amount);
         burned_arth_historical = burned_arth_historical.add(arth_amount);
     }
 
@@ -504,7 +504,7 @@ contract CurveAMO is AccessControl {
 
         // Make sure the collateral ratio did not fall too much
         uint256 current_collateral_E18 =
-            (controller.globalCollateralRatio()).mul(10**missing_decimals);
+            (controller.getGlobalCollateralRatio()).mul(10**missing_decimals);
         uint256 cur_arth_supply = ARTH.totalSupply();
         uint256 new_cr =
             (current_collateral_E18.mul(PRICE_PRECISION)).div(cur_arth_supply);

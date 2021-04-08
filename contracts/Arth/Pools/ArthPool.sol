@@ -54,10 +54,10 @@ contract ARTHPool is AccessControl, IARTHPool {
     uint256 public redeemCollateralRatio;
     uint256 public recollateralizeCollateralRatio;
 
-    uint256 public buybackFee;
-    uint256 public mintingFee;
-    uint256 public recollatFee;
-    uint256 public redemptionFee;
+    uint256 public override buybackFee;
+    uint256 public override mintingFee;
+    uint256 public override recollatFee;
+    uint256 public override redemptionFee;
     uint256 public stabilityFee = 1; // In %.
     uint256 public buybackCollateralBuffer = 20; // In %.
 
@@ -416,7 +416,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         notMintPaused
         returns (uint256)
     {
-        uint256 arthxPrice = _arthController.arthxPrice();
+        uint256 arthxPrice = _arthController.getARTHXPrice();
 
         require(getCRForMint() == 0, 'ARTHPool: Collateral ratio != 0');
 
@@ -444,7 +444,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         uint256 arthxAmount,
         uint256 arthOutMin
     ) external override notMintPaused returns (uint256) {
-        uint256 arthxPrice = _arthController.arthxPrice();
+        uint256 arthxPrice = _arthController.getARTHXPrice();
         uint256 collateralRatioForMint = getCRForMint();
 
         require(
@@ -547,7 +547,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         uint256 arthxOutMin,
         uint256 collateralOutMin
     ) external override notRedeemPaused {
-        uint256 arthxPrice = _arthController.arthxPrice();
+        uint256 arthxPrice = _arthController.getARTHXPrice();
         uint256 collateralRatioForRedeem = getCRForRedeem();
 
         require(
@@ -615,7 +615,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         override
         notRedeemPaused
     {
-        uint256 arthxPrice = _arthController.arthxPrice();
+        uint256 arthxPrice = _arthController.getARTHXPrice();
         uint256 collateralRatioForRedeem = getCRForRedeem();
 
         require(collateralRatioForRedeem == 0, 'Collateral ratio must be 0');
@@ -698,10 +698,10 @@ contract ARTHPool is AccessControl, IARTHPool {
         require(recollateralizePaused == false, 'Recollateralize is paused');
 
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
-        uint256 arthxPrice = _arthController.arthxPrice();
+        uint256 arthxPrice = _arthController.getARTHXPrice();
         uint256 arthTotalSupply = _ARTH.totalSupply();
         uint256 collateralRatioForRecollateralize = getCRForRecollateralize();
-        uint256 globalCollatValue = _arthController.globalCollateralValue();
+        uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
         (uint256 collateralUnits, uint256 amountToRecollateralize) =
             ArthPoolLibrary.calcRecollateralizeARTHInner(
@@ -749,7 +749,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     {
         require(buyBackPaused == false, 'Buyback is paused');
 
-        uint256 arthxPrice = _arthController.arthxPrice();
+        uint256 arthxPrice = _arthController.getARTHXPrice();
 
         ArthPoolLibrary.BuybackARTHXParams memory inputParams =
             ArthPoolLibrary.BuybackARTHXParams(
@@ -780,12 +780,12 @@ contract ARTHPool is AccessControl, IARTHPool {
      * Public.
      */
 
-    function getARTHMAHAPrice() public view returns (uint256) {
+    function getARTHMAHAPrice() public view override returns (uint256) {
         return _ARTHMAHAOracle.getPrice();
     }
 
     function getGlobalCR() public view override returns (uint256) {
-        return _arthController.globalCollateralRatio();
+        return _arthController.getGlobalCollateralRatio();
     }
 
     function getCRForMint() public view override returns (uint256) {
@@ -837,10 +837,15 @@ contract ARTHPool is AccessControl, IARTHPool {
     }
 
     // Returns the value of excess collateral held in this Arth pool, compared to what is needed to maintain the global collateral ratio
-    function getAvailableExcessCollateralDV() public view returns (uint256) {
+    function getAvailableExcessCollateralDV()
+        public
+        view
+        override
+        returns (uint256)
+    {
         uint256 totalSupply = _ARTH.totalSupply();
         uint256 globalCollateralRatio = getGlobalCR();
-        uint256 globalCollatValue = _arthController.globalCollateralValue();
+        uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
         // Check if overcollateralized contract with CR > 1.
         if (globalCollateralRatio > _COLLATERAL_RATIO_PRECISION)
@@ -868,7 +873,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     function getCollateralPrice() public view override returns (uint256) {
         if (collateralPricePaused) return pausedPrice;
 
-        uint256 ethGMUPrice = _arthController.ethGMUPrice();
+        uint256 ethGMUPrice = _arthController.getETHGMUPrice();
 
         return
             ethGMUPrice.mul(_PRICE_PRECISION).div(

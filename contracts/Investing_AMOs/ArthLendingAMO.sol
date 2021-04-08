@@ -204,13 +204,13 @@ contract ArthLendingAMO is AccessControl {
 
         // Make sure the current CR isn't already too low
         require(
-            controller.globalCollateralRatio() > min_cr,
+            controller.getGlobalCollateralRatio() > min_cr,
             'Collateral ratio is already too low'
         );
 
         // Make sure the ARTH minting wouldn't push the CR down too much
         uint256 current_collateral_E18 =
-            (controller.globalCollateralValue()).mul(10**missing_decimals);
+            (controller.getGlobalCollateralValue()).mul(10**missing_decimals);
         uint256 cur_arth_supply = ARTH.totalSupply();
         uint256 new_arth_supply = cur_arth_supply.add(arth_amount);
         uint256 new_cr =
@@ -231,7 +231,7 @@ contract ArthLendingAMO is AccessControl {
 
     // Burn unneeded or excess ARTH
     function burnARTH(uint256 arth_amount) public onlyByOwnerOrGovernance {
-        ARTH.burn(arth_amount);
+        // ARTH.burn(arth_amount);
         burned_sum_historical = burned_sum_historical.add(arth_amount);
     }
 

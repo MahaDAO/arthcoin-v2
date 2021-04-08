@@ -83,9 +83,8 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         (uint256 reservesETH, uint256 reservesOther, bool isWETHPairToken0) =
             _getReserves(address(WETH));
 
-        uint256 amountIn = msg.value;
         amountOut = UniswapV2Library.getAmountOut(
-            amountIn,
+            msg.value,
             reservesETH,
             reservesOther
         );
@@ -99,8 +98,8 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
 
         // Convert sent ETH to wrapped ETH and assert successful transfer to pair.
-        WETH.deposit{value: amountIn}();
-        assert(WETH.transfer(address(pair), amountIn));
+        WETH.deposit{value: msg.value}();
+        assert(WETH.transfer(address(pair), msg.value));
 
         address arth = isWETHPairToken0 ? pair.token1() : pair.token0();
         // Check ARTH balance of recipient before to compare against.
