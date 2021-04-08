@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import '../Math/SafeMath.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
 
 contract Timelock {
     using SafeMath for uint256;

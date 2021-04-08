@@ -3,20 +3,20 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './Pausable.sol';
-import '../Math/Math.sol';
-import '../Arth/IARTH.sol';
-import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
-import './IStakingRewards.sol';
-import '../ERC20/SafeERC20.sol';
-import '../Utils/StringHelpers.sol';
-import '../Utils/ReentrancyGuard.sol';
-import '../Uniswap/TransferHelper.sol';
-import './RewardsDistributionRecipient.sol';
-import './IStakingRewardsDualForMigrator.sol';
-import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
-import '../Uniswap/Interfaces/IUniswapV2Router02.sol';
+import {Math} from '../Math/Math.sol';
+import {IARTH} from '../Arth/IARTH.sol';
+import {Pausable} from './Pausable.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeERC20} from '../ERC20/SafeERC20.sol';
+import {IStakingRewards} from './IStakingRewards.sol';
+import {ReentrancyGuard} from '../Utils/ReentrancyGuard.sol';
+import {RewardsDistributionRecipient} from './RewardsDistributionRecipient.sol';
+import {
+    IStakingRewardsDualForMigrator
+} from './IStakingRewardsDualForMigrator.sol';
+import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import {IUniswapV2Router02} from '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
 /**
  * @title  UniLPToSushiLPMigrator
@@ -32,7 +32,7 @@ contract UniLPToSushiLPMigrator is
     Pausable
 {
     using SafeMath for uint256;
-    using SafeERC20 for ERC20;
+    using SafeERC20 for IERC20;
 
     /**
      * State variables.
@@ -43,8 +43,8 @@ contract UniLPToSushiLPMigrator is
     IERC20 public stakingToken;
     IUniswapV2Pair public DestLPPair;
     IUniswapV2Pair public SourceLPPair;
-    IStakingRewardsDualForMigrator public SourceStakingContract;
     IStakingRewardsDualForMigrator public DestStakingContract;
+    IStakingRewardsDualForMigrator public SourceStakingContract;
 
     IUniswapV2Router02 internal constant _UniswapRouter =
         IUniswapV2Router02(UNISWAP_ROUTER_ADDRESS);

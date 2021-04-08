@@ -3,10 +3,10 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './ISimpleOracle.sol';
-import '../Math/SafeMath.sol';
-import './IChainlinkOracle.sol';
-import './AggregatorV3Interface.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {ISimpleOracle} from './ISimpleOracle.sol';
+import {IChainlinkOracle} from './IChainlinkOracle.sol';
+import {AggregatorV3Interface} from './AggregatorV3Interface.sol';
 
 contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
     using SafeMath for uint256;

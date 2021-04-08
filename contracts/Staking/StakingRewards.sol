@@ -3,20 +3,19 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './Pausable.sol';
-import '../Math/Math.sol';
-import '../Arth/IARTH.sol';
-import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
-import './IStakingRewards.sol';
-import '../ERC20/SafeERC20.sol';
-import '../Utils/StringHelpers.sol';
-import './IMintAndCallFallBack.sol';
-import '../Arth/IARTHController.sol';
-import '../Utils/ReentrancyGuard.sol';
-import '../Uniswap/TransferHelper.sol';
-import '../Governance/AccessControl.sol';
-import './RewardsDistributionRecipient.sol';
+import {Math} from '../Math/Math.sol';
+import {Pausable} from './Pausable.sol';
+import {IARTH} from '../Arth/IARTH.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeERC20} from '../ERC20/SafeERC20.sol';
+import {IStakingRewards} from './IStakingRewards.sol';
+import {StringHelpers} from '../Utils/StringHelpers.sol';
+import {IARTHController} from '../Arth/IARTHController.sol';
+import {ReentrancyGuard} from '../Utils/ReentrancyGuard.sol';
+import {TransferHelper} from '../Uniswap/TransferHelper.sol';
+import {AccessControl} from '../Governance/AccessControl.sol';
+import {RewardsDistributionRecipient} from './RewardsDistributionRecipient.sol';
 
 /**
  * @title  StakingRewards.
@@ -31,7 +30,6 @@ import './RewardsDistributionRecipient.sol';
 contract StakingRewards is
     AccessControl,
     IStakingRewards,
-    IMintAndCallFallBack,
     RewardsDistributionRecipient,
     ReentrancyGuard,
     Pausable
@@ -365,19 +363,6 @@ contract StakingRewards is
     {
         ownerAddress = _newOwner;
         timelockAddress = _newTimelock;
-    }
-
-    function receiveMint(
-        address from,
-        uint256 amount,
-        uint256 lockedDuration,
-        bytes memory data
-    ) external override onlyPool {
-        if (lockedDuration != 0) {
-            _stakeLocked(from, amount, lockedDuration);
-        } else {
-            _stake(from, amount);
-        }
     }
 
     function stakeFor(address who, uint256 amount) external override onlyPool {

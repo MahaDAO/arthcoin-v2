@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../ERC20/ERC20.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
 
 interface IStakingRewardsDualForMigrator {
     struct ILockedStake {
@@ -26,7 +26,7 @@ interface IStakingRewardsDualForMigrator {
 
     function unlockStakes() external;
 
-    function stakingToken() external view returns (ERC20);
+    function stakingToken() external view returns (IERC20);
 
     function lockedStakesOf(address account)
         external

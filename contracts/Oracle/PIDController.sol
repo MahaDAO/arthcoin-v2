@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import '../Arth/IARTH.sol';
-import '../ARTHX/IARTHX.sol';
-import '../Math/SafeMath.sol';
-import './ReserveTracker.sol';
-import '../Arth/IARTHController.sol';
-import '../Curve/IMetaImplementationUSD.sol';
+import {IARTH} from '../Arth/IARTH.sol';
+import {IARTHX} from '../ARTHX/IARTHX.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {ReserveTracker} from './ReserveTracker.sol';
+import {IARTHController} from '../Arth/IARTHController.sol';
+import {IMetaImplementationUSD} from '../Curve/IMetaImplementationUSD.sol';
 
 /**
  * @title  PIDController.

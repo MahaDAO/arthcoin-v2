@@ -3,17 +3,17 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './Pausable.sol';
-import '../Math/Math.sol';
-import '../Arth/IARTH.sol';
-import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
-import '../ERC20/SafeERC20.sol';
-import './IStakingRewardsDual.sol';
-import '../Utils/StringHelpers.sol';
-import '../Arth/IARTHController.sol';
-import '../Utils/ReentrancyGuard.sol';
-import '../Uniswap/TransferHelper.sol';
+import {Math} from '../Math/Math.sol';
+import {Pausable} from './Pausable.sol';
+import {IARTH} from '../Arth/IARTH.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeERC20} from '../ERC20/SafeERC20.sol';
+import {StringHelpers} from '../Utils/StringHelpers.sol';
+import {IARTHController} from '../Arth/IARTHController.sol';
+import {ReentrancyGuard} from '../Utils/ReentrancyGuard.sol';
+import {TransferHelper} from '../Uniswap/TransferHelper.sol';
+import {IStakingRewardsDual} from './IStakingRewardsDual.sol';
 
 /**
  * @title  StakingRewardsDualV2

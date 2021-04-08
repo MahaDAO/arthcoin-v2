@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import '../Math/Math.sol';
-import '../Math/SafeMath.sol';
-import './IUniswapPairOracle.sol';
-import './ChainlinkETHUSDPriceConsumer.sol';
-import '../Curve/IMetaImplementationUSD.sol';
-import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import {Math} from '../Math/Math.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {IUniswapPairOracle} from './IUniswapPairOracle.sol';
+import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import {IMetaImplementationUSD} from '../Curve/IMetaImplementationUSD.sol';
 
 /**
  * @title  ReserveTracker.

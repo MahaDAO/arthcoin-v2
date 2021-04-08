@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import '../Common/Ownable.sol';
+import {Ownable} from '../Common/Ownable.sol';
 
 /// Refer: https://docs.synthetix.io/contracts/Pausable
 abstract contract Pausable is Ownable {
