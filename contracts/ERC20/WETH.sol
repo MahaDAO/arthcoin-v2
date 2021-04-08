@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import './IWETH.sol';
+import {IWETH} from './IWETH.sol';
 
 // Copyright (C) 2015, 2016, 2017 Dapphub
 

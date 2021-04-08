@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import './ARTHB.sol';
-import '../Arth/Arth.sol';
+import '../ARTH/ARTH.sol';
 import '../ERC20/ERC20.sol';
 import '../Math/SafeMath.sol';
 import '../Governance/AccessControl.sol';
@@ -123,7 +123,7 @@ contract ArthBondIssuerWithDeposits is AccessControl {
     // }
     // /* ========== VIEWS ========== */
     // // Needed for the Arth contract to function
-    // function collatDollarBalance() external view returns (uint256) {
+    // function getCollateralGMUBalance() external view returns (uint256) {
     //     return 1; // 1e0
     // }
     // function depositsOf(address account) external view returns (BondDeposit[] memory) {

@@ -5,9 +5,10 @@ pragma experimental ABIEncoderV2;
 
 import './ISimpleOracle.sol';
 import '../Math/SafeMath.sol';
+import './IChainlinkOracle.sol';
 import './AggregatorV3Interface.sol';
 
-contract ChainlinkETHUSDPriceConsumer {
+contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
     using SafeMath for uint256;
 
     /**
@@ -19,6 +20,9 @@ contract ChainlinkETHUSDPriceConsumer {
 
     uint256 public priceFeedDecimals = 8;
 
+    /**
+     * Constructor.
+     */
     constructor(address priceFeed_, ISimpleOracle gmuOracle_) {
         priceFeed = AggregatorV3Interface(priceFeed_);
 
@@ -27,10 +31,10 @@ contract ChainlinkETHUSDPriceConsumer {
     }
 
     /**
-     * Returns the latest price
+     * Publics.
      */
 
-    function getGmuPrice() public view returns (uint256) {
+    function getGmuPrice() public view override returns (uint256) {
         // Considering that gmuOracle uses 1e18 as precision.
 
         uint256 decimalsDiff = uint256(18).sub(priceFeedDecimals);
@@ -38,17 +42,17 @@ contract ChainlinkETHUSDPriceConsumer {
         return gmuOracle.getPrice().div(10**decimalsDiff);
     }
 
-    function getLatestUSDPrice() public view returns (uint256) {
+    function getLatestUSDPrice() public view override returns (uint256) {
         (, int256 price, , , ) = priceFeed.latestRoundData();
 
         return uint256(price);
     }
 
-    function getLatestPrice() public view returns (uint256) {
+    function getLatestPrice() public view override returns (uint256) {
         return getLatestUSDPrice().mul(getGmuPrice()).div(priceFeedDecimals);
     }
 
-    function getDecimals() public view returns (uint8) {
+    function getDecimals() public view override returns (uint8) {
         return priceFeed.decimals();
     }
 }

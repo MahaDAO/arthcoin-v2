@@ -3,44 +3,58 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../Arth/Arth.sol';
-import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
-import '../Common/Context.sol';
-import '../ERC20/ERC20Custom.sol';
-import '../Governance/AccessControl.sol';
-import '../ERC20/Variants/AnyswapV4Token.sol';
-import '../Arth/ArthController.sol';
+import {IARTHX} from './IARTHX.sol';
+import {IARTH} from '../ARTH/IARTH.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
+import {Context} from '../Common/Context.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
+import {IARTHController} from '../Arth/IARTHController.sol';
+import {AccessControl} from '../Governance/AccessControl.sol';
 
 /**
- *  Original code written by:
- *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
- *  Code modified by:
- *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
+ * @title  ARTHShares.
+ * @author MahaDAO.
+ *
+ * Original code written by:
+ * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
-contract ARTHShares is AnyswapV4Token {
+contract ARTHShares is AnyswapV4Token, IARTHX {
     using SafeMath for uint256;
 
-    /* ========== STATE VARIABLES ========== */
+    /**
+     * State variables.
+     */
 
-    string public symbol;
+    /// @dev Controller for arth params.
+    IARTH private _ARTH;
+    IARTHController private _arthController;
+
     string public name;
-    uint8 public constant decimals = 18;
-    address public ARTHStablecoinAdd;
+    string public symbol;
+    uint8 public constant override decimals = 18;
+    uint256 public constant genesisSupply = 10000e18; // 10k is printed upon genesis.
 
-    uint256 public constant genesis_supply = 10000e18; // 10k is printed upon genesis
-
+    address public arthAddress;
     address public ownerAddress;
-    address public oracle_address;
-    address public timelock_address; // Governance timelock address
-    ARTHStablecoin private ARTH;
-    ArthController private controller;
+    address public oracleAddress;
+    address public timelockAddress; // Governance timelock address.
 
-    /* ========== MODIFIERS ========== */
+    /**
+     * Events.
+     */
+
+    event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
+
+    event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
+
+    /**
+     * Modifier.
+     */
 
     modifier onlyPools() {
         require(
-            controller.arth_pools(msg.sender) == true,
+            _arthController.arthPools(msg.sender) == true,
             'Only arth pools can mint new ARTH'
         );
         _;
@@ -48,51 +62,67 @@ contract ARTHShares is AnyswapV4Token {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == ownerAddress || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelockAddress,
             'You are not an owner or the governance timelock'
         );
         _;
     }
 
-    /* ========== CONSTRUCTOR ========== */
+    /**
+     * Constructor.
+     */
 
     constructor(
         string memory _name,
         string memory _symbol,
-        address _oracle_address,
+        address _oracleAddress,
         address _ownerAddress,
-        address _timelock_address
+        address _timelockAddress
     ) AnyswapV4Token(_name) {
         name = _name;
         symbol = _symbol;
+
         ownerAddress = _ownerAddress;
-        oracle_address = _oracle_address;
-        timelock_address = _timelock_address;
+        oracleAddress = _oracleAddress;
+        timelockAddress = _timelockAddress;
+
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _mint(ownerAddress, genesis_supply);
+        _mint(ownerAddress, genesisSupply);
     }
 
-    /* ========== RESTRICTED FUNCTIONS ========== */
+    /**
+     * External.
+     */
 
-    function setOracle(address new_oracle) external onlyByOwnerOrGovernance {
-        oracle_address = new_oracle;
-    }
-
-    function setTimelock(address new_timelock)
+    function setOracle(address newOracle)
         external
+        override
         onlyByOwnerOrGovernance
     {
-        timelock_address = new_timelock;
+        oracleAddress = newOracle;
     }
 
-    function setARTHAddress(address arth_contract_address)
+    function setTimelock(address newTimelock)
         external
+        override
         onlyByOwnerOrGovernance
     {
-        ARTH = ARTHStablecoin(arth_contract_address);
+        timelockAddress = newTimelock;
     }
 
-    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+    function setARTHAddress(address arthContractAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        _ARTH = IARTH(arthContractAddress);
+    }
+
+    function setOwner(address _ownerAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
         ownerAddress = _ownerAddress;
     }
 
@@ -101,23 +131,23 @@ contract ARTHShares is AnyswapV4Token {
     }
 
     // This function is what other arth pools will call to mint new ARTHX (similar to the ARTH mint)
-    function poolMint(address m_address, uint256 m_amount) external onlyPools {
-        super._mint(m_address, m_amount);
-        emit ARTHXMinted(address(this), m_address, m_amount);
+    function poolMint(address account, uint256 amount)
+        external
+        override
+        onlyPools
+    {
+        super._mint(account, amount);
+
+        emit ARTHXMinted(address(this), account, amount);
     }
 
     // This function is what other arth pools will call to burn ARTHX
-    function poolBurnFrom(address b_address, uint256 b_amount)
+    function poolBurnFrom(address account, uint256 amount)
         external
+        override
         onlyPools
     {
-        super._burnFrom(b_address, b_amount);
-        emit ARTHXBurned(b_address, address(this), b_amount);
+        super._burnFrom(account, amount);
+        emit ARTHXBurned(account, address(this), amount);
     }
-
-    // Track ARTHX burned
-    event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
-
-    // Track ARTHX minted
-    event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
 }

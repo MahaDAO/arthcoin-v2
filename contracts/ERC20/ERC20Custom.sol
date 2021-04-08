@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import './IERC20.sol';
-import '../Math/SafeMath.sol';
-import '../Utils/Address.sol';
-import '../Common/Context.sol';
-import '../Staking/Pausable.sol';
+import {IERC20} from './IERC20.sol';
+import {Address} from '../Utils/Address.sol';
+import {Context} from '../Common/Context.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {Pausable} from '../Staking/Pausable.sol';
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -32,7 +32,7 @@ import '../Staking/Pausable.sol';
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20Custom is Pausable, IERC20 {
+abstract contract ERC20Custom is Pausable, IERC20 {
     using SafeMath for uint256;
 
     uint256 private _totalSupply;

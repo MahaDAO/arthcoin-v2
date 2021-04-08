@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '../Math/SafeMath.sol';
-import '../ARTHX/ARTHX.sol';
-import '../Arth/Arth.sol';
+import '../ARTHX/IARTHX.sol';
+import '../ARTH/IARTH.sol';
 import '../ERC20/ERC20.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../Governance/AccessControl.sol';
-import '../Arth/Pools/ArthPoolvAMM.sol';
+import '../ARTH/Pools/ArthPoolvAMM.sol';
 
 // contract ArthPoolInvestor is AccessControl {
 //     using SafeMath for uint256;

@@ -7,9 +7,17 @@ import '../Common/Ownable.sol';
 
 /// Refer: https://docs.synthetix.io/contracts/RewardsDistributionRecipient
 abstract contract RewardsDistributionRecipient is Ownable {
+    /**
+     * State variables.
+     */
+
     address public rewardsDistribution;
 
-    //function notifyRewardAmount(uint256 reward) external virtual;
+    // function notifyRewardAmount(uint256 reward) external virtual;
+
+    /**
+     * Modifer.
+     */
 
     modifier onlyRewardsDistribution() {
         require(
@@ -18,6 +26,10 @@ abstract contract RewardsDistributionRecipient is Ownable {
         );
         _;
     }
+
+    /**
+     * External.
+     */
 
     function setRewardsDistribution(address _rewardsDistribution)
         external

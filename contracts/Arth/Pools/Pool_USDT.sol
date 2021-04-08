@@ -2,30 +2,36 @@
 
 pragma solidity ^0.8.0;
 
-import './ArthPool.sol';
+import './ARTHPool.sol';
 
-contract Pool_USDT is ArthPool {
+contract Pool_USDT is ARTHPool {
+    /**
+     * State variable.
+     */
     address public USDT_address;
 
+    /**
+     * Constructor.
+     */
     constructor(
-        address _arth_contract_address,
-        address _arthx_contract_address,
+        address _arthContractAddres,
+        address _arthxContractAddres,
         address _collateralAddress,
-        address _creator_address,
-        address _timelock_address,
-        address _stabilityFeeToken,
-        address _arth_stability_token_oracle,
-        uint256 _pool_ceiling
+        address _creatorAddress,
+        address _timelockAddress,
+        address _mahaToken,
+        address _arthMAHAOracle,
+        uint256 _poolCeiling
     )
-        ArthPool(
-            _arth_contract_address,
-            _arthx_contract_address,
+        ARTHPool(
+            _arthContractAddres,
+            _arthxContractAddres,
             _collateralAddress,
-            _creator_address,
-            _timelock_address,
-            _stabilityFeeToken,
-            _arth_stability_token_oracle,
-            _pool_ceiling
+            _creatorAddress,
+            _timelockAddress,
+            _mahaToken,
+            _arthMAHAOracle,
+            _poolCeiling
         )
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());

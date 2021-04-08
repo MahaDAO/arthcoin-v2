@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import './ARTHB.sol';
-import '../Arth/Arth.sol';
+import '../ARTH/IARTH.sol';
 import '../ERC20/ERC20.sol';
 import '../Math/SafeMath.sol';
 import '../Governance/AccessControl.sol';
-import '../Arth/ArthController.sol';
+import '../ARTH/IARTHController.sol';
 
 /**
  *  Original code written by:
@@ -20,9 +20,9 @@ contract ArthBondIssuer is AccessControl {
     /* ========== STATE VARIABLES ========== */
     enum DirectionChoice {BELOW_TO_PRICE_ARTH_IN, ABOVE_TO_PRICE}
 
-    ARTHStablecoin private ARTH;
+    IARTH private ARTH;
     ArthBond private ARTHB;
-    ArthController private controller;
+    IARTHController private controller;
 
     address public ownerAddress;
     address public timelock_address;
@@ -130,7 +130,7 @@ contract ArthBondIssuer is AccessControl {
         address _timelock_address,
         address _controller_address
     ) {
-        ARTH = ARTHStablecoin(_arth_contract_address);
+        ARTH = IARTH(_arth_contract_address);
         ARTHB = ArthBond(_arthb_contract_address);
         ownerAddress = _ownerAddress;
         timelock_address = _timelock_address;
@@ -198,7 +198,7 @@ contract ArthBondIssuer is AccessControl {
     }
 
     // Needed for the Arth contract to function without bricking
-    function collatDollarBalance()
+    function getCollateralGMUBalance()
         external
         pure
         returns (uint256 dummy_dollar_balance)
@@ -335,11 +335,11 @@ contract ArthBondIssuer is AccessControl {
         require(isInEpoch(), 'Not in an epoch');
         require(issuable_arthb > 0, 'No new ARTHB to issue');
         require(
-            controller.arth_price() < PRICE_PRECISION,
+            controller.getARTHPrice() < PRICE_PRECISION,
             'ARTH price must be less than $1'
         );
         require(
-            controller.globalCollateralRatio() >= min_collateral_ratio,
+            controller.getGlobalCollateralRatio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 
@@ -435,7 +435,7 @@ contract ArthBondIssuer is AccessControl {
         );
 
         // Burn ARTH from the sender and increase the virtual balance
-        ARTH.burnFrom(msg.sender, arth_in);
+        // ARTH.burnFrom(msg.sender, arth_in);
         vBal_ARTH = vBal_ARTH.add(arth_in);
 
         // Mint ARTHB to the sender and decrease the virtual balance
@@ -643,7 +643,7 @@ contract ArthBondIssuer is AccessControl {
     ) external onlyByOwnerControllerOrGovernance {
         require(isInEpoch(), 'Not in an epoch');
         require(
-            controller.globalCollateralRatio() >= min_collateral_ratio,
+            controller.getGlobalCollateralRatio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 
@@ -666,7 +666,7 @@ contract ArthBondIssuer is AccessControl {
     ) external onlyByOwnerControllerOrGovernance {
         require(isInEpoch(), 'Not in an epoch');
         require(
-            controller.globalCollateralRatio() >= min_collateral_ratio,
+            controller.getGlobalCollateralRatio() >= min_collateral_ratio,
             'ARTH is already too undercollateralized'
         );
 

@@ -7,6 +7,6 @@ interface IMintAndCallFallBack {
         address from,
         uint256 amount,
         uint256 lockedDuration,
-        bytes memory _data
+        bytes memory data
     ) external;
 }

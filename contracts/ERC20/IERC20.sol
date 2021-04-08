@@ -2,9 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import '../Common/Context.sol';
-import '../Math/SafeMath.sol';
-
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP. Does not include
  * the optional functions; to access them see {ERC20Detailed}.
@@ -14,6 +11,11 @@ interface IERC20 {
      * @dev Returns the amount of tokens in existence.
      */
     function totalSupply() external view returns (uint256);
+
+    /**
+     * @dev Returns the number of decimals for token.
+     */
+    function decimals() external view returns (uint8);
 
     /**
      * @dev Returns the amount of tokens owned by `account`.

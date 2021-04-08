@@ -11,18 +11,18 @@ contract Stake_ARTH_ARTHX is StakingRewards {
         address _rewardsDistribution,
         address _rewardsToken,
         address _stakingToken,
-        address _arth_address,
-        address _timelock_address,
-        uint256 _pool_weight
+        address _arthAddress,
+        address _timelockAddress,
+        uint256 _poolWeight
     )
         StakingRewards(
             _owner,
             _rewardsDistribution,
             _rewardsToken,
             _stakingToken,
-            _arth_address,
-            _timelock_address,
-            _pool_weight
+            _arthAddress,
+            _timelockAddress,
+            _poolWeight
         )
     {}
 }

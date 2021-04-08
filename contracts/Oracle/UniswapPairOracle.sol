@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import '../Math/FixedPoint.sol';
+import './IUniswapPairOracle.sol';
 import '../Uniswap/UniswapV2Library.sol';
 import '../Uniswap/UniswapV2OracleLibrary.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
@@ -10,40 +11,53 @@ import '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 
 /// @dev Fixed window oracle that recomputes the average price for the entire period once every period
 ///  Note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
-contract UniswapPairOracle {
+contract UniswapPairOracle is IUniswapPairOracle {
     using FixedPoint for *;
 
-    address ownerAddress;
-    address timelock_address;
-
-    uint256 public PERIOD = 3600; // 1 hour TWAP (time-weighted average price)
-    uint256 public CONSULT_LENIENCY = 120; // Used for being able to consult past the period end
-    bool public ALLOW_STALE_CONSULTS = false; // If false, consult() will fail if the TWAP is stale
+    /**
+     * State varaibles.
+     */
 
     IUniswapV2Pair public immutable pair;
-    address public immutable token0;
-    address public immutable token1;
-
-    uint256 public price0CumulativeLast;
-    uint256 public price1CumulativeLast;
-    uint32 public blockTimestampLast;
     FixedPoint.uq112x112 public price0Average;
     FixedPoint.uq112x112 public price1Average;
 
+    uint32 public blockTimestampLast;
+    uint256 public PERIOD = 3600; // 1 hour TWAP (time-weighted average price)
+    uint256 public CONSULT_LENIENCY = 120; // Used for being able to consult past the period end
+    uint256 public price0CumulativeLast;
+    uint256 public price1CumulativeLast;
+
+    bool public ALLOW_STALE_CONSULTS = false; // If false, consult() will fail if the TWAP is stale
+
+    address public immutable token0;
+    address public immutable token1;
+
+    address ownerAddress;
+    address timelockAddress;
+
+    /**
+     * Modifier.
+     */
+
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == ownerAddress || msg.sender == timelock_address,
+            msg.sender == ownerAddress || msg.sender == timelockAddress,
             'You are not an owner or the governance timelock'
         );
         _;
     }
+
+    /**
+     * Constructor.
+     */
 
     constructor(
         address factory,
         address tokenA,
         address tokenB,
         address _ownerAddress,
-        address _timelock_address
+        address _timelockAddress
     ) {
         IUniswapV2Pair _pair =
             IUniswapV2Pair(UniswapV2Library.pairFor(factory, tokenA, tokenB));
@@ -61,26 +75,40 @@ contract UniswapPairOracle {
         ); // Ensure that there's liquidity in the pair
 
         ownerAddress = _ownerAddress;
-        timelock_address = _timelock_address;
+        timelockAddress = _timelockAddress;
     }
 
-    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
+    /**
+     * External.
+     */
+
+    function setOwner(address _ownerAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
         ownerAddress = _ownerAddress;
     }
 
-    function setTimelock(address _timelock_address)
+    function setTimelock(address _timelockAddress)
         external
+        override
         onlyByOwnerOrGovernance
     {
-        timelock_address = _timelock_address;
+        timelockAddress = _timelockAddress;
     }
 
-    function setPeriod(uint256 _period) external onlyByOwnerOrGovernance {
+    function setPeriod(uint256 _period)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
         PERIOD = _period;
     }
 
     function setConsultLeniency(uint256 _consult_leniency)
         external
+        override
         onlyByOwnerOrGovernance
     {
         CONSULT_LENIENCY = _consult_leniency;
@@ -88,19 +116,13 @@ contract UniswapPairOracle {
 
     function setAllowStaleConsults(bool _allow_stale_consults)
         external
+        override
         onlyByOwnerOrGovernance
     {
         ALLOW_STALE_CONSULTS = _allow_stale_consults;
     }
 
-    // Check if update() can be called instead of wasting gas calling it
-    function canUpdate() public view returns (bool) {
-        uint32 blockTimestamp = UniswapV2OracleLibrary.currentBlockTimestamp();
-        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
-        return (timeElapsed >= PERIOD);
-    }
-
-    function update() external {
+    function update() external override {
         (
             uint256 price0Cumulative,
             uint256 price1Cumulative,
@@ -129,6 +151,7 @@ contract UniswapPairOracle {
     function consult(address token, uint256 amountIn)
         external
         view
+        override
         returns (uint256 amountOut)
     {
         uint32 blockTimestamp = UniswapV2OracleLibrary.currentBlockTimestamp();
@@ -146,5 +169,16 @@ contract UniswapPairOracle {
             require(token == token1, 'UniswapPairOracle: INVALID_TOKEN');
             amountOut = price1Average.mul(amountIn).decode144();
         }
+    }
+
+    /**
+     * Public.
+     */
+
+    // Check if update() can be called instead of wasting gas calling it
+    function canUpdate() public view override returns (bool) {
+        uint32 blockTimestamp = UniswapV2OracleLibrary.currentBlockTimestamp();
+        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
+        return (timeElapsed >= PERIOD);
     }
 }
