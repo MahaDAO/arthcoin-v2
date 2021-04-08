@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {IARTH} from './IARTH.sol';
-import '../ERC20/Variants/AnyswapV4Token.sol';
+import '../ERC20/AnyswapV4Token.sol';
 import {IIncentiveController} from './IIncentive.sol';
 
 /**

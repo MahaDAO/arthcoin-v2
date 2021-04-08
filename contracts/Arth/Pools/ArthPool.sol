@@ -15,7 +15,7 @@ import '../IARTHController.sol';
 import '../../Oracle/ISimpleOracle.sol';
 import '../../Governance/AccessControl.sol';
 import './RecollateralizeDiscountCurve.sol';
-import {IIUniswapPairOracle} from '../../Oracle/IIUniswapPairOracle.sol';
+import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
 
 /**
  * @title  ARTHPool.
@@ -27,10 +27,6 @@ import {IIUniswapPairOracle} from '../../Oracle/IIUniswapPairOracle.sol';
 contract ARTHPool is AccessControl, IARTHPool {
     using SafeMath for uint256;
 
-    /**
-     * State variables.
-     */
-
     IARTH private _ARTH;
     IARTHX private _ARTHX;
     IERC20 private _COLLATERAL;
@@ -39,6 +35,10 @@ contract ARTHPool is AccessControl, IARTHPool {
     IARTHController private _arthController;
     IUniswapPairOracle private _collateralETHOracle;
     RecollateralizeDiscountCurve private _recollateralizeDiscountCruve;
+
+    /**
+     * State variables.
+     */
 
     bool public mintPaused = false;
     bool public redeemPaused = false;
@@ -61,14 +61,14 @@ contract ARTHPool is AccessControl, IARTHPool {
     uint256 public stabilityFee = 1; // In %.
     uint256 public buybackCollateralBuffer = 20; // In %.
 
-    uint256 public pausedPrice = 0; // Stores price of the collateral, if price is paused
+    uint256 public override pausedPrice = 0; // Stores price of the collateral, if price is paused
     uint256 public poolCeiling = 0; // Total units of collateral that a pool contract can hold
     uint256 public redemptionDelay = 1; // Number of blocks to wait before being able to collect redemption.
 
     uint256 public unclaimedPoolARTHX;
     uint256 public unclaimedPoolCollateral;
 
-    address public collateralETHOracleAddress;
+    address public override collateralETHOracleAddress;
 
     mapping(address => uint256) public lastRedeemed;
     mapping(address => uint256) public borrowedCollateral;

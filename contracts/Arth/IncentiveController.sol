@@ -229,7 +229,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
                 'UniswapIncentive: Burn exceeds trade size'
             );
 
-            ARTH.burnFrom(address(uniswapPairAddress), penalty);
+            ARTH.poolBurnFrom(address(uniswapPairAddress), penalty);
         }
     }
 

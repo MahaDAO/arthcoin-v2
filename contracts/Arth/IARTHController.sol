@@ -67,4 +67,6 @@ interface IARTHController {
     function getGlobalCollateralRatio() external view returns (uint256);
 
     function getGlobalCollateralValue() external view returns (uint256);
+
+    function arthPools(address pool) external view returns (bool);
 }

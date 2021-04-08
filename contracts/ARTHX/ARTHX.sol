@@ -9,8 +9,8 @@ import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
 import '../Common/Context.sol';
 import '../Arth/IARTHController.sol';
+import '../ERC20/AnyswapV4Token.sol';
 import '../Governance/AccessControl.sol';
-import '../ERC20/Variants/AnyswapV4Token.sol';
 
 /**
  * @title  ARTHShares.
@@ -32,7 +32,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     string public name;
     string public symbol;
-    uint8 public constant decimals = 18;
+    uint8 public constant override decimals = 18;
     uint256 public constant genesisSupply = 10000e18; // 10k is printed upon genesis.
 
     address public arthAddress;
@@ -54,7 +54,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     modifier onlyPools() {
         require(
-            _arthController.arth_pools(msg.sender) == true,
+            _arthController.arthPools(msg.sender) == true,
             'Only arth pools can mint new ARTH'
         );
         _;

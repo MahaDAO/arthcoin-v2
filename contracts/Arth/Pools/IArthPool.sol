@@ -111,5 +111,9 @@ interface IARTHPool {
 
     function getARTHMAHAPrice() external view returns (uint256);
 
-    function collateralPricePaused() external view returns (uint256);
+    function collateralPricePaused() external view returns (bool);
+
+    function pausedPrice() external view returns (uint256);
+
+    function collateralETHOracleAddress() external view returns (address);
 }

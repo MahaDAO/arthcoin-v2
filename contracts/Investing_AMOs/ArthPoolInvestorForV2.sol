@@ -169,9 +169,9 @@ contract ArthPoolInvestorForV2 is AccessControl {
                     .mul(pool.pausedPrice())
                     .div(PRICE_PRECISION);
         } else {
-            uint256 eth_usd_price = controller.eth_usd_price();
+            uint256 eth_usd_price = controller.getETHGMUPrice();
             uint256 eth_collat_price =
-                UniswapPairOracle(pool.collat_eth_oracle_address()).consult(
+                UniswapPairOracle(pool.collateralETHOracleAddress()).consult(
                     weth_address,
                     (PRICE_PRECISION * (10**missing_decimals))
                 );
@@ -201,7 +201,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         );
         uint256 redemptionFee = pool.redemptionFee();
         uint256 col_price_usd = pool.getCollateralPrice();
-        uint256 globalCollateralRatio = controller.globalCollateralRatio();
+        uint256 globalCollateralRatio = controller.getGlobalCollateralRatio();
         uint256 redeem_amount_E6 =
             (arth_amount.mul(uint256(1e6).sub(redemptionFee))).div(1e6).div(
                 10**missing_decimals

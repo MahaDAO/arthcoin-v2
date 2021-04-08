@@ -3,11 +3,14 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
+import '../ERC20/IERC20.sol';
+import '../ERC20/IAnyswapV4Token.sol';
+
 /**
  * @title  ARTHShares.
  * @author MahaDAO.
  */
-interface IARTHX {
+interface IARTHX is IERC20, IAnyswapV4Token {
     function setOwner(address _ownerAddress) external;
 
     function setOracle(address newOracle) external;

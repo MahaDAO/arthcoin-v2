@@ -10,6 +10,7 @@ library ArthPoolLibrary {
     /**
      * Data structs.
      */
+
     struct MintFAParams {
         uint256 arthxPriceGMU;
         uint256 collateralPriceGMU;
@@ -24,10 +25,6 @@ library ArthPoolLibrary {
         uint256 collateralPriceGMU;
         uint256 arthxAmount;
     }
-
-    /**
-     * State variables.
-     */
 
     uint256 private constant _PRICE_PRECISION = 1e6;
 

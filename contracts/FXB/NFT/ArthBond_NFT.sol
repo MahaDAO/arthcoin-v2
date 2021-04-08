@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import '../../ERC721/ERC721.sol';
 import './ArthBond_NFT_Library.sol';
 import '../../ERC721/V8_0_0/Math/SafeMath.sol';
-import '../../Arth/V8_0_0/IArthPartial.sol';
+import '../../ARTH/IARTH.sol';
 import '../../ERC721/V8_0_0/Governance/AccessControl.sol';
 
 /**
@@ -17,7 +17,7 @@ contract ArthBond_NFT is ERC721, AccessControl {
 
     /* ========== STATE VARIABLES ========== */
 
-    IArthPartial private ARTH =
+    IARTH private ARTH =
         IArthPartial(0x853d955aCEf822Db058eb8505911ED77F175b99e);
 
     address public controller_address; // Controller contract to dynamically adjust system parameters automatically

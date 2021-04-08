@@ -15,10 +15,6 @@ import '../../Common/Ownable.sol';
 contract RecollateralizeDiscountCurve is Ownable {
     using SafeMath for uint256;
 
-    /**
-     * State variables.
-     */
-
     IERC20 private _ARTH;
     IARTHController private _arthController;
 
@@ -29,7 +25,7 @@ contract RecollateralizeDiscountCurve is Ownable {
      * Constructor.
      */
     constructor(IERC20 __ARTH, IARTHController __arthController) {
-        _ARTH = ___ARTH;
+        _ARTH = __ARTH;
         _arthController = __arthController;
     }
 

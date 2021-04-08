@@ -76,7 +76,7 @@ contract ARTHController is AccessControl, IARTHController {
 
     address[] public arthPoolsArray; // These contracts are able to mint ARTH.
 
-    mapping(address => bool) public arthPools;
+    mapping(address => bool) public override arthPools;
 
     uint8 private _ethGMUPricerDecimals;
     uint256 private constant _PRICE_PRECISION = 1e6;
