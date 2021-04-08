@@ -5,11 +5,11 @@ pragma experimental ABIEncoderV2;
 
 import '../Math/SafeMath.sol';
 import '../ARTHX/IARTHX.sol';
-import '../ARTH/IARTH.sol';
+import '../Arth/IARTH.sol';
 import '../ERC20/ERC20.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../Governance/AccessControl.sol';
-import '../ARTH/Pools/ArthPoolvAMM.sol';
+import '../Arth/Pools/ArthPoolvAMM.sol';
 
 // contract ArthPoolInvestor is AccessControl {
 //     using SafeMath for uint256;

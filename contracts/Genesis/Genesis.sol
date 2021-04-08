@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import '@openzeppelin/contracts/token/ERC20/ERC20.sol';
-import '../Oracle/ChainlinkETHUSDPriceConsumer.sol';
+import '../Oracle/IChainlinkOracle.sol';
 import '../Math/SafeMath.sol';
 import './BondingCurve.sol';
-
-//import '../Arth/IArth.sol';
+import { IARTH } from '../Arth/IARTH.sol';
 
 contract Genesis is ERC20 {
     using SafeMath for uint256;
@@ -18,9 +17,9 @@ contract Genesis is ERC20 {
     // uint256 public EthPrice = 2000;
     uint256 public ethRaised;
 
-    ChainlinkETHUSDPriceConsumer private ethUsdPricer;
+    IChainlinkOracle private ethGMUPricer;
     BondingCurve private bondingCurve;
-    //ARTHStablecoin private arth;
+    IARTH private arth;
 
     uint8 private eth_usd_pricer_decimals;
     uint256 private constant PRICE_PRECISION = 1e6;
@@ -29,12 +28,14 @@ contract Genesis is ERC20 {
 
     constructor(
         BondingCurve _bondingCurve,
-        //ARTHStablecoin _arth,
+        IARTH _arth,
+        IChainlinkOracle _ethGMUPricer,
         uint256 _hardcap,
         uint256 _softcap
     ) public ERC20('Arth Genesis Token', 'ARTHG') {
         bondingCurve = _bondingCurve;
-        //arth = _arth;
+        arth = _arth;
+        ethGMUPricer = _ethGMUPricer;
         hardcap = _hardcap;
         softcap = _softcap;
     }
@@ -50,7 +51,7 @@ contract Genesis is ERC20 {
 
     function mintGenesisToken(uint256 _collateralAmount) public payable {
         uint256 eth_2_usd_price =
-            uint256(ethUsdPricer.getLatestPrice()).mul(PRICE_PRECISION).div(
+            uint256(ethGMUPricer.getLatestPrice()).mul(PRICE_PRECISION).div(
                 uint256(10)**eth_usd_pricer_decimals
             );
 
@@ -77,7 +78,7 @@ contract Genesis is ERC20 {
 
         _burn(msg.sender, _genesisTokenAmount);
 
-        //_arth.poolMint(msg.sender, _genesisTokenAmount);
+        _arth.poolMint(msg.sender, _genesisTokenAmount);
     }
 
     function reedemWithMaha(uint256 _genesisTokenAmount) public payable {
@@ -90,7 +91,7 @@ contract Genesis is ERC20 {
 
         _burn(msg.sender, _genesisTokenAmount);
 
-        //_arth.poolMint(msg.sender, _genesisTokenAmount);
+        _arth.poolMint(msg.sender, _genesisTokenAmount);
     }
 
     receive() external payable {}

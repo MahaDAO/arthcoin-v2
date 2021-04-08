@@ -3,14 +3,14 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../ARTH/IArth.sol';
+import '../Arth/IArth.sol';
 import '../ARTHX/IARTHX.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
 import './finnexus/IFNX_CFNX.sol';
 import './cream/ICREAM_crARTH.sol';
 import './finnexus/IFNX_FPT_B.sol';
-import '../ARTH/Pools/IARTHPool.sol';
+import '../Arth/Pools/IARTHPool.sol';
 import '../ERC20/Variants/Comp.sol';
 import './finnexus/IFNX_Oracle.sol';
 import './finnexus/IFNX_MinePool.sol';
@@ -20,7 +20,7 @@ import '../Governance/AccessControl.sol';
 import './finnexus/IFNX_ManagerProxy.sol';
 import './finnexus/IFNX_TokenConverter.sol';
 import './finnexus/IFNX_IntegratedStake.sol';
-import '../ARTH/IARTHController.sol';
+import '../Arth/IARTHController.sol';
 
 contract ArthLendingAMO is AccessControl {
     using SafeMath for uint256;

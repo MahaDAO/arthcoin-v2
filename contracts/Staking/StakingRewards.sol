@@ -5,14 +5,14 @@ pragma experimental ABIEncoderV2;
 
 import './Pausable.sol';
 import '../Math/Math.sol';
-import '../ARTH/IARTH.sol';
+import '../Arth/IARTH.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
 import './IStakingRewards.sol';
 import '../ERC20/SafeERC20.sol';
 import '../Utils/StringHelpers.sol';
 import './IMintAndCallFallBack.sol';
-import '../ARTH/IARTHController.sol';
+import '../Arth/IARTHController.sol';
 import '../Utils/ReentrancyGuard.sol';
 import '../Uniswap/TransferHelper.sol';
 import '../Governance/AccessControl.sol';

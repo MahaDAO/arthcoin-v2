@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import '../ARTH/IARTH.sol';
+import '../Arth/IARTH.sol';
 import '../ARTHX/IARTHX.sol';
 import '../Math/SafeMath.sol';
 import './ReserveTracker.sol';
-import '../ARTH/IARTHController.sol';
+import '../Arth/IARTHController.sol';
 import '../Curve/IMetaImplementationUSD.sol';
 
 /**

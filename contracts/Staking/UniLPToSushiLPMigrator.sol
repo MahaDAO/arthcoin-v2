@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import './Pausable.sol';
 import '../Math/Math.sol';
-import '../ARTH/IARTH.sol';
+import '../Arth/IARTH.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
 import './IStakingRewards.sol';

@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 import '../../ERC721/ERC721.sol';
 import './ArthBond_NFT_Library.sol';
 import '../../ERC721/V8_0_0/Math/SafeMath.sol';
-import '../../ARTH/IARTH.sol';
+import '../../Arth/IARTH.sol';
 import '../../ERC721/V8_0_0/Governance/AccessControl.sol';
 
 /**

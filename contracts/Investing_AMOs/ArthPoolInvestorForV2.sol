@@ -3,11 +3,11 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../ARTH/IARTH.sol';
+import '../Arth/IARTH.sol';
 import '../ARTHX/IARTHX.sol';
 import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
-import '../ARTH/Pools/IARTHPool.sol';
+import '../Arth/Pools/IARTHPool.sol';
 import '../ERC20/Variants/Comp.sol';
 import './compound/IcUSDC_Partial.sol';
 import './yearn/IyUSDC_V2_Partial.sol';
@@ -16,7 +16,7 @@ import '../Oracle/UniswapPairOracle.sol';
 import '../Governance/AccessControl.sol';
 import './aave/IAAVELendingPool_Partial.sol';
 import './compound/ICompComptrollerPartial.sol';
-import '../ARTH/IARTHController.sol';
+import '../Arth/IARTHController.sol';
 
 /**
  *  Original code written by:
