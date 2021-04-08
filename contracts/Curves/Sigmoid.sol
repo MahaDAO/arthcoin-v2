@@ -10,7 +10,7 @@ import {Curve} from './Curve.sol';
 contract Sigmoid is Curve {
     using SafeMath for uint256;
 
-    uint256[23] private slots;
+    uint256[25] private slots;
 
     /**
      * Constructor.
@@ -50,6 +50,8 @@ contract Sigmoid is Curve {
         slots[20] = 11486942630593183;
         slots[21] = 5092850924284857;
         slots[22] = 0;
+        slots[23] = 0;
+        slots[24] = 0;
     }
 
     /**
@@ -73,14 +75,10 @@ contract Sigmoid is Curve {
     }
 
     function getY(uint256 x) public view override returns (uint256) {
-        // if (x <= minX) {
-        //     return maxY;
-        // }
+        if (x <= minX) return 0; // return maxY;
 
         // Fail safe to return after maxX.
-        if (x >= maxX) {
-            return maxY;
-        }
+        if (x >= maxX) return maxY;
 
         uint256 slotWidth = maxX.sub(minX).div(slots.length);
         uint256 xa = x.sub(minX).div(slotWidth);
