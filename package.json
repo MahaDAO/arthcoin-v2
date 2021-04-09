@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "tsc": "tsc",
-    "test": "npm test",
+    "test": "hardhat test",
     "dev": "hardhat node",
     "coverage": "hardhat coverage",
     "flatten": "truffle-flattener",
