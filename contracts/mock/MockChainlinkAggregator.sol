@@ -2,25 +2,30 @@
 
 pragma solidity ^0.8.0;
 
-contract AggregatorV3 {
+import {Ownable} from '../access/Ownable.sol';
+
+contract MockChainlinkAggregator is Ownable {
+    uint256 latestPrice = 1e8;
+
     function decimals() external pure returns (uint8) {
         return 8;
     }
 
     function description() external pure returns (string memory) {
-        return 'chainlink';
+        return 'This is a mock chainlink oracle';
     }
 
     function version() external pure returns (uint256) {
         return 3;
     }
 
-    // getRoundData and latestRoundData should both raise "No data present"
-    // if they do not have data to report, instead of returning unset values
-    // which could be misinterpreted as actual reported values.
+    function setLatestPrice(uint256 price) public {
+        latestPrice = price;
+    }
+
     function getRoundData(uint80 _roundId)
         external
-        pure
+        view
         returns (
             uint80 roundId,
             int256 answer,
@@ -29,12 +34,12 @@ contract AggregatorV3 {
             uint80 answeredInRound
         )
     {
-        return (1, 1, 1, 1, 1);
+        return (_roundId, int256(latestPrice), 1, 1, 1);
     }
 
     function latestRoundData()
         external
-        pure
+        view
         returns (
             uint80 roundId,
             int256 answer,
@@ -43,6 +48,6 @@ contract AggregatorV3 {
             uint80 answeredInRound
         )
     {
-        return (1, 1, 1, 1, 1);
+        return (1, int256(latestPrice), 1, 1, 1);
     }
 }
