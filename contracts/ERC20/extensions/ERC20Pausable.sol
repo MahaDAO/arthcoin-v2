@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import './ERC20Burnable.sol';
+import '../ERC20.sol';
 import '../../security/Pausable.sol';
 
 /**
@@ -12,7 +12,7 @@ import '../../security/Pausable.sol';
  * period, or having an emergency switch for freezing all token transfers in the
  * event of a large bug.
  */
-abstract contract ERC20Pausable is ERC20Burnable, Pausable {
+abstract contract ERC20Pausable is ERC20, Pausable {
     /**
      * @dev See {ERC20-_beforeTokenTransfer}.
      *
