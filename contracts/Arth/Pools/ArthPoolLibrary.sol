@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../../Math/SafeMath.sol';
+import {SafeMath} from '../../utils/math/SafeMath.sol';
 
 library ArthPoolLibrary {
     using SafeMath for uint256;

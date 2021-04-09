@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import '../Math/FixedPoint.sol';
+import '../utils/math/FixedPoint.sol';
 import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 
 /// @dev Library with helper methods for oracles that are concerned

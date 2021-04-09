@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import '../Math/SafeMath.sol';
+import '../utils/math/SafeMath.sol';
 import './Interfaces/IUniswapV2Pair.sol';
 import './Interfaces/IUniswapV2Factory.sol';
 

@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {FixedPoint} from '../Math/FixedPoint.sol';
+import {FixedPoint} from '../utils/math/FixedPoint.sol';
 import {IUniswapPairOracle} from './IUniswapPairOracle.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
 import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';

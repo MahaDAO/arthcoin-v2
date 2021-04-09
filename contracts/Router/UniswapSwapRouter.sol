@@ -9,7 +9,7 @@ import {
     TransferHelper
 } from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
-import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IUniswapSwapRouter} from './IUniswapSwapRouter.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
 import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';

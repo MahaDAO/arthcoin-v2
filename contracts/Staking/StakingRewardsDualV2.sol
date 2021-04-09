@@ -3,11 +3,11 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {Math} from '../Math/Math.sol';
+import {Math} from '../utils/math/Math.sol';
 import {Pausable} from './Pausable.sol';
 import {IARTH} from '../Arth/IARTH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
-import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {SafeERC20} from '../ERC20/SafeERC20.sol';
 import {StringHelpers} from '../utils/StringHelpers.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';

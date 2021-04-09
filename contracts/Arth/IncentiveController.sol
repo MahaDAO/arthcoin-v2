@@ -3,14 +3,12 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {SafeCast} from '@openzeppelin/contracts/utils/math/SafeCast.sol';
-import {
-    SignedSafeMath
-} from '@openzeppelin/contracts/utils/math/SignedSafeMath.sol';
+import {SafeCast} from '../utils/math/SafeCast.sol';
+import {SignedSafeMath} from '../utils/math/SignedSafeMath.sol';
 
 import {IARTH} from './IARTH.sol';
-import {Math} from '../Math//Math.sol';
-import {SafeMath} from '../Math/SafeMath.sol';
+import {Math} from '../utils/math/Math.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IIncentiveController} from './IIncentive.sol';
 import {AccessControl} from '../Governance/AccessControl.sol';
 import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';

@@ -7,7 +7,7 @@ import {IARTH} from '../IARTH.sol';
 import {IARTHPool} from './IARTHPool.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {IARTHX} from '../../ARTHX/IARTHX.sol';
-import {SafeMath} from '../../Math/SafeMath.sol';
+import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
 import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';

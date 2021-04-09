@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {Math} from '@openzeppelin/contracts/utils/math/Math.sol';
-import {SafeMath} from '@openzeppelin/contracts/utils/math/SafeMath.sol';
+import {Math} from '../utils/math/Math.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 
 import {Curve} from './Curve.sol';
 

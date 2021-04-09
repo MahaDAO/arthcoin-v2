@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {ISimpleOracle} from './ISimpleOracle.sol';
 import {IChainlinkOracle} from './IChainlinkOracle.sol';
 import {AggregatorV3Interface} from './AggregatorV3Interface.sol';

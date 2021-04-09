@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import '../Arth/IARTH.sol';
 import '../ARTHX/IARTHX.sol';
 import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
+import '../utils/math/SafeMath.sol';
 import '../Arth/Pools/IARTHPool.sol';
 import '../ERC20/Variants/Comp.sol';
 import './compound/IcUSDC_Partial.sol';

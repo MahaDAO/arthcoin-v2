@@ -4,10 +4,10 @@
 // pragma experimental ABIEncoderV2;
 
 // import '../../Arth/Arth.sol';
-// import '../../Math/Math.sol';
+// import '../../utils/math/Math.sol';
 // import '../../ERC20/ERC20.sol';
 // import '../../ARTHS/ARTHS.sol';
-// import '../../Math/SafeMath.sol';
+// import '../../utils/math/SafeMath.sol';
 // import '../../Uniswap/UniswapV2Library.sol';
 // import '../../Oracle/UniswapPairOracle.sol';
 // import '../../Governance/AccessControl.sol';

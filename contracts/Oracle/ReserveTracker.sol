@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {Math} from '../Math/Math.sol';
-import {SafeMath} from '../Math/SafeMath.sol';
+import {Math} from '../utils/math/Math.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IUniswapPairOracle} from './IUniswapPairOracle.sol';
 import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 import {IMetaImplementationUSD} from '../Curve/IMetaImplementationUSD.sol';

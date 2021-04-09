@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import '../Common/Context.sol';
 import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
+import '../utils/math/SafeMath.sol';
 import '../utils/Address.sol';
 
 // Due to compiling issues, _name, _symbol, and _decimals were removed

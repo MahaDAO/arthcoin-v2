@@ -7,7 +7,7 @@ import {IMinter} from './IMinter.sol';
 import {IARTH} from '../Arth/IARTH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {IARTHX} from '../ARTHX/IARTHX.sol';
-import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IARTHPool} from '../Arth/Pools/IARTHPool.sol';
 import {ILiquidityGauge} from './ILiquidityGauge.sol';
 import {IStableSwap3Pool} from './IStableSwap3Pool.sol';

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import '../ERC20.sol';
-import '../../Math/SafeMath.sol';
+import '../../utils/math/SafeMath.sol';
 import '../../Common/Ownable.sol';
 
 // SushiToken with Governance.

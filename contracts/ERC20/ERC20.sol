@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from './IERC20.sol';
 import {Address} from '../utils/Address.sol';
-import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {Context} from '../Common/Context.sol';
 
 /**

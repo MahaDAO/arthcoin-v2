@@ -8,7 +8,7 @@ import {IWETH} from '../ERC20/IWETH.sol';
 import {ERC20} from '../ERC20/ERC20.sol';
 import {IARTHX} from '../ARTHX/IARTHX.sol';
 import {ICurve} from '../Curves/ICurve.sol';
-import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {Ownable} from '../Common/Ownable.sol';
 import {IERC20Mintable} from '../ERC20/IERC20Mintable.sol';
 import {IUniswapV2Factory} from '../Uniswap/Interfaces/IUniswapV2Factory.sol';

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {IARTH} from './IARTH.sol';
-import {SafeMath} from '../Math/SafeMath.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AccessControl} from '../Governance/AccessControl.sol';
 
 contract ArthBridge is AccessControl {

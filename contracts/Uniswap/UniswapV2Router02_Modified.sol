@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import '../ERC20/IWETH.sol';
 import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
+import '../utils/math/SafeMath.sol';
 import './TransferHelper.sol';
 import './UniswapV2Library.sol';
 import './Interfaces/IUniswapV2Factory.sol';
