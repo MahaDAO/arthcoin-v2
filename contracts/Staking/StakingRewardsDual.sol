@@ -10,9 +10,9 @@ import {IERC20} from '../ERC20/IERC20.sol';
 import {SafeMath} from '../Math/SafeMath.sol';
 import {SafeERC20} from '../ERC20/SafeERC20.sol';
 import {IStakingRewards} from './IStakingRewards.sol';
-import {StringHelpers} from '../Utils/StringHelpers.sol';
+import {StringHelpers} from '../utils/StringHelpers.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
-import {ReentrancyGuard} from '../Utils/ReentrancyGuard.sol';
+import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
 import {TransferHelper} from '../Uniswap/TransferHelper.sol';
 import {IStakingRewardsDual} from './IStakingRewardsDual.sol';
 

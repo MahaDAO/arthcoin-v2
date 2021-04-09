@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import '../Utils/EnumerableSet.sol';
-import '../Utils/Address.sol';
+import '../utils/EnumerableSet.sol';
+import '../utils/Address.sol';
 import '../Common/Context.sol';
 
 /**

@@ -10,7 +10,7 @@ import {IERC20} from '../ERC20/IERC20.sol';
 import {SafeMath} from '../Math/SafeMath.sol';
 import {SafeERC20} from '../ERC20/SafeERC20.sol';
 import {IStakingRewards} from './IStakingRewards.sol';
-import {ReentrancyGuard} from '../Utils/ReentrancyGuard.sol';
+import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
 import {RewardsDistributionRecipient} from './RewardsDistributionRecipient.sol';
 import {
     IStakingRewardsDualForMigrator

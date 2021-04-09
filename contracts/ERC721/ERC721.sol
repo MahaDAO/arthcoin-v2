@@ -8,10 +8,10 @@ import './IERC721Metadata.sol';
 import './IERC721Enumerable.sol';
 import './IERC721Receiver.sol';
 import '../ERC165/ERC165.sol';
-import './V8_0_0/Utils/Address.sol';
-import './V8_0_0/Utils/EnumerableSet.sol';
-import './V8_0_0/Utils/EnumerableMap.sol';
-import './V8_0_0/Utils/Strings.sol';
+import './V8_0_0/utils/Address.sol';
+import './V8_0_0/utils/EnumerableSet.sol';
+import './V8_0_0/utils/EnumerableMap.sol';
+import './V8_0_0/utils/Strings.sol';
 
 /**
  * @title ERC721 Non-Fungible Token Standard basic implementation
