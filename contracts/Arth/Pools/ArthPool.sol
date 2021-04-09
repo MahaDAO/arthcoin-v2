@@ -39,10 +39,6 @@ contract ArthPool is AccessControl, IARTHPool {
     IUniswapPairOracle private _collateralETHOracle;
     RecollateralizeDiscountCurve private _recollateralizeDiscountCruve;
 
-    /**
-     * State variables.
-     */
-
     bool public mintPaused = false;
     bool public redeemPaused = false;
     bool public buyBackPaused = false;
@@ -102,7 +98,6 @@ contract ArthPool is AccessControl, IARTHPool {
     /**
      * Events.
      */
-
     event Repay(address indexed from, uint256 amount);
     event Borrow(address indexed from, uint256 amount);
     event StabilityFeesCharged(address indexed from, uint256 fee);
@@ -110,11 +105,10 @@ contract ArthPool is AccessControl, IARTHPool {
     /**
      * Modifiers.
      */
-
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == _timelockAddress || msg.sender == _ownerAddress,
-            'You are not the owner or the governance timelock'
+            'ArthPool: You are not the owner or the governance timelock'
         );
         _;
     }
@@ -122,7 +116,7 @@ contract ArthPool is AccessControl, IARTHPool {
     modifier onlyAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'You are not the owner or the governance timelock'
+            'ArthPool: You are not the admin'
         );
         _;
     }
@@ -143,12 +137,12 @@ contract ArthPool is AccessControl, IARTHPool {
     }
 
     modifier notRedeemPaused() {
-        require(redeemPaused == false, 'Redeeming is paused');
+        require(redeemPaused == false, 'ArthPool: Redeeming is paused');
         _;
     }
 
     modifier notMintPaused() {
-        require(mintPaused == false, 'Minting is paused');
+        require(mintPaused == false, 'ArthPool: Minting is paused');
         _;
     }
 
@@ -193,14 +187,12 @@ contract ArthPool is AccessControl, IARTHPool {
     /**
      * External.
      */
-
     function setBuyBackCollateralBuffer(uint256 percent)
         external
         override
         onlyAdminOrOwnerOrGovernance
     {
         require(percent <= 100, 'ArthPool: percent > 100');
-
         buybackCollateralBuffer = percent;
     }
 
@@ -273,7 +265,6 @@ contract ArthPool is AccessControl, IARTHPool {
 
     function toggleMinting() external override {
         require(hasRole(_MINT_PAUSER, msg.sender));
-
         mintPaused = !mintPaused;
     }
 
@@ -296,11 +287,8 @@ contract ArthPool is AccessControl, IARTHPool {
         require(hasRole(_COLLATERAL_PRICE_PAUSER, msg.sender));
 
         // If pausing, set paused price; else if unpausing, clear pausedPrice.
-        if (collateralPricePaused == false) {
-            pausedPrice = newPrice;
-        } else {
-            pausedPrice = 0;
-        }
+        if (collateralPricePaused == false) pausedPrice = newPrice;
+        else pausedPrice = 0;
 
         collateralPricePaused = !collateralPricePaused;
     }
@@ -392,6 +380,7 @@ contract ArthPool is AccessControl, IARTHPool {
                 getCollateralPrice(),
                 collateralAmountD18
             );
+
         // Remove precision at the end.
         arthAmountD18 = (arthAmountD18.mul(uint256(1e6).sub(mintingFee))).div(
             1e6
@@ -681,12 +670,9 @@ contract ArthPool is AccessControl, IARTHPool {
             sendCollateral = true;
         }
 
-        if (sendARTHX == true) {
-            _ARTHX.transfer(msg.sender, ARTHXAmount);
-        }
-        if (sendCollateral == true) {
+        if (sendARTHX == true) _ARTHX.transfer(msg.sender, ARTHXAmount);
+        if (sendCollateral == true)
             _COLLATERAL.transfer(msg.sender, CollateralAmount);
-        }
     }
 
     // When the protocol is recollateralizing, we need to give a discount of ARTHX to hit the new CR target
@@ -793,19 +779,16 @@ contract ArthPool is AccessControl, IARTHPool {
 
     function getCRForMint() public view override returns (uint256) {
         if (useGlobalCRForMint) return getGlobalCR();
-
         return mintCollateralRatio;
     }
 
     function getCRForRedeem() public view override returns (uint256) {
         if (useGlobalCRForRedeem) return getGlobalCR();
-
         return redeemCollateralRatio;
     }
 
     function getCRForRecollateralize() public view override returns (uint256) {
         if (useGlobalCRForRecollateralize) return getGlobalCR();
-
         return recollateralizeCollateralRatio;
     }
 
@@ -839,7 +822,8 @@ contract ArthPool is AccessControl, IARTHPool {
                 .div(_PRICE_PRECISION);
     }
 
-    // Returns the value of excess collateral held in this Arth pool, compared to what is needed to maintain the global collateral ratio
+    // Returns the value of excess collateral held in this Arth pool, compared to what is
+    // needed to maintain the global collateral ratio
     function getAvailableExcessCollateralDV()
         public
         view
@@ -887,21 +871,24 @@ contract ArthPool is AccessControl, IARTHPool {
             );
     }
 
+    function estimateStabilityFeeInMAHA(uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 stabilityFeeInARTH = amount.mul(stabilityFee).div(100);
+        return getARTHMAHAPrice().mul(stabilityFeeInARTH).div(1e18); // NOTE: this is might change asper ARTH's decimals and price precision.
+    }
+
     /**
      * Internal.
      */
-
     function _chargeStabilityFee(uint256 amount) internal {
         require(amount > 0, 'ArthPool: amount = 0');
 
         if (stabilityFee > 0) {
-            uint256 stabilityFeeInARTH = amount.mul(stabilityFee).div(100);
-
-            uint256 stabilityFeeInMAHA =
-                getARTHMAHAPrice().mul(stabilityFeeInARTH).div(1e18); // NOTE: this is might change asper ARTH's decimals and price precision.
-
+            uint256 stabilityFeeInMAHA = estimateStabilityFeeInMAHA(amount);
             _MAHA.burnFrom(msg.sender, stabilityFeeInMAHA);
-
             emit StabilityFeesCharged(msg.sender, stabilityFeeInMAHA);
         }
 

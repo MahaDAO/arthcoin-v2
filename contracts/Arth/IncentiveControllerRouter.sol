@@ -26,7 +26,6 @@ contract IncentiveControllerRouter is AccessControl, IIncentiveController {
     /**
      * Modifiers.
      */
-
     modifier onlyAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
@@ -38,7 +37,6 @@ contract IncentiveControllerRouter is AccessControl, IIncentiveController {
     /**
      * Constructor.
      */
-
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
@@ -46,7 +44,6 @@ contract IncentiveControllerRouter is AccessControl, IIncentiveController {
     /**
      * External.
      */
-
     function setSenderIncentiveControllers(
         address target,
         IIncentiveController controller
@@ -74,7 +71,6 @@ contract IncentiveControllerRouter is AccessControl, IIncentiveController {
     /**
      * Public.
      */
-
     function incentivize(
         address sender,
         address receiver,

@@ -25,17 +25,10 @@ contract RecollateralizeDiscountCurve is Ownable {
     /// @notice Bonus rate on ARTHX minted when recollateralizing.
     uint256 public bonusRate = 7500; // 6 decimals of precision, is set to 0.75% on genesis.
 
-    /**
-     * Constructor.
-     */
     constructor(IERC20 __ARTH, IARTHController __arthController) {
         _ARTH = __ARTH;
         _arthController = __arthController;
     }
-
-    /**
-     * Public.
-     */
 
     function setBonusRate(uint256 rate) public onlyOwner {
         require(

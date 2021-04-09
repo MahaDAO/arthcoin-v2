@@ -141,6 +141,8 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         uint256 amount
     ) internal override {
         super._transfer(sender, recipient, amount);
-        _checkAndApplyIncentives(sender, recipient, amount);
+        if (address(incentiveController) != address(0)) {
+            _checkAndApplyIncentives(sender, recipient, amount);
+        }
     }
 }

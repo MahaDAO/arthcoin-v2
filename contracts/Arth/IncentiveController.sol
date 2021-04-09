@@ -73,7 +73,6 @@ contract IncentiveController is AccessControl, IIncentiveController {
         IARTH ARTH_,
         address arthETHOracle_,
         address ethGMUPricer_,
-        address arthAddr_,
         address uniswapPairAddress_
     ) {
         ARTH = ARTH_;
@@ -101,7 +100,6 @@ contract IncentiveController is AccessControl, IIncentiveController {
 
     function _getUniswapPrice() internal view returns (uint256) {
         (uint256 reserveARTH, uint256 reserveOther) = getReserves();
-
         return reserveARTH.mul(_PRICE_PRECISION).div(reserveOther);
     }
 
@@ -113,7 +111,6 @@ contract IncentiveController is AccessControl, IIncentiveController {
             );
 
         uint256 arthEthPrice = _getUniswapPrice();
-
         return ethToGMUPrice.mul(arthEthPrice).div(_PRICE_PRECISION);
     }
 
@@ -140,7 +137,6 @@ contract IncentiveController is AccessControl, IIncentiveController {
     function getTimeWeight() public view returns (uint32) {
         TimeWeightInfo memory tw = _timeWeightInfo;
         if (!tw.active) return 0;
-
         uint32 blockDelta = uint32(uint256(block.number).sub(tw.blockNo));
         return uint32(uint256(tw.weight).add(blockDelta * tw.growthRate));
     }
