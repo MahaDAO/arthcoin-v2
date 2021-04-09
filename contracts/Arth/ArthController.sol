@@ -3,67 +3,87 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../ARTHX/ARTHX.sol';
-import '../ERC20/IERC20.sol';
-import '../Math/SafeMath.sol';
-import './Pools/IArthPool.sol';
-import '../Governance/AccessControl.sol';
-import '../Interfaces/IUniswapPairOracle.sol';
-import '../Interfaces/IChainlinkETHUSDPriceConsumer.sol';
-// Note: check this implementation
-import './IncentiveController.sol';
+import {IERC20} from '../ERC20/IERC20.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {IARTHPool} from './Pools/IARTHPool.sol';
+import {IARTHController} from './IARTHController.sol';
+import {AccessControl} from '../Governance/AccessControl.sol';
+import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
+import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 
-contract ArthController is AccessControl {
+/**
+ * @title  ARTHStablecoin.
+ * @author MahaDAO.
+ */
+contract ArthController is AccessControl, IARTHController {
     using SafeMath for uint256;
 
-    /* ========== STATE VARIABLES ========== */
+    /**
+     * Data structures.
+     */
 
     enum PriceChoice {ARTH, ARTHX}
-    ChainlinkETHUSDPriceConsumer private eth_usd_pricer;
-    uint8 private eth_usd_pricer_decimals;
-    IUniswapPairOracle private arthEthOracle;
-    IUniswapPairOracle private arthxEthOracle;
-    IncentiveController private incentiveController;
 
+    /**
+     * State variables.
+     */
+
+    IERC20 public ARTH;
+    IERC20 public ARTHX;
+
+    IChainlinkOracle private _ETHGMUPricer;
+    IUniswapPairOracle private _ARTHETHOracle;
+    IUniswapPairOracle private _ARTHXETHOracle;
+
+    address public wethAddress;
+    address public arthxAddress;
     address public ownerAddress;
-    address public creator_address;
-    address public timelock_address; // Governance timelock address
-    address public controller_address; // Controller contract to dynamically adjust system parameters automatically
-    address public arthx_address;
-    address public arth_eth_oracle_address;
-    address public arthx_eth_oracle_address;
-    address public weth_address;
-    address public eth_usd_consumer_address;
-    // 2M ARTH (only for testing, genesis supply will be 5k on Mainnet). This is to help with establishing the Uniswap pools, as they need liquidity.
-    uint256 public constant genesis_supply = 2000000e18;
-
-    // The addresses in this array are added by the oracle and these contracts are able to mint arth
-    address[] public arth_pools_array;
-
-    IERC20 public arth;
-    IERC20 public arthx;
-
-    // Mapping is also used for faster verification
-    mapping(address => bool) public arth_pools;
-    mapping(address => address) public incentiveContract;
-
-    // Constants for various precisions
-    uint256 private constant PRICE_PRECISION = 1e6;
-
-    uint256 public globalCollateralRatio; // 6 decimals of precision, e.g. 924102 = 0.924102
-    uint256 public redemptionFee; // 6 decimals of precision, divide by 1000000 in calculations for fee
-    uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee
-    uint256 public arth_step; // Amount to change the collateralization ratio by upon refreshCollateralRatio()
-    uint256 public refresh_cooldown; // Seconds to wait before being able to run refreshCollateralRatio() again
-    uint256 public price_target; // The price of ARTH at which the collateral ratio will respond to; this value is only used for the collateral ratio mechanism and not for minting and redeeming which are hardcoded at $1
-    uint256 public price_band; // The bound above and below the price target at which the refreshCollateralRatio() will not change the collateral ratio
-
+    address public creatorAddress;
+    address public timelockAddress;
+    address public controllerAddress;
+    address public arthETHOracleAddress;
+    address public arthxETHOracleAddress;
+    address public ethGMUConsumerAddress;
     address public DEFAULT_ADMIN_ADDRESS;
+
+    uint256 public arthStep; // Amount to change the collateralization ratio by upon refresing CR.
+    uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
+    uint256 public redemptionFee;
+    uint256 public refreshCooldown; // Seconds to wait before being refresh CR again.
+    uint256 public globalCollateralRatio;
+
+    // The bound above and below the price target at which the refershing CR
+    // will not change the collateral ratio.
+    uint256 public priceBand;
+
+    // The price of ARTH at which the collateral ratio will respond to.
+    // This value is only used for the collateral ratio mechanism & not for
+    // minting and redeeming which are hardcoded at $1.
+    uint256 public priceTarget;
+
+    // There needs to be a time interval that this can be called.
+    // Otherwise it can be called multiple times per expansion.
+    // Last time the refreshCollateralRatio function was called.
+    uint256 public lastCallTime;
+
+    // This is to help with establishing the Uniswap pools, as they need liquidity.
+    uint256 public constant genesisSupply = 2000000e18; // 2M ARTH (testnet) & 5k (Mainnet).
+
+    bool public isColalteralRatioPaused = false;
+
     bytes32 public constant COLLATERAL_RATIO_PAUSER =
         keccak256('COLLATERAL_RATIO_PAUSER');
-    bool public collateral_ratio_paused = false;
 
-    /* ========== MODIFIERS ========== */
+    address[] public arthPoolsArray; // These contracts are able to mint ARTH.
+
+    mapping(address => bool) public override arthPools;
+
+    uint8 private _ethGMUPricerDecimals;
+    uint256 private constant _PRICE_PRECISION = 1e6;
+
+    /**
+     * Modifiers.
+     */
 
     modifier onlyCollateralRatioPauser() {
         require(hasRole(COLLATERAL_RATIO_PAUSER, msg.sender));
@@ -71,17 +91,14 @@ contract ArthController is AccessControl {
     }
 
     modifier onlyPools() {
-        require(
-            arth_pools[msg.sender] == true,
-            'Only arth pools can call this function'
-        );
+        require(arthPools[msg.sender] == true, 'ARTHController: FORBIDDEN');
         _;
     }
 
     modifier onlyAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'You are not the owner or the governance timelock'
+            'ARTHController: FORBIDDEN'
         );
         _;
     }
@@ -89,9 +106,9 @@ contract ArthController is AccessControl {
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == ownerAddress ||
-                msg.sender == timelock_address ||
-                msg.sender == controller_address,
-            'You are not the owner, controller, or the governance timelock'
+                msg.sender == timelockAddress ||
+                msg.sender == controllerAddress,
+            'ARTHController: FORBIDDEN'
         );
         _;
     }
@@ -99,86 +116,268 @@ contract ArthController is AccessControl {
     modifier onlyByOwnerGovernanceOrPool() {
         require(
             msg.sender == ownerAddress ||
-                msg.sender == timelock_address ||
-                arth_pools[msg.sender] == true,
-            'You are not the owner, the governance timelock, or a pool'
+                msg.sender == timelockAddress ||
+                arthPools[msg.sender] == true,
+            'ARTHController: FORBIDDEN'
         );
         _;
     }
 
-    /* ========== CONSTRUCTOR ========== */
+    /**
+     * Constructor.
+     */
 
-    constructor(
-        address _creator_address,
-        address _timelock_address //, // address _vault
-    ) {
-        creator_address = _creator_address;
-        timelock_address = _timelock_address;
+    constructor(address _creatorAddress, address _timelockAddress) {
+        creatorAddress = _creatorAddress;
+        timelockAddress = _timelockAddress;
+
+        ownerAddress = _creatorAddress;
+        DEFAULT_ADMIN_ADDRESS = _msgSender();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        DEFAULT_ADMIN_ADDRESS = _msgSender();
-        ownerAddress = _creator_address;
+        grantRole(COLLATERAL_RATIO_PAUSER, creatorAddress);
+        grantRole(COLLATERAL_RATIO_PAUSER, timelockAddress);
 
-        grantRole(COLLATERAL_RATIO_PAUSER, creator_address);
-        grantRole(COLLATERAL_RATIO_PAUSER, timelock_address);
-
-        arth_step = 2500; // 6 decimals of precision, equal to 0.25%
-        globalCollateralRatio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision)
-        refresh_cooldown = 3600; // Refresh cooldown period is set to 1 hour (3600 seconds) at genesis
-        price_target = 1000000; // Collateral ratio will adjust according to the $1 price target at genesis
-        price_band = 5000; // Collateral ratio will not adjust if between $0.995 and $1.005 at genesis
+        arthStep = 2500; // 6 decimals of precision, equal to 0.25%.
+        priceBand = 5000; // Collateral ratio will not adjust if between $0.995 and $1.005 at genesis.
+        priceTarget = 1000000; // Collateral ratio will adjust according to the $1 price target at genesis.
+        refreshCooldown = 3600; // Refresh cooldown period is set to 1 hour (3600 seconds) at genesis.
+        globalCollateralRatio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision).
     }
 
-    /* ========== VIEWS ========== */
+    /**
+     * External.
+     */
 
-    // Choice = 'ARTH' or 'ARTHX' for now
-    function oracle_price(PriceChoice choice) internal view returns (uint256) {
-        // Get the ETH / USD price first, and cut it down to 1e6 precision
-        uint256 eth_2_usd_price =
-            uint256(eth_usd_pricer.getLatestPrice()).mul(PRICE_PRECISION).div(
-                uint256(10)**eth_usd_pricer_decimals
-            );
-        uint256 price_vs_eth;
+    function refreshCollateralRatio() external override {
+        require(
+            isColalteralRatioPaused == false,
+            'ARTHController: Collateral Ratio has been paused'
+        );
+        require(
+            block.timestamp - lastCallTime >= refreshCooldown,
+            'ARTHController: must wait till callable again'
+        );
 
-        if (choice == PriceChoice.ARTH) {
-            price_vs_eth = uint256(
-                arthEthOracle.consult(weth_address, PRICE_PRECISION)
-            ); // How much ARTH if you put in PRICE_PRECISION WETH
-        } else if (choice == PriceChoice.ARTHX) {
-            price_vs_eth = uint256(
-                arthxEthOracle.consult(weth_address, PRICE_PRECISION)
-            ); // How much ARTHX if you put in PRICE_PRECISION WETH
-        } else
-            revert(
-                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHX)'
-            );
+        uint256 currentPrice = getARTHPrice();
 
-        // Will be in 1e6 format
-        return eth_2_usd_price.mul(PRICE_PRECISION).div(price_vs_eth);
+        // Check whether to increase or decrease the CR.
+        if (currentPrice > priceTarget.add(priceBand)) {
+            // Decrease the collateral ratio.
+            if (globalCollateralRatio <= arthStep) {
+                globalCollateralRatio = 0; // If within a step of 0, go to 0
+            } else {
+                globalCollateralRatio = globalCollateralRatio.sub(arthStep);
+            }
+        } else if (currentPrice < priceTarget.sub(priceBand)) {
+            // Increase collateral ratio.
+            if (globalCollateralRatio.add(arthStep) >= 1000000) {
+                globalCollateralRatio = 1000000; // Cap collateral ratio at 1.000000.
+            } else {
+                globalCollateralRatio = globalCollateralRatio.add(arthStep);
+            }
+        }
+
+        lastCallTime = block.timestamp; // Set the time of the last expansion
     }
 
-    // Returns X ARTH = 1 USD
-    function arth_price() public view returns (uint256) {
-        return oracle_price(PriceChoice.ARTH);
+    /// @notice Adds collateral addresses supported.
+    /// @dev    Collateral must be an ERC20.
+    function addPool(address poolAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        require(
+            arthPools[poolAddress] == false,
+            'ARTHController: address present'
+        );
+
+        arthPools[poolAddress] = true;
+        arthPoolsArray.push(poolAddress);
     }
 
-    // Returns X ARTHX = 1 USD
-    function arthxPrice() public view returns (uint256) {
-        return oracle_price(PriceChoice.ARTHX);
+    function removePool(address poolAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        require(
+            arthPools[poolAddress] == true,
+            'ARTHController: address absent'
+        );
+
+        // Delete from the mapping.
+        delete arthPools[poolAddress];
+
+        // 'Delete' from the array by setting the address to 0x0
+        for (uint256 i = 0; i < arthPoolsArray.length; i++) {
+            if (arthPoolsArray[i] == poolAddress) {
+                arthPoolsArray[i] = address(0); // This will leave a null in the array and keep the indices the same.
+                break;
+            }
+        }
     }
 
-    function eth_usd_price() public view returns (uint256) {
+    /**
+     * Public.
+     */
+
+    function setGlobalCollateralRatio(uint256 _globalCollateralRatio)
+        public
+        override
+        onlyAdmin
+    {
+        globalCollateralRatio = _globalCollateralRatio;
+    }
+
+    function setARTHXAddress(address _arthxAddress)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        arthxAddress = _arthxAddress;
+    }
+
+    function setPriceTarget(uint256 newPriceTarget)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        priceTarget = newPriceTarget;
+    }
+
+    function setRefreshCooldown(uint256 newCooldown)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        refreshCooldown = newCooldown;
+    }
+
+    function setETHUSDOracle(address _ethGMUConsumerAddress)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        ethGMUConsumerAddress = _ethGMUConsumerAddress;
+        _ETHGMUPricer = IChainlinkOracle(ethGMUConsumerAddress);
+        _ethGMUPricerDecimals = _ETHGMUPricer.getDecimals();
+    }
+
+    function setARTHXETHOracle(
+        address _arthxOracleAddress,
+        address _wethAddress
+    ) public override onlyByOwnerOrGovernance {
+        arthxETHOracleAddress = _arthxOracleAddress;
+        _ARTHXETHOracle = IUniswapPairOracle(_arthxOracleAddress);
+        wethAddress = _wethAddress;
+    }
+
+    function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        arthETHOracleAddress = _arthOracleAddress;
+        _ARTHETHOracle = IUniswapPairOracle(_arthOracleAddress);
+        wethAddress = _wethAddress;
+    }
+
+    function toggleCollateralRatio() public override onlyCollateralRatioPauser {
+        isColalteralRatioPaused = !isColalteralRatioPaused;
+    }
+
+    function setMintingFee(uint256 fee)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        mintingFee = fee;
+    }
+
+    function setArthStep(uint256 newStep)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        arthStep = newStep;
+    }
+
+    function setRedemptionFee(uint256 fee)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        redemptionFee = fee;
+    }
+
+    function setOwner(address _ownerAddress)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        ownerAddress = _ownerAddress;
+    }
+
+    function setPriceBand(uint256 _priceBand)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        priceBand = _priceBand;
+    }
+
+    function setTimelock(address newTimelock)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        timelockAddress = newTimelock;
+    }
+
+    function getRefreshCooldown() external view override returns (uint256) {
+        return refreshCooldown;
+    }
+
+    function getARTHPrice() public view override returns (uint256) {
+        return _getOraclePrice(PriceChoice.ARTH);
+    }
+
+    function getARTHXPrice() public view override returns (uint256) {
+        return _getOraclePrice(PriceChoice.ARTHX);
+    }
+
+    function getETHGMUPrice() public view override returns (uint256) {
         return
-            uint256(eth_usd_pricer.getLatestPrice()).mul(PRICE_PRECISION).div(
-                uint256(10)**eth_usd_pricer_decimals
+            uint256(_ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
+                uint256(10)**_ethGMUPricerDecimals
             );
     }
 
-    // This is needed to avoid costly repeat calls to different getter functions
-    // It is cheaper gas-wise to just dump everything and only use some of the info
-    function arth_info()
+    function getGlobalCollateralRatio() public view override returns (uint256) {
+        return globalCollateralRatio;
+    }
+
+    function getGlobalCollateralValue() public view override returns (uint256) {
+        uint256 totalCollateralValueD18 = 0;
+
+        for (uint256 i = 0; i < arthPoolsArray.length; i++) {
+            // Exclude null addresses.
+            if (arthPoolsArray[i] != address(0)) {
+                totalCollateralValueD18 = totalCollateralValueD18.add(
+                    IARTHPool(arthPoolsArray[i]).getCollateralGMUBalance()
+                );
+            }
+        }
+
+        return totalCollateralValueD18;
+    }
+
+    function getARTHInfo()
         public
         view
+        override
         returns (
             uint256,
             uint256,
@@ -191,189 +390,47 @@ contract ArthController is AccessControl {
         )
     {
         return (
-            oracle_price(PriceChoice.ARTH), // arth_price()
-            oracle_price(PriceChoice.ARTHX), // arthxPrice()
-            arth.totalSupply(), // totalSupply()
-            globalCollateralRatio, // globalCollateralRatio()
-            globalCollateralValue(), // globalCollateralValue
-            mintingFee, // mintingFee()
-            redemptionFee, // redemptionFee()
-            uint256(eth_usd_pricer.getLatestPrice()).mul(PRICE_PRECISION).div(
-                uint256(10)**eth_usd_pricer_decimals
-            ) //eth_usd_price
+            getARTHPrice(), // ARTH price.
+            getARTHXPrice(), // ARTHX price.
+            ARTH.totalSupply(), // ARTH total supply.
+            globalCollateralRatio, // Global collateralization ratio.
+            getGlobalCollateralValue(), // Global collateral value.
+            mintingFee, // Minting fee.
+            redemptionFee, // Redemtion fee.
+            getETHGMUPrice() // ETH/GMU price.
         );
     }
 
-    // Adds collateral addresses supported, such as tether and busd, must be ERC20
-    function addPool(address pool_address) public onlyByOwnerOrGovernance {
-        require(arth_pools[pool_address] == false, 'address already exists');
-        arth_pools[pool_address] = true;
-        arth_pools_array.push(pool_address);
-    }
+    /**
+     * Internal.
+     */
 
-    // Remove a pool
-    function removePool(address pool_address) public onlyByOwnerOrGovernance {
-        require(
-            arth_pools[pool_address] == true,
-            "address doesn't exist already"
-        );
-
-        // Delete from the mapping
-        delete arth_pools[pool_address];
-
-        // 'Delete' from the array by setting the address to 0x0
-        for (uint256 i = 0; i < arth_pools_array.length; i++) {
-            if (arth_pools_array[i] == pool_address) {
-                arth_pools_array[i] = address(0); // This will leave a null in the array and keep the indices the same
-                break;
-            }
-        }
-    }
-
-    // Iterate through all arth pools and calculate all value of collateral in all pools globally
-    function globalCollateralValue() public view returns (uint256) {
-        uint256 total_collateral_value_d18 = 0;
-
-        for (uint256 i = 0; i < arth_pools_array.length; i++) {
-            // Exclude null addresses
-            if (arth_pools_array[i] != address(0)) {
-                total_collateral_value_d18 = total_collateral_value_d18.add(
-                    IArthPool(arth_pools_array[i]).collatDollarBalance()
-                );
-            }
-        }
-
-        return total_collateral_value_d18;
-    }
-
-    /* ========== PUBLIC FUNCTIONS ========== */
-
-    function setGlobalCollateralRatio(uint256 _globalCollateralRatio)
-        public
-        onlyAdmin
+    /// @param choice 'ARTH' or 'ARTHX'.
+    function _getOraclePrice(PriceChoice choice)
+        internal
+        view
+        returns (uint256)
     {
-        globalCollateralRatio = _globalCollateralRatio;
-    }
+        uint256 eth2GMUPrice =
+            uint256(_ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
+                uint256(10)**_ethGMUPricerDecimals
+            );
 
-    // There needs to be a time interval that this can be called. Otherwise it can be called multiple times per expansion.
-    uint256 public last_call_time; // Last time the refreshCollateralRatio function was called
+        uint256 priceVsETH;
 
-    function refreshCollateralRatio() public {
-        require(
-            collateral_ratio_paused == false,
-            'Collateral Ratio has been paused'
-        );
-        uint256 arth_price_cur = arth_price();
-        require(
-            block.timestamp - last_call_time >= refresh_cooldown,
-            'Must wait for the refresh cooldown since last refresh'
-        );
+        if (choice == PriceChoice.ARTH) {
+            priceVsETH = uint256(
+                _ARTHETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTH if you put in _PRICE_PRECISION WETH ?
+            );
+        } else if (choice == PriceChoice.ARTHX) {
+            priceVsETH = uint256(
+                _ARTHXETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTHX if you put in _PRICE_PRECISION WETH ?
+            );
+        } else
+            revert(
+                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHX)'
+            );
 
-        // Step increments are 0.25% (upon genesis, changable by setArthXtep())
-
-        if (arth_price_cur > price_target.add(price_band)) {
-            //decrease collateral ratio
-            if (globalCollateralRatio <= arth_step) {
-                //if within a step of 0, go to 0
-                globalCollateralRatio = 0;
-            } else {
-                globalCollateralRatio = globalCollateralRatio.sub(arth_step);
-            }
-        } else if (arth_price_cur < price_target.sub(price_band)) {
-            //increase collateral ratio
-            if (globalCollateralRatio.add(arth_step) >= 1000000) {
-                globalCollateralRatio = 1000000; // cap collateral ratio at 1.000000
-            } else {
-                globalCollateralRatio = globalCollateralRatio.add(arth_step);
-            }
-        }
-
-        last_call_time = block.timestamp; // Set the time of the last expansion
-    }
-
-    /* ========== RESTRICTED FUNCTIONS ========== */
-
-    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
-        ownerAddress = _ownerAddress;
-    }
-
-    function setRedemptionFee(uint256 red_fee) public onlyByOwnerOrGovernance {
-        redemptionFee = red_fee;
-    }
-
-    function setMintingFee(uint256 min_fee) public onlyByOwnerOrGovernance {
-        mintingFee = min_fee;
-    }
-
-    function setArthStep(uint256 _new_step) public onlyByOwnerOrGovernance {
-        arth_step = _new_step;
-    }
-
-    function setPriceTarget(uint256 _new_price_target)
-        public
-        onlyByOwnerOrGovernance
-    {
-        price_target = _new_price_target;
-    }
-
-    function setRefreshCooldown(uint256 _new_cooldown)
-        public
-        onlyByOwnerOrGovernance
-    {
-        refresh_cooldown = _new_cooldown;
-    }
-
-    function setARTHXAddress(address _arthx_address)
-        public
-        onlyByOwnerOrGovernance
-    {
-        arthx_address = _arthx_address;
-    }
-
-    function setETHUSDOracle(address _eth_usd_consumer_address)
-        public
-        onlyByOwnerOrGovernance
-    {
-        eth_usd_consumer_address = _eth_usd_consumer_address;
-        eth_usd_pricer = ChainlinkETHUSDPriceConsumer(eth_usd_consumer_address);
-        eth_usd_pricer_decimals = eth_usd_pricer.getDecimals();
-    }
-
-    function setTimelock(address new_timelock)
-        external
-        onlyByOwnerOrGovernance
-    {
-        timelock_address = new_timelock;
-    }
-
-    function setPriceBand(uint256 _price_band)
-        external
-        onlyByOwnerOrGovernance
-    {
-        price_band = _price_band;
-    }
-
-    // Sets the ARTH_ETH Uniswap oracle address
-    function setARTHEthOracle(address _arth_oracle_addr, address _weth_address)
-        public
-        onlyByOwnerOrGovernance
-    {
-        arth_eth_oracle_address = _arth_oracle_addr;
-        arthEthOracle = IUniswapPairOracle(_arth_oracle_addr);
-        weth_address = _weth_address;
-    }
-
-    // Sets the ARTHX_ETH Uniswap oracle address
-    function setARTHXEthOracle(
-        address _arthx_oracle_addr,
-        address _weth_address
-    ) public onlyByOwnerOrGovernance {
-        arthx_eth_oracle_address = _arthx_oracle_addr;
-        arthxEthOracle = IUniswapPairOracle(_arthx_oracle_addr);
-        weth_address = _weth_address;
-    }
-
-    function toggleCollateralRatio() public onlyCollateralRatioPauser {
-        collateral_ratio_paused = !collateral_ratio_paused;
+        return eth2GMUPrice.mul(_PRICE_PRECISION).div(priceVsETH);
     }
 }

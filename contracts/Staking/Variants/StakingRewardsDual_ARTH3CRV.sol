@@ -11,20 +11,20 @@ contract StakingRewardsDual_ARTH3CRV is StakingRewardsDual {
         address _rewardsToken0,
         address _rewardsToken1,
         address _stakingToken,
-        address _arth_address,
-        address _timelock_address,
-        uint256 _pool_weight0,
-        uint256 _pool_weight1
+        address _arthAddress,
+        address _timelockAddress,
+        uint256 _poolWeight0,
+        uint256 _poolWeight1
     )
         StakingRewardsDual(
             _owner,
             _rewardsToken0,
             _rewardsToken1,
             _stakingToken,
-            _arth_address,
-            _timelock_address,
-            _pool_weight0,
-            _pool_weight1
+            _arthAddress,
+            _timelockAddress,
+            _poolWeight0,
+            _poolWeight1
         )
     {}
 }

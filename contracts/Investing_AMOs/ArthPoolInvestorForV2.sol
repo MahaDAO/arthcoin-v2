@@ -3,11 +3,11 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../Arth/Arth.sol';
-import '../ARTHX/ARTHX.sol';
-import '../ERC20/ERC20.sol';
+import '../Arth/IARTH.sol';
+import '../ARTHX/IARTHX.sol';
+import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
-import '../Arth/Pools/ArthPool.sol';
+import '../Arth/Pools/IARTHPool.sol';
 import '../ERC20/Variants/Comp.sol';
 import './compound/IcUSDC_Partial.sol';
 import './yearn/IyUSDC_V2_Partial.sol';
@@ -16,7 +16,7 @@ import '../Oracle/UniswapPairOracle.sol';
 import '../Governance/AccessControl.sol';
 import './aave/IAAVELendingPool_Partial.sol';
 import './compound/ICompComptrollerPartial.sol';
-import '../Arth/ArthController.sol';
+import '../Arth/IARTHController.sol';
 
 /**
  *  Original code written by:
@@ -31,11 +31,11 @@ contract ArthPoolInvestorForV2 is AccessControl {
 
     /* ========== STATE VARIABLES ========== */
 
-    ERC20 private collateralToken;
-    ARTHShares private ARTHX;
-    ARTHStablecoin private ARTH;
-    ArthPool private pool;
-    ArthController private controller;
+    IERC20 private collateralToken;
+    IARTHX private ARTHX;
+    IARTH private ARTH;
+    IARTHPool private pool;
+    IARTHController private controller;
 
     // Pools and vaults
     IyUSDC_V2_Partial private yUSDC_V2 =
@@ -104,12 +104,12 @@ contract ArthPoolInvestorForV2 is AccessControl {
         address _custodian_address,
         address _timelock_address
     ) {
-        ARTH = ARTHStablecoin(_arth_contract_address);
-        ARTHX = ARTHShares(_arthx_contract_address);
+        ARTH = IARTH(_arth_contract_address);
+        ARTHX = IARTHX(_arthx_contract_address);
         pool_address = _pool_address;
-        pool = ArthPool(_pool_address);
+        pool = IARTHPool(_pool_address);
         collateralAddress = _collateralAddress;
-        collateralToken = ERC20(_collateralAddress);
+        collateralToken = IERC20(_collateralAddress);
         timelock_address = _timelock_address;
         ownerAddress = _ownerAddress;
         custodian_address = _custodian_address;
@@ -159,7 +159,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
     /* ========== PUBLIC FUNCTIONS ========== */
 
     // Needed for the Arth contract to function
-    function collatDollarBalance() external view returns (uint256) {
+    function getCollateralGMUBalance() external view returns (uint256) {
         // Needs to mimic the ArthPool value and return in E18
         // Only thing different should be borrowed_balance vs balanceOf()
         if (pool.collateralPricePaused() == true) {
@@ -169,9 +169,9 @@ contract ArthPoolInvestorForV2 is AccessControl {
                     .mul(pool.pausedPrice())
                     .div(PRICE_PRECISION);
         } else {
-            uint256 eth_usd_price = controller.eth_usd_price();
+            uint256 eth_usd_price = controller.getETHGMUPrice();
             uint256 eth_collat_price =
-                UniswapPairOracle(pool.collat_eth_oracle_address()).consult(
+                UniswapPairOracle(pool.collateralETHOracleAddress()).consult(
                     weth_address,
                     (PRICE_PRECISION * (10**missing_decimals))
                 );
@@ -201,7 +201,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         );
         uint256 redemptionFee = pool.redemptionFee();
         uint256 col_price_usd = pool.getCollateralPrice();
-        uint256 globalCollateralRatio = controller.globalCollateralRatio();
+        uint256 globalCollateralRatio = controller.getGlobalCollateralRatio();
         uint256 redeem_amount_E6 =
             (arth_amount.mul(uint256(1e6).sub(redemptionFee))).div(1e6).div(
                 10**missing_decimals
@@ -347,7 +347,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
 
     function setPool(address _pool_address) external onlyByOwnerOrGovernance {
         pool_address = _pool_address;
-        pool = ArthPool(_pool_address);
+        pool = IARTHPool(_pool_address);
     }
 
     function setBorrowCap(uint256 _borrow_cap)
@@ -374,7 +374,7 @@ contract ArthPoolInvestorForV2 is AccessControl {
         // Can only be triggered by owner or governance, not custodian
         // Tokens are sent to the custodian, as a sort of safeguard
 
-        ERC20(tokenAddress).transfer(custodian_address, tokenAmount);
+        IERC20(tokenAddress).transfer(custodian_address, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 

@@ -2,238 +2,246 @@
 
 pragma solidity ^0.8.0;
 
-import '../Arth/Arth.sol';
-import '../Math/SafeMath.sol';
-import './ReserveTracker.sol';
-import '../Curve/IMetaImplementationUSD.sol';
-import '../Arth/ArthController.sol';
+import {IARTH} from '../Arth/IARTH.sol';
+import {IARTHX} from '../ARTHX/IARTHX.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {ReserveTracker} from './ReserveTracker.sol';
+import {IARTHController} from '../Arth/IARTHController.sol';
+import {IMetaImplementationUSD} from '../Curve/IMetaImplementationUSD.sol';
 
 /**
+ * @title  PIDController.
+ * @author MahaDAO.
+ *
  *  Original code written by:
  *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
- *  Code modified by:
- *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
  */
 contract PIDController {
     using SafeMath for uint256;
 
-    ARTHStablecoin public ARTH;
-    ARTHShares public ARTHX;
-    ReserveTracker public reserve_tracker;
-    IMetaImplementationUSD arth_metapool;
-    ArthController private controller;
+    /**
+     * State variables.
+     */
 
-    address public arth_contract_address;
-    address public arthx_contract_address;
+    IARTH public ARTH;
+    IARTHX public ARTHX;
+    ReserveTracker public reserveTracker;
+    IARTHController private _arthController;
+    IMetaImplementationUSD public arthMetaPool;
 
     address public ownerAddress;
-    address public timelock_address;
+    address public timelockAddress;
+    address public arthMetaPoolAddress;
+    address public arthContractAddress;
+    address public arthxContractAddress;
+    address public reserveTrackerAddress;
 
-    address public reserve_tracker_address;
-    address public arth_metapool_address;
+    bool public isActive;
+    uint256 lastUpdate;
+    uint256 lastARTHSupply;
+    uint256 public arthStep;
+    uint256 public GRTopBand;
+    uint256 public ARTHTopBand;
+    uint256 public growthRatio;
+    uint256 public GRBottomBand;
+    uint256 public ARTHBottomBand;
+    uint256 public internalCooldown;
 
-    // 6 decimals of precision
-    uint256 public growth_ratio;
-    uint256 public arth_step;
-    uint256 public GR_top_band;
-    uint256 public GR_bottom_band;
+    uint256[2] public oldTWAP;
 
-    uint256 public ARTH_top_band;
-    uint256 public ARTH_bottom_band;
+    /**
+     * Events.
+     */
 
-    uint256 public internal_cooldown;
-    bool public is_active;
+    event ARTHdecollateralize(uint256 newCollateralRatio);
+    event ARTHrecollateralize(uint256 newCollateralRatio);
 
-    /* ========== MODIFIERS ========== */
+    /**
+     * Modifiers.
+     */
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == ownerAddress || msg.sender == timelock_address,
-            'You are not the owner, controller, or the governance timelock'
+            msg.sender == ownerAddress || msg.sender == timelockAddress,
+            'PIDController: You are not the owner, _arthController, or the governance timelock'
         );
         _;
     }
 
-    /* ========== CONSTRUCTOR ========== */
-
+    /**
+     * Constructor.
+     */
     constructor(
-        address _arth_contract_address,
-        address _arthx_contract_address,
+        address _arthContractAddress,
+        address _arthxContractAddress,
         address _creator_address,
-        address _timelock_address,
-        address _reserve_tracker_address
+        address _timelockAddress,
+        address _reserveTrackerAddress
     ) {
-        arth_contract_address = _arth_contract_address;
-        arthx_contract_address = _arthx_contract_address;
+        arthStep = 2500;
+        arthContractAddress = _arthContractAddress;
+        arthxContractAddress = _arthxContractAddress;
         ownerAddress = _creator_address;
-        timelock_address = _timelock_address;
-        reserve_tracker_address = _reserve_tracker_address;
-        reserve_tracker = ReserveTracker(reserve_tracker_address);
-        arth_step = 2500;
-        ARTH = ARTHStablecoin(arth_contract_address);
-        ARTHX = ARTHShares(arthx_contract_address);
+        timelockAddress = _timelockAddress;
+        reserveTrackerAddress = _reserveTrackerAddress;
+        reserveTracker = ReserveTracker(reserveTrackerAddress);
+
+        ARTH = IARTH(arthContractAddress);
+        ARTHX = IARTHX(arthxContractAddress);
 
         // Upon genesis, if GR changes by more than 1% percent, enable change of collateral ratio
-        GR_top_band = 1000;
-        GR_bottom_band = 1000;
-        is_active = false;
+        GRTopBand = 1000;
+        isActive = false;
+        GRBottomBand = 1000;
     }
 
-    function setReserveTracker(address _reserve_tracker_address)
+    /**
+     * External.
+     */
+
+    function setReserveTracker(address _reserveTrackerAddress)
         external
         onlyByOwnerOrGovernance
     {
-        reserve_tracker_address = _reserve_tracker_address;
-        reserve_tracker = ReserveTracker(_reserve_tracker_address);
+        reserveTrackerAddress = _reserveTrackerAddress;
+        reserveTracker = ReserveTracker(_reserveTrackerAddress);
     }
 
-    function setMetapool(address _metapool_address)
+    function setMetapool(address _metaPoolAddress)
         external
         onlyByOwnerOrGovernance
     {
-        arth_metapool_address = _metapool_address;
-        arth_metapool = IMetaImplementationUSD(_metapool_address);
+        arthMetaPoolAddress = _metaPoolAddress;
+        arthMetaPool = IMetaImplementationUSD(_metaPoolAddress);
     }
-
-    uint256 last_arth_supply;
-    uint256 last_update;
-    uint256[2] public old_twap;
 
     function setCollateralRatio() public onlyByOwnerOrGovernance {
         require(
-            block.timestamp - last_update >= internal_cooldown,
+            block.timestamp - lastUpdate >= internalCooldown,
             'internal cooldown not passed'
         );
-        uint256 arthx_reserves = reserve_tracker.getARTHXReserves();
-        uint256 arthxPrice = reserve_tracker.getARTHXPrice();
 
-        uint256 arthx_liquidity = (arthx_reserves.mul(arthxPrice)); // Has 6 decimals of precision
+        uint256 arthxReserves = reserveTracker.getARTHXReserves();
+        uint256 arthxPrice = reserveTracker.getARTHXPrice();
 
-        uint256 arth_supply = ARTH.totalSupply();
-        //uint256 arth_price = reserve_tracker.getARTHPrice(); // Using Uniswap
+        uint256 arthxLiquidity = (arthxReserves.mul(arthxPrice)); // Has 6 decimals of precision
+
+        uint256 arthSupply = ARTH.totalSupply();
+        // uint256 arth_price = reserveTracker.getARTHPrice(); // Using Uniswap
         // Get the ARTH TWAP on Curve Metapool
-        uint256[2] memory new_twap = arth_metapool.get_price_cumulative_last();
+        uint256[2] memory newTWAP = arthMetaPool.get_price_cumulative_last();
         uint256[2] memory balances =
-            arth_metapool.get_twap_balances(
-                old_twap,
-                new_twap,
-                block.timestamp - last_update
-            );
-        old_twap = new_twap;
-        uint256 arth_price =
-            arth_metapool.get_dy(1, 0, 1e18, balances).mul(1e6).div(
-                arth_metapool.get_virtual_price()
+            arthMetaPool.get_twap_balances(
+                oldTWAP,
+                newTWAP,
+                block.timestamp - lastUpdate
             );
 
-        uint256 new_growth_ratio = arthx_liquidity.div(arth_supply); // (E18 + E6) / E18
+        oldTWAP = newTWAP;
+        uint256 arthPrice =
+            arthMetaPool.get_dy(1, 0, 1e18, balances).mul(1e6).div(
+                arthMetaPool.get_virtual_price()
+            );
 
-        uint256 last_collateral_ratio = controller.globalCollateralRatio();
-        uint256 new_collateral_ratio = last_collateral_ratio;
+        uint256 newGrowthRatio = arthxLiquidity.div(arthSupply); // (E18 + E6) / E18
+
+        uint256 lastCollateralRatio =
+            _arthController.getGlobalCollateralRatio();
+        uint256 newCollateralRatio = lastCollateralRatio;
 
         // First, check if the price is out of the band
-        if (arth_price > ARTH_top_band) {
-            new_collateral_ratio = last_collateral_ratio.sub(arth_step);
-        } else if (arth_price < ARTH_bottom_band) {
-            new_collateral_ratio = last_collateral_ratio.add(arth_step);
+        if (arthPrice > ARTHTopBand) {
+            newCollateralRatio = lastCollateralRatio.sub(arthStep);
+        } else if (arthPrice < ARTHBottomBand) {
+            newCollateralRatio = lastCollateralRatio.add(arthStep);
 
             // Else, check if the growth ratio has increased or decreased since last update
         } else {
-            if (
-                new_growth_ratio > growth_ratio.mul(1e6 + GR_top_band).div(1e6)
-            ) {
-                new_collateral_ratio = last_collateral_ratio.sub(arth_step);
+            if (newGrowthRatio > growthRatio.mul(1e6 + GRTopBand).div(1e6)) {
+                newCollateralRatio = lastCollateralRatio.sub(arthStep);
             } else if (
-                new_growth_ratio <
-                growth_ratio.mul(1e6 - GR_bottom_band).div(1e6)
+                newGrowthRatio < growthRatio.mul(1e6 - GRBottomBand).div(1e6)
             ) {
-                new_collateral_ratio = last_collateral_ratio.add(arth_step);
+                newCollateralRatio = lastCollateralRatio.add(arthStep);
             }
         }
 
-        // No need for checking CR under 0 as the last_collateral_ratio.sub(arth_step) will throw
+        // No need for checking CR under 0 as the lastCollateralRatio.sub(arthStep) will throw
         // an error above in that case
-        if (new_collateral_ratio > 1e6) {
-            new_collateral_ratio = 1e6;
+        if (newCollateralRatio > 1e6) {
+            newCollateralRatio = 1e6;
         }
 
         // For testing purposes
-        if (is_active) {
-            uint256 delta_collateral_ratio;
-            if (new_collateral_ratio > last_collateral_ratio) {
-                delta_collateral_ratio =
-                    new_collateral_ratio -
-                    last_collateral_ratio;
-                controller.setPriceTarget(0); // Set to zero to increase CR
-                emit ARTHdecollateralize(new_collateral_ratio);
-            } else if (new_collateral_ratio < last_collateral_ratio) {
-                delta_collateral_ratio =
-                    last_collateral_ratio -
-                    new_collateral_ratio;
-                controller.setPriceTarget(1000e6); // Set to high value to decrease CR
-                emit ARTHrecollateralize(new_collateral_ratio);
+        if (isActive) {
+            uint256 deltaCollateralRatio;
+
+            if (newCollateralRatio > lastCollateralRatio) {
+                deltaCollateralRatio = newCollateralRatio - lastCollateralRatio;
+                _arthController.setPriceTarget(0); // Set to zero to increase CR
+
+                emit ARTHdecollateralize(newCollateralRatio);
+            } else if (newCollateralRatio < lastCollateralRatio) {
+                deltaCollateralRatio = lastCollateralRatio - newCollateralRatio;
+                _arthController.setPriceTarget(1000e6); // Set to high value to decrease CR
+
+                emit ARTHrecollateralize(newCollateralRatio);
             }
 
-            controller.setArthStep(delta_collateral_ratio); // Change by the delta
-            uint256 cooldown_before = controller.refresh_cooldown(); // Note the existing cooldown period
-            controller.setRefreshCooldown(0); // Unlock the CR cooldown
+            _arthController.setArthStep(deltaCollateralRatio); // Change by the delta
+            uint256 cooldownBefore = _arthController.getRefreshCooldown(); // Note the existing cooldown period
+            _arthController.setRefreshCooldown(0); // Unlock the CR cooldown
 
-            controller.refreshCollateralRatio(); // Refresh CR
+            _arthController.refreshCollateralRatio(); // Refresh CR
 
             // Reset params
-            controller.setArthStep(0);
-            controller.setRefreshCooldown(cooldown_before); // Set the cooldown period to what it was before, or until next controller refresh
-            controller.setPriceTarget(1e6);
+            _arthController.setArthStep(0);
+            // Set the cooldown period to what it was before, or until next _arthController refresh
+            _arthController.setRefreshCooldown(cooldownBefore);
+            _arthController.setPriceTarget(1e6);
         }
 
-        growth_ratio = new_growth_ratio;
-        last_update = block.timestamp;
+        growthRatio = newGrowthRatio;
+        lastUpdate = block.timestamp;
     }
 
     function activate(bool _state) external onlyByOwnerOrGovernance {
-        is_active = _state;
+        isActive = _state;
     }
 
     // As a percentage added/subtracted from the previous; e.g. top_band = 4000 = 0.4% -> will decollat if GR increases by 0.4% or more
-    function setGrowthRatioBands(uint256 _GR_top_band, uint256 _GR_bottom_band)
+    function setGrowthRatioBands(uint256 _GRTopBand, uint256 _GRBottomBand)
         external
         onlyByOwnerOrGovernance
     {
-        GR_top_band = _GR_top_band;
-        GR_bottom_band = _GR_bottom_band;
+        GRTopBand = _GRTopBand;
+        GRBottomBand = _GRBottomBand;
     }
 
-    function setInternalCooldown(uint256 _internal_cooldown)
+    function setInternalCooldown(uint256 _internalCooldown)
         external
         onlyByOwnerOrGovernance
     {
-        internal_cooldown = _internal_cooldown;
+        internalCooldown = _internalCooldown;
     }
 
-    function setArthStep(uint256 _new_step) external onlyByOwnerOrGovernance {
-        arth_step = _new_step;
+    function setArthStep(uint256 _newStep) external onlyByOwnerOrGovernance {
+        arthStep = _newStep;
     }
 
-    function setPriceBands(uint256 _top_band, uint256 _bottom_band)
+    function setPriceBands(uint256 _topBand, uint256 _bottomBand)
         external
         onlyByOwnerOrGovernance
     {
-        ARTH_top_band = _top_band;
-        ARTH_bottom_band = _bottom_band;
+        ARTHTopBand = _topBand;
+        ARTHBottomBand = _bottomBand;
     }
 
     function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
         ownerAddress = _ownerAddress;
     }
 
-    function setTimelock(address new_timelock)
-        external
-        onlyByOwnerOrGovernance
-    {
-        timelock_address = new_timelock;
+    function setTimelock(address newTimelock) external onlyByOwnerOrGovernance {
+        timelockAddress = newTimelock;
     }
-
-    /* ========== EVENTS ========== */
-
-    event ARTHdecollateralize(uint256 new_collateral_ratio);
-    event ARTHrecollateralize(uint256 new_collateral_ratio);
 }

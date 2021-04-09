@@ -22,7 +22,7 @@ contract ArthBond is ERC20Custom, AccessControl {
 
     string public symbol;
     string public name;
-    uint8 public constant decimals = 18;
+    uint8 public constant override decimals = 18;
     address public ownerAddress;
     address public timelock_address; // Governance timelock address
     address public controller_address; // Controller contract to dynamically adjust system parameters automatically

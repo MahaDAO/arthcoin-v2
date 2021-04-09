@@ -2,57 +2,66 @@
 
 pragma solidity ^0.8.0;
 
-import '../Math/Math.sol';
-import '../Math/SafeMath.sol';
-import './UniswapPairOracle.sol';
-import './ChainlinkETHUSDPriceConsumer.sol';
-import '../Curve/IMetaImplementationUSD.sol';
-import '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import {Math} from '../Math/Math.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {IUniswapPairOracle} from './IUniswapPairOracle.sol';
+import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import {IMetaImplementationUSD} from '../Curve/IMetaImplementationUSD.sol';
 
 /**
- *  Original code written by:
- *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
- *  Code modified by:
- *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
- *  Modified originally from Synthetixio
- *  https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
+ * @title  ReserveTracker.
+ * @author MahaDAO.
+ *
+ * Original code written by:
+ * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *
+ * Modified originally from Synthetixio
+ * https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
  */
 contract ReserveTracker {
     using SafeMath for uint256;
 
-    uint256 public CONSULT_ARTHX_DEC;
-    uint256 public CONSULT_ARTH_DEC;
+    /**
+     * State variables.
+     */
 
-    address public arth_contract_address;
-    address public arthx_contract_address;
+    IUniswapPairOracle public arthxWETHOracle;
+    IUniswapPairOracle public arthPriceOracle;
+    IMetaImplementationUSD public arthMetaPool;
+    IUniswapPairOracle public wethCollateralOracle;
+
+    uint256 public lastTimestamp;
+    uint256 public arthxReserves;
+    uint256 public CONSULT_ARTH_DEC;
+    uint256 public CONSULT_ARTHX_DEC;
+    uint256 public wethCollateralDecimals;
+    uint256 public arthPairCollateralCecimals;
+
     address public ownerAddress;
     address public timelock_address;
+    address public arthContractAddress;
+    address public arthxContractAddress;
 
     // The pair of which to get ARTHX price from
-    address public arthx_weth_oracle_address;
-    address public weth_collat_oracle_address;
-    address public weth_address;
-    UniswapPairOracle public arthx_weth_oracle;
-    UniswapPairOracle public weth_collat_oracle;
-    uint256 public weth_collat_decimals;
-
-    // Array of pairs for ARTHX.
-    address[] public arthx_pairs_array;
-
-    // Mapping is also used for faster verification
-    mapping(address => bool) public arthx_pairs;
-
-    uint256 public arthx_reserves;
+    address public wethAddress;
+    address public arthMetaPoolAddress;
+    address public arthxWETHOracleAddress;
+    address public wethCollateralOracleAddress;
 
     // The pair of which to get ARTH price from
-    address public arth_price_oracle_address;
-    address public arth_pair_collateralAddress;
-    uint256 public arth_pair_collateral_decimals;
-    UniswapPairOracle public arth_price_oracle;
-    address public arth_metapool_address;
-    IMetaImplementationUSD public arth_metapool;
+    address public arthPriceOracleAddress;
+    address public arthPairCollateralAddress;
 
-    /* ========== MODIFIERS ========== */
+    // Mapping is also used for faster verification
+    mapping(address => bool) public arthxPairs;
+
+    uint256[2] public oldTWAP;
+    // Array of pairs for ARTHX.
+    address[] public arthxPairsArray;
+
+    /**
+     * Modifier.
+     */
 
     modifier onlyByOwnerOrGovernance() {
         require(
@@ -62,168 +71,171 @@ contract ReserveTracker {
         _;
     }
 
-    /* ========== CONSTRUCTOR ========== */
-
+    /**
+     * Constructor.
+     */
     constructor(
-        address _arth_contract_address,
-        address _arthx_contract_address,
-        address _creator_address,
-        address _timelock_address
+        address _arthContractAddress,
+        address _arthxContractAddress,
+        address _creatorAddress,
+        address _timelockAddress
     ) {
-        arth_contract_address = _arth_contract_address;
-        arthx_contract_address = _arthx_contract_address;
-        ownerAddress = _creator_address;
-        timelock_address = _timelock_address;
+        arthContractAddress = _arthContractAddress;
+        arthxContractAddress = _arthxContractAddress;
+        ownerAddress = _creatorAddress;
+        timelock_address = _timelockAddress;
     }
 
-    /* ========== VIEWS ========== */
-
-    // Returns ARTH price with 6 decimals of precision
-    function getARTHPrice() public view returns (uint256) {
-        return
-            arth_price_oracle.consult(arth_contract_address, CONSULT_ARTH_DEC);
-    }
-
-    uint256 public last_timestamp;
-    uint256[2] public old_twap;
-
-    function getARTHCurvePrice() public returns (uint256) {
-        uint256[2] memory new_twap = arth_metapool.get_price_cumulative_last();
-        uint256[2] memory balances =
-            arth_metapool.get_twap_balances(
-                old_twap,
-                new_twap,
-                block.timestamp - last_timestamp
-            );
-        last_timestamp = block.timestamp;
-        old_twap = new_twap;
-        uint256 twap_price =
-            arth_metapool.get_dy(1, 0, 1e18, balances).mul(1e6).div(
-                arth_metapool.get_virtual_price()
-            );
-        return twap_price;
-    }
-
-    // Returns ARTHX price with 6 decimals of precision
-    function getARTHXPrice() public view returns (uint256) {
-        uint256 arthx_weth_price =
-            arthx_weth_oracle.consult(arthx_contract_address, 1e6);
-        return
-            weth_collat_oracle
-                .consult(weth_address, CONSULT_ARTHX_DEC)
-                .mul(arthx_weth_price)
-                .div(1e6);
-    }
-
-    function getARTHXReserves() public view returns (uint256) {
-        uint256 total_arthx_reserves = 0;
-
-        for (uint256 i = 0; i < arthx_pairs_array.length; i++) {
-            // Exclude null addresses
-            if (arthx_pairs_array[i] != address(0)) {
-                if (
-                    IUniswapV2Pair(arthx_pairs_array[i]).token0() ==
-                    arthx_contract_address
-                ) {
-                    (uint256 reserves0, , ) =
-                        IUniswapV2Pair(arthx_pairs_array[i]).getReserves();
-                    total_arthx_reserves = total_arthx_reserves.add(reserves0);
-                } else if (
-                    IUniswapV2Pair(arthx_pairs_array[i]).token1() ==
-                    arthx_contract_address
-                ) {
-                    (, uint256 reserves1, ) =
-                        IUniswapV2Pair(arthx_pairs_array[i]).getReserves();
-                    total_arthx_reserves = total_arthx_reserves.add(reserves1);
-                }
-            }
-        }
-
-        return total_arthx_reserves;
-    }
-
-    /* ========== RESTRICTED FUNCTIONS ========== */
-
-    // Get the pair of which to price ARTH from
-    function setARTHPriceOracle(
-        address _arth_price_oracle_address,
-        address _arth_pair_collateralAddress,
-        uint256 _arth_pair_collateral_decimals
-    ) public onlyByOwnerOrGovernance {
-        arth_price_oracle_address = _arth_price_oracle_address;
-        arth_pair_collateralAddress = _arth_pair_collateralAddress;
-        arth_pair_collateral_decimals = _arth_pair_collateral_decimals;
-        arth_price_oracle = UniswapPairOracle(arth_price_oracle_address);
-        CONSULT_ARTH_DEC =
-            1e6 *
-            (10**(uint256(18).sub(arth_pair_collateral_decimals)));
-    }
-
-    function setMetapool(address _arth_metapool_address)
-        public
-        onlyByOwnerOrGovernance
-    {
-        arth_metapool_address = _arth_metapool_address;
-        arth_metapool = IMetaImplementationUSD(_arth_metapool_address);
-    }
-
-    // Get the pair of which to price ARTHX from (using ARTHX-WETH)
-    function setARTHXETHOracle(
-        address _arthx_weth_oracle_address,
-        address _weth_address
-    ) public onlyByOwnerOrGovernance {
-        arthx_weth_oracle_address = _arthx_weth_oracle_address;
-        weth_address = _weth_address;
-        arthx_weth_oracle = UniswapPairOracle(arthx_weth_oracle_address);
-    }
-
-    function setETHCollateralOracle(
-        address _weth_collateral_oracle_address,
-        uint256 _collateral_decimals
-    ) public onlyByOwnerOrGovernance {
-        weth_collat_oracle_address = _weth_collateral_oracle_address;
-        weth_collat_decimals = _collateral_decimals;
-        weth_collat_oracle = UniswapPairOracle(_weth_collateral_oracle_address);
-        CONSULT_ARTHX_DEC = 1e6 * (10**(uint256(18).sub(_collateral_decimals)));
-    }
-
-    // Adds collateral addresses supported, such as tether and busd, must be ERC20
-    function addARTHXPair(address pair_address) public onlyByOwnerOrGovernance {
-        require(arthx_pairs[pair_address] == false, 'address already exists');
-        arthx_pairs[pair_address] = true;
-        arthx_pairs_array.push(pair_address);
-    }
-
-    // Remove a pool
-    function removeARTHXPair(address pair_address)
-        public
-        onlyByOwnerOrGovernance
-    {
-        require(
-            arthx_pairs[pair_address] == true,
-            "address doesn't exist already"
-        );
-
-        // Delete from the mapping
-        delete arthx_pairs[pair_address];
-
-        // 'Delete' from the array by setting the address to 0x0
-        for (uint256 i = 0; i < arthx_pairs_array.length; i++) {
-            if (arthx_pairs_array[i] == pair_address) {
-                arthx_pairs_array[i] = address(0); // This will leave a null in the array and keep the indices the same
-                break;
-            }
-        }
-    }
+    /**
+     * External.
+     */
 
     function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
         ownerAddress = _ownerAddress;
     }
 
-    function setTimelock(address new_timelock)
-        external
+    function setTimelock(address newTimelock) external onlyByOwnerOrGovernance {
+        timelock_address = newTimelock;
+    }
+
+    /**
+     * Public.
+     */
+
+    // Get the pair of which to price ARTH from
+    function setARTHPriceOracle(
+        address _arthPriceOracleAddress,
+        address _arthPairCollateralAddress,
+        uint256 _arthPairCollateralCecimals
+    ) public onlyByOwnerOrGovernance {
+        arthPriceOracleAddress = _arthPriceOracleAddress;
+        arthPairCollateralAddress = _arthPairCollateralAddress;
+        arthPairCollateralCecimals = _arthPairCollateralCecimals;
+        arthPriceOracle = IUniswapPairOracle(arthPriceOracleAddress);
+
+        CONSULT_ARTH_DEC =
+            1e6 *
+            (10**(uint256(18).sub(arthPairCollateralCecimals)));
+    }
+
+    function setMetapool(address _arthMetaPoolAddress)
+        public
         onlyByOwnerOrGovernance
     {
-        timelock_address = new_timelock;
+        arthMetaPoolAddress = _arthMetaPoolAddress;
+        arthMetaPool = IMetaImplementationUSD(_arthMetaPoolAddress);
+    }
+
+    // Get the pair of which to price ARTHX from (using ARTHX-WETH)
+    function setARTHXETHOracle(
+        address _arthxWETHOracleAddress,
+        address _wethAddress
+    ) public onlyByOwnerOrGovernance {
+        arthxWETHOracleAddress = _arthxWETHOracleAddress;
+        wethAddress = _wethAddress;
+        arthxWETHOracle = IUniswapPairOracle(arthxWETHOracleAddress);
+    }
+
+    function setETHCollateralOracle(
+        address _wethCollateralOracleAddress,
+        uint256 _collateralDecimals
+    ) public onlyByOwnerOrGovernance {
+        wethCollateralOracleAddress = _wethCollateralOracleAddress;
+        wethCollateralDecimals = _collateralDecimals;
+        wethCollateralOracle = IUniswapPairOracle(_wethCollateralOracleAddress);
+        CONSULT_ARTHX_DEC = 1e6 * (10**(uint256(18).sub(_collateralDecimals)));
+    }
+
+    // Adds collateral addresses supported, such as tether and busd, must be ERC20
+    function addARTHXPair(address pariAddress) public onlyByOwnerOrGovernance {
+        require(arthxPairs[pariAddress] == false, 'address already exists');
+        arthxPairs[pariAddress] = true;
+        arthxPairsArray.push(pariAddress);
+    }
+
+    // Remove a pool
+    function removeARTHXPair(address pariAddress)
+        public
+        onlyByOwnerOrGovernance
+    {
+        require(
+            arthxPairs[pariAddress] == true,
+            "address doesn't exist already"
+        );
+
+        // Delete from the mapping
+        delete arthxPairs[pariAddress];
+
+        // 'Delete' from the array by setting the address to 0x0
+        for (uint256 i = 0; i < arthxPairsArray.length; i++) {
+            if (arthxPairsArray[i] == pariAddress) {
+                arthxPairsArray[i] = address(0); // This will leave a null in the array and keep the indices the same
+                break;
+            }
+        }
+    }
+
+    function getARTHCurvePrice() public returns (uint256) {
+        uint256[2] memory newTWAP = arthMetaPool.get_price_cumulative_last();
+        uint256[2] memory balances =
+            arthMetaPool.get_twap_balances(
+                oldTWAP,
+                newTWAP,
+                block.timestamp - lastTimestamp
+            );
+
+        lastTimestamp = block.timestamp;
+        oldTWAP = newTWAP;
+
+        uint256 twapPrice =
+            arthMetaPool.get_dy(1, 0, 1e18, balances).mul(1e6).div(
+                arthMetaPool.get_virtual_price()
+            );
+
+        return twapPrice;
+    }
+
+    // Returns ARTH price with 6 decimals of precision
+    function getARTHPrice() public view returns (uint256) {
+        return arthPriceOracle.consult(arthContractAddress, CONSULT_ARTH_DEC);
+    }
+
+    // Returns ARTHX price with 6 decimals of precision
+    function getARTHXPrice() public view returns (uint256) {
+        uint256 arthxWETHPrice =
+            arthxWETHOracle.consult(arthxContractAddress, 1e6);
+
+        return
+            wethCollateralOracle
+                .consult(wethAddress, CONSULT_ARTHX_DEC)
+                .mul(arthxWETHPrice)
+                .div(1e6);
+    }
+
+    function getARTHXReserves() public view returns (uint256) {
+        uint256 totalARTHXReserves = 0;
+
+        for (uint256 i = 0; i < arthxPairsArray.length; i++) {
+            // Exclude null addresses
+            if (arthxPairsArray[i] != address(0)) {
+                if (
+                    IUniswapV2Pair(arthxPairsArray[i]).token0() ==
+                    arthxContractAddress
+                ) {
+                    (uint256 reserves0, , ) =
+                        IUniswapV2Pair(arthxPairsArray[i]).getReserves();
+                    totalARTHXReserves = totalARTHXReserves.add(reserves0);
+                } else if (
+                    IUniswapV2Pair(arthxPairsArray[i]).token1() ==
+                    arthxContractAddress
+                ) {
+                    (, uint256 reserves1, ) =
+                        IUniswapV2Pair(arthxPairsArray[i]).getReserves();
+                    totalARTHXReserves = totalARTHXReserves.add(reserves1);
+                }
+            }
+        }
+
+        return totalARTHXReserves;
     }
 }

@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import '../Common/Context.sol';
-import './IERC20.sol';
-import '../Math/SafeMath.sol';
-import '../Utils/Address.sol';
+import {IERC20} from './IERC20.sol';
+import {Address} from '../Utils/Address.sol';
+import {SafeMath} from '../Math/SafeMath.sol';
+import {Context} from '../Common/Context.sol';
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -88,7 +88,7 @@ contract ERC20 is Context, IERC20 {
      * no way affects any of the arithmetic of the contract, including
      * {IERC20-balanceOf} and {IERC20-transfer}.
      */
-    function decimals() public view returns (uint8) {
+    function decimals() public view override returns (uint8) {
         return _decimals;
     }
 

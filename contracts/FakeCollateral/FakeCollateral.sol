@@ -36,7 +36,7 @@ import '../Utils/Address.sol';
 contract FakeCollateral is Context, IERC20 {
     using SafeMath for uint256;
     string public symbol;
-    uint8 public decimals;
+    uint8 public override decimals;
     address public creator_address;
     uint256 public genesis_supply;
     uint256 private _totalSupply;

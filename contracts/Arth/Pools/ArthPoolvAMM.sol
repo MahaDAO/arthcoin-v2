@@ -371,7 +371,7 @@
 //     }
 
 //     // Needed for compatibility with ArthPool standard
-//     function collatDollarBalance() public view returns (uint256) {
+//     function getCollateralGMUBalance() public view returns (uint256) {
 //         return
 //             (
 //                 collateralToken
@@ -382,7 +382,7 @@
 //                 .mul(10**missing_decimals);
 //     }
 
-//     function availableExcessCollatDV() public view returns (uint256) {
+//     function getAvailableExcessCollateralDV() public view returns (uint256) {
 //         uint256 total_supply = ARTH.totalSupply();
 //         uint256 globalCollateralRatio = ARTH.globalCollateralRatio();
 //         uint256 globalCollatValue = ARTH.globalCollateralValue();
@@ -765,7 +765,7 @@
 //     {
 //         require(buyBackPaused == false, 'Buyback is paused');
 //         uint256 buyback_available =
-//             availableExcessCollatDV().div(10**missing_decimals);
+//             getAvailableExcessCollateralDV().div(10**missing_decimals);
 //         uint256 collat_out =
 //             getAmountOut(
 //                 ARTHS_amount,

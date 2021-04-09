@@ -3,14 +3,14 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../Arth/Arth.sol';
-import '../ARTHX/ARTHX.sol';
-import '../ERC20/ERC20.sol';
+import '../Arth/IARTH.sol';
+import '../ARTHX/IARTHX.sol';
+import '../ERC20/IERC20.sol';
 import '../Math/SafeMath.sol';
 import './finnexus/IFNX_CFNX.sol';
 import './cream/ICREAM_crARTH.sol';
 import './finnexus/IFNX_FPT_B.sol';
-import '../Arth/Pools/ArthPool.sol';
+import '../Arth/Pools/IARTHPool.sol';
 import '../ERC20/Variants/Comp.sol';
 import './finnexus/IFNX_Oracle.sol';
 import './finnexus/IFNX_MinePool.sol';
@@ -20,18 +20,18 @@ import '../Governance/AccessControl.sol';
 import './finnexus/IFNX_ManagerProxy.sol';
 import './finnexus/IFNX_TokenConverter.sol';
 import './finnexus/IFNX_IntegratedStake.sol';
-import '../Arth/ArthController.sol';
+import '../Arth/IARTHController.sol';
 
 contract ArthLendingAMO is AccessControl {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */
 
-    ERC20 private collateralToken;
-    ARTHShares private ARTHX;
-    ARTHStablecoin private ARTH;
-    ArthPool private pool;
-    ArthController private controller;
+    IERC20 private collateralToken;
+    IARTHX private ARTHX;
+    IARTH private ARTH;
+    IARTHPool private pool;
+    IARTHController private controller;
 
     // Cream
     ICREAM_crARTH private crARTH =
@@ -57,7 +57,7 @@ contract ArthLendingAMO is AccessControl {
     // Reward Tokens
     IFNX_CFNX private CFNX =
         IFNX_CFNX(0x9d7beb4265817a4923FAD9Ca9EF8af138499615d);
-    ERC20 private FNX = ERC20(0xeF9Cd7882c067686691B6fF49e650b43AFBBCC6B);
+    IERC20 private FNX = IERC20(0xeF9Cd7882c067686691B6fF49e650b43AFBBCC6B);
 
     address public collateralAddress;
     address public pool_address;
@@ -93,12 +93,12 @@ contract ArthLendingAMO is AccessControl {
         address _custodian_address,
         address _timelock_address
     ) {
-        ARTH = ARTHStablecoin(_arth_contract_address);
-        ARTHX = ARTHShares(_arthx_contract_address);
+        ARTH = IARTH(_arth_contract_address);
+        ARTHX = IARTHX(_arthx_contract_address);
         pool_address = _pool_address;
-        pool = ArthPool(_pool_address);
+        pool = IARTHPool(_pool_address);
         collateralAddress = _collateralAddress;
-        collateralToken = ERC20(_collateralAddress);
+        collateralToken = IERC20(_collateralAddress);
         timelock_address = _timelock_address;
         ownerAddress = _ownerAddress;
         custodian_address = _custodian_address;
@@ -181,7 +181,7 @@ contract ArthLendingAMO is AccessControl {
     /* ========== PUBLIC FUNCTIONS ========== */
 
     // Needed for the Arth contract to not brick
-    function collatDollarBalance() external pure returns (uint256) {
+    function getCollateralGMUBalance() external pure returns (uint256) {
         return 1e18; // 1 USDC
     }
 
@@ -204,13 +204,13 @@ contract ArthLendingAMO is AccessControl {
 
         // Make sure the current CR isn't already too low
         require(
-            controller.globalCollateralRatio() > min_cr,
+            controller.getGlobalCollateralRatio() > min_cr,
             'Collateral ratio is already too low'
         );
 
         // Make sure the ARTH minting wouldn't push the CR down too much
         uint256 current_collateral_E18 =
-            (controller.globalCollateralValue()).mul(10**missing_decimals);
+            (controller.getGlobalCollateralValue()).mul(10**missing_decimals);
         uint256 cur_arth_supply = ARTH.totalSupply();
         uint256 new_arth_supply = cur_arth_supply.add(arth_amount);
         uint256 new_cr =
@@ -231,7 +231,7 @@ contract ArthLendingAMO is AccessControl {
 
     // Burn unneeded or excess ARTH
     function burnARTH(uint256 arth_amount) public onlyByOwnerOrGovernance {
-        ARTH.burn(arth_amount);
+        // ARTH.burn(arth_amount);
         burned_sum_historical = burned_sum_historical.add(arth_amount);
     }
 
@@ -424,7 +424,7 @@ contract ArthLendingAMO is AccessControl {
 
     function setPool(address _pool_address) external onlyByOwnerOrGovernance {
         pool_address = _pool_address;
-        pool = ArthPool(_pool_address);
+        pool = IARTHPool(_pool_address);
     }
 
     function setMintCap(uint256 _mint_cap) external onlyByOwnerOrGovernance {
@@ -453,7 +453,7 @@ contract ArthLendingAMO is AccessControl {
         // Can only be triggered by owner or governance, not custodian
         // Tokens are sent to the custodian, as a sort of safeguard
 
-        ERC20(tokenAddress).transfer(custodian_address, tokenAmount);
+        IERC20(tokenAddress).transfer(custodian_address, tokenAmount);
         emit Recovered(tokenAddress, tokenAmount);
     }
 
