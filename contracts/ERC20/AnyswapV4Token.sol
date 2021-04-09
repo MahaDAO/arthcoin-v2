@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {ERC20Custom} from './ERC20Custom.sol';
 import {IAnyswapV4Token} from './IAnyswapV4Token.sol';
-import {AccessControl} from '../Governance/AccessControl.sol';
+import {AccessControl} from '../access/AccessControl.sol';
 
 interface IApprovalReceiver {
     function onTokenApproval(

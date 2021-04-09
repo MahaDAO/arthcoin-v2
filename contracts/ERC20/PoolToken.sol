@@ -6,7 +6,7 @@ import {ERC20} from './ERC20.sol';
 import {IERC20} from './IERC20.sol';
 import {Math} from '../utils/math/Math.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {AccessControl} from '../Governance/AccessControl.sol';
+import {AccessControl} from '../access/AccessControl.sol';
 
 /**
  * @title  PoolToken

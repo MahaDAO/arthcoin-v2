@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {Ownable} from '../Common/Ownable.sol';
+import {Ownable} from '../access/Ownable.sol';
 import {ISimpleOracle} from './ISimpleOracle.sol';
 
 contract SimpleOracle is Ownable, ISimpleOracle {

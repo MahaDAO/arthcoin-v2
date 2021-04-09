@@ -12,7 +12,7 @@ import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
 import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
-import {AccessControl} from '../../Governance/AccessControl.sol';
+import {AccessControl} from '../../access/AccessControl.sol';
 import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
 import {RecollateralizeDiscountCurve} from './RecollateralizeDiscountCurve.sol';
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import '../ERC20.sol';
 import '../../utils/math/SafeMath.sol';
-import '../../Common/Ownable.sol';
+import '../../access/Ownable.sol';
 
 // SushiToken with Governance.
 contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {

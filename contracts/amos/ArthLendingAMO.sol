@@ -16,7 +16,7 @@ import './finnexus/IFNX_Oracle.sol';
 import './finnexus/IFNX_MinePool.sol';
 import './finnexus/IFNX_FPT_ARTH.sol';
 import '../Oracle/UniswapPairOracle.sol';
-import '../Governance/AccessControl.sol';
+import '../access/AccessControl.sol';
 import './finnexus/IFNX_ManagerProxy.sol';
 import './finnexus/IFNX_TokenConverter.sol';
 import './finnexus/IFNX_IntegratedStake.sol';

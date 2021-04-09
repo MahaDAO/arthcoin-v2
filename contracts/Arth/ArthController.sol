@@ -7,7 +7,7 @@ import {IERC20} from '../ERC20/IERC20.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IARTHPool} from './Pools/IARTHPool.sol';
 import {IARTHController} from './IARTHController.sol';
-import {AccessControl} from '../Governance/AccessControl.sol';
+import {AccessControl} from '../access/AccessControl.sol';
 import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
 import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 

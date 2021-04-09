@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {IARTH} from './IARTH.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {AccessControl} from '../Governance/AccessControl.sol';
+import {AccessControl} from '../access/AccessControl.sol';
 
 contract ArthBridge is AccessControl {
     using SafeMath for uint256;

@@ -10,7 +10,7 @@ import {IARTH} from './IARTH.sol';
 import {Math} from '../utils/math/Math.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IIncentiveController} from './IIncentive.sol';
-import {AccessControl} from '../Governance/AccessControl.sol';
+import {AccessControl} from '../access/AccessControl.sol';
 import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
 import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
@@ -370,6 +370,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
             targetPrice.mul(reserveTarget).mul(reserveOther).mul(
                 10**missingDecimals
             );
+
         uint256 root = Math.sqrt(radicand);
 
         if (root > reserveTarget)

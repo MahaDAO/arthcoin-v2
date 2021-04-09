@@ -13,7 +13,7 @@ import './compound/IcUSDC_Partial.sol';
 import './yearn/IyUSDC_V2_Partial.sol';
 import './aave/IAAVE_aUSDC_Partial.sol';
 import '../Oracle/UniswapPairOracle.sol';
-import '../Governance/AccessControl.sol';
+import '../access/AccessControl.sol';
 import './aave/IAAVELendingPool_Partial.sol';
 import './compound/ICompComptrollerPartial.sol';
 import '../Arth/IARTHController.sol';

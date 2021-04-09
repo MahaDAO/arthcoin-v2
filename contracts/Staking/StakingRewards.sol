@@ -14,7 +14,7 @@ import {StringHelpers} from '../utils/StringHelpers.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
 import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
 import {TransferHelper} from '../Uniswap/TransferHelper.sol';
-import {AccessControl} from '../Governance/AccessControl.sol';
+import {AccessControl} from '../access/AccessControl.sol';
 import {RewardsDistributionRecipient} from './RewardsDistributionRecipient.sol';
 
 /**

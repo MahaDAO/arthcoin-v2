@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {ICurve} from './ICurve.sol';
-import {Ownable} from '../Common/Ownable.sol';
+import {Ownable} from '../access/Ownable.sol';
 
 abstract contract Curve is ICurve, Ownable {
     /**
