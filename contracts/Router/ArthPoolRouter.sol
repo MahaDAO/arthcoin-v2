@@ -9,11 +9,13 @@ import {IERC20} from '../ERC20/IERC20.sol';
 import {IWETH} from '../ERC20/IWETH.sol';
 import {ISimpleOracle} from '../Oracle/ISimpleOracle.sol';
 import {IStakingRewards} from '../Staking/IStakingRewards.sol';
+import {IUniswapV2Router02} from '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
 contract ArthPoolRouter {
     IARTH private arth;
     IARTHX private arthx;
     IWETH private weth;
+    IUniswapV2Router02 private router;
 
     constructor(
         IARTHX _arthx,
@@ -66,7 +68,9 @@ contract ArthPoolRouter {
         uint256 arthxAmount,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IStakingRewards stakingPool,
+        bool swapWithUniswap,
+        uint256 amountToSell
     ) external {
         _mintFractionalARTHAndStake(
             pool,
@@ -75,7 +79,9 @@ contract ArthPoolRouter {
             arthxAmount,
             arthOutMin,
             secs,
-            stakingPool
+            stakingPool,
+            swapWithUniswap,
+            amountToSell
         );
     }
 
@@ -136,7 +142,9 @@ contract ArthPoolRouter {
         uint256 arthxAmount,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IStakingRewards stakingPool,
+        bool swapWithUniswap,
+        uint256 amountToSell
     ) external payable {
         weth.deposit{value: msg.value}();
         _mintFractionalARTHAndStake(
@@ -146,7 +154,9 @@ contract ArthPoolRouter {
             arthxAmount,
             arthOutMin,
             secs,
-            stakingPool
+            stakingPool,
+            swapWithUniswap,
+            amountToSell
         );
     }
 
@@ -196,15 +206,25 @@ contract ArthPoolRouter {
         uint256 arthxAmount,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IStakingRewards stakingPool,
+        bool swapWithUniswap,
+        uint256 amountToSell
     ) internal {
         collateral.transferFrom(msg.sender, address(this), amount);
-        arthx.transferFrom(msg.sender, address(this), arthxAmount);
 
+        // if we should buyback from Uniswap or use the arthx from the user's wallet
+        if (swapWithUniswap) {
+            _swapForARTHX(collateral, amountToSell, arthxAmount);
+        } else {
+            arthx.transferFrom(msg.sender, address(this), arthxAmount);
+        }
+
+        // mint the ARTH
         uint256 arthOut =
             pool.mintFractionalARTH(amount, arthxAmount, arthOutMin);
         arth.approve(address(stakingPool), uint256(arthOut));
 
+        // stake if necessary
         if (address(stakingPool) != address(0)) {
             if (secs != 0)
                 stakingPool.stakeLockedFor(msg.sender, arthOut, secs);
@@ -230,5 +250,25 @@ contract ArthPoolRouter {
                 stakingPool.stakeLockedFor(msg.sender, arthxOut, secs);
             else stakingPool.stakeFor(msg.sender, arthxOut);
         }
+    }
+
+    function _swapForARTHX(
+        IERC20 tokenToSell,
+        uint256 amountToSell,
+        uint256 minAmountToRecieve
+    ) internal {
+        address[] memory path = new address[](2);
+        path[0] = address(tokenToSell);
+        path[1] = address(arthx);
+
+        tokenToSell.transferFrom(msg.sender, address(this), amountToSell);
+
+        router.swapExactTokensForTokens(
+            amountToSell,
+            minAmountToRecieve,
+            path,
+            address(this),
+            block.timestamp
+        );
     }
 }
