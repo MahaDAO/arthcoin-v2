@@ -101,7 +101,7 @@ contract Genesis is ERC20, Ownable {
         IUniswapV2Router02 __ROUTER,
         uint256 _startTime,
         uint256 _duration
-    ) ERC20('ARTH Gen', 'ARTH-GEN') {
+    ) ERC20('ARTH Genesis', 'ARTH-GEN') {
         duration = _duration;
         startTime = _startTime;
 

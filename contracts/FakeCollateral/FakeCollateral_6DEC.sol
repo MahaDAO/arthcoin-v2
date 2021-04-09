@@ -6,9 +6,9 @@ import './FakeCollateral.sol';
 
 contract FakeCollateral_6DEC is FakeCollateral {
     constructor(
-        address _creator_address,
-        uint256 _genesis_supply,
-        string memory _symbol,
-        uint8 _decimals
-    ) FakeCollateral(_creator_address, _genesis_supply, _symbol, _decimals) {}
+        address creator_address,
+        uint256 genesis_supply,
+        string memory symbol,
+        uint8 decimals
+    ) FakeCollateral(creator_address, genesis_supply, symbol, decimals) {}
 }
