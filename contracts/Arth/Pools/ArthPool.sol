@@ -767,10 +767,6 @@ contract ArthPool is AccessControl, IARTHPool {
         _COLLATERAL.transfer(msg.sender, collateralPrecision);
     }
 
-    /**
-     * Public.
-     */
-
     function getARTHMAHAPrice() public view override returns (uint256) {
         return _ARTHMAHAOracle.getPrice();
     }

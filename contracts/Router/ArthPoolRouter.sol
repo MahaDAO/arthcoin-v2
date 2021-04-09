@@ -10,211 +10,93 @@ import {ISimpleOracle} from '../Oracle/ISimpleOracle.sol';
 import {IStakingRewards} from '../Staking/IStakingRewards.sol';
 
 contract ArthPoolRouter {
-    /**
-     * @dev Contract instances.
-     */
+    IARTH private arth;
+    IARTHX private arthx;
 
-    IARTH private _ARTH;
-    IARTHX private _ARTHX;
-    IARTHPool private _POOL;
-    IERC20 private _COLLATEAL;
-    IStakingRewards private _arthStakingPool;
-    IStakingRewards private _arthxStakingPool;
-
-    /**
-     * Constructor.
-     */
-    constructor(
-        IARTHPool __POOL,
-        IARTHX __ARTHX,
-        IARTH __ARTH,
-        IStakingRewards __arthStakingPool,
-        IStakingRewards __arthxStakingPool
-    ) {
-        _POOL = __POOL;
-        _ARTH = __ARTH;
-        _ARTHX = __ARTHX;
-
-        _arthStakingPool = __arthStakingPool;
-        _arthxStakingPool = __arthxStakingPool;
+    constructor(IARTHX _arthx, IARTH _arth) {
+        arth = _arth;
+        arthx = _arthx;
     }
-
-    /**
-     * Public.
-     */
 
     function mint1t1ARTHAndStake(
-        uint256 collateralAmount,
+        IARTHPool pool,
+        IERC20 collateral,
+        uint256 amount,
         uint256 arthOutMin,
-        uint256 lockDuration
+        uint256 secs,
+        IStakingRewards stakingPool
     ) public {
-        _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
+        collateral.transferFrom(msg.sender, address(this), amount);
 
-        uint256 arthOut = _POOL.mint1t1ARTH(collateralAmount, arthOutMin);
-        _ARTH.approve(address(_arthStakingPool), uint256(arthOut));
+        uint256 arthOut = pool.mint1t1ARTH(amount, arthOutMin);
+        arth.approve(address(stakingPool), uint256(arthOut));
 
-        if (lockDuration != 0)
-            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else _arthStakingPool.stakeFor(msg.sender, arthOut);
-    }
-
-    function mint1t1ARTHAndStakeWithPermit(
-        uint256 collateralAmount,
-        uint256 arthOutMin,
-        uint256 lockDuration,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external {
-        _ARTH.permit(
-            msg.sender,
-            address(_arthStakingPool),
-            uint256(int256(-1)),
-            block.timestamp,
-            v,
-            r,
-            s
-        );
-
-        uint256 arthOut = _POOL.mint1t1ARTH(collateralAmount, arthOutMin);
-
-        if (lockDuration != 0)
-            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else _arthStakingPool.stakeFor(msg.sender, arthOut);
-    }
-
-    function mintAlgorithmicARTHAndStake(
-        uint256 arthxAmountD18,
-        uint256 arthOutMin,
-        uint256 lockDuration
-    ) external {
-        _ARTHX.transferFrom(msg.sender, address(this), arthxAmountD18);
-        uint256 arthOut = _POOL.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
-        _ARTH.approve(address(_arthStakingPool), uint256(arthOut));
-
-        if (lockDuration != 0) {
-            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        } else {
-            _arthStakingPool.stakeFor(msg.sender, arthOut);
+        if (address(stakingPool) != address(0)) {
+            if (secs != 0)
+                stakingPool.stakeLockedFor(msg.sender, arthOut, secs);
+            else stakingPool.stakeFor(msg.sender, arthOut);
         }
     }
 
-    function mintAlgorithmicARTHAndStakeWithPermit(
+    function mintAlgorithmicARTHAndStake(
+        IARTHPool pool,
         uint256 arthxAmountD18,
         uint256 arthOutMin,
-        uint256 lockDuration,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
+        uint256 secs,
+        IStakingRewards stakingPool
     ) external {
-        _ARTH.permit(
-            msg.sender,
-            address(_arthStakingPool),
-            uint256(int256(-1)),
-            block.timestamp,
-            v,
-            r,
-            s
-        );
+        arthx.transferFrom(msg.sender, address(this), arthxAmountD18);
 
-        uint256 arthOut = _POOL.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
+        uint256 arthOut = pool.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
+        arth.approve(address(stakingPool), uint256(arthOut));
 
-        if (lockDuration != 0)
-            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else _arthStakingPool.stakeFor(msg.sender, arthOut);
+        if (address(stakingPool) != address(0)) {
+            if (secs != 0)
+                stakingPool.stakeLockedFor(msg.sender, arthOut, secs);
+            else stakingPool.stakeFor(msg.sender, arthOut);
+        }
     }
 
     function mintFractionalARTHAndStake(
-        uint256 collateralAmount,
+        IARTHPool pool,
+        IERC20 collateral,
+        uint256 amount,
         uint256 arthxAmount,
         uint256 arthOutMin,
-        uint256 lockDuration
+        uint256 secs,
+        IStakingRewards stakingPool
     ) external {
-        _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
-        _ARTHX.transferFrom(msg.sender, address(this), arthxAmount);
+        collateral.transferFrom(msg.sender, address(this), amount);
+        arthx.transferFrom(msg.sender, address(this), arthxAmount);
 
         uint256 arthOut =
-            _POOL.mintFractionalARTH(collateralAmount, arthxAmount, arthOutMin);
-        _ARTH.approve(address(_arthStakingPool), uint256(arthOut));
+            pool.mintFractionalARTH(amount, arthxAmount, arthOutMin);
+        arth.approve(address(stakingPool), uint256(arthOut));
 
-        if (lockDuration != 0)
-            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else _arthStakingPool.stakeFor(msg.sender, arthOut);
-    }
-
-    function mintFractionalARTHAndStakeWithPermit(
-        uint256 collateralAmount,
-        uint256 arthxAmount,
-        uint256 arthOutMin,
-        uint256 lockDuration,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external {
-        _ARTH.permit(
-            msg.sender,
-            address(_arthStakingPool),
-            uint256(int256(-1)),
-            block.timestamp,
-            v,
-            r,
-            s
-        );
-
-        uint256 arthOut =
-            _POOL.mintFractionalARTH(collateralAmount, arthxAmount, arthOutMin);
-
-        if (lockDuration != 0)
-            _arthStakingPool.stakeLockedFor(msg.sender, arthOut, lockDuration);
-        else _arthStakingPool.stakeFor(msg.sender, arthOut);
+        if (address(stakingPool) != address(0)) {
+            if (secs != 0)
+                stakingPool.stakeLockedFor(msg.sender, arthOut, secs);
+            else stakingPool.stakeFor(msg.sender, arthOut);
+        }
     }
 
     function recollateralizeARTHAndStake(
-        uint256 collateralAmount,
+        IARTHPool pool,
+        IERC20 collateral,
+        uint256 amount,
         uint256 ARTHXOutMin,
-        uint256 lockDuration
+        uint256 secs,
+        IStakingRewards stakingPool
     ) external {
-        _COLLATEAL.transferFrom(msg.sender, address(this), collateralAmount);
-        uint256 arthxOut =
-            _POOL.recollateralizeARTH(collateralAmount, ARTHXOutMin);
-        _ARTHX.approve(address(_arthxStakingPool), uint256(arthxOut));
+        collateral.transferFrom(msg.sender, address(this), amount);
 
-        if (lockDuration != 0)
-            _arthxStakingPool.stakeLockedFor(
-                msg.sender,
-                arthxOut,
-                lockDuration
-            );
-        else _arthxStakingPool.stakeFor(msg.sender, arthxOut);
-    }
+        uint256 arthxOut = pool.recollateralizeARTH(amount, ARTHXOutMin);
+        arthx.approve(address(stakingPool), uint256(arthxOut));
 
-    function recollateralizeARTHAndStakeWithPermit(
-        uint256 collateralAmount,
-        uint256 ARTHXOutMin,
-        uint256 lockDuration,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external {
-        _ARTHX.permit(
-            msg.sender,
-            address(_arthxStakingPool),
-            uint256(int256(-1)),
-            block.timestamp,
-            v,
-            r,
-            s
-        );
-
-        uint256 arthxOut =
-            _POOL.recollateralizeARTH(collateralAmount, ARTHXOutMin);
-
-        if (lockDuration != 0)
-            _arthxStakingPool.stakeLockedFor(
-                msg.sender,
-                arthxOut,
-                lockDuration
-            );
-        else _arthxStakingPool.stakeFor(msg.sender, arthxOut);
+        if (address(stakingPool) != address(0)) {
+            if (secs != 0)
+                stakingPool.stakeLockedFor(msg.sender, arthxOut, secs);
+            else stakingPool.stakeFor(msg.sender, arthxOut);
+        }
     }
 }
