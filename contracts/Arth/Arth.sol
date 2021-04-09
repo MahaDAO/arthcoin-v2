@@ -15,10 +15,6 @@ import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
  * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
 contract ARTHStablecoin is AnyswapV4Token, IARTH {
-    /**
-     * State variables.
-     */
-
     IIncentiveController public incentiveController;
 
     /// @notice Governance timelock address.
@@ -33,16 +29,8 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
 
     mapping(address => bool) public pools;
 
-    /**
-     * Events.
-     */
-
     event PoolBurned(address indexed from, address indexed to, uint256 amount);
     event PoolMinted(address indexed from, address indexed to, uint256 amount);
-
-    /**
-     * Modifiers.
-     */
 
     modifier onlyPools() {
         require(
@@ -60,19 +48,11 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         _;
     }
 
-    /**
-     * Constructor.
-     */
-
     constructor(address _governance) AnyswapV4Token(name) {
         governance = _governance;
 
         _mint(msg.sender, genesisSupply);
     }
-
-    /**
-     * External.
-     */
 
     /// @notice Used by pools when user redeems.
     function poolBurnFrom(address who, uint256 amount)
@@ -107,10 +87,6 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         delete pools[pool];
     }
 
-    /**
-     * Public.
-     */
-
     function setGovernance(address _governance) external override onlyOwner {
         governance = _governance;
     }
@@ -123,18 +99,6 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         incentiveController = _incentiveController;
     }
 
-    /**
-     * Internal.
-     */
-
-    function _checkAndApplyIncentives(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) internal {
-        incentiveController.incentivize(sender, recipient, msg.sender, amount);
-    }
-
     function _transfer(
         address sender,
         address recipient,
@@ -142,7 +106,12 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     ) internal override {
         super._transfer(sender, recipient, amount);
         if (address(incentiveController) != address(0)) {
-            _checkAndApplyIncentives(sender, recipient, amount);
+            incentiveController.incentivize(
+                sender,
+                recipient,
+                msg.sender,
+                amount
+            );
         }
     }
 }
