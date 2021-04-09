@@ -12,19 +12,21 @@ import {IStakingRewards} from '../Staking/IStakingRewards.sol';
 import {IUniswapV2Router02} from '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
 contract ArthPoolRouter {
-    IARTH private arth;
-    IARTHX private arthx;
-    IWETH private weth;
-    IUniswapV2Router02 private router;
+    IARTH public arth;
+    IARTHX public arthx;
+    IWETH public weth;
+    IUniswapV2Router02 public router;
 
     constructor(
         IARTHX _arthx,
         IARTH _arth,
-        IWETH _weth
+        IWETH _weth,
+        IUniswapV2Router02 _router
     ) {
         arth = _arth;
         arthx = _arthx;
         weth = _weth;
+        router = _router;
     }
 
     function mint1t1ARTHAndStake(
@@ -170,6 +172,7 @@ contract ArthPoolRouter {
     ) internal {
         collateral.transferFrom(msg.sender, address(this), amount);
 
+        // mint arth with 100% colalteral
         uint256 arthOut = pool.mint1t1ARTH(amount, arthOutMin);
         arth.approve(address(stakingPool), uint256(arthOut));
 
@@ -189,6 +192,7 @@ contract ArthPoolRouter {
     ) internal {
         arthx.transferFrom(msg.sender, address(this), arthxAmountD18);
 
+        // mint arth with 100% ARTHX
         uint256 arthOut = pool.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
         arth.approve(address(stakingPool), uint256(arthOut));
 
@@ -219,7 +223,7 @@ contract ArthPoolRouter {
             arthx.transferFrom(msg.sender, address(this), arthxAmount);
         }
 
-        // mint the ARTH
+        // mint the ARTH with ARTHX + Collateral
         uint256 arthOut =
             pool.mintFractionalARTH(amount, arthxAmount, arthOutMin);
         arth.approve(address(stakingPool), uint256(arthOut));
