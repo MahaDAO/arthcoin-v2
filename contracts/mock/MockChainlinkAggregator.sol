@@ -2,9 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {Ownable} from '../access/Ownable.sol';
-
-contract MockChainlinkAggregator is Ownable {
+contract MockChainlinkAggregator {
     uint256 latestPrice = 1e8;
 
     function decimals() external pure returns (uint8) {

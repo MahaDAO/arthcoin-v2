@@ -29,6 +29,15 @@ describe("ArthPool contract", function () {
     const arthmahaoracle = await ARTHMAHAOracle.deploy('ARTH/MAHA', ETH);
     const ArthController = await ethers.getContractFactory("ArthController");
     const arthController = await ArthController.deploy(owner.address, owner.address);
+    const MockChainlinkAggregator = await ethers.getContractFactory("MockChainlinkAggregator");
+    const mockChainlinkAggregator = await MockChainlinkAggregator.deploy();
+    const GMUOracle = await ethers.getContractFactory("GMUOracle");
+    const gmuOracle = await GMUOracle.deploy('GMU', ETH);
+    const ChainlinkETHUSDPriceConsumer = await ethers.getContractFactory("ChainlinkETHUSDPriceConsumer");
+    const chainlinkETHUSDPriceConsumer = await ChainlinkETHUSDPriceConsumer.deploy(mockChainlinkAggregator.address, gmuOracle.address);
+    const DAIETHOracle = await MockUniswapOracle.deploy();
+
+    arthController.setETHGMUOracle(chainlinkETHUSDPriceConsumer.address)
 
     ArthPoolLibrary = await ethers.getContractFactory('ArthPoolLibrary');
     arthPoolLibrary = await ArthPoolLibrary.deploy();
@@ -51,6 +60,8 @@ describe("ArthPool contract", function () {
       ETH.mul(90000)
     );
 
+    await arth.addPool(arthPool.address)
+
     await arthPool.setPoolParameters(
       ETH.mul(30000),
       1500,
@@ -60,7 +71,10 @@ describe("ArthPool contract", function () {
       1000
     )
 
+    await arthPool.setCollatETHOracle(DAIETHOracle.address, owner.address);
+
     await fakeCollateralDAI.approve(arthPool.address, ETH);
+
     await arthPool.mint1t1ARTH(ETH, 0);
   });
 });
