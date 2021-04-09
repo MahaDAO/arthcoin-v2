@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import '../../Arth/Arth.sol';
-import './IArthPool.sol';
-import '../../ARTHX/ARTHX.sol';
-import '../../ERC20/ERC20.sol';
-import '../../Oracle/ISimpleOracle.sol';
-import '../../Staking/StakingRewards.sol';
+import '../Arth/Arth.sol';
+import '../Arth/Pools/IArthPool.sol';
+import '../ARTHX/ARTHX.sol';
+import '../ERC20/ERC20.sol';
+import '../Oracle/ISimpleOracle.sol';
+import '../Staking/StakingRewards.sol';
 
 contract ArthPoolRouter {
     IArthPool public pool;
