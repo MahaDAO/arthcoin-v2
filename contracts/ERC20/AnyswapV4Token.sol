@@ -28,10 +28,6 @@ abstract contract AnyswapV4Token is
     AccessControl,
     IAnyswapV4Token
 {
-    /**
-     * State variables.
-     */
-
     bytes32 public immutable DOMAIN_SEPARATOR;
 
     bytes32 public constant BRIDGE_ROLE = keccak256('BRIDGE_ROLE');
@@ -44,13 +40,7 @@ abstract contract AnyswapV4Token is
             'Transfer(address owner,address to,uint256 value,uint256 nonce,uint256 deadline)'
         );
 
-    bool private _vaultOnly = false;
-
     mapping(address => uint256) public override nonces;
-
-    /**
-     * Events
-     */
 
     event LogSwapin(
         bytes32 indexed txhash,
@@ -64,9 +54,6 @@ abstract contract AnyswapV4Token is
         uint256 amount
     );
 
-    /**
-     * Modifier.
-     */
     modifier onlyBridge {
         require(
             hasRole(BRIDGE_ROLE, _msgSender()),
@@ -75,14 +62,7 @@ abstract contract AnyswapV4Token is
         _;
     }
 
-    /**
-     * Constructor.
-     */
-    constructor(
-        string memory name /*, address _vault */
-    ) {
-        _vaultOnly = false;
-
+    constructor(string memory name) {
         uint256 chainId;
         assembly {
             chainId := chainid()
@@ -102,10 +82,6 @@ abstract contract AnyswapV4Token is
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
-
-    /**
-     * External.
-     */
 
     function approveAndCall(
         address spender,
@@ -173,10 +149,6 @@ abstract contract AnyswapV4Token is
         return true;
     }
 
-    /**
-     * Public
-     */
-
     function permit(
         address target,
         address spender,
@@ -226,17 +198,12 @@ abstract contract AnyswapV4Token is
         onlyBridge
         returns (bool)
     {
-        require(!_vaultOnly, 'AnyswapV4ERC20: onlyAuth');
         require(bindaddr != address(0), 'AnyswapV4ERC20: address(0x0)');
 
         _burn(msg.sender, amount);
         emit LogSwapout(msg.sender, bindaddr, amount);
         return true;
     }
-
-    /**
-     * Internal.
-     */
 
     function _verifyEIP712(
         address target,

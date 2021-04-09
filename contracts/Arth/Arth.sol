@@ -10,14 +10,9 @@ import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 /**
  * @title  ARTHStablecoin.
  * @author MahaDAO.
- *
- * Original code written by:
- * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
 contract ARTHStablecoin is AnyswapV4Token, IARTH {
     IIncentiveController public incentiveController;
-
-    /// @notice Governance timelock address.
     address public governance;
 
     uint8 public constant override decimals = 18;
@@ -33,24 +28,19 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     event PoolMinted(address indexed from, address indexed to, uint256 amount);
 
     modifier onlyPools() {
-        require(
-            pools[msg.sender] == true,
-            'Only arth pools can call this function'
-        );
+        require(pools[msg.sender] == true, 'ARTH: not pool');
         _;
     }
 
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner() || msg.sender == governance,
-            'You are not the owner, or the governance timelock'
+            'ARTH: not owner or governance'
         );
         _;
     }
 
-    constructor(address _governance) AnyswapV4Token(name) {
-        governance = _governance;
-
+    constructor() AnyswapV4Token(name) {
         _mint(msg.sender, genesisSupply);
     }
 
@@ -73,7 +63,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     /// @dev    Collateral Must be ERC20.
     /// @notice Adds collateral addresses supported.
     function addPool(address pool) external override onlyByOwnerOrGovernance {
-        require(pools[pool] == false, 'address already exists');
+        require(pools[pool] == false, 'pool exists');
         pools[pool] = true;
     }
 
@@ -83,7 +73,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         override
         onlyByOwnerOrGovernance
     {
-        require(pools[pool] == true, "address doesn't exist already");
+        require(pools[pool] == true, "pool doesn't exist");
         delete pools[pool];
     }
 
