@@ -21,6 +21,7 @@ contract Pool_6DEC is ArthPool {
         address _timelockAddress,
         address _mahaToken,
         address _arthMAHAOracle,
+        address _arthController,
         uint256 _poolCeiling
     )
         ArthPool(
@@ -31,6 +32,7 @@ contract Pool_6DEC is ArthPool {
             _timelockAddress,
             _mahaToken,
             _arthMAHAOracle,
+            _arthController,
             _poolCeiling
         )
     {

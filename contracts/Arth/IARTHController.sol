@@ -52,7 +52,7 @@ interface IARTHController {
 
     function setRefreshCooldown(uint256 newCooldown) external;
 
-    function setETHUSDOracle(address _ethGMUConsumerAddress) external;
+    function setETHGMUOracle(address _ethGMUConsumerAddress) external;
 
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio) external;
 

@@ -255,7 +255,7 @@ contract ArthController is AccessControl, IARTHController {
         refreshCooldown = newCooldown;
     }
 
-    function setETHUSDOracle(address _ethGMUConsumerAddress)
+    function setETHGMUOracle(address _ethGMUConsumerAddress)
         public
         override
         onlyByOwnerOrGovernance

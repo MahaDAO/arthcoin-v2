@@ -158,6 +158,7 @@ contract ArthPool is AccessControl, IARTHPool {
         address __timelockAddress,
         address __MAHA,
         address __ARTHMAHAOracle,
+        address __arthController,
         uint256 _poolCeiling
     ) {
         _MAHA = IERC20Burnable(__MAHA);
@@ -165,6 +166,7 @@ contract ArthPool is AccessControl, IARTHPool {
         _COLLATERAL = IERC20(__collateralAddress);
         _ARTHX = IARTHX(__arthxContractAddress);
         _ARTHMAHAOracle = ISimpleOracle(__ARTHMAHAOracle);
+        _arthController = IARTHController(__arthController);
 
         _ownerAddress = _creatorAddress;
         _timelockAddress = __timelockAddress;
