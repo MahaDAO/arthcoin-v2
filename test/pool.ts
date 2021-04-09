@@ -35,7 +35,9 @@ describe("ArthPool contract", function () {
     const gmuOracle = await GMUOracle.deploy('GMU', ETH);
     const ChainlinkETHUSDPriceConsumer = await ethers.getContractFactory("ChainlinkETHUSDPriceConsumer");
     const chainlinkETHUSDPriceConsumer = await ChainlinkETHUSDPriceConsumer.deploy(mockChainlinkAggregator.address, gmuOracle.address);
+
     const DAIETHOracle = await MockUniswapOracle.deploy();
+    const ARTHXOracle = await MockUniswapOracle.deploy();
 
     arthController.setETHGMUOracle(chainlinkETHUSDPriceConsumer.address)
 
@@ -61,6 +63,7 @@ describe("ArthPool contract", function () {
     );
 
     await arth.addPool(arthPool.address)
+    await arthController.addPool(arthPool.address)
 
     await arthPool.setPoolParameters(
       ETH.mul(30000),
@@ -72,9 +75,16 @@ describe("ArthPool contract", function () {
     )
 
     await arthPool.setCollatETHOracle(DAIETHOracle.address, owner.address);
+    await arthController.setARTHXETHOracle(ARTHXOracle.address, owner.address);
 
     await fakeCollateralDAI.approve(arthPool.address, ETH);
 
+    await arthController.setGlobalCollateralRatio(0);
+    await arthx.setArthController(arthController.address);
+    await arthx.approve(arthPool.address, ETH);
+    await arthPool.mintAlgorithmicARTH(ETH, 0);
+
+    await await arthController.setGlobalCollateralRatio(1e6);
     await arthPool.mint1t1ARTH(ETH, 0);
   });
 });

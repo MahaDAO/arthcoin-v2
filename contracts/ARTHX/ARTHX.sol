@@ -102,6 +102,14 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         oracleAddress = newOracle;
     }
 
+    function setArthController(address _controller)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        _arthController = IARTHController(_controller);
+    }
+
     function setTimelock(address newTimelock)
         external
         override

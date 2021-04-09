@@ -15,6 +15,8 @@ interface IARTHX is IERC20, IAnyswapV4Token {
 
     function setOracle(address newOracle) external;
 
+    function setArthController(address _controller) external;
+
     function setTimelock(address newTimelock) external;
 
     function setARTHAddress(address arthContractAddress) external;
