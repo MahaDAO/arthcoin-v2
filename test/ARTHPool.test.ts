@@ -133,7 +133,7 @@ describe('ARTHPool', () => {
       );
     })
 
-    it(' - Should not mint while collateral > celing', async () => {
+    it(' - Should not mint when collateral > celing', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
 
       await expect(arthPool.mint1t1ARTH((ETH).mul(3), 0)).to.revertedWith(
@@ -141,7 +141,7 @@ describe('ARTHPool', () => {
       );
     })
 
-    it(' - Should not mint while expected > to be minted', async () => {
+    it(' - Should not mint when expected > to be minted', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
 
       await expect(arthPool.mint1t1ARTH(ETH, ETH.mul(10))).to.revertedWith(
@@ -163,7 +163,7 @@ describe('ARTHPool', () => {
       );
     })
 
-    it(' - Should not mint while expected > to be minted', async () => {
+    it(' - Should not mint when expected > to be minted', async () => {
       await arthController.setGlobalCollateralRatio(0);
 
       await expect(arthPool.mintAlgorithmicARTH(ETH, ETH.mul(2))).to.revertedWith(
@@ -178,7 +178,7 @@ describe('ARTHPool', () => {
       arthx.approve(arthPool.address, ETH);
     })
 
-    it(' - Should not mint CR = 0 || CR = 1', async () => {
+    it(' - Should not mint when CR = 0 || CR = 1', async () => {
       await arthController.setGlobalCollateralRatio(0);
 
       await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
@@ -192,11 +192,20 @@ describe('ARTHPool', () => {
       )
     })
 
-    it(' - Should throw error related to ceiling', async () => {
+    it(' - Should not mint when collateral > ceiling', async () => {
       await dai.transfer(arthPool.address, ETH.mul(2))
       await arthController.setGlobalCollateralRatio(1e5);
 
       await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
+        'ARTHPool: ceiling reached.'
+      )
+    })
+
+    it(' - Should not mint when slippage reached', async () => {
+      await dai.transfer(arthPool.address, ETH.mul(2))
+      await arthController.setGlobalCollateralRatio(1e5);
+
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH.mul(3))).to.revertedWith(
         'ARTHPool: ceiling reached.'
       )
     })
