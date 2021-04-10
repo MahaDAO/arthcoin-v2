@@ -221,6 +221,14 @@ describe('ARTHPool', () => {
           'Collateral ratio must be == 1'
         )
       })
+
+      it(' - Should not redeem if pools collateral balance is low', async () => {
+        await arthController.setGlobalCollateralRatio(1e6);
+
+        await expect(arthPool.redeem1t1ARTH(ETH.mul(9), ETH)).to.revertedWith(
+          'ARTHPool: Not enough collateral in pool'
+        )
+      })
     })
   })
 });
