@@ -4,6 +4,7 @@ import { solidity } from 'ethereum-waffle';
 import { Contract, ContractFactory, BigNumber, utils } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
+
 chai.use(solidity);
 
 
@@ -120,11 +121,11 @@ describe('ARTHPool', () => {
   })
 
   describe('- Mint 1:1 ARTH', async () => {
-    beforeEach('Approve collateral', async () => {
+    beforeEach(' - Approve collateral', async () => {
       dai.approve(arthPool.address, ETH);
     })
 
-    it('Should not mint when CR is less than 1', async () => {
+    it(' - Should not mint when CR < 1', async () => {
       await arthController.setGlobalCollateralRatio(100);
 
       await expect(arthPool.mint1t1ARTH(ETH, 0)).to.revertedWith(
@@ -132,7 +133,7 @@ describe('ARTHPool', () => {
       );
     })
 
-    it('Should not mint while collateral is greater then celing', async () => {
+    it(' - Should not mint while collateral > celing', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
 
       await expect(arthPool.mint1t1ARTH((ETH).mul(3), 0)).to.revertedWith(
@@ -140,7 +141,7 @@ describe('ARTHPool', () => {
       );
     })
 
-    it('Should not mint while arthAmountD18 is greater then arthOutMin', async () => {
+    it(' - Should not mint while expected > to be minted', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
 
       await expect(arthPool.mint1t1ARTH(ETH, ETH.mul(10))).to.revertedWith(
@@ -150,11 +151,11 @@ describe('ARTHPool', () => {
   })
 
   describe('- Mint Algorithmic ARTH', async () => {
-    beforeEach('Approve Arthx', async () => {
+    beforeEach(' - Approve ARTHX', async () => {
       arthx.approve(arthPool.address, ETH);
     })
 
-    it('Should not mint when CR is not equal to 0', async () => {
+    it(' - Should not mint when CR != 0', async () => {
       await arthController.setGlobalCollateralRatio(100);
 
       await expect(arthPool.mintAlgorithmicARTH(ETH, 0)).to.revertedWith(
@@ -162,40 +163,42 @@ describe('ARTHPool', () => {
       );
     })
 
-    it('Should not mint while arthxAmountD18 is greater then arthOutMin', async () => {
+    it(' - Should not mint while expected > to be minted', async () => {
       await arthController.setGlobalCollateralRatio(0);
-      //await
 
-      await expect(arthPool.mintAlgorithmicARTH(ETH, ETH.sub(100))).to.revertedWith(
+      await expect(arthPool.mintAlgorithmicARTH(ETH, ETH.mul(2))).to.revertedWith(
         'Slippage limit reached'
       );
     })
   })
 
   describe('- Mint Fractional ARTH', async () => {
-    beforeEach('Approve Arthx', async () => {
+    beforeEach(' - Approve DAI & ARTHX', async () => {
       dai.approve(arthPool.address, ETH);
       arthx.approve(arthPool.address, ETH);
     })
 
-    it('Should not mint when CR is not equal to 0', async () => {
-      await arthPool.toggleUseGlobalCRForRecollateralize(false);
-      await arthPool.setMintCollateralRatio(1e7);
+    it(' - Should not mint CR = 0 || CR = 1', async () => {
+      await arthController.setGlobalCollateralRatio(0);
+
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
+        'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+      )
+
+      await arthController.setGlobalCollateralRatio(1e6);
 
       await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
         'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
       )
     })
 
-    it('Should throw error related to ceiling', async () => {
-      // await arthPool.toggleUseGlobalCRForRecollateralize(false);
-      // await arthPool.setMintCollateralRatio(1e7);
+    it(' - Should throw error related to ceiling', async () => {
       await dai.transfer(arthPool.address, ETH.mul(2))
-      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0))
+      await arthController.setGlobalCollateralRatio(1e5);
 
-      // await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
-      //   'ARTHPool: ceiling reached.'
-      // )
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
+        'ARTHPool: ceiling reached.'
+      )
     })
   })
 });
