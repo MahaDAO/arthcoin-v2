@@ -7,7 +7,7 @@ import {SafeMath} from '../utils/math/SafeMath.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
 import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 
-contract UniswapPairOracle is IUniswapPairOracle {
+contract MockUniswapPairOracle is IUniswapPairOracle {
     using SafeMath for uint256;
 
     uint256 epoch;

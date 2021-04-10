@@ -7,15 +7,12 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 chai.use(solidity);
 
 
-describe('ARTHPool', async () => {
+describe('ARTHPool', () => {
   const ZERO = BigNumber.from(0);
   const ETH = utils.parseEther('1');
 
-  const [
-    owner,  // Owner and timelock for contracts.
-    whale // Whale participant.
-  ]: SignerWithAddress[] = await ethers.getSigners();
-
+  let owner: SignerWithAddress;
+  let whale: SignerWithAddress;
 
   let ARTH: ContractFactory;
   let MAHA: ContractFactory;
@@ -29,13 +26,29 @@ describe('ARTHPool', async () => {
   let ChainlinkETHGMUOracle: ContractFactory;
   let MockChainlinkAggregatorV3: ContractFactory;
 
+  let dai: Contract;
+  let arth: Contract;
+  let maha: Contract;
+  let arthx: Contract;
+  let arthPool: Contract;
+  let gmuOracle: Contract;
+  let arthMahaOracle: Contract;
+  let arthController: Contract;
   let arthPoolLibrary: Contract;
-  before(' - Deploy libraries', async () => {
+  let daiETHUniswapOracle: Contract;
+  let arthETHUniswapOracle: Contract;
+  let chainlinkETHGMUOracle: Contract;
+  let arthxETHUniswapOracle: Contract;
+  let mockChainlinkAggregatorV3: Contract;
+
+  before(' - Setup accounts & deploy libraries', async () => {
+    [owner, whale] = await ethers.getSigners();
+
     ARTHPoolLibrary = await ethers.getContractFactory('ArthPoolLibrary');
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
   });
 
-  before(' - Fetch contract factories', async () => {
+  beforeEach(' - Fetch contract factories', async () => {
     MAHA = await ethers.getContractFactory('MahaToken');
     ARTHX = await ethers.getContractFactory('ARTHShares');
     ARTH = await ethers.getContractFactory('ARTHStablecoin');
@@ -54,21 +67,7 @@ describe('ARTHPool', async () => {
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
   });
 
-  let dai: Contract;
-  let arth: Contract;
-  let maha: Contract;
-  let arthx: Contract;
-  let arthPool: Contract;
-  let gmuOracle: Contract;
-  let arthMahaOracle: Contract;
-  let arthController: Contract;
-  let daiETHUniswapOracle: Contract;
-  let arthETHUniswapOracle: Contract;
-  let chainlinkETHGMUOracle: Contract;
-  let arthxETHUniswapOracle: Contract;
-  let mockChainlinkAggregatorV3: Contract;
-
-  before(' - Deploy contracts', async () => {
+  beforeEach(' - Deploy contracts', async () => {
     arth = await ARTH.deploy();
     maha = await MAHA.deploy();
     dai = await MockCollateral.deploy(owner.address, ETH.mul(10000), 'DAI', 18);
@@ -89,19 +88,20 @@ describe('ARTHPool', async () => {
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
     arthController = await ARTHController.deploy(owner.address, owner.address);
 
-    arthPool = await ARTHPoolLibrary.deploy(
+    arthPool = await ARTHPool.deploy(
       arth.address,
       arthx.address,
       dai.address,
       owner.address,
       owner.address,
       maha.address,
+      arthMahaOracle.address,
       arthController.address,
       ETH.mul(90000)
     );
   });
 
-  before(' - Set some contract variables', async () => {
+  beforeEach(' - Set some contract variables', async () => {
     arthController.setETHGMUOracle(chainlinkETHGMUOracle.address);
     await arth.addPool(arthPool.address);
     await arthController.addPool(arthPool.address);
@@ -117,5 +117,19 @@ describe('ARTHPool', async () => {
     await arthx.setArthController(arthController.address);
     await arthPool.setCollatETHOracle(daiETHUniswapOracle.address, owner.address);
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
+  })
+
+  describe('- Mint 1:1 ARTH', async () => {
+    beforeEach('Approve collateral', async () => {
+      dai.approve(arthPool.address, ETH);
+    })
+
+    it('Should not mint when CR is less than 1', async () => {
+      await arthController.setGlobalCollateralRatio(100);
+
+      await expect(arthPool.mint1t1ARTH(ETH, 0)).to.revertedWith(
+        'ARHTPool: Collateral ratio < 1'
+      );
+    })
   })
 });
