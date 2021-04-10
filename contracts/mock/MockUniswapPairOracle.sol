@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import {SafeMath} from '../utils/math/SafeMath.sol';
 
-import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
+import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 
 contract UniswapPairOracle is IUniswapPairOracle {
     using SafeMath for uint256;

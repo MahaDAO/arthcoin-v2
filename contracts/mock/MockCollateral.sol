@@ -2,14 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import '../utils/Context.sol';
-import '../ERC20/IERC20.sol';
-import '../utils/math/SafeMath.sol';
-import '../utils/Address.sol';
-
-// Due to compiling issues, _name, _symbol, and _decimals were removed
+import {IERC20} from '../ERC20/IERC20.sol';
+import {Context} from '../utils/Context.sol';
+import {Address} from '../utils/Address.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
 
 /**
+ * NOTE: Due to compiling issues, _name, _symbol, and _decimals were removed
  * @dev Implementation of the {IERC20} interface.
  *
  * This implementation is agnostic to the way tokens are created. This means
@@ -33,12 +32,13 @@ import '../utils/Address.sol';
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract FakeCollateral is Context, IERC20 {
+contract MockCollateral is Context, IERC20 {
     using SafeMath for uint256;
+
     string public symbol;
     uint8 public override decimals;
-    address public creator_address;
-    uint256 public genesis_supply;
+    address public creatorAddress;
+    uint256 public genesisSupply;
     uint256 private _totalSupply;
 
     mapping(address => uint256) private _balances;
@@ -46,16 +46,17 @@ contract FakeCollateral is Context, IERC20 {
     mapping(address => bool) used;
 
     constructor(
-        address _creator_address,
-        uint256 _genesis_supply,
+        address _creatorAddress,
+        uint256 _genesisSupply,
         string memory _symbol,
         uint8 _decimals
     ) {
-        genesis_supply = _genesis_supply;
-        creator_address = _creator_address;
+        genesisSupply = _genesisSupply;
+        creatorAddress = _creatorAddress;
         symbol = _symbol;
         decimals = _decimals;
-        _mint(creator_address, genesis_supply);
+
+        _mint(creatorAddress, genesisSupply);
     }
 
     function faucet() public {

@@ -16,12 +16,13 @@ describe('ARTHPool', async () => {
     whale // Whale participant.
   ]: SignerWithAddress[] = await ethers.getSigners();
 
-  let DAI: ContractFactory;
+
   let ARTH: ContractFactory;
   let MAHA: ContractFactory;
   let ARTHX: ContractFactory;
   let ARTHPool: ContractFactory;
   let SimpleOracle: ContractFactory;
+  let MockCollateral: ContractFactory;
   let ARTHController: ContractFactory;
   let ARTHPoolLibrary: ContractFactory;
   let MockUniswapOracle: ContractFactory;
@@ -35,10 +36,10 @@ describe('ARTHPool', async () => {
   });
 
   before(' - Fetch contract factories', async () => {
-    DAI = await ethers.getContractFactory('FakeCollateral_DAI');
-    ARTH = await ethers.getContractFactory('ARTHStablecoin');
     MAHA = await ethers.getContractFactory('MahaToken');
     ARTHX = await ethers.getContractFactory('ARTHShares');
+    ARTH = await ethers.getContractFactory('ARTHStablecoin');
+    MockCollateral = await ethers.getContractFactory('MockCollateral');
 
     ARTHPool = await ethers.getContractFactory('ArthPool', {
       libraries: {
@@ -70,7 +71,7 @@ describe('ARTHPool', async () => {
   before(' - Deploy contracts', async () => {
     arth = await ARTH.deploy();
     maha = await MAHA.deploy();
-    dai = await DAI.deploy(owner.address, ETH.mul(10000), 'DAI', 18);
+    dai = await MockCollateral.deploy(owner.address, ETH.mul(10000), 'DAI', 18);
 
     gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH);
     daiETHUniswapOracle = await MockUniswapOracle.deploy();
