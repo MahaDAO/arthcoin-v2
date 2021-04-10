@@ -148,4 +148,43 @@ describe('ARTHPool', () => {
       );
     })
   })
+
+  describe('- Mint Algorithmic ARTH', async () => {
+    beforeEach('Approve Arthx', async () => {
+      arthx.approve(arthPool.address, ETH);
+    })
+
+    it('Should not mint when CR is not equal to 0', async () => {
+      await arthController.setGlobalCollateralRatio(100);
+
+      await expect(arthPool.mintAlgorithmicARTH(ETH, 0)).to.revertedWith(
+        'ARTHPool: Collateral ratio != 0'
+      );
+    })
+
+    it('Should not mint while arthxAmountD18 is greater then arthOutMin', async () => {
+      await arthController.setGlobalCollateralRatio(0);
+      //await
+
+      await expect(arthPool.mintAlgorithmicARTH(ETH, ETH.sub(100))).to.revertedWith(
+        'Slippage limit reached'
+      );
+    })
+  })
+
+  describe('- Mint Fractional ARTH', async () => {
+    beforeEach('Approve Arthx', async () => {
+      dai.approve(arthPool.address, ETH);
+      arthx.approve(arthPool.address, ETH);
+    })
+
+    it('Should not mint when CR is not equal to 0', async () => {
+      await arthPool.toggleUseGlobalCRForRecollateralize(false);
+      await arthPool.setMintCollateralRatio(1e7);
+
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
+        'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+      )
+    })
+  })
 });

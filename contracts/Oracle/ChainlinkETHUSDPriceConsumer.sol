@@ -49,7 +49,8 @@ contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
     }
 
     function getLatestPrice() public view override returns (uint256) {
-        return getLatestUSDPrice().mul(getGmuPrice()).div(priceFeedDecimals);
+        return
+            getLatestUSDPrice().mul(getGmuPrice()).div(10**priceFeedDecimals);
     }
 
     function getDecimals() public view override returns (uint8) {
