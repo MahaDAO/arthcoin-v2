@@ -446,6 +446,7 @@ contract ArthPool is AccessControl, IARTHPool {
                 collateralRatioForMint > 0,
             'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
         );
+
         require(
             _COLLATERAL
                 .balanceOf(address(this))

@@ -186,5 +186,16 @@ describe('ARTHPool', () => {
         'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
       )
     })
+
+    it('Should throw error related to ceiling', async () => {
+      // await arthPool.toggleUseGlobalCRForRecollateralize(false);
+      // await arthPool.setMintCollateralRatio(1e7);
+      await dai.transfer(arthPool.address, ETH.mul(2))
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0))
+
+      // await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
+      //   'ARTHPool: ceiling reached.'
+      // )
+    })
   })
 });
