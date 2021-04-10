@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-contract MockChainlinkAggregator {
+contract ChainlinkAggregatorV3 {
     uint256 latestPrice = 1e8;
 
     function decimals() external pure returns (uint8) {
