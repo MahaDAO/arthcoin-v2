@@ -201,6 +201,7 @@ describe('ARTHPool', () => {
       )
     })
 
+
     it(' - Should not mint when slippage reached', async () => {
       await arthController.setGlobalCollateralRatio(1e5);
 
@@ -208,19 +209,19 @@ describe('ARTHPool', () => {
         'ARTHPool: Slippage limit reached'
       )
     })
+  })
 
-    describe('- Redeem 1t1 Arth', async () => {
-      beforeEach(' - Approve ARTHX', async () => {
-        arth.approve(arthPool.address, ETH);
-      })
+  describe('- Redeem 1t1 Arth', async () => {
+    beforeEach(' - Approve ARTHX', async () => {
+      arth.approve(arthPool.address, ETH);
+    })
 
-      it(' - Should not redeem when CR != 0', async () => {
-        await arthController.setGlobalCollateralRatio(0);
+    it(' - Should not redeem when CR != 0', async () => {
+      await arthController.setGlobalCollateralRatio(0);
 
-        await expect(arthPool.redeem1t1ARTH(ETH, ETH)).to.revertedWith(
-          'Collateral ratio must be == 1'
-        )
-      })
+      await expect(arthPool.redeem1t1ARTH(ETH, ETH)).to.revertedWith(
+        'Collateral ratio must be == 1'
+      )
     })
   })
 });
