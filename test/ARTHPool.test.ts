@@ -321,5 +321,63 @@ describe('ARTHPool', () => {
         )
     })
   })
+
+  describe('- Redeem Fractional ARTH', async () => {
+    beforeEach(' - Approve ARTHX', async () => {
+      arth.approve(arthPool.address, ETH);
+      dai.approve(arthPool.address, ETH);
+    })
+
+    it('- Collateral Ratio Redeem Range', async () => {
+      await arthController.setGlobalCollateralRatio(0);
+      await dai.transfer(arthPool.address, ETH.mul(3));
+
+      await expect(arthPool.redeemFractionalARTH(ETH.mul(2), ETH, ETH))
+        .to
+        .revertedWith(
+          'ARTHPool: Collateral ratio needs to be between .000001 and .999999'
+        )
+
+      await arthController.setGlobalCollateralRatio(1e6);
+      await expect(arthPool.redeemFractionalARTH(ETH.mul(2), ETH, ETH))
+        .to
+        .revertedWith(
+          'ARTHPool: Collateral ratio needs to be between .000001 and .999999'
+        )
+    })
+
+    it('- Not Enough Collateral Balance', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+      //await dai.transfer(arthPool.address, ETH.mul(3));
+
+      await expect(arthPool.redeemFractionalARTH(ETH.mul(2), ETH, ETH.mul(2)))
+        .to
+        .revertedWith(
+          'Not enough collateral in pool'
+        )
+    })
+
+    it('- Slipage test collateral', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+      await dai.transfer(arthPool.address, ETH.mul(3));
+
+      await expect(arthPool.redeemFractionalARTH(ETH.mul(2), ETH, ETH.mul(3)))
+        .to
+        .revertedWith(
+          'Slippage limit reached [collateral]'
+        )
+    })
+
+    // it('- Slipage test arthx', async () => {
+    //   await arthController.setGlobalCollateralRatio(1e5);
+    //   await dai.transfer(arthPool.address, ETH.mul(3));
+
+    //   await expect(arthPool.redeemFractionalARTH(ETH.mul(2), ETH.mul(4), ETH))
+    //     .to
+    //     .revertedWith(
+    //       'Slippage limit reached [ARTHX]'
+    //     )
+    // })
+  })
 })
 
