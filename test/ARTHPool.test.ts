@@ -128,12 +128,25 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARHTPool: Collateral ratio < 1'
         );
+
+      await expect(arthPool.mint1t1ARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'ARHTPool: Collateral ratio < 1'
+        );
     })
 
     it(' - Should not mint when collateral > celing', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
 
-      await expect(arthPool.mint1t1ARTH((ETH).mul(3), 0))
+      await expect(arthPool.mint1t1ARTH(ETH.mul(3), 0))
+        .to
+        .revertedWith(
+          'ARTHPool: ceiling reached'
+        );
+
+      await dai.transfer(arthPool.address, ETH.mul(2))
+      await expect(arthPool.mint1t1ARTH(ETH, ETH))
         .to
         .revertedWith(
           'ARTHPool: ceiling reached'
@@ -143,7 +156,14 @@ describe('ARTHPool', () => {
     it(' - Should not mint when expected > to be minted', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
 
-      await expect(arthPool.mint1t1ARTH(ETH, ETH.mul(10)))
+      // Some portion of minted is taken as mint fee.
+      await expect(arthPool.mint1t1ARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'ARTHPool: Slippage limit reached'
+        );
+
+      await expect(arthPool.mint1t1ARTH(ETH, ETH.mul(2)))
         .to
         .revertedWith(
           'ARTHPool: Slippage limit reached'
@@ -164,10 +184,23 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Collateral ratio != 0'
         );
+
+      await expect(arthPool.mintAlgorithmicARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'ARTHPool: Collateral ratio != 0'
+        );
     })
 
     it(' - Should not mint when expected > to be minted', async () => {
       await arthController.setGlobalCollateralRatio(0);
+
+      // Some portion of minted is taken as mint fee.
+      await expect(arthPool.mintAlgorithmicARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'Slippage limit reached'
+        );
 
       await expect(arthPool.mintAlgorithmicARTH(ETH, ETH.mul(2)))
         .to
@@ -192,9 +225,21 @@ describe('ARTHPool', () => {
           'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
         )
 
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH))
+        .to
+        .revertedWith(
+          'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+        )
+
       await arthController.setGlobalCollateralRatio(1e6);
 
       await expect(arthPool.mintFractionalARTH(ETH, ETH, 0))
+        .to
+        .revertedWith(
+          'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+        )
+
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH))
         .to
         .revertedWith(
           'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
@@ -210,12 +255,25 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: ceiling reached.'
         )
+
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH))
+        .to
+        .revertedWith(
+          'ARTHPool: ceiling reached.'
+        )
     })
 
-    it(' - Should not mint when slippage reached', async () => {
+    it(' - Should not mint when expected > minted', async () => {
       await arthController.setGlobalCollateralRatio(1e5);
 
+      // Some portion of minted is taken as fee.
       await expect(arthPool.mintFractionalARTH(ETH, ETH.mul(9), ETH.mul(11)))
+        .to
+        .revertedWith(
+          'ARTHPool: Slippage limit reached'
+        )
+
+      await expect(arthPool.mintFractionalARTH(ETH, ETH.mul(10), ETH.mul(11)))
         .to
         .revertedWith(
           'ARTHPool: Slippage limit reached'
@@ -223,13 +281,19 @@ describe('ARTHPool', () => {
     })
   })
 
-  describe('- Redeem 1t1 Arth', async () => {
+  describe('- Redeem 1:1 Arth', async () => {
     beforeEach(' - Approve ARTHX', async () => {
       arth.approve(arthPool.address, ETH);
     })
 
     it(' - Should not redeem when CR != 0', async () => {
       await arthController.setGlobalCollateralRatio(0);
+
+      await expect(arthPool.redeem1t1ARTH(ETH, 0))
+        .to
+        .revertedWith(
+          'Collateral ratio must be == 1'
+        )
 
       await expect(arthPool.redeem1t1ARTH(ETH, ETH))
         .to
