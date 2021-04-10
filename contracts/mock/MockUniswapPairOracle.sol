@@ -57,7 +57,7 @@ contract MockUniswapPairOracle is IUniswapPairOracle {
         override
         returns (uint256)
     {
-        return price.mul(amountIn).div(1e18);
+        return price.mul(amountIn); //.div(1e18);
     }
 
     function pairFor(

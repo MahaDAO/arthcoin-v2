@@ -106,7 +106,7 @@ describe('ARTHPool', () => {
     await arth.addPool(arthPool.address);
     await arthController.addPool(arthPool.address);
     await arthPool.setPoolParameters(
-      ETH.mul(30000),
+      ETH.mul(2),
       1500,
       1000,
       1000,
@@ -129,6 +129,22 @@ describe('ARTHPool', () => {
 
       await expect(arthPool.mint1t1ARTH(ETH, 0)).to.revertedWith(
         'ARHTPool: Collateral ratio < 1'
+      );
+    })
+
+    it('Should not mint while collateral is greater then celing', async () => {
+      await arthController.setGlobalCollateralRatio(1e6);
+
+      await expect(arthPool.mint1t1ARTH((ETH).mul(3), 0)).to.revertedWith(
+        'ARTHPool: ceiling reached'
+      );
+    })
+
+    it('Should not mint while arthAmountD18 is greater then arthOutMin', async () => {
+      await arthController.setGlobalCollateralRatio(1e6);
+
+      await expect(arthPool.mint1t1ARTH(ETH, ETH.mul(10))).to.revertedWith(
+        'ARTHPool: Slippage limit reached'
       );
     })
   })
