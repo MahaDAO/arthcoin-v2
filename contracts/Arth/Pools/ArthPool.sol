@@ -230,6 +230,13 @@ contract ArthPool is AccessControl, IARTHPool {
         mintCollateralRatio = val;
     }
 
+    function setRecollateralizationCurve(RecollateralizeDiscountCurve curve)
+        external
+        onlyAdminOrOwnerOrGovernance
+    {
+        _recollateralizeDiscountCruve = curve;
+    }
+
     function setRedeemCollateralRatio(uint256 val)
         external
         override

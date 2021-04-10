@@ -25,6 +25,7 @@ describe('ARTHPool', () => {
   let ARTHPoolLibrary: ContractFactory;
   let MockUniswapOracle: ContractFactory;
   let ChainlinkETHGMUOracle: ContractFactory;
+  let RecollateralizationCurve: ContractFactory;
   let MockChainlinkAggregatorV3: ContractFactory;
 
   let dai: Contract;
@@ -40,6 +41,7 @@ describe('ARTHPool', () => {
   let arthETHUniswapOracle: Contract;
   let chainlinkETHGMUOracle: Contract;
   let arthxETHUniswapOracle: Contract;
+  let recollaterizationCurve: Contract;
   let mockChainlinkAggregatorV3: Contract;
 
   before(' - Setup accounts & deploy libraries', async () => {
@@ -64,6 +66,7 @@ describe('ARTHPool', () => {
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
     ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
+    RecollateralizationCurve = await ethers.getContractFactory('RecollateralizeDiscountCurve');
   });
 
   beforeEach(' - Deploy contracts', async () => {
@@ -95,6 +98,7 @@ describe('ARTHPool', () => {
       arthController.address,
       ETH.mul(90000)
     );
+    recollaterizationCurve = await RecollateralizationCurve.deploy(arth.address, arthController.address);
   });
 
   beforeEach(' - Set some contract variables', async () => {
@@ -113,6 +117,7 @@ describe('ARTHPool', () => {
       1000,
       1000
     );
+    await arthPool.setRecollateralizationCurve(recollaterizationCurve.address);
   })
 
   describe('- Mint 1:1 ARTH', async () => {
@@ -281,7 +286,7 @@ describe('ARTHPool', () => {
     })
   })
 
-  describe('- Redeem 1:1 Arth', async () => {
+  describe('- Redeem 1:1 ARTH', async () => {
     beforeEach(' - Approve ARTHX', async () => {
       arth.approve(arthPool.address, ETH);
     })
@@ -368,16 +373,105 @@ describe('ARTHPool', () => {
         )
     })
 
-    // it('- Slipage test arthx', async () => {
-    //   await arthController.setGlobalCollateralRatio(1e5);
-    //   await dai.transfer(arthPool.address, ETH.mul(3));
+    // TODO: check the below test.
+    it('- Slipage test arthx', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+      await dai.transfer(arthPool.address, ETH.mul(3));
 
-    //   await expect(arthPool.redeemFractionalARTH(ETH.mul(2), ETH.mul(4), ETH))
-    //     .to
-    //     .revertedWith(
-    //       'Slippage limit reached [ARTHX]'
-    //     )
-    // })
+      // TODO: check the argument values.
+      await expect(arthPool.redeemFractionalARTH(ETH, ETH.mul(4), ETH.mul(80).div(100))) // Reducing expected collatOutMin by 50%.
+        .to
+        .revertedWith(
+          'Slippage limit reached [ARTHX]'
+        )
+    })
+  })
+
+  describe('- Redeem Algorithmic ARTH', async () => {
+    beforeEach(' - Approve ARTHX', async () => {
+      arth.approve(arthPool.address, ETH);
+    })
+
+    it('- Should not redeem when CR != 0', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+
+      await expect(arthPool.redeemAlgorithmicARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'Collateral ratio must be 0'
+        )
+    })
+
+    it('- Should not redeem when expected > to be minted', async () => {
+      await arthController.setGlobalCollateralRatio(0);
+
+      await expect(arthPool.redeemAlgorithmicARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'Slippage limit reached'
+        )
+    })
+  })
+
+  describe('- Recollateralize ARTH', async () => {
+    beforeEach(' - Approve collateral', async () => {
+      dai.approve(arthPool.address, ETH);
+    })
+
+    it(' - Should not recollateralize when paused', async () => {
+      await arthPool.toggleRecollateralize();
+
+      await expect(arthPool.recollateralizeARTH(ETH, 0))
+        .to
+        .revertedWith(
+          'Recollateralize is paused'
+        );
+
+      await expect(arthPool.recollateralizeARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'Recollateralize is paused'
+        );
+    })
+
+    it(' - Should not recollateralize when expected ARTHX > to be minted', async () => {
+      await expect(arthPool.recollateralizeARTH(ETH, ETH.mul(3)))
+        .to
+        .revertedWith(
+          'Slippage limit reached'
+        );
+    })
+  })
+
+  describe('- Buyback ARTHX', async () => {
+    beforeEach(' - Approve collateral', async () => {
+      arthx.approve(arthPool.address, ETH);
+    })
+
+    it(' - Should not recollateralize when paused', async () => {
+      await arthPool.toggleBuyBack();
+
+      await expect(arthPool.buyBackARTHX(ETH, 0))
+        .to
+        .revertedWith(
+          'Buyback is paused'
+        );
+
+      await expect(arthPool.buyBackARTHX(ETH, ETH))
+        .to
+        .revertedWith(
+          'Buyback is paused'
+        );
+    })
+
+    it(' - Should not recollateralize when expected collateral > to be bought back', async () => {
+      await dai.transfer(arthPool.address, await dai.balanceOf(owner.address)); // Causes effect of excess collateral.
+
+      await expect(arthPool.buyBackARTHX(ETH, ETH.mul(3)))
+        .to
+        .revertedWith(
+          'Slippage limit reached'
+        );
+    })
   })
 })
-
