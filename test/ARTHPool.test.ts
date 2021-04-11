@@ -9,7 +9,6 @@ chai.use(solidity);
 
 
 describe('ARTHPool', () => {
-  const ZERO = BigNumber.from(0);
   const ETH = utils.parseEther('1');
 
   let owner: SignerWithAddress;
@@ -125,6 +124,30 @@ describe('ARTHPool', () => {
       dai.approve(arthPool.address, ETH);
     })
 
+    it(' - Should mint properly', async () => {
+      await arthController.setGlobalCollateralRatio(1e6);
+
+      const daiBeforeMint = await dai.balanceOf(owner.address);
+      const arthBalanceBeforeMint = await arth.balanceOf(owner.address);
+      const collateralArthPoolBalanceBeforeMint = await dai.balanceOf(arthPool.address);
+
+      const expectedMint = ETH.sub(ETH.div(1000)); // 1e18 - 1e15
+
+      await arthPool.mint1t1ARTH(ETH, expectedMint);
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(collateralArthPoolBalanceBeforeMint.add(ETH));
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(daiBeforeMint.sub(ETH));
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(arthBalanceBeforeMint.add(expectedMint));
+    })
+
     it(' - Should not mint when CR < 1', async () => {
       await arthController.setGlobalCollateralRatio(100);
 
@@ -135,6 +158,13 @@ describe('ARTHPool', () => {
         );
 
       await expect(arthPool.mint1t1ARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'ARHTPool: Collateral ratio < 1'
+        );
+
+      const expectedMint = ETH.sub(ETH.div(1000)); // 1e18 - 1e15
+      await expect(arthPool.mint1t1ARTH(ETH, expectedMint))
         .to
         .revertedWith(
           'ARHTPool: Collateral ratio < 1'
@@ -152,6 +182,13 @@ describe('ARTHPool', () => {
 
       await dai.transfer(arthPool.address, ETH.mul(2))
       await expect(arthPool.mint1t1ARTH(ETH, ETH))
+        .to
+        .revertedWith(
+          'ARTHPool: ceiling reached'
+        );
+
+      const expectedMint = ETH.sub(ETH.div(1000)); // 1e18 - 1e15
+      await expect(arthPool.mint1t1ARTH(ETH, expectedMint))
         .to
         .revertedWith(
           'ARTHPool: ceiling reached'
@@ -174,19 +211,19 @@ describe('ARTHPool', () => {
           'ARTHPool: Slippage limit reached'
         );
     })
-
-    it(' - Should mint with amount validations', async () => {
-      await arthController.setGlobalCollateralRatio(1e6);
-
-      // Some portion of minted is taken as mint fee.
-      // mint fee is 0.1 %
-      await arthPool.mint1t1ARTH(ETH, ETH.sub(ETH.div(1000)));
-    })
   })
 
   describe('- Mint Algorithmic ARTH', async () => {
     beforeEach(' - Approve ARTHX', async () => {
       arthx.approve(arthPool.address, ETH);
+    })
+
+    it(' - Should mint properly', async () => {
+      await arthController.setGlobalCollateralRatio(0);
+
+      const expectedMint = ETH.sub(ETH.div(1000)); // 1e18 - 1e15
+
+      await arthPool.mintAlgorithmicARTH(ETH, expectedMint);
     })
 
     it(' - Should not mint when CR != 0', async () => {
@@ -226,7 +263,17 @@ describe('ARTHPool', () => {
   describe('- Mint Fractional ARTH', async () => {
     beforeEach(' - Approve DAI & ARTHX', async () => {
       dai.approve(arthPool.address, ETH);
-      arthx.approve(arthPool.address, ETH);
+      arthx.approve(arthPool.address, ETH.mul(9));
+    })
+
+    it(' - Should mint properly', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+
+      // Since total collateral now transfered is 10times.
+      // (1 via DAI and 9 via ARTHX as CR = 0.1), Since GlobalCR = 10%.
+      const expectedMint = ETH.mul(10).sub(ETH.mul(10).div(1000)); // 10e18 - 10e15
+
+      await arthPool.mintFractionalARTH(ETH, ETH.mul(9), expectedMint);
     })
 
     it(' - Should not mint when CR = 0 || CR = 1', async () => {
