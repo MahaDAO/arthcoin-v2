@@ -51,7 +51,7 @@ describe('ARTHPool', () => {
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
   });
 
-  beforeEach(' - Fetch contract factories', async () => {
+  before(' - Fetch contract factories', async () => {
     MAHA = await ethers.getContractFactory('MahaToken');
     ARTHX = await ethers.getContractFactory('ARTHShares');
     ARTH = await ethers.getContractFactory('ARTHStablecoin');
@@ -173,6 +173,14 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Slippage limit reached'
         );
+    })
+
+    it(' - Should mint with amount validations', async () => {
+      await arthController.setGlobalCollateralRatio(1e6);
+
+      // Some portion of minted is taken as mint fee.
+      // mint fee is 0.1 %
+      await arthPool.mint1t1ARTH(ETH, ETH.sub(ETH.div(1000)));
     })
   })
 
