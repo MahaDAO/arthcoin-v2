@@ -240,6 +240,13 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Collateral ratio != 0'
         );
+
+      const expectedMint = ETH.sub(ETH.div(1000)); // 1e18 - 1e15
+      await expect(arthPool.mintAlgorithmicARTH(ETH, expectedMint))
+        .to
+        .revertedWith(
+          'ARTHPool: Collateral ratio != 0'
+        );
     })
 
     it(' - Should not mint when expected > to be minted', async () => {
@@ -304,6 +311,13 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
         )
+
+      const expectedMint = ETH.mul(10).sub(ETH.mul(10).div(1000)); // 10e18 - 10e15
+      await expect(arthPool.mintFractionalARTH(ETH, ETH.mul(9), expectedMint))
+        .to
+        .revertedWith(
+          'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+        );
     })
 
     it(' - Should not mint when collateral > ceiling', async () => {
@@ -321,6 +335,13 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: ceiling reached.'
         )
+
+      const expectedMint = ETH.mul(10).sub(ETH.mul(10).div(1000)); // 10e18 - 10e15
+      await expect(arthPool.mintFractionalARTH(ETH, ETH.mul(9), expectedMint))
+        .to
+        .revertedWith(
+          'ARTHPool: ceiling reached.'
+        );
     })
 
     it(' - Should not mint when expected > minted', async () => {
