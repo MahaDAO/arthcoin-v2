@@ -8,6 +8,7 @@ const helpers = require('./helpers')
 const ARTHShares = artifacts.require("ARTHX/ARTHShares")
 const Timelock = artifacts.require("Governance/Timelock")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
+const ARTHController = artifacts.require("ArthController")
 const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH")
 const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC")
 const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT")
@@ -27,6 +28,7 @@ module.exports = async function (deployer, network, accounts) {
   const arthxInstance = await ARTHShares.deployed()
   const timelockInstance = await Timelock.deployed()
   const arthInstance = await ARTHStablecoin.deployed()
+  const arthController = await ARTHController.deployed()
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts)
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
@@ -122,13 +124,13 @@ module.exports = async function (deployer, network, accounts) {
   const chainlinkETHUSDOracle = await helpers.getChainlinkETHUSDOracle(network, deployer, artifacts)
 
   console.log(chalk.yellow('\nSetting chainlink oracle...'))
-  await arthInstance.setETHUSDOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS })
+  await arthController.setETHGMUOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS })
 
   console.log(chalk.yellow('\nSetting ARTHWETH oracle...'))
   const arthWETHOracle = await UniswapPairOracle_ARTH_WETH.deployed()
-  arthInstance.setARTHEthOracle(arthWETHOracle.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
+  await arthController.setARTHETHOracle(arthWETHOracle.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
 
   const oracle_instance_ARTHX_WETH = await UniswapPairOracle_ARTHX_WETH.deployed()
   console.log(chalk.yellow('\nLinking ARTHX oracles...'))
-  await arthInstance.setARTHXEthOracle(oracle_instance_ARTHX_WETH.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
+  await arthController.setARTHXETHOracle(oracle_instance_ARTHX_WETH.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
 }

@@ -6,6 +6,7 @@ const helpers = require('./helpers')
 
 
 const ARTHShares = artifacts.require("ARTHX/ARTHShares")
+const ARTHController = artifacts.require("ArthController")
 const Timelock = artifacts.require("Governance/Timelock")
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC")
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT")
@@ -26,6 +27,7 @@ module.exports = async function (deployer, network, accounts) {
   const arthxInstance = await ARTHShares.deployed()
   const timelockInstance = await Timelock.deployed()
   const arthInstance = await ARTHStablecoin.deployed()
+  const arthControllerInstance = await ARTHController.deployed()
   const mahaTokenInstance = await helpers.getMahaToken(network, deployer, artifacts)
   const arthMahaOracle = await helpers.getARTHMAHAOracle(network, deployer, artifacts)
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
@@ -47,6 +49,7 @@ module.exports = async function (deployer, network, accounts) {
       timelockInstance.address,
       mahaTokenInstance.address,
       arthMahaOracle.address,
+      arthControllerInstance.address,
       FIVE_MILLION
     ),
     deployer.deploy(
@@ -58,6 +61,7 @@ module.exports = async function (deployer, network, accounts) {
       timelockInstance.address,
       mahaTokenInstance.address,
       arthMahaOracle.address,
+      arthControllerInstance.address,
       FIVE_MILLION
     )
   ])
@@ -68,14 +72,14 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSetting minting and redemtion fee...'))
   await Promise.all([
-    arthInstance.setMintingFee(mintingFee, { from: DEPLOYER_ADDRESS }),
-    arthInstance.setRedemptionFee(redemptionFee, { from: DEPLOYER_ADDRESS })
+    arthControllerInstance.setMintingFee(mintingFee, { from: DEPLOYER_ADDRESS }),
+    arthControllerInstance.setRedemptionFee(redemptionFee, { from: DEPLOYER_ADDRESS })
   ])
 
   console.log(chalk.yellow('\nRefreshing pool params...'))
   await Promise.all([
-    await pool_instance_USDC.setPoolParameters(FIVE_MILLION, 7500, 1, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
-    await pool_instance_USDT.setPoolParameters(FIVE_MILLION, 7500, 1, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDC.setPoolParameters(FIVE_MILLION, 7500, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDT.setPoolParameters(FIVE_MILLION, 7500, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
   ])
 
   console.log(chalk.yellow('\nGetting ARTH and ARTHX oracles...'))

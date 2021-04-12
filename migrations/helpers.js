@@ -9,7 +9,7 @@ const ONE = new BigNumber('1e18')
 
 const getDAI = async (network, deployer, artifacts, ownerAddr, genesisSupply, symbol, decimals) => {
   const IERC20 = artifacts.require('IERC20')
-  const MockDai = artifacts.require('FakeCollateral_DAI')
+  const MockDai = artifacts.require('MockDAI')
 
   const addr = knownContracts.DAI && knownContracts.DAI[network]
   if (addr) return IERC20.at(addr)
@@ -22,16 +22,16 @@ const getDAI = async (network, deployer, artifacts, ownerAddr, genesisSupply, sy
 }
 
 
-const getWETH = async (network, deployer, artifacts, ownerAddr) => {
+const getWETH = async (network, deployer, artifacts, ownerAddr, genesisSupply, symbol, decimals) => {
   const IERC20 = artifacts.require('IERC20')
-  const MockWETH = artifacts.require('WETH')
+  const MockWETH = artifacts.require('MockWETH')
 
   const addr = knownContracts.WETH && knownContracts.WETH[network]
   if (addr) return IERC20.at(addr)
   if (MockWETH.isDeployed()) return MockWETH.deployed()
 
   console.log(chalk.yellow(`\nDeploying mock weth on ${network} network...`))
-  await deployer.deploy(MockWETH, ownerAddr)
+  await deployer.deploy(MockWETH, ownerAddr, genesisSupply, symbol, decimals)
 
   return MockWETH.deployed()
 }
@@ -39,7 +39,7 @@ const getWETH = async (network, deployer, artifacts, ownerAddr) => {
 
 const getUSDC = async (network, deployer, artifacts, ownerAddr, genesisSupply, symbol, decimals) => {
   const IERC20 = artifacts.require('IERC20')
-  const MockUSDC = artifacts.require('FakeCollateral_USDC')
+  const MockUSDC = artifacts.require('MockUSDC')
 
   const addr = knownContracts.USDC && knownContracts.USDC[network]
   if (addr) return IERC20.at(addr)
@@ -54,7 +54,7 @@ const getUSDC = async (network, deployer, artifacts, ownerAddr, genesisSupply, s
 
 const getUSDT = async (network, deployer, artifacts, ownerAddr, genesisSupply, symbol, decimals) => {
   const IERC20 = artifacts.require('IERC20')
-  const MockUSDT = artifacts.require('FakeCollateral_USDT')
+  const MockUSDT = artifacts.require('MockUSDT')
 
   const addr = knownContracts.USDT && knownContracts.USDT[network]
   if (addr) return IERC20.at(addr)
@@ -162,15 +162,19 @@ const getARTHMAHAOracle = async (network, deployer, artifacts) => {
 
 
 const getChainlinkETHUSDOracle = async (network, deployer, artifacts) => {
+  const MockChainlinkOracle = artifacts.require('MockChainlinkAggregatorV3')
   const ChainlinkETHUSDPriceConsumer = artifacts.require('ChainlinkETHUSDPriceConsumer')
 
-  const addr = knownContracts.ETHUSDChainlinkOracle && knownContracts.ETHUSDChainlinkOracle[network]
+  const addr = knownContracts['ETHUSDChainlinkOracle'] && knownContracts.ETHUSDChainlinkOracle[network]
   if (addr) return ChainlinkETHUSDPriceConsumer.at(addr)
 
   if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed()
 
-  const defaultChainlinkConsumerAddr = knownContracts.ETHUSDChainlinkOracleDefault[network]
-  if (!defaultChainlinkConsumerAddr) throw Error('Default Chainlink Address not specified in known-contracts.')
+  let defaultChainlinkConsumerAddr = knownContracts.ETHUSDChainlinkOracleDefault[network]
+  if (!defaultChainlinkConsumerAddr) {
+    await deployer.deploy(MockChainlinkOracle)
+    defaultChainlinkConsumerAddr = (await MockChainlinkOracle.deployed()).address
+  }
 
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`))
   await deployer.deploy(ChainlinkETHUSDPriceConsumer, defaultChainlinkConsumerAddr, (await getGMUOracle(network, deployer, artifacts)).address)
