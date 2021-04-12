@@ -21,7 +21,7 @@ module.exports = async function (deployer, network, accounts) {
   const redemptionFee = 400 // 0.04%
   const mintingFee = 300 // 0.03%
   const DEPLOYER_ADDRESS = accounts[0]
-  const FIVE_MILLION = new BigNumber("500000e6")
+  const TEN_MILLION = new BigNumber("1000000e6")
   const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
   const arthxInstance = await ARTHShares.deployed()
@@ -50,7 +50,7 @@ module.exports = async function (deployer, network, accounts) {
       mahaTokenInstance.address,
       arthMahaOracle.address,
       arthControllerInstance.address,
-      FIVE_MILLION
+      TEN_MILLION
     ),
     deployer.deploy(
       Pool_USDT,
@@ -62,7 +62,7 @@ module.exports = async function (deployer, network, accounts) {
       mahaTokenInstance.address,
       arthMahaOracle.address,
       arthControllerInstance.address,
-      FIVE_MILLION
+      TEN_MILLION
     )
   ])
 
@@ -78,8 +78,8 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nRefreshing pool params...'))
   await Promise.all([
-    await pool_instance_USDC.setPoolParameters(FIVE_MILLION, 7500, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
-    await pool_instance_USDT.setPoolParameters(FIVE_MILLION, 7500, 1, 1, 1, 1, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDC.setPoolParameters(TEN_MILLION, 7500, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDT.setPoolParameters(TEN_MILLION, 7500, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
   ])
 
   console.log(chalk.yellow('\nGetting ARTH and ARTHX oracles...'))

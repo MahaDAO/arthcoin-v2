@@ -17,5 +17,7 @@ contract MahaToken is ERC20 {
     string public url = 'https://mahadao.com';
     string public website = 'https://mahadao.io';
 
-    constructor() ERC20('MahaDAO', 'MAHA') {}
+    constructor() ERC20('MahaDAO', 'MAHA') {
+        _mint(msg.sender, 10000000000000e18); // For testing purposes.
+    }
 }
