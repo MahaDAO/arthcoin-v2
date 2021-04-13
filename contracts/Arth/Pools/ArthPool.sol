@@ -488,7 +488,7 @@ contract ArthPool is AccessControl, IARTHPool {
         );
         _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount);
 
-        _ARTH.poolMint(address(this), mintAmount);
+        _ARTH.poolMint(msg.sender, mintAmount);
 
         return mintAmount;
     }

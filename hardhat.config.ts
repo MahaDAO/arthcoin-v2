@@ -27,7 +27,7 @@ export default {
       accounts: [`0x${process.env.METAMASK_WALLET_SECRET}`]
     },
     development: {
-      url: "http://localhost:7545",
+      url: "http://localhost:8545",
       accounts: [process.env.METAMASK_WALLET_SECRET]
     }
   },
