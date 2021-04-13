@@ -108,7 +108,7 @@ const getUniswapRouter = async (network, deployer, artifacts) => {
 
   console.log(chalk.yellow(`\nDeploying uniswap router on ${network} network...`))
   const factory = await getUniswapFactory(network, deployer, artifacts)
-  await deployer.deploy(UniswapV2Router02, factory.address, '0x0000000000000000000000000000000000000000')
+  await deployer.deploy(UniswapV2Router02, factory.address, factory.address)
 
   return UniswapV2Router02.deployed()
 }

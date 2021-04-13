@@ -223,7 +223,7 @@ contract('ARTH', async (accounts) => {
     await arthxUSDCOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     await arthxUSDTOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
-    await arthInstance.addPool(usdtPoolInstance.address, { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    // await arthInstance.addPool(usdtPoolInstance.address, { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     await arthControllerInstance.addPool(usdtPoolInstance.address, { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
     // Add allowances to the Uniswap Router
@@ -406,11 +406,11 @@ contract('ARTH', async (accounts) => {
     arthWETHARTHPrice = (new BigNumber(await arthWETHOracleInstance.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber()
     console.log("ARTH/WETH ARTH Price Before: ", arthWETHARTHPrice.toString(), " ARTH = 1 WETH")
 
-    // Add allowances to the swapToPrice contract
+    // // Add allowances to the swapToPrice contract
     // await wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     // await arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
-    // Swap the ARTH price upwards
-    // Targeting 350 ARTH / 1 WETH
+    // // Swap the ARTH price upwards
+    // // Targeting 350 ARTH / 1 WETH
     // await swapToPriceInstance.swapToPrice(
     //   arthInstance.address,
     //   wethInstance.address,
@@ -428,10 +428,10 @@ contract('ARTH', async (accounts) => {
 
     await routerInstance.swapExactTokensForTokens(
       new BigNumber(100e18),
-      0,
+      1,
       [arthControllerInstance.address, wethInstance.address],
       COLLATERAL_ARTH_AND_ARTHX_OWNER,
-      new BigNumber(9999105300114),
+      new BigNumber(`${Math.floor(Date.now() / 1000) + 10000}`),
       { from: COLLATERAL_ARTH_AND_ARTHX_OWNER }
     )
 
