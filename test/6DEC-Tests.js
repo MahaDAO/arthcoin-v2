@@ -406,34 +406,35 @@ contract('ARTH', async (accounts) => {
     arthWETHARTHPrice = (new BigNumber(await arthWETHOracleInstance.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber()
     console.log("ARTH/WETH ARTH Price Before: ", arthWETHARTHPrice.toString(), " ARTH = 1 WETH")
 
-    // // Add allowances to the swapToPrice contract
-    // await wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
-    // await arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
-    // // Swap the ARTH price upwards
-    // // Targeting 350 ARTH / 1 WETH
-    // await swapToPriceInstance.swapToPrice(
-    //   arthInstance.address,
-    //   wethInstance.address,
-    //   new BigNumber(350e6),
-    //   new BigNumber(1e6),
-    //   new BigNumber(100e18),
-    //   new BigNumber(100e18),
-    //   COLLATERAL_ARTH_AND_ARTHX_OWNER,
-    //   new BigNumber(2105300114),
-    //   { from: COLLATERAL_ARTH_AND_ARTHX_OWNER }
-    // )
+    // Add allowances to the swapToPrice contract
+    await wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
-    await wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
-    await arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
-
-    await routerInstance.swapExactTokensForTokens(
+    // Swap the ARTH price upwards
+    // Targeting 350 ARTH / 1 WETH
+    await swapToPriceInstance.swapToPrice(
+      arthInstance.address,
+      wethInstance.address,
+      new BigNumber(350e6),
+      new BigNumber(1e6),
       new BigNumber(100e18),
-      1,
-      [arthControllerInstance.address, wethInstance.address],
+      new BigNumber(100e18),
       COLLATERAL_ARTH_AND_ARTHX_OWNER,
-      new BigNumber(`${Math.floor(Date.now() / 1000) + 10000}`),
+      new BigNumber(2105300114),
       { from: COLLATERAL_ARTH_AND_ARTHX_OWNER }
     )
+
+    // await wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    // await arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+
+    // await routerInstance.swapExactTokensForTokens(
+    //   new BigNumber(100e18),
+    //   1,
+    //   [arthControllerInstance.address, wethInstance.address],
+    //   COLLATERAL_ARTH_AND_ARTHX_OWNER,
+    //   new BigNumber(`${Math.floor(Date.now() / 1000) + 60 * 10000}`),
+    //   { from: COLLATERAL_ARTH_AND_ARTHX_OWNER }
+    // )
 
     // Print the new ARTH price
     arthWETHARTHPrice = (new BigNumber(await arthWETHOracleInstance.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber()
@@ -770,6 +771,9 @@ contract('ARTH', async (accounts) => {
     await time.increase(86400 + 1)
     await time.advanceBlock()
 
+    await time.increase(86400 + 1)
+    await time.advanceBlock()
+
     await arthWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     await arthUSDCOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     await arthUSDTOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
@@ -827,6 +831,9 @@ contract('ARTH', async (accounts) => {
 
 
   it("Buys back collateral using ARTHX [should fail if CR = 0]", async () => {
+    await time.increase(86400 + 1)
+    await time.advanceBlock()
+
     await time.increase(86400 + 1)
     await time.advanceBlock()
 
