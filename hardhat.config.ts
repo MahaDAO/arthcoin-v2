@@ -42,7 +42,7 @@ export default {
   },
   paths: {
     sources: './contracts',
-    tests: './test',
+    tests: './hardhat-test',
     cache: './build/cache',
     artifacts: './build/artifacts',
   },

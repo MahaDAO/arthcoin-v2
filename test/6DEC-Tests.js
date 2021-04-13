@@ -223,7 +223,8 @@ contract('ARTH', async (accounts) => {
     await arthxUSDCOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     await arthxUSDTOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
-    await arthControllerInstance.addPool(arthPoolInstance.address, { from: COLLATERAL_ARTH_AND_ARTHX_OWNER });
+    await arthInstance.addPool(usdtPoolInstance.address, { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthControllerInstance.addPool(usdtPoolInstance.address, { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
     // Add allowances to the Uniswap Router
     await wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
@@ -266,7 +267,7 @@ contract('ARTH', async (accounts) => {
     console.log();
 
     // Note the collateral ratio
-    const collateral_ratio_before = new BigNumber(await arthControllerInstance.globalCollateralRatio.call()).div(BIG6);
+    const collateral_ratio_before = new BigNumber(await arthControllerInstance.getGlobalCollateralRatio.call()).div(BIG6);
     console.log("CR Before: ", collateral_ratio_before.toNumber());
 
     // Note the collateral and ARTH amounts before minting
@@ -348,6 +349,7 @@ contract('ARTH', async (accounts) => {
     balARTH = arthBefore
     colBalUSDT = collateralBefore
     poolBalUSDT = poolCollateralBefore
+
     console.log("Bal. ARTH: ", balARTH.toNumber())
     console.log("Collateral Bal.: ", colBalUSDT.toNumber())
     console.log("Pool Collateral Bal.: ", poolBalUSDT.toNumber())
@@ -371,6 +373,7 @@ contract('ARTH', async (accounts) => {
     const collateralAfter = new BigNumber(await usdtInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHX_OWNER)).div(BIG6)
     const arthAfter = new BigNumber(await arthInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHX_OWNER)).div(BIG18)
     const poolCollateralAfter = new BigNumber(await usdtInstance.balanceOf.call(usdtPoolInstance.address)).div(BIG6)
+
     console.log("ARTH change: ", arthAfter.toNumber() - arthBefore.toNumber())
     console.log("Collateral change: ", collateralAfter.toNumber() - collateralBefore.toNumber())
     console.log("Pool collateral change: ", poolCollateralAfter.toNumber() - poolCollateralBefore.toNumber())
@@ -387,6 +390,7 @@ contract('ARTH', async (accounts) => {
     await time.advanceBlock()
 
     console.log('================ Reduce CR 1:1 ================\n')
+
     await arthWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     await arthUSDCOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     await arthUSDTOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
@@ -396,37 +400,40 @@ contract('ARTH', async (accounts) => {
     await usdtWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     await usdcWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
-    // Add allowances to the swapToPrice contract
-    await wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
-    await arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
-    await time.increase(86400 + 1)
-    await time.advanceBlock()
-
-    // Make sure the price is updated
-    await arthWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
     // Print the current ARTH price
     arthWETHARTHPrice = (new BigNumber(await arthWETHOracleInstance.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber()
     console.log("ARTH/WETH ARTH Price Before: ", arthWETHARTHPrice.toString(), " ARTH = 1 WETH")
 
-    console.log(new BigNumber(await arthInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHX_OWNER)).toString())
-
+    // Add allowances to the swapToPrice contract
+    // await wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    // await arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
     // Swap the ARTH price upwards
     // Targeting 350 ARTH / 1 WETH
-    await swapToPriceInstance.swapToPrice(
-      arthInstance.address,
-      wethInstance.address,
-      new BigNumber(350e6),
-      new BigNumber(1e6),
+    // await swapToPriceInstance.swapToPrice(
+    //   arthInstance.address,
+    //   wethInstance.address,
+    //   new BigNumber(350e6),
+    //   new BigNumber(1e6),
+    //   new BigNumber(100e18),
+    //   new BigNumber(100e18),
+    //   COLLATERAL_ARTH_AND_ARTHX_OWNER,
+    //   new BigNumber(2105300114),
+    //   { from: COLLATERAL_ARTH_AND_ARTHX_OWNER }
+    // )
+
+    await wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+
+    await routerInstance.swapExactTokensForTokens(
       new BigNumber(100e18),
-      new BigNumber(100e18),
+      0,
+      [arthControllerInstance.address, wethInstance.address],
       COLLATERAL_ARTH_AND_ARTHX_OWNER,
-      new BigNumber(2105300114),
+      new BigNumber(9999105300114),
       { from: COLLATERAL_ARTH_AND_ARTHX_OWNER }
     )
-
-    console.log(new BigNumber(await arthInstance.balanceOf.call(COLLATERAL_ARTH_AND_ARTHX_OWNER)).toString())
 
     // Print the new ARTH price
     arthWETHARTHPrice = (new BigNumber(await arthWETHOracleInstance.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber()
@@ -447,8 +454,9 @@ contract('ARTH', async (accounts) => {
 
       await arthControllerInstance.refreshCollateralRatio()
       console.log("Global CR:", (new BigNumber(await arthControllerInstance.getGlobalCollateralRatio.call()).div(BIG6)).toNumber())
-      console.log('================ Reduce 1:1 ================\n')
     }
+
+    console.log('================ Reduce 1:1 ================\n')
   })
 
   it('Mint some ARTH using ARTHX and 6DEC (collateral ratio between .000001 and .999999) [mintFractionalARTH]', async () => {
@@ -468,6 +476,7 @@ contract('ARTH', async (accounts) => {
     totalSupplyARTHX = new BigNumber(await arthxInstance.totalSupply.call()).div(BIG18).toNumber()
     globalCollateralRatio = new BigNumber(await arthControllerInstance.getGlobalCollateralRatio.call()).div(BIG6).toNumber()
     globalCollateralValue = new BigNumber(await arthControllerInstance.getGlobalCollateralValue.call()).div(BIG18).toNumber()
+
     console.log("ARTH price (USD): ", (new BigNumber(await arthControllerInstance.getARTHPrice.call()).div(BIG6)).toNumber())
     console.log("ARTHX price (USD): ", (new BigNumber(await arthControllerInstance.getARTHXPrice.call()).div(BIG6)).toNumber())
     console.log("totalSupplyARTH: ", totalSupplyARTH)
@@ -476,7 +485,6 @@ contract('ARTH', async (accounts) => {
     console.log("globalCollateralValue: ", globalCollateralValue)
     console.log("")
 
-    // console.log("accounts[0] votes intial:", (await arthxInstance.getCurrentVotes(COLLATERAL_ARTH_AND_ARTHX_OWNER)).toString())
     // Note the collateral ratio
     const collateral_ratio_before = new BigNumber(await arthControllerInstance.getGlobalCollateralRatio.call()).div(BIG6)
     console.log("collateral_ratio_before: ", collateral_ratio_before.toNumber())
