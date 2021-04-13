@@ -22,7 +22,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     /// @notice This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant override genesisSupply = 22000000e18; // 22M ARTH (testnet) & 5k (Mainnet).
 
-    mapping(address => bool) public pools;
+    mapping(address => bool) public override pools;
 
     event PoolBurned(address indexed from, address indexed to, uint256 amount);
     event PoolMinted(address indexed from, address indexed to, uint256 amount);
