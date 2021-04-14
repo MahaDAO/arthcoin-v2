@@ -408,7 +408,7 @@ contract('ARTH', async (accounts) => {
 
     // Add allowances to the swapToPrice contract
     await wethInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
-    await arthInstance.approve(swapToPriceInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthInstance.approve(swapToPriceInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
     // Swap the ARTH price upwards
     // Targeting 350 ARTH / 1 WETH
@@ -417,24 +417,24 @@ contract('ARTH', async (accounts) => {
       wethInstance.address,
       new BigNumber(350e6),
       new BigNumber(1e6),
-      new BigNumber(100e18),
-      new BigNumber(100e18),
+      new BigNumber(200e18),
+      new BigNumber(200e18),
       COLLATERAL_ARTH_AND_ARTHX_OWNER,
       new BigNumber(2105300114),
       { from: COLLATERAL_ARTH_AND_ARTHX_OWNER }
     )
 
-    // await wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
-    // await arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await time.increase(86400 + 1)
+    await time.advanceBlock()
 
-    // await routerInstance.swapExactTokensForTokens(
-    //   new BigNumber(100e18),
-    //   1,
-    //   [arthControllerInstance.address, wethInstance.address],
-    //   COLLATERAL_ARTH_AND_ARTHX_OWNER,
-    //   new BigNumber(`${Math.floor(Date.now() / 1000) + 60 * 10000}`),
-    //   { from: COLLATERAL_ARTH_AND_ARTHX_OWNER }
-    // )
+    await arthWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthUSDCOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthUSDTOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthxWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthxUSDCOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await arthxUSDTOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await usdtWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
+    await usdcWETHOracleInstance.update({ from: COLLATERAL_ARTH_AND_ARTHX_OWNER })
 
     // Print the new ARTH price
     arthWETHARTHPrice = (new BigNumber(await arthWETHOracleInstance.consult.call(wethInstance.address, 1e6))).div(BIG6).toNumber()
