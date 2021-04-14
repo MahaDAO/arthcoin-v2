@@ -543,7 +543,7 @@ describe('ARTHPool', () => {
         )
     })
 
-    it('- Not Enough Collateral Balance', async () => {
+    it('- Should not redeem when no collateral', async () => {
       await expect(arthPool.redeemFractionalARTH(ETH.mul(2), ETH, ETH.mul(2)))
         .to
         .revertedWith(
@@ -699,6 +699,7 @@ describe('ARTHPool', () => {
   describe('- Recollateralize ARTH', async () => {
     beforeEach(' - Approve collateral', async () => {
       await dai.approve(arthPool.address, ETH);
+      await arthController.setGlobalCollateralRatio(1e4);
     })
 
     it(' - Should not recollateralize when paused', async () => {
@@ -726,6 +727,8 @@ describe('ARTHPool', () => {
     })
 
     it(' - Should recollaterize properly when all prices = 1', async () => {
+      await dai.transfer(arthPool.address, ETH);  // Ensuring that pool has some collateral.
+
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
@@ -749,13 +752,53 @@ describe('ARTHPool', () => {
 
       expect(await arthx.balanceOf(owner.address))
         .to
-        .gt(
+        .eq(
           arthxBalanceBefore.add(expectedMint)
         );
 
       expect(await arthx.totalSupply())
         .to
-        .gt(
+        .eq(
+          arthxTotalSupply.add(expectedMint)
+        );
+    })
+
+    it(' - Should recollaterize properly when all prices = 1 & pool has no collateral', async () => {
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      // Ensuring pool has no collateral at all.
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(0)
+
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+      const arthxTotalSupply = await arthx.totalSupply();
+
+      const expectedMint = ETH.sub(ETH.div(1000))
+      await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.add(expectedMint)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
           arthxTotalSupply.add(expectedMint)
         );
     })
