@@ -29,6 +29,8 @@ describe('Staking Reward', () => {
   let RecollateralizationCurve: ContractFactory;
   let MockChainlinkAggregatorV3: ContractFactory;
   let StakingRewards: ContractFactory;
+  let RewardsDistributionRecipient: ContractFactory;
+  let TransferHelper: ContractFactory;
 
   let dai: Contract;
   let arth: Contract;
@@ -46,12 +48,15 @@ describe('Staking Reward', () => {
   let recollaterizationCurve: Contract;
   let mockChainlinkAggregatorV3: Contract;
   let stakingRewards: Contract;
+  let transferHelper: Contract;
 
   before(' - Setup accounts & deploy libraries', async () => {
     [owner, whale] = await ethers.getSigners();
 
     ARTHPoolLibrary = await ethers.getContractFactory('ArthPoolLibrary');
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
+    //TransferHelper = await ethers.getContractFactory('Uniswap/TransferHelper');
+    //transferHelper = await TransferHelper.deploy();
   });
 
   before(' - Fetch contract factories', async () => {
@@ -89,19 +94,7 @@ describe('Staking Reward', () => {
       gmuOracle.address
     );
     arthx = await ARTHX.deploy('ARTHX', 'ARTHX', arthxETHUniswapOracle.address, owner.address, owner.address);
-    arthPoolLibrary = await ARTHPoolLibrary.deploy();
     arthController = await ARTHController.deploy(owner.address, owner.address);
-    // arthPool = await ARTHPool.deploy(
-    //   arth.address,
-    //   arthx.address,
-    //   dai.address,
-    //   owner.address,
-    //   owner.address,
-    //   maha.address,
-    //   arthMahaOracle.address,
-    //   arthController.address,
-    //   ETH.mul(90000)
-    // );
     recollaterizationCurve = await RecollateralizationCurve.deploy(arth.address, arthController.address);
     stakingRewards = await StakingRewards.deploy(
       owner.address,
@@ -110,33 +103,66 @@ describe('Staking Reward', () => {
       arth.address,
       arth.address,
       owner.address,
-      ETH.mul(90000)
+      1000
     )
   });
 
   beforeEach(' - Set some contract variables', async () => {
     arthController.setETHGMUOracle(chainlinkETHGMUOracle.address);
     await arthx.setARTHAddress(arth.address);
-    //await arth.addPool(arthPool.address);
-    //await arthController.addPool(arthPool.address);
     await arthController.setGlobalCollateralRatio(0);
     await arthx.setArthController(arthController.address);
-    //await arthPool.setCollatETHOracle(daiETHUniswapOracle.address, owner.address);
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
-    // await arthPool.setPoolParameters(
-    //   ETH.mul(2),
-    //   1,
-    //   1000,
-    //   1000,
-    //   1000,
-    //   1000
-    // );
-    //await arthPool.setRecollateralizationCurve(recollaterizationCurve.address);
+    await stakingRewards.setArthController(arthController.address);
+    await maha.transfer(stakingRewards.address, ETH.mul(10000000000000));
   })
 
   describe('- Mint 1:1 ARTH', async () => {
     beforeEach(' - Approve collateral', async () => {
       //dai.approve(arthPool.address, ETH);
+    })
+
+    it(' - Test Stake', async () => {
+      let myBalance = await arth.balanceOf(owner.address);
+      let stakingRewardsBalance = await arth.balanceOf(stakingRewards.address);
+      // console.log('my balance', myBalance.toString());
+      // console.log('staking contract balance', stakingRewardsBalance.toString());
+
+      await arth.approve(stakingRewards.address, ETH);
+      await stakingRewards.stake(ETH);
+
+      let myBalance2 = await arth.balanceOf(owner.address);
+      let stakingRewardsBalance2 = await arth.balanceOf(stakingRewards.address);
+
+      // console.log('my balance', myBalance2.toString());
+      // console.log('staking contract balance', stakingRewardsBalance2.toString());
+
+      expect(await arth.balanceOf(stakingRewards.address))
+        .to
+        .eq(
+          await stakingRewardsBalance.add(ETH)
+        )
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          await myBalance.sub(ETH)
+        )
+    })
+
+    it(' - Stake Should Fail For Grey listed Addresses', async () => {
+      await stakingRewards.greylistAnAddress(owner.address);
+      //await arth.approve(stakingRewards.address, ETH);
+      console.log(await stakingRewards.greylist[owner.address]);
+
+
+      //expect(await stakingRewards.stake(ETH))
+      // .to
+      // .revertedWith(
+      //   'address has been greylisted'
+      // )
+
+      //await stakingRewards.whitelistAnAddress(owner.address);
     })
 
     it(' - Test Withdraw', async () => {
