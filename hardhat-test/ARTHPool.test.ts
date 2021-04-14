@@ -58,11 +58,13 @@ describe('ARTHPool', () => {
     ARTHX = await ethers.getContractFactory('ARTHShares');
     ARTH = await ethers.getContractFactory('ARTHStablecoin');
     MockCollateral = await ethers.getContractFactory('MockCollateral');
+
     ARTHPool = await ethers.getContractFactory('ArthPool', {
       libraries: {
         ArthPoolLibrary: arthPoolLibrary.address
       }
     });
+
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
@@ -82,13 +84,16 @@ describe('ARTHPool', () => {
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
     arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH);
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
+
     chainlinkETHGMUOracle = await ChainlinkETHGMUOracle.deploy(
       mockChainlinkAggregatorV3.address,
       gmuOracle.address
     );
+
     arthx = await ARTHX.deploy('ARTHX', 'ARTHX', arthxETHUniswapOracle.address, owner.address, owner.address);
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
     arthController = await ARTHController.deploy(owner.address, owner.address);
+
     arthPool = await ARTHPool.deploy(
       arth.address,
       arthx.address,
@@ -100,11 +105,12 @@ describe('ARTHPool', () => {
       arthController.address,
       ETH.mul(90000)
     );
+
     recollaterizationCurve = await RecollateralizationCurve.deploy(arth.address, arthController.address);
   });
 
   beforeEach(' - Set some contract variables', async () => {
-    arthController.setETHGMUOracle(chainlinkETHGMUOracle.address);
+    await arthController.setETHGMUOracle(chainlinkETHGMUOracle.address);
     await arthx.setARTHAddress(arth.address);
     await arth.addPool(arthPool.address);
     await arthController.addPool(arthPool.address);
@@ -112,6 +118,7 @@ describe('ARTHPool', () => {
     await arthx.setArthController(arthController.address);
     await arthPool.setCollatETHOracle(daiETHUniswapOracle.address, owner.address);
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
+
     await arthPool.setPoolParameters(
       ETH.mul(2),
       1,
@@ -120,6 +127,7 @@ describe('ARTHPool', () => {
       1000,
       1000
     );
+
     await arthPool.setRecollateralizationCurve(recollaterizationCurve.address);
   })
 
@@ -190,8 +198,7 @@ describe('ARTHPool', () => {
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-      // Since, Mint fee is 0.1 %.
-      const expectedMint = ETH.sub(ETH.div(1000))
+      const expectedMint = ETH.sub(ETH.div(1000))  // Since, Mint fee is 0.1 %.
       await arthPool.mint1t1ARTH(ETH, expectedMint);
 
       expect(await arth.totalSupply())
@@ -268,8 +275,7 @@ describe('ARTHPool', () => {
       const arthxTotalSupplyBefore = await arthx.totalSupply();
       const arthxBalanceBefore = await arthx.balanceOf(owner.address);
 
-      // Since, Mint fee is 0.1 %.
-      const expectedMint = ETH.sub(ETH.div(1000))
+      const expectedMint = ETH.sub(ETH.div(1000))  // Since, Mint fee is 0.1 %.
       await arthPool.mintAlgorithmicARTH(ETH, expectedMint);
 
       expect(await arth.totalSupply())
@@ -361,6 +367,7 @@ describe('ARTHPool', () => {
           'ARTHPool: Slippage limit reached'
         )
 
+      // Clear slippage.
       await expect(arthPool.mintFractionalARTH(ETH, ETH.mul(10), ETH.mul(11)))
         .to
         .revertedWith(
@@ -380,8 +387,7 @@ describe('ARTHPool', () => {
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-      // Since, Mint fee is 0.1 %.
-      const expectedMint = ETH.mul(10).sub(ETH.mul(10).div(1000))
+      const expectedMint = ETH.mul(10).sub(ETH.mul(10).div(1000))  // Since, Mint fee is 0.1 %.
       await arthPool.mintFractionalARTH(ETH, ETH.mul(9), expectedMint)
 
       expect(await arth.totalSupply())
@@ -475,13 +481,10 @@ describe('ARTHPool', () => {
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-      // Redemption fee is 0.1%.
-      const expectedCollateralRedeemed = ETH.sub(ETH.div(1000));
+      const expectedCollateralRedeemed = ETH.sub(ETH.div(1000));  // Redemption fee is 0.1%.
       await arthPool.redeem1t1ARTH(ETH, expectedCollateralRedeemed);
 
-      // Redemtion delay.
-      await advanceBlock(provider);
-
+      await advanceBlock(provider);  // Redemtion delay.
       await arthPool.collectRedemption();
 
       expect(await await dai.balanceOf(owner.address))
@@ -565,7 +568,6 @@ describe('ARTHPool', () => {
       const expectedCollateralRedeemed = expectedARTHAmountPostFee.mul(10).div(100);  // Since CR is 10%(1e5/1e6 * 100)
       const expectedArthxRedeemed = expectedARTHAmountPostFee.mul(90).div(100);
 
-      // Reducing expected collatOutMin by 50%.
       await expect(arthPool.redeemFractionalARTH(ETH, expectedArthxRedeemed.add(1), expectedCollateralRedeemed))
         .to
         .revertedWith(
@@ -665,12 +667,10 @@ describe('ARTHPool', () => {
 
       const mahaBalanceBefore = await maha.balanceOf(owner.address);
 
-      // Redemption fee is 0.1%.
-      const expectedArthxRedeemed = ETH.sub(ETH.div(1000));
+      const expectedArthxRedeemed = ETH.sub(ETH.div(1000));   // Redemption fee is 0.1%.
       await arthPool.redeemAlgorithmicARTH(ETH, expectedArthxRedeemed);
 
-      await advanceBlock(provider);
-
+      await advanceBlock(provider);  // Redemption delay.
       await arthPool.collectRedemption();
 
       expect(await arth.balanceOf(owner.address))
@@ -783,7 +783,7 @@ describe('ARTHPool', () => {
     })
 
     it(' - Should not buyback when expected collateral > to be bought back', async () => {
-      await dai.transfer(arthPool.address, await dai.balanceOf(owner.address)); // Should cause effect of excess collateral.
+      await dai.transfer(arthPool.address, await dai.balanceOf(owner.address));  // Should cause effect of excess collateral.
 
       await expect(arthPool.buyBackARTHX(ETH, ETH.mul(3)))
         .to
@@ -793,7 +793,7 @@ describe('ARTHPool', () => {
     })
 
     it(' - Should buyback properly when all prices = 1', async () => {
-      await dai.transfer(arthPool.address, await dai.balanceOf(owner.address)); // Should causes effect of excess collateral.
+      await dai.transfer(arthPool.address, await dai.balanceOf(owner.address));  // Should causes effect of excess collateral.
 
       const daiBalanceBefore = await dai.balanceOf(owner.address);
       const poolsDaiBalanceBefore = await dai.balanceOf(arthPool.address);
