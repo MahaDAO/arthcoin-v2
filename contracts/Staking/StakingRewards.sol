@@ -193,23 +193,6 @@ contract StakingRewards is
         _arthController = IARTHController(_controller);
     }
 
-    function greylistAnAddress(address _address)
-        external
-        onlyByOwnerOrGovernance
-        returns (bool)
-    {
-        greylist[_address] = true;
-        return true;
-    }
-
-    function whitelistAnAddress(address _address)
-        external
-        onlyByOwnerOrGovernance
-        returns (bool)
-    {
-        greylist[_address] = false;
-        return true;
-    }
 
     function withdraw(uint256 amount)
         external
