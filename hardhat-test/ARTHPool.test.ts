@@ -130,7 +130,7 @@ describe('ARTHPool', () => {
     );
 
     await arthPool.setRecollateralizationCurve(recollaterizationCurve.address);
-  })
+  });
 
   describe('- Mint 1:1 ARTH', async () => {
     beforeEach(' - Approve collateral', async () => {
@@ -151,7 +151,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARHTPool: Collateral ratio < 1'
         );
-    })
+    });
 
     it(' - Should not mint when collateral > celing', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
@@ -170,7 +170,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: ceiling reached'
         );
-    })
+    });
 
     it(' - Should not mint when expected > to be minted', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
@@ -188,7 +188,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Slippage limit reached'
         );
-    })
+    });
 
     it(' - Should mint properly when all prices = 1', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
@@ -226,12 +226,12 @@ describe('ARTHPool', () => {
           poolCollateralBalanceBefore.add(ETH)
         );
     })
-  })
+  });
 
   describe('- Mint Algorithmic ARTH', async () => {
     beforeEach(' - Approve ARTHX', async () => {
       await arthx.approve(arthPool.address, ETH);
-    })
+    });
 
     it(' - Should not mint when CR != 0', async () => {
       await arthController.setGlobalCollateralRatio(100);
@@ -247,7 +247,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Collateral ratio != 0'
         );
-    })
+    });
 
     it(' - Should not mint when expected > to be minted', async () => {
       await arthController.setGlobalCollateralRatio(0);
@@ -265,7 +265,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Slippage limit reached'
         );
-    })
+    });
 
     it(' - Should mint properly when all prices = 1', async () => {
       await arthController.setGlobalCollateralRatio(0);
@@ -302,14 +302,14 @@ describe('ARTHPool', () => {
         .eq(
           arthxTotalSupplyBefore.sub(ETH)
         );
-    })
-  })
+    });
+  });
 
   describe('- Mint Fractional ARTH', async () => {
     beforeEach(' - Approve DAI & ARTHX', async () => {
       await dai.approve(arthPool.address, ETH);
       await arthx.approve(arthPool.address, ETH.mul(9));
-    })
+    });
 
     it(' - Should not mint when CR = 0 || CR = 1', async () => {
       await arthController.setGlobalCollateralRatio(0);
@@ -339,7 +339,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
         );
-    })
+    });
 
     it(' - Should not mint when collateral > ceiling', async () => {
       await dai.transfer(arthPool.address, ETH.mul(2))
@@ -356,7 +356,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: ceiling reached.'
         );
-    })
+    });
 
     it(' - Should not mint when expected > minted', async () => {
       await arthController.setGlobalCollateralRatio(1e5);
@@ -374,7 +374,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Slippage limit reached'
         );
-    })
+    });
 
     it(' - Should mint properly when all prices = 1', async () => {
       await arthController.setGlobalCollateralRatio(1e5);
@@ -426,15 +426,15 @@ describe('ARTHPool', () => {
         .eq(
           arthxTotalSupply.sub(ETH.mul(9))
         );
-    })
-  })
+    });
+  });
 
   describe('- Redeem 1:1 ARTH', async () => {
     beforeEach(' - Approve ARTHX', async () => {
       await arth.approve(arthPool.address, ETH);
       await maha.approve(arthPool.address, ETH);
       await arthController.setGlobalCollateralRatio(1e6);
-    })
+    });
 
     it(' - Should not redeem when CR != 1', async () => {
       await arthController.setGlobalCollateralRatio(0);
@@ -450,7 +450,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Collateral ratio must be == 1'
         );
-    })
+    });
 
     it(' - Should not redeem if collateral low', async () => {
       await expect(arthPool.redeem1t1ARTH(ETH.mul(9), ETH))
@@ -458,7 +458,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Not enough collateral in pool'
         );
-    })
+    });
 
     it(' - Should not redeem when expect > to be minted', async () => {
       // Making sure the pool has enough collateral to be redeemed.
@@ -469,7 +469,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Slippage limit reached'
         );
-    })
+    });
 
     it(' - Should redeem properly when all prices = 1', async () => {
       // Making sure the pool has more than enough collateral.
@@ -516,15 +516,15 @@ describe('ARTHPool', () => {
       expect(await await maha.balanceOf(owner.address))
         .to
         .lt(mahaBalanceBefore);
-    })
-  })
+    });
+  });
 
   describe('- Redeem Fractional ARTH', async () => {
     beforeEach(' - Approve ARTHX', async () => {
       await arth.approve(arthPool.address, ETH);
       await maha.approve(arthPool.address, ETH);
       await arthController.setGlobalCollateralRatio(1e5);
-    })
+    });
 
     it('- Should not redeem when CR not in range(0, 1)', async () => {
       await arthController.setGlobalCollateralRatio(0);
@@ -542,7 +542,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'ARTHPool: Collateral ratio needs to be between .000001 and .999999'
         );
-    })
+    });
 
     it('- Should not redeem when no collateral', async () => {
       await expect(arthPool.redeemFractionalARTH(ETH.mul(2), ETH, ETH.mul(2)))
@@ -550,7 +550,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Not enough collateral in pool'
         )
-    })
+    });
 
     it('- Should not redeem when expcted collateral > redeemable', async () => {
       await dai.transfer(arthPool.address, ETH.mul(3));
@@ -560,7 +560,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Slippage limit reached [collateral]'
         );
-    })
+    });
 
     it('- Should not redeem when expected arthx > redeemable', async () => {
       await dai.transfer(arthPool.address, ETH.mul(3));
@@ -574,7 +574,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Slippage limit reached [ARTHX]'
         );
-    })
+    });
 
     it(' - Should redeem properly when all prices = 1', async () => {
       // Making sure the pool has more than enough collateral.
@@ -628,15 +628,15 @@ describe('ARTHPool', () => {
       expect(await await maha.balanceOf(owner.address))
         .to
         .lt(mahaBalanceBefore);
-    })
-  })
+    });
+  });
 
   describe('- Redeem Algorithmic ARTH', async () => {
     beforeEach(' - Approve ARTHX', async () => {
       await arth.approve(arthPool.address, ETH);
       await maha.approve(arthPool.address, ETH);
       await arthController.setGlobalCollateralRatio(0);
-    })
+    });
 
     it('- Should not redeem when CR != 0', async () => {
       await arthController.setGlobalCollateralRatio(1e5);
@@ -646,7 +646,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Collateral ratio must be 0'
         );
-    })
+    });
 
     it('- Should not redeem when expected > to be minted', async () => {
       await expect(arthPool.redeemAlgorithmicARTH(ETH, ETH))
@@ -654,7 +654,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Slippage limit reached'
         );
-    })
+    });
 
     it(' - Should redeem properly when all prices = 1', async () => {
       // Making sure the pool has more than enough collateral.
@@ -694,8 +694,8 @@ describe('ARTHPool', () => {
       expect(await await maha.balanceOf(owner.address))
         .to
         .lt(mahaBalanceBefore);
-    })
-  })
+    });
+  });
 
   describe('- Recollateralize ARTH', async () => {
     beforeEach(' - Approve collateral', async () => {
@@ -717,7 +717,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Recollateralize is paused'
         );
-    })
+    });
 
     it(' - Should not recollateralize when expected ARTHX > to be minted', async () => {
       await expect(arthPool.recollateralizeARTH(ETH, ETH.mul(3)))
@@ -725,7 +725,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Slippage limit reached'
         );
-    })
+    });
 
     it(' - Should recollaterize properly when all prices = 1', async () => {
       await dai.transfer(arthPool.address, ETH);  // Ensuring that pool has some collateral.
@@ -762,7 +762,7 @@ describe('ARTHPool', () => {
         .eq(
           arthxTotalSupply.add(expectedMint)
         );
-    })
+    });
 
     it(' - Should recollaterize properly when all prices = 1 & pool has no collateral', async () => {
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
@@ -802,8 +802,8 @@ describe('ARTHPool', () => {
         .eq(
           arthxTotalSupply.add(expectedMint)
         );
-    })
-  })
+    });
+  });
 
   describe('- Buyback ARTHX', async () => {
     beforeEach(' - Approve collateral', async () => {
@@ -824,7 +824,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Buyback is paused'
         );
-    })
+    });
 
     it(' - Should not buyback when expected collateral > to be bought back', async () => {
       await dai.transfer(arthPool.address, await dai.balanceOf(owner.address));  // Should cause effect of excess collateral.
@@ -834,7 +834,7 @@ describe('ARTHPool', () => {
         .revertedWith(
           'Slippage limit reached'
         );
-    })
+    });
 
     it(' - Should buyback properly when all prices = 1', async () => {
       await dai.transfer(arthPool.address, await dai.balanceOf(owner.address));  // Should causes effect of excess collateral.
@@ -872,6 +872,6 @@ describe('ARTHPool', () => {
         .eq(
           totalSupplyBefore.sub(ETH)
         );
-    })
-  })
-})
+    });
+  });
+});
