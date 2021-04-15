@@ -186,6 +186,14 @@ contract StakingRewards is
         _stakeLocked(who, amount, duration);
     }
 
+    function setArthController(address _controller)
+        external
+        onlyByOwnerOrGovernance
+    {
+        _arthController = IARTHController(_controller);
+    }
+
+
     function withdraw(uint256 amount)
         external
         override

@@ -26,10 +26,10 @@ module.exports = {
       gasPrice: 115000000000, // 115 gwei,
     },
     ropsten: {
-      // provider: providerFactory(),
+      provider: providerFactory(),
       network_id: 3,
-      gas: 8000000,      // Make sure this gas allocation isn't over 4M, which is the max
-      gasPrice: 30000000000, // 30 gwei,
+      //gas: 8000000,      // Make sure this gas allocation isn't over 4M, which is the max
+      //gasPrice: 30000000000, // 30 gwei,
       skipDryRun: true
     },
     kovan: {
@@ -42,7 +42,7 @@ module.exports = {
     rinkeby: {
       provider: providerFactory(),
       network_id: 4,
-      gas: 8000000,
+      //gas: 8000000,
       skipDryRun: true      //  Sure this gas allocation isn't over 4M, which is the max
     }
   },
