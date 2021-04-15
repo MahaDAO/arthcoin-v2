@@ -49,7 +49,7 @@ contract RecollateralizeDiscountCurve is Ownable {
 
     function getCurveExponent() public view returns (uint256) {
         uint256 targetCollatValue = getTargetCollateralValue();
-        uint256 currentCollatValue = _arthController.getGlobalCollateralRatio();
+        uint256 currentCollatValue = _arthController.getGlobalCollateralValue();
 
         if (targetCollatValue <= currentCollatValue) return 0;
 

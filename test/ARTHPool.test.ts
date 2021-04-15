@@ -11,7 +11,7 @@ chai.use(solidity);
 
 
 // --- TODO: Add test cases with prices < 1 & prices > 1 ---
-describe('ARTHPool', () => {
+describe.only('ARTHPool', () => {
   const { provider } = ethers;
 
   const ETH = utils.parseEther('1');
@@ -118,6 +118,8 @@ describe('ARTHPool', () => {
     await arthController.setGlobalCollateralRatio(0);
     await arthx.setArthController(arthController.address);
     await arthPool.setCollatETHOracle(daiETHUniswapOracle.address, owner.address);
+
+    await arthController.setARTHETHOracle(arthETHUniswapOracle.address, owner.address);
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
 
     await arthPool.setPoolParameters(
@@ -135,7 +137,7 @@ describe('ARTHPool', () => {
   describe('- Mint 1:1 ARTH', async () => {
     beforeEach(' - Approve collateral', async () => {
       await dai.approve(arthPool.address, ETH);
-    })
+    });
 
     it(' - Should not mint when CR < 1', async () => {
       await arthController.setGlobalCollateralRatio(100);
@@ -225,7 +227,101 @@ describe('ARTHPool', () => {
         .eq(
           poolCollateralBalanceBefore.add(ETH)
         );
-    })
+    });
+
+    it(' - Should mint properly when all DAI/ETH price < 1', async () => {
+      await arthController.setGlobalCollateralRatio(1e6);
+
+      // Increasing the price of WETH so as to decrease the price of DAI.
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      // Making sure the price is < 1 for the tests to be valid.
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(943396);
+
+      const totalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      // Get the expected Mint amount as per the price of collateral(DAI).
+      const expectedMintWithoutFee = ETH.mul(943396).div(1e6);  // 0.943396 * 1e18.
+      const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
+
+      await arthPool.mint1t1ARTH(ETH, expectedMint);
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.add(expectedMint)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          arthBalanceBefore.add(expectedMint)
+        );
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+    });
+
+    it(' - Should mint properly when all DAI/ETH price > 1', async () => {
+      await arthController.setGlobalCollateralRatio(1e6);
+
+      // Decreasing the price of WETH so as to Increase the price of DAI.
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(1063829);
+
+      const totalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      // Get the expected Mint amount as per the price of collateral(DAI).
+      const expectedMintWithoutFee = ETH.mul(1063829).div(1e6);  // 1.063829 * 1e18.
+      const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
+
+      await arthPool.mint1t1ARTH(ETH, expectedMint);
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.add(expectedMint)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          arthBalanceBefore.add(expectedMint)
+        );
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+    });
   });
 
   describe('- Mint Algorithmic ARTH', async () => {
@@ -277,6 +373,94 @@ describe('ARTHPool', () => {
       const arthxBalanceBefore = await arthx.balanceOf(owner.address);
 
       const expectedMint = ETH.sub(ETH.div(1000));  // Since, Mint fee is 0.1 %.
+      await arthPool.mintAlgorithmicARTH(ETH, expectedMint);
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.add(expectedMint)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          arthBalanceBefore.add(expectedMint)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(ETH)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          arthxTotalSupplyBefore.sub(ETH)
+        );
+    });
+
+    it(' - Should mint properly when all ARTHX/ETH price < 1', async () => {
+      await arthController.setGlobalCollateralRatio(0);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      // Making sure the price is < 1 for the tests to be valid.
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(943396);
+
+      const totalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const arthxTotalSupplyBefore = await arthx.totalSupply();
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+      const expectedMintWithoutFee = ETH.mul(943396).div(1e6);
+      const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
+      await arthPool.mintAlgorithmicARTH(ETH, expectedMint);
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.add(expectedMint)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          arthBalanceBefore.add(expectedMint)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(ETH)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          arthxTotalSupplyBefore.sub(ETH)
+        );
+    });
+
+    it(' - Should mint properly when all ARTHX/ETH price > 1', async () => {
+      await arthController.setGlobalCollateralRatio(0);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1063829);
+
+      const totalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const arthxTotalSupplyBefore = await arthx.totalSupply();
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+      const expectedMintWithoutFee = ETH.mul(1063829).div(1e6);
+      const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
       await arthPool.mintAlgorithmicARTH(ETH, expectedMint);
 
       expect(await arth.totalSupply())
@@ -389,6 +573,136 @@ describe('ARTHPool', () => {
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
       const expectedMint = ETH.mul(10).sub(ETH.mul(10).div(1000));  // Since, Mint fee is 0.1 %.
+      await arthPool.mintFractionalARTH(ETH, ETH.mul(9), expectedMint);
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.add(expectedMint)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          arthBalanceBefore.add(expectedMint)
+        );
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(ETH.mul(9))
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          arthxTotalSupply.sub(ETH.mul(9))
+        );
+    });
+
+    it(' - Should mint properly when all DAI/ETH & ARTHX/ETH > 1 && DAI/ETH = ARTHX/ETH', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(1063829);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1063829);
+
+      const totalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const arthxTotalSupply = await arthx.totalSupply();
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const expectedMintWithoutFee = ETH.mul(1063829).div(1e6).mul(10);  // Since 1 DAI & 9ARTHX & DAI price = ARTH price.
+      const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
+      await arthPool.mintFractionalARTH(ETH, ETH.mul(9), expectedMint);
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.add(expectedMint)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          arthBalanceBefore.add(expectedMint)
+        );
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(ETH.mul(9))
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          arthxTotalSupply.sub(ETH.mul(9))
+        );
+    });
+
+    it(' - Should mint properly when all DAI/ETH & ARTHX/ETH < 1 && DAI/ETH = ARTHX/ETH', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(943396);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(943396);
+
+      const totalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const arthxTotalSupply = await arthx.totalSupply();
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const expectedMintWithoutFee = ETH.mul(943396).div(1e6).mul(10);  // Since 1 DAI & 9ARTHX & DAI price = ARTH price.
+      const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
       await arthPool.mintFractionalARTH(ETH, ETH.mul(9), expectedMint);
 
       expect(await arth.totalSupply())
