@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { Contract, ContractFactory, providers, utils } from 'ethers';
+import { Contract, ContractFactory, utils } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 import { advanceTimeAndBlock } from './utilities';
@@ -10,6 +10,12 @@ import { advanceTimeAndBlock } from './utilities';
 chai.use(solidity);
 
 
+/**
+ *
+ * TODO: add test cases for.
+ *  - Access level check.
+ *  - Manually set prices and check for getters(espcially price and value getters).
+ */
 describe('ARTHController', () => {
   const { provider } = ethers;
 

@@ -10,8 +10,19 @@ import { advanceBlock } from './utilities';
 chai.use(solidity);
 
 
-// --- TODO: Add test cases with prices < 1 & prices > 1 ---
-describe.only('ARTHPool', () => {
+/**
+ * TODO: Add test cases where:
+ *  - Access level check test cases.
+ *
+ *  - Fix Curve and consider that in test cases.
+ *
+ *  - DAI/ETH > 1 & ARTHX/ETH > 1, but prices are diff.
+ *  - DAI/ETH < 1 & ARTHX/ETH < 1, but prices are diff.
+ *
+ *  - DAI/ETH > 1 & ARTHX/ETH < 1.
+ *  - DAI/ETH < 1 & ARTHX/ETH > 1.
+ */
+describe('ARTHPool', () => {
   const { provider } = ethers;
 
   const ETH = utils.parseEther('1');
@@ -1411,6 +1422,104 @@ describe.only('ARTHPool', () => {
         );
     });
 
+    it(' - Should recollaterize properly when all DAI/ETH & ARTHX/ETH > 1 && DAI/ETH = ARTHX/ETH', async () => {
+      await dai.transfer(arthPool.address, ETH);  // Ensuring that pool has some collateral.
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(1063829);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1063829);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+      const arthxTotalSupply = await arthx.totalSupply();
+
+      const collateralValue = ETH.mul(1063829).div(1e6);  // Collateral's value.
+      // Amount to recollateralize as per ARTHX price and collatera's value.
+      const expectedMint = collateralValue.sub(collateralValue.div(1000)).mul(1e6).div(1063829);
+      await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.add(expectedMint)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          arthxTotalSupply.add(expectedMint)
+        );
+    });
+
+    it(' - Should recollaterize properly when all DAI/ETH & ARTHX/ETH < 1 && DAI/ETH = ARTHX/ETH', async () => {
+      await dai.transfer(arthPool.address, ETH);  // Ensuring that pool has some collateral.
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(943396);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(943396);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+      const arthxTotalSupply = await arthx.totalSupply();
+
+      const collateralValue = ETH.mul(943396).div(1e6); // Collateral's value.
+      // Amount to recollateralize as per ARTHX price and collatera's value.
+      const expectedMint = collateralValue.sub(collateralValue.div(1000)).mul(1e6).div(943396);  // Amount to recollateralize as per ARTHX price.
+      await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.add(expectedMint)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          arthxTotalSupply.add(expectedMint)
+        );
+    });
+
     it(' - Should recollaterize properly when all prices = 1 & pool has no collateral', async () => {
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
@@ -1450,6 +1559,114 @@ describe.only('ARTHPool', () => {
           arthxTotalSupply.add(expectedMint)
         );
     });
+
+    it(
+      ' - Should recollaterize properly when all DAI/ETH & ARTHX/ETH > 1 && DAI/ETH = ARTHX/ETH && pool has no collateral',
+      async () => {
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        expect(await arthPool.getCollateralPrice())
+          .to
+          .eq(1063829);
+
+        await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        expect(await arthController.getARTHXPrice())
+          .to
+          .eq(1063829);
+
+        // Ensuring pool has no collateral at all.
+        expect(await dai.balanceOf(arthPool.address))
+          .to
+          .eq(0);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        const collateralValue = ETH.mul(1063829).div(1e6); // Collateral's value.
+        // Amount to recollateralize as per ARTHX price and collatera's value.`
+        const expectedMint = collateralValue.sub(collateralValue.div(1000)).mul(1e6).div(1063829);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to
+          .eq(
+            collateralBalanceBefore.sub(ETH)
+          );
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to
+          .eq(
+            poolCollateralBalanceBefore.add(ETH)
+          );
+
+        expect(await arthx.balanceOf(owner.address))
+          .to
+          .eq(
+            arthxBalanceBefore.add(expectedMint)
+          );
+
+        expect(await arthx.totalSupply())
+          .to
+          .eq(
+            arthxTotalSupply.add(expectedMint)
+          );
+      });
+
+    it(
+      ' - Should recollaterize properly when all DAI/ETH & ARTHX/ETH < 1 && DAI/ETH = ARTHX/ETH && pool has no collateral',
+      async () => {
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        expect(await arthPool.getCollateralPrice())
+          .to
+          .eq(943396);
+
+        await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        expect(await arthController.getARTHXPrice())
+          .to
+          .eq(943396);
+
+        // Ensuring pool has no collateral at all.
+        expect(await dai.balanceOf(arthPool.address))
+          .to
+          .eq(0);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        const collateralValue = ETH.mul(943396).div(1e6); // Collateral's value.
+        // Amount to recollateralize as per ARTHX price and collatera's value.
+        const expectedMint = collateralValue.sub(collateralValue.div(1000)).mul(1e6).div(943396);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to
+          .eq(
+            collateralBalanceBefore.sub(ETH)
+          );
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to
+          .eq(
+            poolCollateralBalanceBefore.add(ETH)
+          );
+
+        expect(await arthx.balanceOf(owner.address))
+          .to
+          .eq(
+            arthxBalanceBefore.add(expectedMint)
+          );
+
+        expect(await arthx.totalSupply())
+          .to
+          .eq(
+            arthxTotalSupply.add(expectedMint)
+          );
+      });
   });
 
   describe('- Buyback ARTHX', async () => {
@@ -1494,6 +1711,142 @@ describe.only('ARTHPool', () => {
 
       // Buyback fee is 0.1%(1 / 1000)
       const expectedBuyback = ETH.sub(ETH.div(1000));
+      await arthPool.buyBackARTHX(ETH, expectedBuyback)
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          daiBalanceBefore.add(expectedBuyback)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolsDaiBalanceBefore.sub(expectedBuyback)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(ETH)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.sub(ETH)
+        );
+    });
+
+    it(' - Should buyback properly when all prices = 1', async () => {
+      await dai.transfer(arthPool.address, await dai.balanceOf(owner.address));  // Should causes effect of excess collateral.
+
+      const daiBalanceBefore = await dai.balanceOf(owner.address);
+      const poolsDaiBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+      const totalSupplyBefore = await arthx.totalSupply();
+
+      // Buyback fee is 0.1%(1 / 1000)
+      const expectedBuyback = ETH.sub(ETH.div(1000));
+      await arthPool.buyBackARTHX(ETH, expectedBuyback)
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          daiBalanceBefore.add(expectedBuyback)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolsDaiBalanceBefore.sub(expectedBuyback)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(ETH)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.sub(ETH)
+        );
+    });
+
+    it(' - Should buyback properly when DAI/ETH & ARTHX/ETH < 1 && DAI/ETH = ARTHX/ETH', async () => {
+      await dai.transfer(arthPool.address, await dai.balanceOf(owner.address));  // Should causes effect of excess collateral.
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(943396);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(943396);
+
+      const daiBalanceBefore = await dai.balanceOf(owner.address);
+      const poolsDaiBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+      const totalSupplyBefore = await arthx.totalSupply();
+
+      // Buyback fee is 0.1%(1 / 1000)
+      const arthxValue = ETH.mul(943396).div(1e6);
+      const expectedBuyback = arthxValue.sub(arthxValue.div(1000)).mul(1e6).div(943396);
+      await arthPool.buyBackARTHX(ETH, expectedBuyback)
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          daiBalanceBefore.add(expectedBuyback)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolsDaiBalanceBefore.sub(expectedBuyback)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(ETH)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.sub(ETH)
+        );
+    });
+
+    it(' - Should buyback properly when DAI/ETH & ARTHX/ETH > 1 && DAI/ETH = ARTHX/ETH', async () => {
+      await dai.transfer(arthPool.address, await dai.balanceOf(owner.address));  // Should causes effect of excess collateral.
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(1063829);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1063829);
+
+      const daiBalanceBefore = await dai.balanceOf(owner.address);
+      const poolsDaiBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+      const totalSupplyBefore = await arthx.totalSupply();
+
+      // Buyback fee is 0.1%(1 / 1000)
+      const arthxValue = ETH.mul(1063829).div(1e6);
+      const expectedBuyback = arthxValue.sub(arthxValue.div(1000)).mul(1e6).div(1063829);
       await arthPool.buyBackARTHX(ETH, expectedBuyback)
 
       expect(await dai.balanceOf(owner.address))
