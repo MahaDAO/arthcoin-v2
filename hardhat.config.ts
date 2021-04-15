@@ -1,9 +1,9 @@
-import 'solidity-coverage'
-import 'hardhat-gas-reporter'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-etherscan'
+import 'solidity-coverage';
+import 'hardhat-gas-reporter';
+import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-etherscan';
 
-require('dotenv').config()
+require('dotenv').config();
 
 
 export default {
@@ -42,7 +42,7 @@ export default {
   },
   paths: {
     sources: './contracts',
-    tests: './hardhat-test',
+    tests: './test',
     cache: './build/cache',
     artifacts: './build/artifacts',
   },
@@ -55,4 +55,4 @@ export default {
     // Obtain one at https://etherscan.io/
     apiKey: process.env.ETHERSCAN_API_KEY
   },
-}
+};
