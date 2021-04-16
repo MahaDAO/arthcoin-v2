@@ -9,17 +9,7 @@ interface IARTHPool {
 
     function setStabilityFee(uint256 percent) external;
 
-    function setMintCollateralRatio(uint256 val) external;
-
-    function toggleUseGlobalCRForRedeem(bool flag) external;
-
-    function setRedeemCollateralRatio(uint256 val) external;
-
-    function setRecollateralizeCollateralRatio(uint256 val) external;
-
-    function toggleUseGlobalCRForRecollateralize(bool flag) external;
-
-    function toggleUseGlobalCRForMint(bool flag) external;
+    //function toggleUseGlobalCRForRedeem(bool flag) external;
 
     function setBuyBackCollateralBuffer(uint256 percent) external;
 

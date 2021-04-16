@@ -193,7 +193,6 @@ contract StakingRewards is
         _arthController = IARTHController(_controller);
     }
 
-
     function withdraw(uint256 amount)
         external
         override
