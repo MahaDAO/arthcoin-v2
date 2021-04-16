@@ -19,7 +19,7 @@ chai.use(solidity);
  *  - DAI/ETH > 1 & ARTHX/ETH > 1, but prices are diff.
  *  - DAI/ETH < 1 & ARTHX/ETH < 1, but prices are diff.
  */
-describe.only('ARTHPool', () => {
+describe('ARTHPool', () => {
   const { provider } = ethers;
 
   const ETH = utils.parseEther('1');
@@ -76,10 +76,10 @@ describe.only('ARTHPool', () => {
 
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
+    RecollateralizationCurve = await ethers.getContractFactory('Sigmoid');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
     ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
-    RecollateralizationCurve = await ethers.getContractFactory('RecollateralizeDiscountCurve');
   });
 
   beforeEach(' - Deploy contracts', async () => {
@@ -123,8 +123,10 @@ describe.only('ARTHPool', () => {
     );
 
     recollaterizationCurve = await RecollateralizationCurve.deploy(
-      arth.address,
-      arthController.address
+      0,  // Xmin(0%)
+      100,  // Xmax(100%)
+      0,  // Ymin- Sigmoid minimum.
+      ETH  // Ymax- Sigmoid maximum.
     );
   });
 
