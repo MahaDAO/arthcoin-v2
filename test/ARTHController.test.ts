@@ -126,7 +126,7 @@ describe('ARTHController', () => {
     it(' - Should reduce CR by a step if price > (1 + band)', async () => {
       await arthController.setGlobalCollateralRatio(1e5)
 
-      // Reduce the WETH price by 50% to increase ARTH price.
+      // Reduce the WETH to increase ARTH price.
       await arthETHUniswapOracle.setPrice(ETH.mul(50).div(100));
 
       // Making sure that ARTH price > (target + band)
@@ -148,12 +148,11 @@ describe('ARTHController', () => {
         .eq(97500);  // 1e5 - 2500(step).
     });
 
-    it(' - Should reduce CR to 0 if already CR < step & price > (1 - band)', async () => {
+    it(' - Should reduce CR to 0 if already CR < step & price > (1 + band)', async () => {
       await arthController.setGlobalCollateralRatio(2500)
-      // Reduce the WETH price by 50% to increase ARTH price.
-      await arthETHUniswapOracle.setPrice(ETH.mul(50).div(100));
+      await arthETHUniswapOracle.setPrice(ETH.mul(50).div(100));  // Reduce WETH price, to increase ARTH price.
 
-      // Making sure that ARTH price > (target + band)
+      // Making sure that ARTH price > (target + band).
       expect(await arthController.getARTHPrice())
         .to
         .gt(
@@ -195,7 +194,7 @@ describe('ARTHController', () => {
     it(' - Should not modify CR if price = 1', async () => {
       await arthController.setGlobalCollateralRatio(1e5);
 
-      // Making sure that ARTH price > (target + band)
+      // Making sure that ARTH price = target.
       expect(await arthController.getARTHPrice())
         .to
         .eq(
@@ -211,7 +210,7 @@ describe('ARTHController', () => {
 
       expect(await arthController.getGlobalCollateralRatio())
         .to
-        .eq(1e5);  // 1e5.
+        .eq(1e5);
     });
 
     it(' - Should not modify CR if  (1 - band) > price > 1', async () => {
@@ -221,7 +220,7 @@ describe('ARTHController', () => {
         ETH.add(ETH.div(200))
       );
 
-      // Making sure that ARTH price > (target - band)
+      // Making sure that ARTH price > (target - band).
       expect(await arthController.getARTHPrice())
         .to
         .gte(
@@ -243,7 +242,7 @@ describe('ARTHController', () => {
 
       expect(await arthController.getGlobalCollateralRatio())
         .to
-        .eq(1e5);  // 1e5.
+        .eq(1e5);
     });
 
     it(' - Should not modify CR if 1 < price < (1 + band)', async () => {
@@ -253,13 +252,13 @@ describe('ARTHController', () => {
         ETH.sub(ETH.div(225))
       );
 
-      // Making sure that ARTH price > (target - band)
+      // Making sure that ARTH price < (target + band)
       expect(await arthController.getARTHPrice())
         .to
         .lte(
           1e6 + 5000
         );
-      // Making sure that ARTH price < (target)
+      // Making sure that ARTH price > (target)
       expect(await arthController.getARTHPrice())
         .to
         .gt(
@@ -275,12 +274,12 @@ describe('ARTHController', () => {
 
       expect(await arthController.getGlobalCollateralRatio())
         .to
-        .eq(1e5);  // 1e5.
+        .eq(1e5);
     });
 
     it(' - Should cap CR to 1 if already CR + step >= 1 & price < (1 - band)', async () => {
       await arthController.setGlobalCollateralRatio(1e6)
-      // Reduce the WETH price by 50% to increase ARTH price.
+      // Reduce WETH price, to increase ARTH price.
       await arthETHUniswapOracle.setPrice(ETH.mul(150).div(100));
 
       // Making sure that ARTH price < (target - band)
@@ -295,16 +294,17 @@ describe('ARTHController', () => {
         .eq(false);
 
       await arthController.refreshCollateralRatio();
+
       expect(await arthController.getGlobalCollateralRatio())
         .to
-        .eq(1e6); // Capping.
+        .eq(1e6); // Checking capping of CR.
 
       // Must wait till callable again.
       await advanceTimeAndBlock(provider, 3601);
 
       await arthController.setGlobalCollateralRatio(1e6 + 1);
 
-      // Making sure that still, ARTH price > (target + band)
+      // Making sure that still, ARTH price > (target - band)
       expect(await arthController.getARTHPrice())
         .to
         .lt(
@@ -319,7 +319,7 @@ describe('ARTHController', () => {
       await arthController.refreshCollateralRatio();
       expect(await arthController.getGlobalCollateralRatio())
         .to
-        .eq(1e6); // Capping.
+        .eq(1e6); // Checking capping of CR.
     });
 
     it(' - Should increase CR by a step if price < (1 - band)', async () => {
@@ -328,7 +328,7 @@ describe('ARTHController', () => {
       // Increase the WETH price to reduce ARTH price.
       await arthETHUniswapOracle.setPrice(ETH.mul(150).div(100));
 
-      // Making sure that ARTH price > (target + band)
+      // Making sure that ARTH price > (target - band)
       expect(await arthController.getARTHPrice())
         .to
         .lt(
@@ -344,7 +344,7 @@ describe('ARTHController', () => {
 
       expect(await arthController.getGlobalCollateralRatio())
         .to
-        .eq(102500);  // 1e5 - 2500(step).
+        .eq(102500);  // 1e5 + 2500(step).
     });
   });
 });
