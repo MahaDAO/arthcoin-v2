@@ -696,8 +696,8 @@ describe('ARTHPool', () => {
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
       const valueSuppliedInCollateral = ETH.mul(1063829).div(1e6);
-      const valueToBeSuppliedInTotal = valueSuppliedInCollateral.mul(100).div(10);
-      const valueToBeSuppliedInARTHX = valueToBeSuppliedInTotal.sub(valueSuppliedInCollateral);
+      const valueToBeSuppliedInTotal = valueSuppliedInCollateral.mul(100).div(10); // 10% CR.
+      const valueToBeSuppliedInARTHX = valueToBeSuppliedInTotal.sub(valueSuppliedInCollateral);  // Hence need 90% ARTHX.
       const arthxToBeSupplied = valueToBeSuppliedInARTHX.mul(1e6).div(943396);
 
       const expectedMintWithoutFee = valueSuppliedInCollateral.add(valueToBeSuppliedInARTHX);
@@ -765,11 +765,11 @@ describe('ARTHPool', () => {
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
       const valueSuppliedInCollateral = ETH.mul(943396).div(1e6);
-      const valueToBeSuppliedInTotal = valueSuppliedInCollateral.mul(100).div(10);
-      const valueToBeSuppliedInARTHX = valueToBeSuppliedInTotal.sub(valueSuppliedInCollateral);
-      const arthxToBeSupplied = valueToBeSuppliedInARTHX.mul(1e6).div(1063829);
+      const valueSuppliedInTotal = valueSuppliedInCollateral.mul(100).div(10);
+      const valueSuppliedInARTHX = valueSuppliedInTotal.sub(valueSuppliedInCollateral);
+      const arthxToBeSupplied = valueSuppliedInARTHX.mul(1e6).div(1063829);
 
-      const expectedMintWithoutFee = valueSuppliedInCollateral.add(arthxToBeSupplied);
+      const expectedMintWithoutFee = valueSuppliedInCollateral.add(valueSuppliedInARTHX);
       const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
 
       await arthPool.mintFractionalARTH(ETH, arthxToBeSupplied, expectedMint);
