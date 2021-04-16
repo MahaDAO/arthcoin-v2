@@ -227,7 +227,7 @@ contract Genesis is ERC20, Ownable {
 
     function getCurvePrice() public view returns (uint256) {
         if (getIsRaisedBelowSoftCap())
-            return _CURVE.getY(getPercentRaised().mul(1e18).div(100));
+            return _CURVE.getY(getPercentRaised()/*.mul(1e18).div(100)*/);
 
         return _CURVE.fixedY();
     }

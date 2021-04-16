@@ -7,6 +7,7 @@ import {IARTH} from '../IARTH.sol';
 import {IARTHPool} from './IARTHPool.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {IARTHX} from '../../ARTHX/IARTHX.sol';
+import {ICurve} from '../../Curves/ICurve.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
@@ -14,7 +15,6 @@ import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
 import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
-import {RecollateralizeDiscountCurve} from './RecollateralizeDiscountCurve.sol';
 
 /**
  * @title  ARTHPool.
@@ -36,23 +36,14 @@ contract ArthPool is AccessControl, IARTHPool {
     IERC20Burnable private _MAHA;
     ISimpleOracle private _ARTHMAHAOracle;
     IARTHController private _arthController;
+    ICurve private _recollateralizeDiscountCruve;
     IUniswapPairOracle private _collateralETHOracle;
-    RecollateralizeDiscountCurve private _recollateralizeDiscountCruve;
 
     bool public mintPaused = false;
     bool public redeemPaused = false;
     bool public buyBackPaused = false;
     bool public recollateralizePaused = false;
     bool public override collateralPricePaused = false;
-
-    // Shift to controller
-    // bool public useGlobalCRForMint = true;
-    // bool public useGlobalCRForRedeem = true;
-    // bool public useGlobalCRForRecollateralize = true;
-
-    // uint256 public mintCollateralRatio;
-    // uint256 public redeemCollateralRatio;
-    // uint256 public recollateralizeCollateralRatio;
 
     uint256 public override buybackFee;
     uint256 public override mintingFee;
@@ -199,7 +190,7 @@ contract ArthPool is AccessControl, IARTHPool {
         buybackCollateralBuffer = percent;
     }
 
-    function setRecollateralizationCurve(RecollateralizeDiscountCurve curve)
+    function setRecollateralizationCurve(ICurve curve)
         external
         onlyAdminOrOwnerOrGovernance
     {
@@ -672,7 +663,7 @@ contract ArthPool is AccessControl, IARTHPool {
             amountToRecollateralize
                 .mul(
                 uint256(1e6)
-                    .add(_recollateralizeDiscountCruve.getCurvedDiscount())
+                    .add(getRecollateralizationDiscount())
                     .sub(recollatFee)
             )
                 .div(arthxPrice);
@@ -801,6 +792,29 @@ contract ArthPool is AccessControl, IARTHPool {
         return 0;
     }
 
+    function getTargetCollateralValue() public view returns (uint256) {
+        return
+            _ARTH
+                .totalSupply()
+                .mul(_arthController.getGlobalCollateralRatio())
+                .div(1e6);
+    }
+
+    function getRecollateralizationDiscount() public view override returns (uint256) {
+        uint256 targetCollatValue = getTargetCollateralValue();
+        uint256 currentCollatValue = _arthController.getGlobalCollateralValue();
+
+        if (targetCollatValue <= currentCollatValue) return 0;
+
+        // % of deviation from target.
+        uint256 percentDeviation = targetCollatValue
+            .sub(currentCollatValue)
+            .mul(100)
+            .div(targetCollatValue);
+
+        _recollateralizeDiscountCruve.getY(percentDeviation);
+    }
+
     function getCollateralPrice() public view override returns (uint256) {
         if (collateralPricePaused) return pausedPrice;
 
@@ -827,6 +841,7 @@ contract ArthPool is AccessControl, IARTHPool {
     /**
      * Internal.
      */
+
     function _chargeStabilityFee(uint256 amount) internal {
         require(amount > 0, 'ArthPool: amount = 0');
 

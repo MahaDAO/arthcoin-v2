@@ -19,7 +19,7 @@ chai.use(solidity);
  *  - DAI/ETH > 1 & ARTHX/ETH > 1, but prices are diff.
  *  - DAI/ETH < 1 & ARTHX/ETH < 1, but prices are diff.
  */
-describe('ARTHPool', () => {
+describe.only('ARTHPool', () => {
   const { provider } = ethers;
 
   const ETH = utils.parseEther('1');
@@ -956,10 +956,6 @@ describe('ARTHPool', () => {
       expect(await maha.balanceOf(owner.address))
         .to
         .lt(mahaBalanceBefore);
-
-      expect(await maha.balanceOf(owner.address))
-        .to
-        .eq(mahaBalanceBefore);
     });
 
     it(' - Should redeem properly when all DAI/ETH prices > 1', async () => {
