@@ -841,6 +841,10 @@ describe('ARTHPool', () => {
       expect(await maha.balanceOf(owner.address))
         .to
         .lt(mahaBalanceBefore);
+
+      expect(await maha.balanceOf(owner.address))
+        .to
+        .eq(mahaBalanceBefore);
     });
 
     it(' - Should redeem properly when all DAI/ETH prices > 1', async () => {

@@ -45,13 +45,14 @@ contract ArthPool is AccessControl, IARTHPool {
     bool public recollateralizePaused = false;
     bool public override collateralPricePaused = false;
 
-    bool public useGlobalCRForMint = true;
-    bool public useGlobalCRForRedeem = true;
-    bool public useGlobalCRForRecollateralize = true;
+    // Shift to controller
+    // bool public useGlobalCRForMint = true;
+    // bool public useGlobalCRForRedeem = true;
+    // bool public useGlobalCRForRecollateralize = true;
 
-    uint256 public mintCollateralRatio;
-    uint256 public redeemCollateralRatio;
-    uint256 public recollateralizeCollateralRatio;
+    // uint256 public mintCollateralRatio;
+    // uint256 public redeemCollateralRatio;
+    // uint256 public recollateralizeCollateralRatio;
 
     uint256 public override buybackFee;
     uint256 public override mintingFee;
@@ -198,59 +199,11 @@ contract ArthPool is AccessControl, IARTHPool {
         buybackCollateralBuffer = percent;
     }
 
-    function toggleUseGlobalCRForMint(bool flag)
-        external
-        override
-        onlyAdminOrOwnerOrGovernance
-    {
-        useGlobalCRForMint = flag;
-    }
-
-    function toggleUseGlobalCRForRedeem(bool flag)
-        external
-        override
-        onlyAdminOrOwnerOrGovernance
-    {
-        useGlobalCRForRedeem = flag;
-    }
-
-    function toggleUseGlobalCRForRecollateralize(bool flag)
-        external
-        override
-        onlyAdminOrOwnerOrGovernance
-    {
-        useGlobalCRForRecollateralize = flag;
-    }
-
-    function setMintCollateralRatio(uint256 val)
-        external
-        override
-        onlyAdminOrOwnerOrGovernance
-    {
-        mintCollateralRatio = val;
-    }
-
     function setRecollateralizationCurve(RecollateralizeDiscountCurve curve)
         external
         onlyAdminOrOwnerOrGovernance
     {
         _recollateralizeDiscountCruve = curve;
-    }
-
-    function setRedeemCollateralRatio(uint256 val)
-        external
-        override
-        onlyAdminOrOwnerOrGovernance
-    {
-        redeemCollateralRatio = val;
-    }
-
-    function setRecollateralizeCollateralRatio(uint256 val)
-        external
-        override
-        onlyAdminOrOwnerOrGovernance
-    {
-        recollateralizeCollateralRatio = val;
     }
 
     function setStabilityFee(uint256 percent)
@@ -784,18 +737,20 @@ contract ArthPool is AccessControl, IARTHPool {
     }
 
     function getCRForMint() public view override returns (uint256) {
-        if (useGlobalCRForMint) return getGlobalCR();
-        return mintCollateralRatio;
+        if (_arthController.getGlobalCRForMintToggle()) return getGlobalCR();
+        return _arthController.getMintCollateralRatio();
     }
 
     function getCRForRedeem() public view override returns (uint256) {
-        if (useGlobalCRForRedeem) return getGlobalCR();
-        return redeemCollateralRatio;
+        if (_arthController.getUseGlobalCRForRedeemToggle())
+            return getGlobalCR();
+        return _arthController.getRedeemCollateralRatio();
     }
 
     function getCRForRecollateralize() public view override returns (uint256) {
-        if (useGlobalCRForRecollateralize) return getGlobalCR();
-        return recollateralizeCollateralRatio;
+        if (_arthController.getUseGlobalCRForRecollateralize())
+            return getGlobalCR();
+        return _arthController.getRecollateralizeCollateralRatio();
     }
 
     function getCollateralGMUBalance() public view override returns (uint256) {

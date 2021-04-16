@@ -69,6 +69,15 @@ contract ArthController is AccessControl, IARTHController {
     // This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant genesisSupply = 2000000e18; // 2M ARTH (testnet) & 5k (Mainnet).
 
+    // Moved variables from pool
+    bool public useGlobalCRForMint = true;
+    bool public useGlobalCRForRedeem = true;
+    bool public useGlobalCRForRecollateralize = true;
+
+    uint256 public mintCollateralRatio;
+    uint256 public redeemCollateralRatio;
+    uint256 public recollateralizeCollateralRatio;
+
     bool public isColalteralRatioPaused = false;
 
     bytes32 public constant COLLATERAL_RATIO_PAUSER =
@@ -148,6 +157,55 @@ contract ArthController is AccessControl, IARTHController {
     /**
      * External.
      */
+
+    //Moved functions from pool
+    function toggleUseGlobalCRForMint(bool flag)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        useGlobalCRForMint = flag;
+    }
+
+    function toggleUseGlobalCRForRedeem(bool flag)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        useGlobalCRForRedeem = flag;
+    }
+
+    function toggleUseGlobalCRForRecollateralize(bool flag)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        useGlobalCRForRecollateralize = flag;
+    }
+
+    function setMintCollateralRatio(uint256 val)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        mintCollateralRatio = val;
+    }
+
+    function setRedeemCollateralRatio(uint256 val)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        redeemCollateralRatio = val;
+    }
+
+    function setRecollateralizeCollateralRatio(uint256 val)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        recollateralizeCollateralRatio = val;
+    }
 
     function refreshCollateralRatio() external override {
         require(
@@ -340,6 +398,43 @@ contract ArthController is AccessControl, IARTHController {
         return refreshCooldown;
     }
 
+    //useGlobalCRForRecollateralize
+    function getUseGlobalCRForRecollateralize()
+        external
+        view
+        override
+        returns (bool)
+    {
+        return useGlobalCRForRecollateralize;
+    }
+
+    function getRecollateralizeCollateralRatio()
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return recollateralizeCollateralRatio;
+    }
+
+    function getMintCollateralRatio() external view override returns (uint256) {
+        return mintCollateralRatio;
+    }
+
+    function getGlobalCRForMintToggle() external view override returns (bool) {
+        return useGlobalCRForMint;
+    }
+
+    //redeemCollateralRatio
+    function getRedeemCollateralRatio()
+        external
+        view
+        override
+        returns (uint256)
+    {
+        return redeemCollateralRatio;
+    }
+
     function getARTHPrice() public view override returns (uint256) {
         return _getOraclePrice(PriceChoice.ARTH);
     }
@@ -357,6 +452,16 @@ contract ArthController is AccessControl, IARTHController {
 
     function getGlobalCollateralRatio() public view override returns (uint256) {
         return globalCollateralRatio;
+    }
+
+    //useGlobalCRForRedeem
+    function getUseGlobalCRForRedeemToggle()
+        public
+        view
+        override
+        returns (bool)
+    {
+        return useGlobalCRForRedeem;
     }
 
     function getGlobalCollateralValue() public view override returns (uint256) {
