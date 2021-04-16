@@ -69,7 +69,6 @@ contract ArthController is AccessControl, IARTHController {
     // This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant genesisSupply = 2000000e18; // 2M ARTH (testnet) & 5k (Mainnet).
 
-    // Moved variables from pool
     bool public useGlobalCRForMint = true;
     bool public useGlobalCRForRedeem = true;
     bool public useGlobalCRForRecollateralize = true;
@@ -158,7 +157,6 @@ contract ArthController is AccessControl, IARTHController {
      * External.
      */
 
-    //Moved functions from pool
     function toggleUseGlobalCRForMint(bool flag)
         external
         override
@@ -398,43 +396,6 @@ contract ArthController is AccessControl, IARTHController {
         return refreshCooldown;
     }
 
-    //useGlobalCRForRecollateralize
-    function getUseGlobalCRForRecollateralize()
-        external
-        view
-        override
-        returns (bool)
-    {
-        return useGlobalCRForRecollateralize;
-    }
-
-    function getRecollateralizeCollateralRatio()
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return recollateralizeCollateralRatio;
-    }
-
-    function getMintCollateralRatio() external view override returns (uint256) {
-        return mintCollateralRatio;
-    }
-
-    function getGlobalCRForMintToggle() external view override returns (bool) {
-        return useGlobalCRForMint;
-    }
-
-    //redeemCollateralRatio
-    function getRedeemCollateralRatio()
-        external
-        view
-        override
-        returns (uint256)
-    {
-        return redeemCollateralRatio;
-    }
-
     function getARTHPrice() public view override returns (uint256) {
         return _getOraclePrice(PriceChoice.ARTH);
     }
@@ -454,16 +415,6 @@ contract ArthController is AccessControl, IARTHController {
         return globalCollateralRatio;
     }
 
-    //useGlobalCRForRedeem
-    function getUseGlobalCRForRedeemToggle()
-        public
-        view
-        override
-        returns (bool)
-    {
-        return useGlobalCRForRedeem;
-    }
-
     function getGlobalCollateralValue() public view override returns (uint256) {
         uint256 totalCollateralValueD18 = 0;
 
@@ -477,6 +428,24 @@ contract ArthController is AccessControl, IARTHController {
         }
 
         return totalCollateralValueD18;
+    }
+
+    function getCRForMint() public view override returns(uint256) {
+        if (useGlobalCRForMint) return getGlobalCollateralRatio();
+
+        return mintCollateralRatio;
+    }
+
+    function getCRForRedeem() public view override returns(uint256) {
+        if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
+
+        return redeemCollateralRatio;
+    }
+
+    function getCRForRecollateralize() public view override returns(uint256) {
+        if (useGlobalCRForRecollateralize) return getGlobalCollateralRatio();
+
+        return recollateralizeCollateralRatio;
     }
 
     function getARTHInfo()

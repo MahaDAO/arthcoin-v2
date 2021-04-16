@@ -82,18 +82,9 @@ interface IARTHController {
 
     function setRecollateralizeCollateralRatio(uint256 val) external;
 
-    function getGlobalCRForMintToggle() external view returns (bool);
+    function getCRForMint() external view returns(uint256);
 
-    function getMintCollateralRatio() external view returns (uint256);
+    function getCRForRedeem() external view returns(uint256);
 
-    function getUseGlobalCRForRedeemToggle() external view returns (bool);
-
-    function getRedeemCollateralRatio() external view returns (uint256);
-
-    function getUseGlobalCRForRecollateralize() external view returns (bool);
-
-    function getRecollateralizeCollateralRatio()
-        external
-        view
-        returns (uint256);
+    function getCRForRecollateralize() external view returns(uint256);
 }
