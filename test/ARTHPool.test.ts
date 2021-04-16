@@ -502,8 +502,8 @@ describe('ARTHPool', () => {
 
   describe('- Mint Fractional ARTH', async () => {
     beforeEach(' - Approve DAI & ARTHX', async () => {
-      await dai.approve(arthPool.address, ETH);
-      await arthx.approve(arthPool.address, ETH.mul(9));
+      await dai.approve(arthPool.address, ETH.mul(20));  // Set higher approval for cases with different prices.
+      await arthx.approve(arthPool.address, ETH.mul(20));  // Set higher approval for cases with different prices.
     });
 
     it(' - Should not mint when CR = 0 || CR = 1', async () => {
@@ -685,6 +685,148 @@ describe('ARTHPool', () => {
         .to
         .eq(
           arthxTotalSupply.sub(ETH.mul(9))
+        );
+    });
+
+    it(' - Should mint properly when all DAI/ETH > 1 & ARTHX/ETH < 1', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(1063829);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(943396);
+
+      const totalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const arthxTotalSupply = await arthx.totalSupply();
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const collateralValue = ETH.mul(1063829).div(1e6);
+      const totalValueNeeded = collateralValue.mul(100).div(10);
+      const arthxValueNeeded = totalValueNeeded.sub(collateralValue);
+      const arthxNeeded = arthxValueNeeded.mul(1e6).div(943396);
+
+      const expectedMintWithoutFee = collateralValue.add(arthxValueNeeded);
+      const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
+
+      await arthPool.mintFractionalARTH(ETH, arthxNeeded, expectedMint);
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.add(expectedMint)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          arthBalanceBefore.add(expectedMint)
+        );
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(arthxNeeded)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          arthxTotalSupply.sub(arthxNeeded)
+        );
+    });
+
+    it(' - Should mint properly when all DAI/ETH < 1 & ARTHX/ETH > 1', async () => {
+      await arthController.setGlobalCollateralRatio(1e5);
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(943396);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      // Making sure the price is > 1 for the tests to be valid.
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1063829);
+
+      const totalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const arthxTotalSupply = await arthx.totalSupply();
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const collateralValue = ETH.mul(943396).div(1e6);
+      const totalValueNeeded = collateralValue.mul(100).div(10);
+      const arthxValueNeeded = totalValueNeeded.sub(collateralValue);
+      const arthxNeeded = arthxValueNeeded.mul(1e6).div(1063829);
+
+      const expectedMintWithoutFee = collateralValue.add(arthxValueNeeded);
+      const expectedMint = expectedMintWithoutFee.sub(expectedMintWithoutFee.div(1000));  // Since, Mint fee is 0.1 %.
+
+      await arthPool.mintFractionalARTH(ETH, arthxNeeded, expectedMint);
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(
+          totalSupplyBefore.add(expectedMint)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          arthBalanceBefore.add(expectedMint)
+        );
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(
+          collateralBalanceBefore.sub(ETH)
+        );
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(
+          poolCollateralBalanceBefore.add(ETH)
+        );
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(
+          arthxBalanceBefore.sub(arthxNeeded)
+        );
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(
+          arthxTotalSupply.sub(arthxNeeded)
         );
     });
 
@@ -1163,6 +1305,140 @@ describe('ARTHPool', () => {
       const expectedARTHAmountPostFee = ETH.sub(ETH.div(1000));  // Redemption fee is 0.1%(1 / 1000)
       const expectedCollateralRedeemed = expectedARTHAmountPostFee.mul(10).div(100).mul(1e6).div(943396);  // Since CR is 10%(1e5/1e6 * 100) at that price.
       const expectedArthxRedeemed = expectedARTHAmountPostFee.mul(90).div(100).mul(1e6).div(943396);  // Considering CR at that price.
+
+      await arthPool.redeemFractionalARTH(ETH, expectedArthxRedeemed, expectedCollateralRedeemed);
+
+      await advanceBlock(provider);
+
+      await arthPool.collectRedemption();
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(collateralBalanceBefore.add(expectedCollateralRedeemed));
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(poolCollateralBalanceBefore.sub(expectedCollateralRedeemed));
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(arthBalanceBefore.sub(ETH));
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(arthTotalSupplyBefore.sub(ETH));
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(arthxBalanceBefore.add(expectedArthxRedeemed));
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(arthxTotalSupplyBefore.add(expectedArthxRedeemed));
+
+      // TODO: use eq and proper amount in stability fee check.
+      expect(await maha.balanceOf(owner.address))
+        .to
+        .lt(mahaBalanceBefore);
+    });
+
+    it(' - Should redeem properly when all DAI/ETH  < 1 & ARTHX/ETH > 1', async () => {
+      // Making sure the pool has more than enough collateral.
+      await dai.transfer(arthPool.address, ETH.mul(11));
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(943396);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1063829);
+
+      const arthTotalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const arthxTotalSupplyBefore = await arthx.totalSupply();
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+      const mahaBalanceBefore = await maha.balanceOf(owner.address);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const expectedARTHAmountPostFee = ETH.sub(ETH.div(1000));  // Redemption fee is 0.1%(1 / 1000)
+      // Since CR is 10%(1e5/1e6 * 100) at that price.
+      const expectedCollateralRedeemed = expectedARTHAmountPostFee.mul(10).div(100).mul(1e6).div(943396);
+      // Considering CR at that price.
+      const expectedArthxRedeemed = expectedARTHAmountPostFee.mul(90).div(100).mul(1e6).div(1063829);
+
+      await arthPool.redeemFractionalARTH(ETH, expectedArthxRedeemed, expectedCollateralRedeemed);
+
+      await advanceBlock(provider);
+
+      await arthPool.collectRedemption();
+
+      expect(await dai.balanceOf(owner.address))
+        .to
+        .eq(collateralBalanceBefore.add(expectedCollateralRedeemed));
+
+      expect(await dai.balanceOf(arthPool.address))
+        .to
+        .eq(poolCollateralBalanceBefore.sub(expectedCollateralRedeemed));
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(arthBalanceBefore.sub(ETH));
+
+      expect(await arth.totalSupply())
+        .to
+        .eq(arthTotalSupplyBefore.sub(ETH));
+
+      expect(await arthx.balanceOf(owner.address))
+        .to
+        .eq(arthxBalanceBefore.add(expectedArthxRedeemed));
+
+      expect(await arthx.totalSupply())
+        .to
+        .eq(arthxTotalSupplyBefore.add(expectedArthxRedeemed));
+
+      // TODO: use eq and proper amount in stability fee check.
+      expect(await maha.balanceOf(owner.address))
+        .to
+        .lt(mahaBalanceBefore);
+    });
+
+    it(' - Should redeem properly when all DAI/ETH  > 1 & ARTHX/ETH < 1', async () => {
+      // Making sure the pool has more than enough collateral.
+      await dai.transfer(arthPool.address, ETH.mul(11));
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(1063829);
+
+      await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(943396);
+
+      const arthTotalSupplyBefore = await arth.totalSupply();
+      const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+      const arthxTotalSupplyBefore = await arthx.totalSupply();
+      const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+      const mahaBalanceBefore = await maha.balanceOf(owner.address);
+
+      const collateralBalanceBefore = await dai.balanceOf(owner.address);
+      const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+      const expectedARTHAmountPostFee = ETH.sub(ETH.div(1000));  // Redemption fee is 0.1%(1 / 1000)
+      // Since CR is 10%(1e5/1e6 * 100) at that price.
+      const expectedCollateralRedeemed = expectedARTHAmountPostFee.mul(10).div(100).mul(1e6).div(1063829);
+      // Considering CR at that price.
+      const expectedArthxRedeemed = expectedARTHAmountPostFee.mul(90).div(100).mul(1e6).div(943396);
 
       await arthPool.redeemFractionalARTH(ETH, expectedArthxRedeemed, expectedCollateralRedeemed);
 
