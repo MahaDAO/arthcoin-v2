@@ -1,8 +1,4 @@
-# Arth Finance – Solidity Implementation
-
-<p align="center">
-  <img width="200" height="200" src="https://i.ibb.co/9HHVcGV/arth-logo.png">
-</p>
+# Arth Protocol – Solidity Implementation
 
 <p align="center">
 

@@ -43,7 +43,7 @@ module.exports = {
       provider: providerFactory(),
       network_id: 4,
       // gas: 8000000,
-      skipDryRun: true  //  Sure this gas allocation isn't over 4M, which is the max
+      skipDryRun: true  // Sure this gas allocation isn't over 4M, which is the max
     }
   },
   compilers: {
