@@ -3,11 +3,11 @@
 pragma solidity ^0.8.0;
 
 import {FixedPoint} from '../utils/math/FixedPoint.sol';
-import {IUniswapPairOracle} from './IUniswapPairOracle.sol';
+import {IUniswapPairOracle} from '../interfaces/IUniswapPairOracle.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
-import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import {IUniswapV2Pair} from '../interfaces/uniswap/IUniswapV2Pair.sol';
 import {UniswapV2OracleLibrary} from '../Uniswap/UniswapV2OracleLibrary.sol';
-import {IUniswapV2Factory} from '../Uniswap/Interfaces/IUniswapV2Factory.sol';
+import {IUniswapV2Factory} from '../interfaces/uniswap/IUniswapV2Factory.sol';
 
 /// @dev Fixed window oracle that recomputes the average price for the entire period once every period
 ///  Note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period

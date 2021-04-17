@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../ERC20/IERC20.sol';
+import {IERC20} from '../interfaces/IERC20.sol';
 import {IWETH} from '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import {
     TransferHelper
@@ -11,9 +11,9 @@ import {
 
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
-import {IUniswapLiquidityRouter} from './IUniswapLiquidityRouter.sol';
-import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
-import {IUniswapV2Factory} from '../Uniswap/Interfaces/IUniswapV2Factory.sol';
+import {IUniswapLiquidityRouter} from '../interfaces/IUniswapLiquidityRouter.sol';
+import {IUniswapV2Pair} from '../interfaces/uniswap/IUniswapV2Pair.sol';
+import {IUniswapV2Factory} from '../interfaces/uniswap/IUniswapV2Factory.sol';
 
 /**
  * @title  A Uniswap Router for managing liquidity.

@@ -3,20 +3,20 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../Arth/IARTH.sol';
-import '../ARTHX/IARTHX.sol';
-import '../ERC20/IERC20.sol';
+import '../interfaces/IARTH.sol';
+import '../interfaces/IARTHX.sol';
+import '../interfaces/IERC20.sol';
 import '../utils/math/SafeMath.sol';
-import '../Arth/Pools/IARTHPool.sol';
+import '../interfaces/IARTHPool.sol';
 import '../ERC20/Variants/Comp.sol';
-import './compound/IcUSDC_Partial.sol';
-import './yearn/IyUSDC_V2_Partial.sol';
-import './aave/IAAVE_aUSDC_Partial.sol';
+import '../interfaces/compound/IcUSDCPartial.sol';
+import '../interfaces/yearn/IyUSDCV2Partial.sol';
+import '../interfaces/aave/IAAVEaUSDCPartial.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../access/AccessControl.sol';
-import './aave/IAAVELendingPool_Partial.sol';
-import './compound/ICompComptrollerPartial.sol';
-import '../Arth/IARTHController.sol';
+import '../interfaces/aave/IAAVELendingPoolPartial.sol';
+import '../interfaces/compound/ICompComptrollerPartial.sol';
+import '../interfaces/IARTHController.sol';
 
 /**
  *  Original code written by:
@@ -38,14 +38,14 @@ contract ArthPoolInvestorForV2 is AccessControl {
     IARTHController private controller;
 
     // Pools and vaults
-    IyUSDC_V2_Partial private yUSDC_V2 =
-        IyUSDC_V2_Partial(0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9);
-    IAAVELendingPool_Partial private aaveUSDC_Pool =
-        IAAVELendingPool_Partial(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
-    IAAVE_aUSDC_Partial private aaveUSDC_Token =
-        IAAVE_aUSDC_Partial(0xBcca60bB61934080951369a648Fb03DF4F96263C);
-    IcUSDC_Partial private cUSDC =
-        IcUSDC_Partial(0x39AA39c021dfbaE8faC545936693aC917d5E7563);
+    IyUSDCV2Partial private yUSDC_V2 =
+        IyUSDCV2Partial(0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9);
+    IAAVELendingPoolPartial private aaveUSDC_Pool =
+        IAAVELendingPoolPartial(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
+    IAAVEaUSDCPartial private aaveUSDC_Token =
+        IAAVEaUSDCPartial(0xBcca60bB61934080951369a648Fb03DF4F96263C);
+    IcUSDCPartial private cUSDC =
+        IcUSDCPartial(0x39AA39c021dfbaE8faC545936693aC917d5E7563);
 
     // Reward Tokens
     Comp private COMP = Comp(0xc00e94Cb662C3520282E6f5717214004A7f26888);

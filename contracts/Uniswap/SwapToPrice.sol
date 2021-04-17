@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import '../ERC20/IERC20.sol';
+import '../interfaces/IERC20.sol';
 import '../utils/math/SafeMath.sol';
 import './TransferHelper.sol';
 import '../utils/math/Babylonian.sol';
 import './UniswapV2Library.sol';
-import './Interfaces/IUniswapV2Pair.sol';
-import './Interfaces/IUniswapV2Router01.sol';
+import '../interfaces/uniswap/IUniswapV2Pair.sol';
+import '../interfaces/uniswap/IUniswapV2Router01.sol';
 
 contract SwapToPrice {
     using SafeMath for uint256;

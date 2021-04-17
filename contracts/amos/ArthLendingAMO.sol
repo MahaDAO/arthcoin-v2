@@ -3,24 +3,24 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../Arth/IARTH.sol';
-import '../ARTHX/IARTHX.sol';
-import '../ERC20/IERC20.sol';
+import '../interfaces/IARTH.sol';
+import '../interfaces/IARTHX.sol';
+import '../interfaces/IERC20.sol';
 import '../utils/math/SafeMath.sol';
-import './finnexus/IFNX_CFNX.sol';
-import './cream/ICREAM_crARTH.sol';
-import './finnexus/IFNX_FPT_B.sol';
-import '../Arth/Pools/IARTHPool.sol';
+import '../interfaces/finnexus/IFNXCFNX.sol';
+import '../interfaces/ICREAMcrARTH.sol';
+import '../interfaces/finnexus/IFNXFPTB.sol';
+import '../interfaces/IARTHPool.sol';
 import '../ERC20/Variants/Comp.sol';
-import './finnexus/IFNX_Oracle.sol';
-import './finnexus/IFNX_MinePool.sol';
-import './finnexus/IFNX_FPT_ARTH.sol';
+import '../interfaces/finnexus/IFNXOracle.sol';
+import '../interfaces/finnexus/IFNXMinePool.sol';
+import '../interfaces/finnexus/IFNXFPTARTH.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../access/AccessControl.sol';
-import './finnexus/IFNX_ManagerProxy.sol';
-import './finnexus/IFNX_TokenConverter.sol';
-import './finnexus/IFNX_IntegratedStake.sol';
-import '../Arth/IARTHController.sol';
+import '../interfaces/finnexus/IFNXManagerProxy.sol';
+import '../interfaces/finnexus/IFNXTokenConverter.sol';
+import '../interfaces/finnexus/IFNXIntegratedStake.sol';
+import '../interfaces/IARTHController.sol';
 
 contract ArthLendingAMO is AccessControl {
     using SafeMath for uint256;
@@ -34,29 +34,29 @@ contract ArthLendingAMO is AccessControl {
     IARTHController private controller;
 
     // Cream
-    ICREAM_crARTH private crARTH =
-        ICREAM_crARTH(0xb092b4601850E23903A42EaCBc9D8A0EeC26A4d5);
+    ICREAMcrARTH private crARTH =
+        ICREAMcrARTH(0xb092b4601850E23903A42EaCBc9D8A0EeC26A4d5);
 
     // FinNexus
     // More addresses: https://github.com/FinNexus/FinNexus-Documentation/blob/master/content/developers/smart-contracts.md
-    IFNX_FPT_ARTH private fnxFPT_ARTH =
-        IFNX_FPT_ARTH(0x39ad661bA8a7C9D3A7E4808fb9f9D5223E22F763);
-    IFNX_FPT_B private fnxFPT_B =
-        IFNX_FPT_B(0x7E605Fb638983A448096D82fFD2958ba012F30Cd);
-    IFNX_IntegratedStake private fnxIntegratedStake =
-        IFNX_IntegratedStake(0x23e54F9bBe26eD55F93F19541bC30AAc2D5569b2);
-    IFNX_MinePool private fnxMinePool =
-        IFNX_MinePool(0x4e6005396F80a737cE80d50B2162C0a7296c9620);
-    IFNX_TokenConverter private fnxTokenConverter =
-        IFNX_TokenConverter(0x955282b82440F8F69E901380BeF2b603Fba96F3b);
-    IFNX_ManagerProxy private fnxManagerProxy =
-        IFNX_ManagerProxy(0xa2904Fd151C9d9D634dFA8ECd856E6B9517F9785);
-    IFNX_Oracle private fnxOracle =
-        IFNX_Oracle(0x43BD92bF3Bb25EBB3BdC2524CBd6156E3Fdd41F3);
+    IFNXFPTARTH private fnxFPT_ARTH =
+        IFNXFPTARTH(0x39ad661bA8a7C9D3A7E4808fb9f9D5223E22F763);
+    IFNXFPTB private fnxFPT_B =
+        IFNXFPTB(0x7E605Fb638983A448096D82fFD2958ba012F30Cd);
+    IFNXIntegratedStake private fnxIntegratedStake =
+        IFNXIntegratedStake(0x23e54F9bBe26eD55F93F19541bC30AAc2D5569b2);
+    IFNXMinePool private fnxMinePool =
+        IFNXMinePool(0x4e6005396F80a737cE80d50B2162C0a7296c9620);
+    IFNXTokenConverter private fnxTokenConverter =
+        IFNXTokenConverter(0x955282b82440F8F69E901380BeF2b603Fba96F3b);
+    IFNXManagerProxy private fnxManagerProxy =
+        IFNXManagerProxy(0xa2904Fd151C9d9D634dFA8ECd856E6B9517F9785);
+    IFNXOracle private fnxOracle =
+        IFNXOracle(0x43BD92bF3Bb25EBB3BdC2524CBd6156E3Fdd41F3);
 
     // Reward Tokens
-    IFNX_CFNX private CFNX =
-        IFNX_CFNX(0x9d7beb4265817a4923FAD9Ca9EF8af138499615d);
+    IFNXCFNX private CFNX =
+        IFNXCFNX(0x9d7beb4265817a4923FAD9Ca9EF8af138499615d);
     IERC20 private FNX = IERC20(0xeF9Cd7882c067686691B6fF49e650b43AFBBCC6B);
 
     address public collateralAddress;

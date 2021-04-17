@@ -3,17 +3,17 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../ERC20/IERC20.sol';
+import {IERC20} from '../interfaces/IERC20.sol';
 import {IWETH} from '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
 import {
     TransferHelper
 } from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IUniswapSwapRouter} from './IUniswapSwapRouter.sol';
+import {IUniswapSwapRouter} from '../interfaces/IUniswapSwapRouter.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
-import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
-import {IUniswapV2Factory} from '../Uniswap/Interfaces/IUniswapV2Factory.sol';
+import {IUniswapV2Pair} from '../interfaces/uniswap/IUniswapV2Pair.sol';
+import {IUniswapV2Factory} from '../interfaces/uniswap/IUniswapV2Factory.sol';
 
 /**
  * @title  A Uniswap Router for pairs involving ARTH.

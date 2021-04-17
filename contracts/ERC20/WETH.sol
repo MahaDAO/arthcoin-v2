@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {IWETH} from './IWETH.sol';
+import {IWETH} from '../interfaces/IWETH.sol';
 import {ERC20} from './ERC20.sol';
 
 contract WETH is IWETH, ERC20 {

@@ -3,18 +3,18 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IARTH} from '../IARTH.sol';
-import {IARTHPool} from './IARTHPool.sol';
-import {IERC20} from '../../ERC20/IERC20.sol';
-import {IARTHX} from '../../ARTHX/IARTHX.sol';
-import {ICurve} from '../../Curves/ICurve.sol';
+import {IARTH} from '../../interfaces/IARTH.sol';
+import {IARTHPool} from '../../interfaces/IARTHPool.sol';
+import {IERC20} from '../../interfaces/IERC20.sol';
+import {IARTHX} from '../../interfaces/IARTHX.sol';
+import {ICurve} from '../../interfaces/ICurve.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
-import {IARTHController} from '../IARTHController.sol';
-import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
-import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
+import {IARTHController} from '../../interfaces/IARTHController.sol';
+import {ISimpleOracle} from '../../interfaces/ISimpleOracle.sol';
+import {IERC20Burnable} from '../../interfaces/IERC20Burnable.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
-import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
+import {IUniswapPairOracle} from '../../interfaces/IUniswapPairOracle.sol';
 
 /**
  * @title  ARTHPool.

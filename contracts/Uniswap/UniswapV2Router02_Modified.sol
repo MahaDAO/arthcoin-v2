@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import '../ERC20/IWETH.sol';
-import '../ERC20/IERC20.sol';
+import '../interfaces/IWETH.sol';
+import '../interfaces/IERC20.sol';
 import '../utils/math/SafeMath.sol';
 import './TransferHelper.sol';
 import './UniswapV2Library.sol';
-import './Interfaces/IUniswapV2Factory.sol';
-import './Interfaces/IUniswapV2Router02.sol';
+import '../interfaces/uniswap/IUniswapV2Factory.sol';
+import '../interfaces/uniswap/IUniswapV2Router02.sol';
 
 contract UniswapV2Router02_Modified is IUniswapV2Router02 {
     using SafeMath for uint256;

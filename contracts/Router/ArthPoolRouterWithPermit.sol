@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import {IARTH} from '../Arth/IARTH.sol';
-import {IARTHPool} from '../Arth/Pools/IARTHPool.sol';
-import {IARTHX} from '../ARTHX/IARTHX.sol';
-import {IERC20} from '../ERC20/IERC20.sol';
-import {ISimpleOracle} from '../Oracle/ISimpleOracle.sol';
-import {IStakingRewards} from '../Staking/IStakingRewards.sol';
+import {IARTH} from '../interfaces/IARTH.sol';
+import {IARTHPool} from '../interfaces/IARTHPool.sol';
+import {IARTHX} from '../interfaces/IARTHX.sol';
+import {IERC20} from '../interfaces/IERC20.sol';
+import {ISimpleOracle} from '../interfaces/ISimpleOracle.sol';
+import {IStakingRewards} from '../interfaces/IStakingRewards.sol';
 
 contract ArthPoolRouterWithPermit {
     IARTH private arth;

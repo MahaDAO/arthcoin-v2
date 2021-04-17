@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../ERC20/IERC20.sol';
+import {IERC20} from '../interfaces/IERC20.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IARTHPool} from './Pools/IARTHPool.sol';
-import {IARTHController} from './IARTHController.sol';
+import {IARTHPool} from '../interfaces/IARTHPool.sol';
+import {IARTHController} from '../interfaces/IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
-import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
-import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
+import {IChainlinkOracle} from '../interfaces/IChainlinkOracle.sol';
+import {IUniswapPairOracle} from '../interfaces/IUniswapPairOracle.sol';
 
 /**
  * @title  ARTHStablecoin.

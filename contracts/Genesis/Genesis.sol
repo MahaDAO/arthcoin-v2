@@ -3,16 +3,16 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IARTH} from '../Arth/IARTH.sol';
-import {IWETH} from '../ERC20/IWETH.sol';
+import {IARTH} from '../interfaces/IARTH.sol';
+import {IWETH} from '../interfaces/IWETH.sol';
 import {ERC20} from '../ERC20/ERC20.sol';
-import {IARTHX} from '../ARTHX/IARTHX.sol';
-import {ICurve} from '../Curves/ICurve.sol';
+import {IARTHX} from '../interfaces/IARTHX.sol';
+import {ICurve} from '../interfaces/ICurve.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {Ownable} from '../access/Ownable.sol';
-import {IERC20Mintable} from '../ERC20/IERC20Mintable.sol';
-import {IUniswapV2Factory} from '../Uniswap/Interfaces/IUniswapV2Factory.sol';
-import {IUniswapV2Router02} from '../Uniswap/Interfaces/IUniswapV2Router02.sol';
+import {IERC20Mintable} from '../interfaces/IERC20Mintable.sol';
+import {IUniswapV2Factory} from '../interfaces/uniswap/IUniswapV2Factory.sol';
+import {IUniswapV2Router02} from '../interfaces/uniswap/IUniswapV2Router02.sol';
 
 contract Genesis is ERC20, Ownable {
     using SafeMath for uint256;

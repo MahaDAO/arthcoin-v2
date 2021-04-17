@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IARTHX} from './IARTHX.sol';
-import {IARTH} from '../Arth/IARTH.sol';
-import {IERC20} from '../ERC20/IERC20.sol';
+import {IARTHX} from '../interfaces/IARTHX.sol';
+import {IARTH} from '../interfaces/IARTH.sol';
+import {IERC20} from '../interfaces/IERC20.sol';
 import {Context} from '../utils/Context.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
-import {IARTHController} from '../Arth/IARTHController.sol';
+import {IARTHController} from '../interfaces/IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 
 /**

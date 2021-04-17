@@ -3,12 +3,12 @@
 pragma solidity ^0.8.0;
 
 import '../utils/math/Math.sol';
-import '../ERC20/IERC20.sol';
+import '../interfaces/IERC20.sol';
 import './UniswapV2ERC20.sol';
 import '../utils/math/UQ112x112.sol';
-import './Interfaces/IUniswapV2Pair.sol';
-import './Interfaces/IUniswapV2Callee.sol';
-import './Interfaces/IUniswapV2Factory.sol';
+import '../interfaces/uniswap/IUniswapV2Pair.sol';
+import '../interfaces/uniswap/IUniswapV2Callee.sol';
+import '../interfaces/uniswap/IUniswapV2Factory.sol';
 
 contract UniswapV2Pair is IUniswapV2Pair {
     using SafeMath for uint256;

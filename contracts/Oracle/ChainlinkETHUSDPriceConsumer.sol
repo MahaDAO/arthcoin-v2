@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {ISimpleOracle} from './ISimpleOracle.sol';
-import {IChainlinkOracle} from './IChainlinkOracle.sol';
-import {AggregatorV3Interface} from './AggregatorV3Interface.sol';
+import {ISimpleOracle} from '../interfaces/ISimpleOracle.sol';
+import {IChainlinkOracle} from '../interfaces/IChainlinkOracle.sol';
+import {IChainlinkAggregatorV3} from '../interfaces/IChainlinkAggregatorV3.sol';
 
 contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
     using SafeMath for uint256;
@@ -16,7 +16,7 @@ contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
      */
 
     ISimpleOracle public gmuOracle;
-    AggregatorV3Interface internal priceFeed;
+    IChainlinkAggregatorV3 internal priceFeed;
 
     uint256 public priceFeedDecimals = 8;
 
@@ -24,7 +24,7 @@ contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
      * Constructor.
      */
     constructor(address priceFeed_, ISimpleOracle gmuOracle_) {
-        priceFeed = AggregatorV3Interface(priceFeed_);
+        priceFeed = IChainlinkAggregatorV3(priceFeed_);
 
         gmuOracle = gmuOracle_;
         priceFeedDecimals = priceFeed.decimals();

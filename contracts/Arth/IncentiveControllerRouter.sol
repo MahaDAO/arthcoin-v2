@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IIncentiveController} from './IIncentive.sol';
+import {IIncentiveController} from '../interfaces/IIncentive.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 
 contract IncentiveControllerRouter is AccessControl, IIncentiveController {

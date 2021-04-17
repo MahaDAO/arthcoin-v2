@@ -5,13 +5,13 @@ pragma experimental ABIEncoderV2;
 
 import {Math} from '../utils/math/Math.sol';
 import {Pausable} from './Pausable.sol';
-import {IARTH} from '../Arth/IARTH.sol';
-import {IERC20} from '../ERC20/IERC20.sol';
+import {IARTH} from '../interfaces/IARTH.sol';
+import {IERC20} from '../interfaces/IERC20.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {SafeERC20} from '../ERC20/SafeERC20.sol';
-import {IStakingRewards} from './IStakingRewards.sol';
+import {IStakingRewards} from '../interfaces/IStakingRewards.sol';
 import {StringHelpers} from '../utils/StringHelpers.sol';
-import {IARTHController} from '../Arth/IARTHController.sol';
+import {IARTHController} from '../interfaces/IARTHController.sol';
 import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
 import {TransferHelper} from '../Uniswap/TransferHelper.sol';
 import {AccessControl} from '../access/AccessControl.sol';

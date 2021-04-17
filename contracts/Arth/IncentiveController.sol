@@ -6,14 +6,14 @@ pragma experimental ABIEncoderV2;
 import {SafeCast} from '../utils/math/SafeCast.sol';
 import {SignedSafeMath} from '../utils/math/SignedSafeMath.sol';
 
-import {IARTH} from './IARTH.sol';
+import {IARTH} from '../interfaces/IARTH.sol';
 import {Math} from '../utils/math/Math.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IIncentiveController} from './IIncentive.sol';
+import {IIncentiveController} from '../interfaces/IIncentive.sol';
 import {AccessControl} from '../access/AccessControl.sol';
-import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
-import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
-import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
+import {IChainlinkOracle} from '../interfaces/IChainlinkOracle.sol';
+import {IUniswapPairOracle} from '../interfaces/IUniswapPairOracle.sol';
+import {IUniswapV2Pair} from '../interfaces/uniswap/IUniswapV2Pair.sol';
 
 contract IncentiveController is AccessControl, IIncentiveController {
     using SafeCast for int256;

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './AggregatorV3Interface.sol';
+import '../interfaces/IChainlinkAggregatorV3.sol';
 
 // VERY IMPORTANT: UNCOMMENT THIS LATER
 // VERY IMPORTANT: UNCOMMENT THIS LATER
@@ -19,7 +19,7 @@ import './AggregatorV3Interface.sol';
 // VERY IMPORTANT: UNCOMMENT THIS LATER
 // VERY IMPORTANT: UNCOMMENT THIS LATER
 // VERY IMPORTANT: UNCOMMENT THIS LATER
-// import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
+// import "@chainlink/contracts/src/v0.6/interfaces/IChainlinkAggregatorV3.sol";
 
 contract ChainlinkETHUSDPriceConsumerTest {
     // VERY IMPORTANT: UNCOMMENT THIS LATER
@@ -36,7 +36,7 @@ contract ChainlinkETHUSDPriceConsumerTest {
     // VERY IMPORTANT: UNCOMMENT THIS LATER
     // VERY IMPORTANT: UNCOMMENT THIS LATER
     // VERY IMPORTANT: UNCOMMENT THIS LATER
-    // AggregatorV3Interface internal priceFeed;
+    // IChainlinkAggregatorV3 internal priceFeed;
 
     /**
      * Network: Kovan
@@ -64,7 +64,7 @@ contract ChainlinkETHUSDPriceConsumerTest {
         // VERY IMPORTANT: UNCOMMENT THIS LATER
         // VERY IMPORTANT: UNCOMMENT THIS LATER
         // VERY IMPORTANT: UNCOMMENT THIS LATER
-        // priceFeed = AggregatorV3Interface(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
+        // priceFeed = IChainlinkAggregatorV3(0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419);
     }
 
     /**

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {ERC20Custom} from './ERC20Custom.sol';
-import {IAnyswapV4Token} from './IAnyswapV4Token.sol';
+import {IAnyswapV4ERC20} from '../interfaces/IAnyswapV4ERC20.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 
 interface IApprovalReceiver {
@@ -26,7 +26,7 @@ interface ITransferReceiver {
 abstract contract AnyswapV4Token is
     ERC20Custom,
     AccessControl,
-    IAnyswapV4Token
+    IAnyswapV4ERC20
 {
     bytes32 public immutable DOMAIN_SEPARATOR;
 
