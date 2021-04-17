@@ -24,9 +24,9 @@ contract Sigmoid is Curve {
         uint256 _maxY
     ) {
         minX = _minX;  // I.E 0%.
-        maxX = _maxX;  // I.E 0.5%.
+        maxX = _maxX;  // I.E 100%.
         minY = _minY;  // I.E 0.00669%.
-        maxY = _maxY;  // I.E 100%.
+        maxY = _maxY;  // I.E 0.5%.
 
         slots[0] = 45e16; // 0.450
         slots[1] = 40e16; // 0.401

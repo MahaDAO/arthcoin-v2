@@ -125,8 +125,8 @@ describe('ARTHPool', () => {
     recollaterizationCurve = await RecollateralizationCurve.deploy(
       0,  // Xmin(0%)
       100,  // Xmax(100%)
-      0,  // Ymin- Sigmoid minimum.
-      ETH  // Ymax- Sigmoid maximum.
+      ETH.mul(669).div(100000),  // Ymin- Sigmoid maximum.
+      ETH.mul(50).div(100),  // Ymax- Sigmoid minimum.
     );
   });
 
@@ -1627,7 +1627,18 @@ describe('ARTHPool', () => {
       const arthxBalanceBefore = await arthx.balanceOf(owner.address);
       const arthxTotalSupply = await arthx.totalSupply();
 
-      const expectedMint = ETH.sub(ETH.div(1000))
+      const collateralValueBefore = await arthController.getGlobalCollateralValue();
+      const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+      expect(
+        collateralValueBefore.div(targetCollateralValue).mul(100)
+      )
+        .to
+        .eq(0);
+
+      const expectedMint = ETH
+        .sub(ETH.div(1000))
+        .add(ETH.mul(50).div(100));
 
       await arthPool.recollateralizeARTH(ETH, expectedMint);
 
@@ -1669,6 +1680,15 @@ describe('ARTHPool', () => {
         .to
         .eq(1063829);
 
+      const collateralValueBefore = await arthController.getGlobalCollateralValue();
+      const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+      expect(
+        collateralValueBefore.div(targetCollateralValue).mul(100)
+      )
+        .to
+        .eq(0);
+
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
@@ -1678,6 +1698,7 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(1063829).div(1e6);  // Collateral's value.
       const expectedMint = suppliedCollteralValue  // Amount to recollateralize as per ARTHX price and collatera's value.
         .sub(suppliedCollteralValue.div(1000))
+        .add(suppliedCollteralValue.mul(50).div(100))  // 50% discount on 0% collateral fulfilled.
         .mul(1e6)
         .div(1063829);
 
@@ -1721,6 +1742,15 @@ describe('ARTHPool', () => {
         .to
         .eq(943396);
 
+      const collateralValueBefore = await arthController.getGlobalCollateralValue();
+      const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+      expect(
+        collateralValueBefore.div(targetCollateralValue).mul(100)
+      )
+        .to
+        .eq(0);
+
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
@@ -1730,6 +1760,7 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(1063829).div(1e6);  // Collateral's value.
       const expectedMint = suppliedCollteralValue  // Amount to recollateralize as per ARTHX price and collatera's value.
         .sub(suppliedCollteralValue.div(1000))
+        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(943396);
 
@@ -1773,6 +1804,15 @@ describe('ARTHPool', () => {
         .to
         .eq(1063829);
 
+      const collateralValueBefore = await arthController.getGlobalCollateralValue();
+      const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+      expect(
+        collateralValueBefore.div(targetCollateralValue).mul(100)
+      )
+        .to
+        .eq(0);
+
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
@@ -1782,6 +1822,7 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(943396).div(1e6);  // Collateral's value.
       const expectedMint = suppliedCollteralValue  // Amount to recollateralize as per ARTHX price and collatera's value.
         .sub(suppliedCollteralValue.div(1000))
+        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(1063829);
 
@@ -1825,6 +1866,15 @@ describe('ARTHPool', () => {
         .to
         .eq(943396);
 
+      const collateralValueBefore = await arthController.getGlobalCollateralValue();
+      const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+      expect(
+        collateralValueBefore.div(targetCollateralValue).mul(100)
+      )
+        .to
+        .eq(0);
+
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
@@ -1834,6 +1884,7 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(943396).div(1e6);
       const expectedMint = suppliedCollteralValue
         .sub(suppliedCollteralValue.div(1000))
+        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(943396);
 
@@ -1873,10 +1924,21 @@ describe('ARTHPool', () => {
         .to
         .eq(0);
 
+      const collateralValueBefore = await arthController.getGlobalCollateralValue();
+      const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+      expect(
+        collateralValueBefore.div(targetCollateralValue).mul(100)
+      )
+        .to
+        .eq(0);
+
       const arthxBalanceBefore = await arthx.balanceOf(owner.address);
       const arthxTotalSupply = await arthx.totalSupply();
 
-      const expectedMint = ETH.sub(ETH.div(1000))
+      const expectedMint = ETH
+        .sub(ETH.div(1000))
+        .add(ETH.mul(50).div(100))
 
       await arthPool.recollateralizeARTH(ETH, expectedMint);
 
@@ -1926,12 +1988,22 @@ describe('ARTHPool', () => {
           .to
           .eq(0);
 
+        const collateralValueBefore = await arthController.getGlobalCollateralValue();
+        const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+        expect(
+          collateralValueBefore.div(targetCollateralValue).mul(100)
+        )
+          .to
+          .eq(0);
+
         const arthxBalanceBefore = await arthx.balanceOf(owner.address);
         const arthxTotalSupply = await arthx.totalSupply();
 
         const suppliedCollteralValue = ETH.mul(1063829).div(1e6);
         const expectedMint = suppliedCollteralValue
           .sub(suppliedCollteralValue.div(1000))
+          .add(suppliedCollteralValue.mul(50).div(100))
           .mul(1e6)
           .div(1063829);
 
@@ -1983,12 +2055,22 @@ describe('ARTHPool', () => {
           .to
           .eq(0);
 
+        const collateralValueBefore = await arthController.getGlobalCollateralValue();
+        const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+        expect(
+          collateralValueBefore.div(targetCollateralValue).mul(100)
+        )
+          .to
+          .eq(0);
+
         const arthxBalanceBefore = await arthx.balanceOf(owner.address);
         const arthxTotalSupply = await arthx.totalSupply();
 
         const suppliedCollteralValue = ETH.mul(943396).div(1e6);
         const expectedMint = suppliedCollteralValue
           .sub(suppliedCollteralValue.div(1000))
+          .add(suppliedCollteralValue.mul(50).div(100))
           .mul(1e6)
           .div(943396);
 
@@ -2030,6 +2112,15 @@ describe('ARTHPool', () => {
         .to
         .eq(943396);
 
+      const collateralValueBefore = await arthController.getGlobalCollateralValue();
+      const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+      expect(
+        collateralValueBefore.div(targetCollateralValue).mul(100)
+      )
+        .to
+        .eq(0);
+
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
@@ -2039,6 +2130,7 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(1063829).div(1e6);
       const expectedMint = suppliedCollteralValue
         .sub(suppliedCollteralValue.div(1000))
+        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(943396);
 
@@ -2080,6 +2172,15 @@ describe('ARTHPool', () => {
         .to
         .eq(1063829);
 
+      const collateralValueBefore = await arthController.getGlobalCollateralValue();
+      const targetCollateralValue = await arthPool.getTargetCollateralValue();
+
+      expect(
+        collateralValueBefore.div(targetCollateralValue).mul(100)
+      )
+        .to
+        .eq(0);
+
       const collateralBalanceBefore = await dai.balanceOf(owner.address);
       const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
@@ -2089,6 +2190,7 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(943396).div(1e6);  // Collateral's value.
       const expectedMint = suppliedCollteralValue
         .sub(suppliedCollteralValue.div(1000))
+        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(1063829);
 
