@@ -7,7 +7,7 @@ import {IARTH} from '../interfaces/IARTH.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 
-contract ArthBridge is AccessControl {
+contract ARTHBridge is AccessControl {
     using SafeMath for uint256;
 
     /**
