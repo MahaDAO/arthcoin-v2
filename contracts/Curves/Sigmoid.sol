@@ -10,7 +10,7 @@ import {Curve} from './Curve.sol';
 contract Sigmoid is Curve {
     using SafeMath for uint256;
 
-    uint256[23] private slots; // Note: 26 slots including slot 0
+    uint256[24] private slots;
 
     /**
      * Constructor.
@@ -23,34 +23,35 @@ contract Sigmoid is Curve {
         uint256 _minY,
         uint256 _maxY
     ) {
-        minX = _minX;
-        maxX = _maxX;
-        minY = _minY;
-        maxY = _maxY;
+        minX = _minX;  // I.E 0%.
+        maxX = _maxX;  // I.E 0.5%.
+        minY = _minY;  // I.E 0.00669%.
+        maxY = _maxY;  // I.E 100%.
 
-        slots[22] = 40e16; // 0.401- Larget deviation- heavy discount.
-        slots[21] = 354e15; // 0.354
-        slots[20] = 31e16; // 0.310
-        slots[19] = 2689e14; // 0.2689
-        slots[18] = 2314e14; // 0.2314
-        slots[17] = 197e15; // 0.197
-        slots[16] = 167e15; // 0.167
-        slots[15] = 141e15; // 0.141
-        slots[14] = 1192e14; // 0.1192
-        slots[13] = 997e14; // 0.0997
-        slots[12] = 831e14; // 0.0831
-        slots[11] = 691e14; // 0.0691
-        slots[10] = 573e14; // 0.0573
-        slots[9] = 474e14; // 0.047
-        slots[8] = 391e14; // 0.0391
-        slots[7] = 322e14; // 0.0322
-        slots[6] = 265e14; // 0.0265
-        slots[5] = 218e14; // 0.0218
-        slots[4] = 179e14; // 0.0179
-        slots[3] = 147e14; // 0.0147
-        slots[2] = 121e14; // 0.0121
-        slots[1] = 995e13; // 0.00995
-        slots[0] = 816e13; // 0.00816- Smaller deviation- smaller discount.
+        slots[0] = 45e16; // 0.450
+        slots[1] = 40e16; // 0.401
+        slots[2] = 354e15; // 0.354
+        slots[3] = 31e16; // 0.310
+        slots[4] = 2689e14; // 0.2689
+        slots[5] = 2314e14; // 0.2314
+        slots[6] = 197e15; // 0.197
+        slots[7] = 167e15; // 0.167
+        slots[8] = 141e15; // 0.141
+        slots[9] = 1192e14; // 0.1192
+        slots[10] = 997e14; // 0.0997
+        slots[11] = 831e14; // 0.0831
+        slots[12] = 691e14; // 0.0691
+        slots[13] = 573e14; // 0.0573
+        slots[14] = 474e14; // 0.047
+        slots[15] = 391e14; // 0.0391
+        slots[16] = 322e14; // 0.0322
+        slots[17] = 265e14; // 0.0265
+        slots[18] = 218e14; // 0.0218
+        slots[19] = 179e14; // 0.0179
+        slots[20] = 147e14; // 0.0147
+        slots[21] = 121e14; // 0.0121
+        slots[22] = 995e13; // 0.00995
+        slots[23] = 816e13; // 0.00816
     }
 
     /**
