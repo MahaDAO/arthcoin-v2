@@ -79,10 +79,8 @@ contract Sigmoid is Curve {
     }
 
     function getY(uint256 x) public view override returns (uint256) {
-        if (x <= minX) return minX; // return maxY;
-
-        // Fail safe to return after maxX.
-        if (x >= maxX) return maxY;
+        if (x <= minX) return maxY;  // Fail safe to return after maxX.
+        if (x >= maxX) return minY;  // Fail safe to return after maxX.
 
         uint256 slotWidth = maxX.sub(minX).div(slots.length);
         uint256 xa = x.sub(minX).div(slotWidth);
