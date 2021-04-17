@@ -12,7 +12,7 @@ import '../assets/variants/Comp.sol';
 import '../interfaces/compound/IcUSDCPartial.sol';
 import '../interfaces/yearn/IyUSDCV2Partial.sol';
 import '../interfaces/aave/IAAVEaUSDCPartial.sol';
-import '../oracle/core/UniswapPairOracle.sol';
+import '../oracles/core/UniswapPairOracle.sol';
 import '../access/AccessControl.sol';
 import '../interfaces/aave/IAAVELendingPoolPartial.sol';
 import '../interfaces/compound/ICompComptrollerPartial.sol';

@@ -7,7 +7,7 @@ import '../utils/math/SafeMath.sol';
 import '../interfaces/IARTHX.sol';
 import '../interfaces/IARTH.sol';
 import '../assets/core/ERC20.sol';
-import '../oracle/core/UniswapPairOracle.sol';
+import '../oracles/core/UniswapPairOracle.sol';
 import '../access/AccessControl.sol';
 import '../pools/core/ARTHPoolvAMM.sol';
 

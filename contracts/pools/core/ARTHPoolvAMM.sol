@@ -9,7 +9,7 @@
 // import '../../ARTHS/ARTHS.sol';
 // import '../../utils/math/SafeMath.sol';
 // import '../../Uniswap/UniswapV2Library.sol';
-// import '../../Oracle/UniswapPairOracle.sol';
+// import '../../oracles/UniswapPairOracle.sol';
 // import '../../access/AccessControl.sol';
 
 // /**
