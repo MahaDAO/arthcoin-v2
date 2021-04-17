@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import '../utils/math/SafeMath.sol';
 import '../interfaces/IARTHX.sol';
 import '../interfaces/IARTH.sol';
-import '../ERC20/ERC20.sol';
+import '../assets/core/ERC20.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../access/AccessControl.sol';
 import '../pools/core/ARTHPoolvAMM.sol';

@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import {IERC20} from '../interfaces/IERC20.sol';
-import {Address} from '../utils/Address.sol';
-import {Context} from '../utils/Context.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {Pausable} from '../Staking/Pausable.sol';
+import {IERC20} from '../../interfaces/IERC20.sol';
+import {Address} from '../../utils/Address.sol';
+import {Context} from '../../utils/Context.sol';
+import {SafeMath} from '../../utils/math/SafeMath.sol';
+import {Pausable} from '../../Staking/Pausable.sol';
 
 /**
  * @dev Implementation of the {IERC20} interface.

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
-/**
- *Submitted for verification at Etherscan.io on 2020-03-04
- */
+
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
+/**
+ * Submitted for verification at Etherscan.io on 2020-03-04
+ */
 contract Comp {
     /// @notice EIP-20 token name for this token
     string public constant name = 'Compound';

@@ -8,7 +8,7 @@ import '../interfaces/IARTHX.sol';
 import '../interfaces/IERC20.sol';
 import '../utils/math/SafeMath.sol';
 import '../interfaces/IARTHPool.sol';
-import '../ERC20/Variants/Comp.sol';
+import '../assets/variants/Comp.sol';
 import '../interfaces/compound/IcUSDCPartial.sol';
 import '../interfaces/yearn/IyUSDCV2Partial.sol';
 import '../interfaces/aave/IAAVEaUSDCPartial.sol';

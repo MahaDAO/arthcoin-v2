@@ -5,13 +5,13 @@ pragma experimental ABIEncoderV2;
 
 import {IARTH} from '../interfaces/IARTH.sol';
 import {IIncentiveController} from '../interfaces/IIncentive.sol';
-import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
+import {AnyswapV4ERC20} from '../assets/core/AnyswapV4ERC20.sol';
 
 /**
  * @title  ARTHStablecoin.
  * @author MahaDAO.
  */
-contract ARTHStablecoin is AnyswapV4Token, IARTH {
+contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
     IIncentiveController public incentiveController;
     address public governance;
 
@@ -40,7 +40,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         _;
     }
 
-    constructor() AnyswapV4Token(name) {
+    constructor() AnyswapV4ERC20(name) {
         _mint(msg.sender, genesisSupply);
     }
 

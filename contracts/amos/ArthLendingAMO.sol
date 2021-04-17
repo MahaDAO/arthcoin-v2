@@ -11,7 +11,7 @@ import '../interfaces/finnexus/IFNXCFNX.sol';
 import '../interfaces/ICREAMcrARTH.sol';
 import '../interfaces/finnexus/IFNXFPTB.sol';
 import '../interfaces/IARTHPool.sol';
-import '../ERC20/Variants/Comp.sol';
+import '../assets/variants/Comp.sol';
 import '../interfaces/finnexus/IFNXOracle.sol';
 import '../interfaces/finnexus/IFNXMinePool.sol';
 import '../interfaces/finnexus/IFNXFPTARTH.sol';

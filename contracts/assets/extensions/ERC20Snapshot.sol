@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import '../ERC20.sol';
+import '../core/ERC20.sol';
 import '../../utils/Arrays.sol';
 import '../../utils/Counters.sol';
 

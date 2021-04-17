@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {ERC20} from './ERC20.sol';
+import {ERC20} from './core/ERC20.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
 import {Math} from '../utils/math/Math.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';

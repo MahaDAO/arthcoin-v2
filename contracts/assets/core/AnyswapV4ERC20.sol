@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {ERC20Custom} from './ERC20Custom.sol';
-import {IAnyswapV4ERC20} from '../interfaces/IAnyswapV4ERC20.sol';
-import {AccessControl} from '../access/AccessControl.sol';
+import {IAnyswapV4ERC20} from '../../interfaces/IAnyswapV4ERC20.sol';
+import {AccessControl} from '../../access/AccessControl.sol';
 
 interface IApprovalReceiver {
     function onTokenApproval(
@@ -23,7 +23,7 @@ interface ITransferReceiver {
     ) external returns (bool);
 }
 
-abstract contract AnyswapV4Token is
+abstract contract AnyswapV4ERC20 is
     ERC20Custom,
     AccessControl,
     IAnyswapV4ERC20
@@ -57,7 +57,7 @@ abstract contract AnyswapV4Token is
     modifier onlyBridge {
         require(
             hasRole(BRIDGE_ROLE, _msgSender()),
-            'AnyswapV4Token: forbidden'
+            'AnyswapV4ERC20: forbidden'
         );
         _;
     }

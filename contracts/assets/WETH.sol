@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {IWETH} from '../interfaces/IWETH.sol';
-import {ERC20} from './ERC20.sol';
+import {ERC20} from './core/ERC20.sol';
 
 contract WETH is IWETH, ERC20 {
     event Deposit(address indexed dst, uint256 wad);

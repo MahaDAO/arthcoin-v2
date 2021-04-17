@@ -8,7 +8,7 @@ import {Pausable} from './Pausable.sol';
 import {IARTH} from '../interfaces/IARTH.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {SafeERC20} from '../ERC20/SafeERC20.sol';
+import {SafeERC20} from '../utils/SafeERC20.sol';
 import {IStakingRewards} from '../interfaces/IStakingRewards.sol';
 import {StringHelpers} from '../utils/StringHelpers.sol';
 import {IARTHController} from '../interfaces/IARTHController.sol';

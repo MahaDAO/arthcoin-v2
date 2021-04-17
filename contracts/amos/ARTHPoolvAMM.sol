@@ -5,7 +5,7 @@
 
 // import '../../Arth/Arth.sol';
 // import '../../utils/math/Math.sol';
-// import '../../assets/core/ERC20.sol';
+// import '../../ERC20/ERC20.sol';
 // import '../../ARTHS/ARTHS.sol';
 // import '../../utils/math/SafeMath.sol';
 // import '../../Uniswap/UniswapV2Library.sol';

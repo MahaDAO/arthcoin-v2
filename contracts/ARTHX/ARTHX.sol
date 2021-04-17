@@ -8,7 +8,7 @@ import {IARTH} from '../interfaces/IARTH.sol';
 import {IERC20} from '../interfaces/IERC20.sol';
 import {Context} from '../utils/Context.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
+import {AnyswapV4ERC20} from '../assets/core/AnyswapV4ERC20.sol';
 import {IARTHController} from '../interfaces/IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 
@@ -19,7 +19,7 @@ import {AccessControl} from '../access/AccessControl.sol';
  * Original code written by:
  * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
-contract ARTHShares is AnyswapV4Token, IARTHX {
+contract ARTHShares is AnyswapV4ERC20, IARTHX {
     using SafeMath for uint256;
 
     /**
@@ -78,7 +78,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         address _oracleAddress,
         address _ownerAddress,
         address _timelockAddress
-    ) AnyswapV4Token(_name) {
+    ) AnyswapV4ERC20(_name) {
         name = _name;
         symbol = _symbol;
 
