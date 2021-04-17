@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../../utils/math/Math.sol';
-import '../../utils/math/SafeMath.sol';
+import '../utils/math/Math.sol';
+import '../utils/math/SafeMath.sol';
 
 contract TestDriftingReserves {
     using SafeMath for uint256;

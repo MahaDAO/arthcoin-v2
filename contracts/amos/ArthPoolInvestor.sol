@@ -9,7 +9,7 @@ import '../interfaces/IARTH.sol';
 import '../ERC20/ERC20.sol';
 import '../Oracle/UniswapPairOracle.sol';
 import '../access/AccessControl.sol';
-import '../Arth/Pools/ArthPoolvAMM.sol';
+import '../pools/core/ARTHPoolvAMM.sol';
 
 // contract ArthPoolInvestor is AccessControl {
 //     using SafeMath for uint256;

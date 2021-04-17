@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import './ArthPool.sol';
+import './core/ARTHPool.sol';
 
-contract Pool_DAI is ArthPool {
+contract PoolDAI is ARTHPool {
     /**
      * State variables.
      */
@@ -24,7 +24,7 @@ contract Pool_DAI is ArthPool {
         address _arthController,
         uint256 _poolCeiling
     )
-        ArthPool(
+        ARTHPool(
             _arthContractAddres,
             _arthxContractAddres,
             _collateralAddress,

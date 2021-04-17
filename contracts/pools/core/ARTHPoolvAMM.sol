@@ -21,7 +21,7 @@
 //  *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
 //  * TODO: 1) Have to call getVirtualReserves() on every update of the reserve, such that we can call _update with the averages of the reserve
 //  */
-// contract ArthPoolvAMM is AccessControl {
+// contract ARTHPoolvAMM is AccessControl {
 //     using SafeMath for uint256;
 
 //     ERC20 private collateralToken;

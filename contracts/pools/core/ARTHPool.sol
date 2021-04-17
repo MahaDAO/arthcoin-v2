@@ -9,7 +9,7 @@ import {IERC20} from '../../interfaces/IERC20.sol';
 import {IARTHX} from '../../interfaces/IARTHX.sol';
 import {ICurve} from '../../interfaces/ICurve.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
+import {ARTHPoolLibrary} from './ARTHPoolLibrary.sol';
 import {IARTHController} from '../../interfaces/IARTHController.sol';
 import {ISimpleOracle} from '../../interfaces/ISimpleOracle.sol';
 import {IERC20Burnable} from '../../interfaces/IERC20Burnable.sol';
@@ -23,7 +23,7 @@ import {IUniswapPairOracle} from '../../interfaces/IUniswapPairOracle.sol';
  *  Original code written by:
  *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  */
-contract ArthPool is AccessControl, IARTHPool {
+contract ARTHPool is AccessControl, IARTHPool {
     using SafeMath for uint256;
 
     /**
@@ -329,7 +329,7 @@ contract ArthPool is AccessControl, IARTHPool {
 
         // 1 ARTH for each $1 worth of collateral.
         uint256 arthAmountD18 =
-            ArthPoolLibrary.calcMint1t1ARTH(
+            ARTHPoolLibrary.calcMint1t1ARTH(
                 getCollateralPrice(),
                 collateralAmountD18
             );
@@ -366,7 +366,7 @@ contract ArthPool is AccessControl, IARTHPool {
         require(_arthController.getCRForMint() == 0, 'ARTHPool: Collateral ratio != 0');
 
         uint256 arthAmountD18 =
-            ArthPoolLibrary.calcMintAlgorithmicARTH(
+            ARTHPoolLibrary.calcMintAlgorithmicARTH(
                 arthxPrice, // X ARTHX / 1 USD
                 arthxAmountD18
             );
@@ -407,8 +407,8 @@ contract ArthPool is AccessControl, IARTHPool {
         );
 
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
-        ArthPoolLibrary.MintFAParams memory inputParams =
-            ArthPoolLibrary.MintFAParams(
+        ARTHPoolLibrary.MintFAParams memory inputParams =
+            ARTHPoolLibrary.MintFAParams(
                 arthxPrice,
                 getCollateralPrice(),
                 arthxAmount,
@@ -417,7 +417,7 @@ contract ArthPool is AccessControl, IARTHPool {
             );
 
         (uint256 mintAmount, uint256 arthxNeeded) =
-            ArthPoolLibrary.calcMintFractionalARTH(inputParams);
+            ARTHPoolLibrary.calcMintFractionalARTH(inputParams);
 
         mintAmount = (mintAmount.mul(uint256(1e6).sub(mintingFee))).div(1e6);
 
@@ -451,7 +451,7 @@ contract ArthPool is AccessControl, IARTHPool {
         // Need to adjust for decimals of collateral
         uint256 arthAmountPrecision = arthAmount.div(10**_missingDeciamls);
         uint256 collateralNeeded =
-            ArthPoolLibrary.calcRedeem1t1ARTH(
+            ARTHPoolLibrary.calcRedeem1t1ARTH(
                 getCollateralPrice(),
                 arthAmountPrecision
             );
@@ -647,7 +647,7 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
         (uint256 collateralUnits, uint256 amountToRecollateralize) =
-            ArthPoolLibrary.calcRecollateralizeARTHInner(
+            ARTHPoolLibrary.calcRecollateralizeARTHInner(
                 collateralAmountD18,
                 getCollateralPrice(),
                 globalCollatValue,
@@ -694,8 +694,8 @@ contract ArthPool is AccessControl, IARTHPool {
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
-        ArthPoolLibrary.BuybackARTHXParams memory inputParams =
-            ArthPoolLibrary.BuybackARTHXParams(
+        ARTHPoolLibrary.BuybackARTHXParams memory inputParams =
+            ARTHPoolLibrary.BuybackARTHXParams(
                 getAvailableExcessCollateralDV(),
                 arthxPrice,
                 getCollateralPrice(),
@@ -703,7 +703,7 @@ contract ArthPool is AccessControl, IARTHPool {
             );
 
         uint256 collateralEquivalentD18 =
-            (ArthPoolLibrary.calcBuyBackARTHX(inputParams))
+            (ARTHPoolLibrary.calcBuyBackARTHX(inputParams))
                 .mul(uint256(1e6).sub(buybackFee))
                 .div(1e6);
         uint256 collateralPrecision =

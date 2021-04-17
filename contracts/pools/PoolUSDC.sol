@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import './ArthPool.sol';
+import './core/ARTHPool.sol';
 
-contract Pool_6DEC is ArthPool {
+contract PoolUSDC is ARTHPool {
     /**
      * State variable.
      */
-    address public _6DEC_address;
+    address public USDC_address;
 
     /**
      * Constructor.
@@ -24,7 +24,7 @@ contract Pool_6DEC is ArthPool {
         address _arthController,
         uint256 _poolCeiling
     )
-        ArthPool(
+        ARTHPool(
             _arthContractAddres,
             _arthxContractAddres,
             _collateralAddress,
@@ -37,6 +37,6 @@ contract Pool_6DEC is ArthPool {
         )
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _6DEC_address = _collateralAddress;
+        USDC_address = _collateralAddress;
     }
 }
