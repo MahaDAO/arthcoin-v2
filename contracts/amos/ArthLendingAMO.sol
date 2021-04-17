@@ -22,7 +22,7 @@ import '../interfaces/finnexus/IFNXTokenConverter.sol';
 import '../interfaces/finnexus/IFNXIntegratedStake.sol';
 import '../interfaces/IARTHController.sol';
 
-contract ArthLendingAMO is AccessControl {
+contract ARTHLendingAMO is AccessControl {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */

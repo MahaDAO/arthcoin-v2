@@ -26,7 +26,7 @@ import '../interfaces/IARTHController.sol';
  *  Lower APY: yearn, AAVE, Compound
  *  Higher APY: KeeperDAO, BZX, Harvest
  */
-contract ArthPoolInvestorForV2 is AccessControl {
+contract ARTHPoolInvestorForV2 is AccessControl {
     using SafeMath for uint256;
 
     /* ========== STATE VARIABLES ========== */

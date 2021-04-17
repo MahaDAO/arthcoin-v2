@@ -11,7 +11,7 @@ import '../Oracle/UniswapPairOracle.sol';
 import '../access/AccessControl.sol';
 import '../pools/core/ARTHPoolvAMM.sol';
 
-// contract ArthPoolInvestor is AccessControl {
+// contract ARTHPoolInvestor is AccessControl {
 //     using SafeMath for uint256;
 
 //     /* ========== STATE VARIABLES ========== */
