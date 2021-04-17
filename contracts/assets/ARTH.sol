@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {IARTH} from '../interfaces/IARTH.sol';
 import {IIncentiveController} from '../interfaces/IIncentive.sol';
-import {AnyswapV4ERC20} from '../assets/core/AnyswapV4ERC20.sol';
+import {AnyswapV4ERC20} from './core/AnyswapV4ERC20.sol';
 
 /**
  * @title  ARTHStablecoin.

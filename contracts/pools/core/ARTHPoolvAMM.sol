@@ -3,7 +3,7 @@
 // pragma solidity ^0.8.0;
 // pragma experimental ABIEncoderV2;
 
-// import '../../Arth/Arth.sol';
+// import '../../assets/ARTH.sol';
 // import '../../utils/math/Math.sol';
 // import '../../assets/core/ERC20.sol';
 // import '../../ARTHS/ARTHS.sol';
