@@ -15,7 +15,7 @@ import '../assets/variants/Comp.sol';
 import '../interfaces/finnexus/IFNXOracle.sol';
 import '../interfaces/finnexus/IFNXMinePool.sol';
 import '../interfaces/finnexus/IFNXFPTARTH.sol';
-import '../Oracle/UniswapPairOracle.sol';
+import '../oracle/core/UniswapPairOracle.sol';
 import '../access/AccessControl.sol';
 import '../interfaces/finnexus/IFNXManagerProxy.sol';
 import '../interfaces/finnexus/IFNXTokenConverter.sol';
