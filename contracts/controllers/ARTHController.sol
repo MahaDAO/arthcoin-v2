@@ -15,7 +15,7 @@ import {IUniswapPairOracle} from '../interfaces/IUniswapPairOracle.sol';
  * @title  ARTHStablecoin.
  * @author MahaDAO.
  */
-contract ArthController is AccessControl, IARTHController {
+contract ARTHController is AccessControl, IARTHController {
     using SafeMath for uint256;
 
     /**
