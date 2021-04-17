@@ -6,7 +6,7 @@ import {IERC20} from '../../interfaces/IERC20.sol';
 import {Address} from '../../utils/Address.sol';
 import {Context} from '../../utils/Context.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {Pausable} from '../../Staking/Pausable.sol';
+import {CustomPausable} from '../../security/CustomPausable.sol';
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -32,7 +32,7 @@ import {Pausable} from '../../Staking/Pausable.sol';
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-abstract contract ERC20Custom is Pausable, IERC20 {
+abstract contract ERC20Custom is CustomPausable, IERC20 {
     using SafeMath for uint256;
 
     uint256 private _totalSupply;

@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../StakingRewards.sol';
+import './core/StakingRewards.sol';
 
-contract Stake_ARTHX_WETH is StakingRewards {
+contract StakeARTHXWETH is StakingRewards {
     constructor(
         address _owner,
         address _rewardsDistribution,

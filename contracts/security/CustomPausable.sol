@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {Ownable} from '../access/Ownable.sol';
 
 /// Refer: https://docs.synthetix.io/contracts/Pausable
-abstract contract Pausable is Ownable {
+abstract contract CustomPausable is Ownable {
     /**
      * State variables.
      */

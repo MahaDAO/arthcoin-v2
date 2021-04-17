@@ -3,19 +3,19 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {Math} from '../utils/math/Math.sol';
-import {Pausable} from './Pausable.sol';
-import {IARTH} from '../interfaces/IARTH.sol';
-import {IERC20} from '../interfaces/IERC20.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {SafeERC20} from '../utils/SafeERC20.sol';
-import {IStakingRewards} from '../interfaces/IStakingRewards.sol';
-import {StringHelpers} from '../utils/StringHelpers.sol';
-import {IARTHController} from '../interfaces/IARTHController.sol';
-import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
-import {TransferHelper} from '../Uniswap/TransferHelper.sol';
-import {AccessControl} from '../access/AccessControl.sol';
-import {RewardsDistributionRecipient} from './RewardsDistributionRecipient.sol';
+import {Math} from '../../utils/math/Math.sol';
+import {CustomPausable} from '../../security/CustomPausable.sol';
+import {IARTH} from '../../interfaces/IARTH.sol';
+import {IERC20} from '../../interfaces/IERC20.sol';
+import {SafeMath} from '../../utils/math/SafeMath.sol';
+import {SafeERC20} from '../../utils/SafeERC20.sol';
+import {IStakingRewards} from '../../interfaces/IStakingRewards.sol';
+import {StringHelpers} from '../../utils/StringHelpers.sol';
+import {IARTHController} from '../../interfaces/IARTHController.sol';
+import {ReentrancyGuard} from '../../utils/ReentrancyGuard.sol';
+import {TransferHelper} from '../../Uniswap/TransferHelper.sol';
+import {AccessControl} from '../../access/AccessControl.sol';
+import {RewardsDistributionRecipient} from '../../distributions/RewardsDistributionRecipient.sol';
 
 /**
  * @title  StakingRewards.
@@ -32,7 +32,7 @@ contract StakingRewards is
     IStakingRewards,
     RewardsDistributionRecipient,
     ReentrancyGuard,
-    Pausable
+    CustomPausable
 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;

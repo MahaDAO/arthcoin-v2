@@ -3,28 +3,26 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../StakingRewardsDual.sol';
+import './core/StakingRewards.sol';
 
-contract StakingRewardsDual_ARTH3CRV is StakingRewardsDual {
+contract StakeARTHWETH is StakingRewards {
     constructor(
         address _owner,
-        address _rewardsToken0,
-        address _rewardsToken1,
+        address _rewardsDistribution,
+        address _rewardsToken,
         address _stakingToken,
         address _arthAddress,
         address _timelockAddress,
-        uint256 _poolWeight0,
-        uint256 _poolWeight1
+        uint256 _poolWeight
     )
-        StakingRewardsDual(
+        StakingRewards(
             _owner,
-            _rewardsToken0,
-            _rewardsToken1,
+            _rewardsDistribution,
+            _rewardsToken,
             _stakingToken,
             _arthAddress,
             _timelockAddress,
-            _poolWeight0,
-            _poolWeight1
+            _poolWeight
         )
     {}
 }

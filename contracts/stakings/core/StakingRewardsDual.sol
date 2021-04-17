@@ -3,18 +3,18 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {Math} from '../utils/math/Math.sol';
-import {Pausable} from './Pausable.sol';
-import {IARTH} from '../interfaces/IARTH.sol';
-import {IERC20} from '../interfaces/IERC20.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {SafeERC20} from '../utils/SafeERC20.sol';
-import {IStakingRewards} from '../interfaces/IStakingRewards.sol';
-import {StringHelpers} from '../utils/StringHelpers.sol';
-import {IARTHController} from '../interfaces/IARTHController.sol';
-import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
-import {TransferHelper} from '../Uniswap/TransferHelper.sol';
-import {IStakingRewardsDual} from '../interfaces/IStakingRewardsDual.sol';
+import {Math} from '../../utils/math/Math.sol';
+import {CustomPausable} from '../../security/CustomPausable.sol';
+import {IARTH} from '../../interfaces/IARTH.sol';
+import {IERC20} from '../../interfaces/IERC20.sol';
+import {SafeMath} from '../../utils/math/SafeMath.sol';
+import {SafeERC20} from '../../utils/SafeERC20.sol';
+import {IStakingRewards} from '../../interfaces/IStakingRewards.sol';
+import {StringHelpers} from '../../utils/StringHelpers.sol';
+import {IARTHController} from '../../interfaces/IARTHController.sol';
+import {ReentrancyGuard} from '../../utils/ReentrancyGuard.sol';
+import {TransferHelper} from '../../Uniswap/TransferHelper.sol';
+import {IStakingRewardsDual} from '../../interfaces/IStakingRewardsDual.sol';
 
 /**
  * @title  StakingRewardsDual.
@@ -26,7 +26,7 @@ import {IStakingRewardsDual} from '../interfaces/IStakingRewardsDual.sol';
  * Modified originally from Synthetixio
  * - https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
  */
-contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, Pausable {
+contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
