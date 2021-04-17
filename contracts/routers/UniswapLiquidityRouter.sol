@@ -10,7 +10,7 @@ import {
 } from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
+import {UniswapV2Library} from '../uniswaps/UniswapV2Library.sol';
 import {IUniswapLiquidityRouter} from '../interfaces/IUniswapLiquidityRouter.sol';
 import {IUniswapV2Pair} from '../interfaces/uniswap/IUniswapV2Pair.sol';
 import {IUniswapV2Factory} from '../interfaces/uniswap/IUniswapV2Factory.sol';

@@ -8,7 +8,7 @@
 // import '../../assets/core/ERC20.sol';
 // import '../../ARTHS/ARTHS.sol';
 // import '../../utils/math/SafeMath.sol';
-// import '../../Uniswap/UniswapV2Library.sol';
+// import '../../uniswaps/UniswapV2Library.sol';
 // import '../../oracles/UniswapPairOracle.sol';
 // import '../../access/AccessControl.sol';
 

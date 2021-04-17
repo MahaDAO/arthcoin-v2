@@ -11,7 +11,7 @@ import {
 
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IUniswapSwapRouter} from '../interfaces/IUniswapSwapRouter.sol';
-import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
+import {UniswapV2Library} from '../uniswaps/UniswapV2Library.sol';
 import {IUniswapV2Pair} from '../interfaces/uniswap/IUniswapV2Pair.sol';
 import {IUniswapV2Factory} from '../interfaces/uniswap/IUniswapV2Factory.sol';
 

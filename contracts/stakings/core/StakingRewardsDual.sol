@@ -13,7 +13,7 @@ import {IStakingRewards} from '../../interfaces/IStakingRewards.sol';
 import {StringHelpers} from '../../utils/StringHelpers.sol';
 import {IARTHController} from '../../interfaces/IARTHController.sol';
 import {ReentrancyGuard} from '../../utils/ReentrancyGuard.sol';
-import {TransferHelper} from '../../Uniswap/TransferHelper.sol';
+import {TransferHelper} from '../../uniswaps/TransferHelper.sol';
 import {IStakingRewardsDual} from '../../interfaces/IStakingRewardsDual.sol';
 
 /**
