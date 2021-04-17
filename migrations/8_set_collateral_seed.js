@@ -5,8 +5,8 @@ require('dotenv').config()
 const helpers = require('./helpers')
 
 
-const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC")
-const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT")
+const PoolUSDC = artifacts.require("PoolUSDC")
+const PoolUSDT = artifacts.require("PoolUSDT")
 
 
 module.exports = async function (deployer, network, accounts) {
@@ -16,8 +16,8 @@ module.exports = async function (deployer, network, accounts) {
   const COLLATERAL_SEED_DEC6 = new BigNumber(508500e6)
   const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
 
-  const pool_instance_USDC = await Pool_USDC.deployed()
-  const pool_instance_USDT = await Pool_USDT.deployed()
+  const pool_instance_USDC = await PoolUSDC.deployed()
+  const pool_instance_USDT = await PoolUSDT.deployed()
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
   const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
 

@@ -5,10 +5,10 @@ require('dotenv').config()
 const helpers = require('./helpers')
 
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares")
-const Timelock = artifacts.require("Governance/Timelock")
-const ARTHController = artifacts.require("Arth/ArthController")
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
+const Timelock = artifacts.require("Timelock")
+const ARTHShares = artifacts.require("ARTHShares")
+const ARTHController = artifacts.require("ARTHController")
+const ARTHStablecoin = artifacts.require("ARTHStablecoin")
 
 
 module.exports = async function (deployer, network, accounts) {

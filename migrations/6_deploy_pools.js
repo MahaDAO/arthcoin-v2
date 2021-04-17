@@ -5,15 +5,15 @@ require('dotenv').config()
 const helpers = require('./helpers')
 
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares")
-const ARTHController = artifacts.require("ArthController")
-const Timelock = artifacts.require("Governance/Timelock")
-const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC")
-const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT")
-const ArthPoolLibrary = artifacts.require("ArthPoolLibrary")
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
-const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH")
-const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH")
+const Timelock = artifacts.require("Timelock")
+const PoolUSDC = artifacts.require("PoolUSDC")
+const PoolUSDT = artifacts.require("PoolUSDT")
+const ARTHShares = artifacts.require("ARTHShares")
+const ARTHStablecoin = artifacts.require("ARTHStablecoin")
+const ARTHController = artifacts.require("ARTHController")
+const ARTHPoolLibrary = artifacts.require("ARTHPoolLibrary")
+const UniswapPairOracleUSDCWETH = artifacts.require("UniswapPairOracleUSDCWETH")
+const UniswapPairOracleUSDTWETH = artifacts.require("UniswapPairOracleUSDTWETH")
 
 
 module.exports = async function (deployer, network, accounts) {
@@ -35,13 +35,13 @@ module.exports = async function (deployer, network, accounts) {
   const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
 
   console.log(chalk.yellow('\nDeploying and linking Pools library...'))
-  await deployer.deploy(ArthPoolLibrary)
-  await deployer.link(ArthPoolLibrary, [Pool_USDC, Pool_USDT]);
+  await deployer.deploy(ARTHPoolLibrary)
+  await deployer.link(ARTHPoolLibrary, [PoolUSDC, PoolUSDT]);
 
   console.log(chalk.yellow('\nDeploying Pools...'))
   await Promise.all([
     deployer.deploy(
-      Pool_USDC,
+      PoolUSDC,
       arthInstance.address,
       arthxInstance.address,
       col_instance_USDC.address,
@@ -53,7 +53,7 @@ module.exports = async function (deployer, network, accounts) {
       TEN_MILLION
     ),
     deployer.deploy(
-      Pool_USDT,
+      PoolUSDT,
       arthInstance.address,
       arthxInstance.address,
       col_instance_USDT.address,
@@ -67,8 +67,8 @@ module.exports = async function (deployer, network, accounts) {
   ])
 
   console.log(chalk.yellow('\nGetting deployed Pool instances...'))
-  const pool_instance_USDC = await Pool_USDC.deployed()
-  const pool_instance_USDT = await Pool_USDT.deployed()
+  const pool_instance_USDC = await PoolUSDC.deployed()
+  const pool_instance_USDT = await PoolUSDT.deployed()
 
   console.log(chalk.yellow('\nSetting minting and redemtion fee...'))
   await Promise.all([
@@ -83,8 +83,8 @@ module.exports = async function (deployer, network, accounts) {
   ])
 
   console.log(chalk.yellow('\nGetting ARTH and ARTHX oracles...'))
-  const oracle_instance_USDC_WETH = await UniswapPairOracle_USDC_WETH.deployed()
-  const oracle_instance_USDT_WETH = await UniswapPairOracle_USDT_WETH.deployed()
+  const oracle_instance_USDC_WETH = await UniswapPairOracleUSDCWETH.deployed()
+  const oracle_instance_USDT_WETH = await UniswapPairOracleUSDTWETH.deployed()
 
   console.log(chalk.yellow('\nLinking Collateral oracles...'))
   await Promise.all([

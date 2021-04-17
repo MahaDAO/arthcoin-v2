@@ -5,9 +5,9 @@ require('dotenv').config()
 const helpers = require('./helpers')
 
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares")
-const SwapToPrice = artifacts.require("Uniswap/SwapToPrice")
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
+const ARTHShares = artifacts.require("ARTHShares")
+const SwapToPrice = artifacts.require("SwapToPrice")
+const ARTHStablecoin = artifacts.require("ARTHStablecoin")
 
 
 module.exports = async function (deployer, network, accounts) {

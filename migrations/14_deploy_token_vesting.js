@@ -6,7 +6,7 @@ require('dotenv').config()
 const helpers = require('./helpers')
 
 
-const TokenVesting = artifacts.require("ARTHS/TokenVesting")
+const TokenVesting = artifacts.require("TokenVesting")
 
 
 module.exports = async function (deployer, network, accounts) {

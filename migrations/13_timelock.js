@@ -4,7 +4,7 @@ const { time } = require('@openzeppelin/test-helpers')
 require('dotenv').config()
 
 
-const Timelock = artifacts.require("Governance/Timelock")
+const Timelock = artifacts.require("Timelock")
 // const MigrationHelper = artifacts.require("Utils/MigrationHelper")
 
 
