@@ -44,7 +44,7 @@ describe('ARTHController', () => {
 
   before(' - Fetch contract factories', async () => {
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
-    ARTHController = await ethers.getContractFactory('ArthController');
+    ARTHController = await ethers.getContractFactory('ARTHController');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
     ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');

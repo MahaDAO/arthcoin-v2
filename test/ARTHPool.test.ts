@@ -58,7 +58,7 @@ describe('ARTHPool', () => {
   before(' - Setup accounts & deploy libraries', async () => {
     [owner] = await ethers.getSigners();
 
-    ARTHPoolLibrary = await ethers.getContractFactory('ArthPoolLibrary');
+    ARTHPoolLibrary = await ethers.getContractFactory('ARTHPoolLibrary');
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
   });
 
@@ -68,14 +68,14 @@ describe('ARTHPool', () => {
     ARTH = await ethers.getContractFactory('ARTHStablecoin');
     MockCollateral = await ethers.getContractFactory('MockCollateral');
 
-    ARTHPool = await ethers.getContractFactory('ArthPool', {
+    ARTHPool = await ethers.getContractFactory('ARTHPool', {
       libraries: {
-        ArthPoolLibrary: arthPoolLibrary.address
+        ARTHPoolLibrary: arthPoolLibrary.address
       }
     });
 
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
-    ARTHController = await ethers.getContractFactory('ArthController');
+    ARTHController = await ethers.getContractFactory('ARTHController');
     RecollateralizationCurve = await ethers.getContractFactory('Sigmoid');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
     ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
