@@ -1,7 +1,7 @@
+require('dotenv').config()
 const chalk = require('chalk')
 const BigNumber = require('bignumber.js')
 
-require('dotenv').config()
 const helpers = require('./helpers')
 
 
@@ -25,42 +25,59 @@ module.exports = async function (deployer, network, accounts) {
 
   const arthxInstance = await ARTHShares.deployed()
   const arthInstance = await ARTHStablecoin.deployed()
-  const pool_instance_USDC = await PoolUSDC.deployed()
-  const pool_instance_USDT = await PoolUSDT.deployed()
+  const poolInstanceUSDC = await PoolUSDC.deployed()
+  const poolInstanceUSDT = await PoolUSDT.deployed()
   const arthControllerInstance = await ARTHController.deployed()
-  const oracle_instance_ARTH_WETH = await UniswapPairOracleARTHWETH.deployed()
-  const oracle_instance_ARTH_USDC = await UniswapPairOracleARTHUSDC.deployed()
-  const oracle_instance_ARTH_USDT = await UniswapPairOracleARTHUSDT.deployed()
-  const oracle_instance_USDC_WETH = await UniswapPairOracleUSDCWETH.deployed()
-  const oracle_instance_ARTH_ARTHX = await UniswapPairOracleARTHARTHX.deployed()
-  const oracle_instance_ARTHX_WETH = await UniswapPairOracleARTHXWETH.deployed()
+  const oracleInstanceARTHWETH = await UniswapPairOracleARTHWETH.deployed()
+  const oracleInstanceARTHUSDC = await UniswapPairOracleARTHUSDC.deployed()
+  const oracleInstanceARTHUSDT = await UniswapPairOracleARTHUSDT.deployed()
+  const oracleInstanceUSDCWETH = await UniswapPairOracleUSDCWETH.deployed()
+  const oracleInstanceARTHARTHX = await UniswapPairOracleARTHARTHX.deployed()
+  const oracleInstanceARTHXWETH = await UniswapPairOracleARTHXWETH.deployed()
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
 
   console.log(chalk.yellow('\nLinking collateral pools to arth contract...'))
-  await arthInstance.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS })
-  await arthInstance.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS })
+  await arthInstance.addPool(poolInstanceUSDC.address, { from: DEPLOYER_ADDRESS })
+  await arthInstance.addPool(poolInstanceUSDT.address, { from: DEPLOYER_ADDRESS })
 
   console.log(chalk.yellow('\nSetting ARTH address within ARTHX...'))
   await arthxInstance.setARTHAddress(arthInstance.address, { from: DEPLOYER_ADDRESS })
 
   console.log(chalk.yellow('\nSome oracle prices are: '))
-  const arth_price_initial = new BigNumber(await arthControllerInstance.getARTHPrice({ from: DEPLOYER_ADDRESS })).div(BIG6)
-  const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6)
-  const arth_price_from_ARTH_WETH = (new BigNumber(await oracle_instance_ARTH_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6)
+  const arthPriceInitial = new BigNumber(
+    await arthControllerInstance.getARTHPrice({ from: DEPLOYER_ADDRESS })
+  ).div(BIG6)
+  const arthxPriceInitial = new BigNumber(
+    await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })
+  ).div(BIG6)
+  const arthPriceFromARTHWETH = new BigNumber(
+    await oracleInstanceARTHWETH.consult.call(wethInstance.address, 1e6)
+  ).div(BIG6)
 
-  const arth_price_from_ARTH_ARTHX = (new BigNumber(await oracle_instance_ARTH_ARTHX.consult.call(arthxInstance.address, 1e6))).div(BIG6)
-  const arthx_price_from_ARTHX_WETH = (new BigNumber(await oracle_instance_ARTHX_WETH.consult.call(wethInstance.address, 1e6))).div(BIG6)
-  const arth_price_from_ARTH_USDC = (new BigNumber(await oracle_instance_ARTH_USDC.consult.call(arthInstance.address, new BigNumber("1e18")))).div(BIG6)
-  const arth_price_from_ARTH_USDT = (new BigNumber(await oracle_instance_ARTH_USDT.consult.call(arthInstance.address, new BigNumber("1e18")))).div(BIG6)
-  const USDC_price_from_USDC_WETH = (new BigNumber(await oracle_instance_USDC_WETH.consult.call(wethInstance.address, new BigNumber("1e18")))).div(BIG6)
-  console.log(" NOTE: - arth_price_initial: ", arth_price_initial.toString(), "USD = 1 ARTH")
-  console.log(" NOTE: - arthx_price_initial: ", arthx_price_initial.toString(), "USD = 1 ARTHX")
-  console.log(" NOTE: - arth_price_from_ARTH_WETH: ", arth_price_from_ARTH_WETH.toString(), "ARTH = 1 WETH")
-  console.log(" NOTE: - arth_price_from_ARTH_USDC: ", arth_price_from_ARTH_USDC.toString(), "ARTH = 1 USDC")
-  console.log(" NOTE: - arth_price_from_ARTH_USDT: ", arth_price_from_ARTH_USDT.toString(), "ARTH = 1 USDT")
-  console.log(" NOTE: - arth_price_from_ARTH_ARTHX: ", arth_price_from_ARTH_ARTHX.toString(), "ARTH = 1 ARTHX")
-  console.log(" NOTE: - arthx_price_from_ARTHX_WETH: ", arthx_price_from_ARTHX_WETH.toString(), "ARTHX = 1 WETH")
-  console.log(" NOTE: - USDC_price_from_USDC_WETH: ", USDC_price_from_USDC_WETH.toString(), "USDC = 1 WETH")
+  const arthPriceFromARTHARTHX = new BigNumber(
+    await oracleInstanceARTHARTHX.consult.call(arthxInstance.address, 1e6)
+  ).div(BIG6)
+  const arthxPriceFromARTHXWETH = new BigNumber(
+    await oracleInstanceARTHXWETH.consult.call(wethInstance.address, 1e6)
+  ).div(BIG6)
+  const arthPriceFromARTHUSDC = new BigNumber(
+    await oracleInstanceARTHUSDC.consult.call(arthInstance.address, new BigNumber("1e18"))
+  ).div(BIG6)
+  const arthPriceFromARTHUSDT = new BigNumber(
+    await oracleInstanceARTHUSDT.consult.call(arthInstance.address, new BigNumber("1e18"))
+  ).div(BIG6)
+  const usdcPriceFromUSDCWETH = new BigNumber(
+    await oracleInstanceUSDCWETH.consult.call(wethInstance.address, new BigNumber("1e18"))
+  ).div(BIG6)
+
+  console.log(" NOTE: - ARTH Price Initial: ", arthPriceInitial.toString(), "USD = 1 ARTH")
+  console.log(" NOTE: - ARTHX Price Initial: ", arthxPriceInitial.toString(), "USD = 1 ARTHX")
+  console.log(" NOTE: - ARTH Price From ARTHWETH: ", arthPriceFromARTHWETH.toString(), "ARTH = 1 WETH")
+  console.log(" NOTE: - ARTH Price From ARTHUSDC: ", arthPriceFromARTHUSDC.toString(), "ARTH = 1 USDC")
+  console.log(" NOTE: - ARTH Price From ARTHUSDT: ", arthPriceFromARTHUSDT.toString(), "ARTH = 1 USDT")
+  console.log(" NOTE: - ARTH Price From ARTHARTHX: ", arthPriceFromARTHARTHX.toString(), "ARTH = 1 ARTHX")
+  console.log(" NOTE: - ARTHX Price From ARTHXWETH: ", arthxPriceFromARTHXWETH.toString(), "ARTHX = 1 WETH")
+  console.log(" NOTE: - USDC Price From USDCWETH: ", usdcPriceFromUSDCWETH.toString(), "USDC = 1 WETH")
 
   console.log(chalk.yellow('\nTransferring some tokens and eth to metamask...'))
   await Promise.all([

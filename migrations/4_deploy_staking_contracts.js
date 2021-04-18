@@ -1,7 +1,7 @@
+require('dotenv').config()
 const chalk = require('chalk')
 const BigNumber = require('bignumber.js')
 
-require('dotenv').config()
 const helpers = require('./helpers')
 
 
@@ -24,13 +24,37 @@ module.exports = async function (deployer, network, accounts) {
   const arthInstance = await ARTHStablecoin.deployed()
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts)
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
-  const usdcCollateralInstance = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
+  const usdcCollateralInstance = await helpers.getUSDC(
+    network,
+    deployer,
+    artifacts,
+    DEPLOYER_ADDRESS,
+    ONE_HUNDRED_MILLION,
+    'USDC',
+    6
+  )
 
   console.log(chalk.yellow('\nGetting created uniswap pair addresses...'))
-  const pair_addr_ARTH_WETH = await uniswapFactoryInstance.getPair(arthInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
-  const pair_addr_ARTH_ARTHX = await uniswapFactoryInstance.getPair(arthInstance.address, arthxInstance.address, { from: DEPLOYER_ADDRESS })
-  const pair_addr_ARTHX_WETH = await uniswapFactoryInstance.getPair(arthxInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
-  const pair_addr_ARTH_USDC = await uniswapFactoryInstance.getPair(arthInstance.address, usdcCollateralInstance.address, { from: DEPLOYER_ADDRESS })
+  const pairAddrARTHWETH = await uniswapFactoryInstance.getPair(
+    arthInstance.address,
+    wethInstance.address,
+    { from: DEPLOYER_ADDRESS }
+  )
+  const pairAddrARTHARTHX = await uniswapFactoryInstance.getPair(
+    arthInstance.address,
+    arthxInstance.address,
+    { from: DEPLOYER_ADDRESS }
+  )
+  const pairAddrARTHXWETH = await uniswapFactoryInstance.getPair(
+    arthxInstance.address,
+    wethInstance.address,
+    { from: DEPLOYER_ADDRESS }
+  )
+  const pairAddrARTHUSDC = await uniswapFactoryInstance.getPair(
+    arthInstance.address,
+    usdcCollateralInstance.address,
+    { from: DEPLOYER_ADDRESS }
+  )
 
   console.log(chalk.yellow('\nDeploying staking contracts...'))
   await Promise.all([
@@ -39,7 +63,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       DEPLOYER_ADDRESS,
       arthxInstance.address,
-      pair_addr_ARTH_WETH,
+      pairAddrARTHWETH,
       arthInstance.address,
       timelockInstance.address,
       500000
@@ -49,7 +73,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       DEPLOYER_ADDRESS,
       arthxInstance.address,
-      pair_addr_ARTH_USDC,
+      pairAddrARTHUSDC,
       arthInstance.address,
       timelockInstance.address,
       500000
@@ -59,7 +83,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       DEPLOYER_ADDRESS,
       arthxInstance.address,
-      pair_addr_ARTH_ARTHX,
+      pairAddrARTHARTHX,
       arthInstance.address,
       timelockInstance.address,
       0
@@ -69,23 +93,24 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       DEPLOYER_ADDRESS,
       arthxInstance.address,
-      pair_addr_ARTHX_WETH,
+      pairAddrARTHXWETH,
       arthInstance.address,
       timelockInstance.address,
       0
     )
   ])
 
-  const stakingInstance_ARTH_WETH = await StakeARTHWETH.deployed()
-  const stakingInstance_ARTH_USDC = await StakeARTHUSDC.deployed()
-  const stakingInstance_ARTH_ARTHX = await StakeARTHARTHX.deployed()
-  const stakingInstance_ARTHX_WETH = await StakeARTHXWETH.deployed()
+  const stakingInstanceARTHWETH = await StakeARTHWETH.deployed()
+  const stakingInstanceARTHUSDC = await StakeARTHUSDC.deployed()
+  const stakingInstanceARTHARTHX = await StakeARTHARTHX.deployed()
+  const stakingInstanceARTHXWETH = await StakeARTHXWETH.deployed()
 
   console.log(chalk.yellow('\nTransfering ARTHX to staking contracts...'))
   await Promise.all([
-    arthxInstance.transfer(stakingInstance_ARTH_WETH.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
-    arthxInstance.transfer(stakingInstance_ARTH_USDC.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
-    arthxInstance.transfer(stakingInstance_ARTH_ARTHX.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
-    arthxInstance.transfer(stakingInstance_ARTHX_WETH.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS })
+    arthxInstance.transfer(
+      stakingInstanceARTHWETH.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
+    arthxInstance.transfer(stakingInstanceARTHUSDC.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
+    arthxInstance.transfer(stakingInstanceARTHARTHX.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS }),
+    arthxInstance.transfer(stakingInstanceARTHXWETH.address, ONE_HUNDRED_MILLION, { from: DEPLOYER_ADDRESS })
   ])
 }

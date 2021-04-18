@@ -1,7 +1,7 @@
+require('dotenv').config()
 const chalk = require('chalk')
 const BigNumber = require('bignumber.js')
 
-require('dotenv').config()
 const helpers = require('./helpers')
 
 
@@ -22,10 +22,12 @@ module.exports = async function (deployer, network, accounts) {
   const timelockInstance = await Timelock.deployed()
 
   console.log(chalk.yellow('\nDeploying tokens...'))
+
   await deployer.deploy(ARTHStablecoin)
   const arthInstance = await ARTHStablecoin.deployed()
-  let arth_name = await arthInstance.name.call()
-  console.log(` - NOTE: ARTH name: ${arth_name}`)
+  const arthName = await arthInstance.name.call()
+  console.log(` - NOTE: ARTH name: ${arthName}`)
+  console.log(` - NOTE: ARTH address: ${arthInstance.address}`)
 
   console.log(chalk.yellow(`\nDeploying ARTH controller...`))
   await deployer.deploy(
@@ -34,18 +36,20 @@ module.exports = async function (deployer, network, accounts) {
     timelockInstance.address
   )
   const arthControllerInstance = await ARTHController.deployed()
+  console.log(` - NOTE: ARTHController address: ${arthControllerInstance.address}`)
 
   await deployer.deploy(
     ARTHShares,
     "Arth Share",
     "ARTHX",
-    DEPLOYER_ADDRESS, // Temporary address until oracle is deployed.
+    DEPLOYER_ADDRESS,  // Temporary address until oracle is deployed.
     DEPLOYER_ADDRESS,
     timelockInstance.address
   )
   const arthxInstance = await ARTHShares.deployed()
-  let arthx_name = await arthxInstance.name.call()
-  console.log(` - NOTE: ARTHX name: ${arthx_name}`)
+  const arthxName = await arthxInstance.name.call()
+  console.log(` - NOTE: ARTHX name: ${arthxName}`)
+  console.log(` - NOTE: ARTHX address: ${arthxInstance.address}`)
 
   await helpers.getMahaToken(network, deployer, artifacts)
   await helpers.getDAI(network, deployer, artifacts, DEPLOYER_ADDRESS, MOCK_TOKEN_INITIAL_SUPPLY, 'DAI', 6)

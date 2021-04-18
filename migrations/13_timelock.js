@@ -13,6 +13,7 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0]
 
   const timelockInstance = await Timelock.deployed()
+
   // const migrationHelperInstance = await MigrationHelper.deployed()
 
   // if (process.env.MIGRATION_MODE == 'ganache' || network == 'development') {

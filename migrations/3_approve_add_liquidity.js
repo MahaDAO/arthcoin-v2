@@ -1,7 +1,7 @@
+require('dotenv').config()
 const chalk = require('chalk')
 const BigNumber = require('bignumber.js')
 
-require('dotenv').config()
 const helpers = require('./helpers')
 
 
@@ -20,38 +20,92 @@ module.exports = async function (deployer, network, accounts) {
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts)
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts)
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
-  const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
-  const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
+
+  const usdcCollateralInstance = await helpers.getUSDC(
+    network,
+    deployer,
+    artifacts,
+    DEPLOYER_ADDRESS,
+    ONE_HUNDRED_MILLION,
+    'USDC',
+    6
+  )
+  const usdtCollateralInstance = await helpers.getUSDT(
+    network,
+    deployer,
+    artifacts,
+    DEPLOYER_ADDRESS,
+    ONE_HUNDRED_MILLION,
+    'USDT',
+    6
+  )
 
   console.log(chalk.yellow('\nDeploying SwapToPrice'))
   await deployer.deploy(SwapToPrice, uniswapFactoryInstance.address, routerInstance.address);
 
   console.log(chalk.yellow('\nSetting uniswap pairs...'))
   console.log(chalk.yellow(' - Setting Pair including ARTH...'))
+
   await Promise.all([
-    uniswapFactoryInstance.createPair(arthInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS }),
-    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDC.address, { from: DEPLOYER_ADDRESS }),
-    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDT.address, { from: DEPLOYER_ADDRESS }),
-    uniswapFactoryInstance.createPair(arthInstance.address, arthxInstance.address, { from: DEPLOYER_ADDRESS })
+    uniswapFactoryInstance.createPair(
+      arthInstance.address,
+      wethInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    ),
+    uniswapFactoryInstance.createPair(
+      arthInstance.address,
+      usdcCollateralInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    ),
+    uniswapFactoryInstance.createPair(
+      arthInstance.address,
+      usdtCollateralInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    ),
+    uniswapFactoryInstance.createPair(
+      arthInstance.address,
+      arthxInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    )
   ])
 
   console.log(chalk.yellow(' - Setting Pair including ARTHX...'))
   await Promise.all([
-    uniswapFactoryInstance.createPair(arthxInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS }),
-    uniswapFactoryInstance.createPair(arthxInstance.address, col_instance_USDC.address, { from: DEPLOYER_ADDRESS }),
-    uniswapFactoryInstance.createPair(arthxInstance.address, col_instance_USDT.address, { from: DEPLOYER_ADDRESS })
+    uniswapFactoryInstance.createPair(
+      arthxInstance.address,
+      wethInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    ),
+    uniswapFactoryInstance.createPair(
+      arthxInstance.address,
+      usdcCollateralInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    ),
+    uniswapFactoryInstance.createPair(
+      arthxInstance.address,
+      usdtCollateralInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    )
   ])
 
   if (!helpers.isMainnet(network)) {
-    await uniswapFactoryInstance.createPair(col_instance_USDC.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
-    await uniswapFactoryInstance.createPair(col_instance_USDT.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
+    await uniswapFactoryInstance.createPair(
+      usdcCollateralInstance.address,
+      wethInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    )
+    await uniswapFactoryInstance.createPair(
+      usdtCollateralInstance.address,
+      wethInstance.address,
+      { from: DEPLOYER_ADDRESS }
+    )
   }
 
   console.log(chalk.yellow('\nApproving uniswap pairs....'))
   await Promise.all([
     wethInstance.approve(routerInstance.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
-    col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e6), { from: DEPLOYER_ADDRESS }),
-    col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e6), { from: DEPLOYER_ADDRESS }),
+    usdcCollateralInstance.approve(routerInstance.address, new BigNumber(2000000e6), { from: DEPLOYER_ADDRESS }),
+    usdtCollateralInstance.approve(routerInstance.address, new BigNumber(2000000e6), { from: DEPLOYER_ADDRESS }),
     arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: DEPLOYER_ADDRESS }),
     arthxInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: DEPLOYER_ADDRESS })
   ])
@@ -73,7 +127,7 @@ module.exports = async function (deployer, network, accounts) {
     // ARTH / USDC
     routerInstance.addLiquidity(
       arthInstance.address,
-      col_instance_USDC.address,
+      usdcCollateralInstance.address,
       new BigNumber(100e18),
       new BigNumber(100e6),
       new BigNumber(100e18),
@@ -85,7 +139,7 @@ module.exports = async function (deployer, network, accounts) {
     // ARTH / USDT
     routerInstance.addLiquidity(
       arthInstance.address,
-      col_instance_USDT.address,
+      usdtCollateralInstance.address,
       new BigNumber(100e18),
       new BigNumber(100e6),
       new BigNumber(100e18),
@@ -121,7 +175,7 @@ module.exports = async function (deployer, network, accounts) {
     // ARTHX / USDC
     routerInstance.addLiquidity(
       arthxInstance.address,
-      col_instance_USDC.address,
+      usdcCollateralInstance.address,
       new BigNumber(133333e15),
       new BigNumber(100e6),
       new BigNumber(133333e15),
@@ -133,7 +187,7 @@ module.exports = async function (deployer, network, accounts) {
     // ARTHX / USDT
     routerInstance.addLiquidity(
       arthxInstance.address,
-      col_instance_USDT.address,
+      usdtCollateralInstance.address,
       new BigNumber(133333e15),
       new BigNumber(100e6),
       new BigNumber(133333e15),
@@ -146,7 +200,7 @@ module.exports = async function (deployer, network, accounts) {
 
   if (!helpers.isMainnet(network)) {
     await routerInstance.addLiquidity(
-      col_instance_USDC.address,
+      usdcCollateralInstance.address,
       wethInstance.address,
       new BigNumber(600000e6),
       new BigNumber(1000e18),
@@ -158,7 +212,7 @@ module.exports = async function (deployer, network, accounts) {
     )
 
     await routerInstance.addLiquidity(
-      col_instance_USDT.address,
+      usdtCollateralInstance.address,
       wethInstance.address,
       new BigNumber(600000e6),
       new BigNumber(1000e18),

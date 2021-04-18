@@ -1,8 +1,6 @@
+require('dotenv').config()
 const chalk = require('chalk')
 const { time } = require('@openzeppelin/test-helpers')
-
-require('dotenv').config()
-const helpers = require('./helpers')
 
 
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracleARTHWETH")
@@ -21,15 +19,15 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0]
 
 
-  const oracle_instance_ARTH_WETH = await UniswapPairOracleARTHWETH.deployed()
-  const oracle_instance_ARTH_USDC = await UniswapPairOracleARTHUSDC.deployed()
-  const oracle_instance_ARTH_USDT = await UniswapPairOracleARTHUSDT.deployed()
-  const oracle_instance_USDC_WETH = await UniswapPairOracleUSDCWETH.deployed()
-  const oracle_instance_USDT_WETH = await UniswapPairOracleUSDTWETH.deployed()
-  const oracle_instance_ARTH_ARTHX = await UniswapPairOracleARTHARTHX.deployed()
-  const oracle_instance_ARTHX_WETH = await UniswapPairOracleARTHXWETH.deployed()
-  const oracle_instance_ARTHX_USDC = await UniswapPairOracleARTHXUSDC.deployed()
-  const oracle_instance_ARTHX_USDT = await UniswapPairOracleARTHXUSDT.deployed()
+  const oracleInstanceARTHWETH = await UniswapPairOracleARTHWETH.deployed()
+  const oracleInstanceARTHUSDC = await UniswapPairOracleARTHUSDC.deployed()
+  const oracleInstanceARTHUSDT = await UniswapPairOracleARTHUSDT.deployed()
+  const oracleInstanceUSDCWETH = await UniswapPairOracleUSDCWETH.deployed()
+  const oracleInstanceUSDTWETH = await UniswapPairOracleUSDTWETH.deployed()
+  const oracleInstanceARTHARTHX = await UniswapPairOracleARTHARTHX.deployed()
+  const oracleInstanceARTHXWETH = await UniswapPairOracleARTHXWETH.deployed()
+  const oracleInstanceARTHXUSDC = await UniswapPairOracleARTHXUSDC.deployed()
+  const oracleInstanceARTHXUSDT = await UniswapPairOracleARTHXUSDT.deployed()
 
   console.log(chalk.red.bold("\nNormally you'd need to wait 24 hrs here, but temporarily we set smaller duration"))
   // // Advance 24 hrs so the period can be computed.
@@ -38,15 +36,15 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow(' - Setting period to 1 sec temporarily'))
   await Promise.all([
-    oracle_instance_ARTH_WETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_USDC.setPeriod(1, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_USDT.setPeriod(1, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_ARTHX.setPeriod(1, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_WETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_USDC.setPeriod(1, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_USDT.setPeriod(1, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_USDC_WETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_USDT_WETH.setPeriod(1, { from: DEPLOYER_ADDRESS })
+    oracleInstanceARTHWETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHUSDC.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHUSDT.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHARTHX.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXWETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXUSDC.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXUSDT.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceUSDCWETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceUSDTWETH.setPeriod(1, { from: DEPLOYER_ADDRESS })
   ])
 
   console.log(chalk.yellow('\nUpdating oracle prices...'))
@@ -62,15 +60,15 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   await Promise.all([
-    oracle_instance_ARTH_WETH.update({ from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_USDC.update({ from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_USDT.update({ from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_ARTHX.update({ from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_WETH.update({ from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_USDC.update({ from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_USDT.update({ from: DEPLOYER_ADDRESS }),
-    oracle_instance_USDC_WETH.update({ from: DEPLOYER_ADDRESS }),
-    oracle_instance_USDT_WETH.update({ from: DEPLOYER_ADDRESS })
+    oracleInstanceARTHWETH.update({ from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHUSDC.update({ from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHUSDT.update({ from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHARTHX.update({ from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXWETH.update({ from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXUSDC.update({ from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXUSDT.update({ from: DEPLOYER_ADDRESS }),
+    oracleInstanceUSDCWETH.update({ from: DEPLOYER_ADDRESS }),
+    oracleInstanceUSDTWETH.update({ from: DEPLOYER_ADDRESS })
   ])
 
   console.log(chalk.yellow('\nSetting the oracle period back to 24 hrs...'))
@@ -86,14 +84,14 @@ module.exports = async function (deployer, network, accounts) {
   }
 
   await Promise.all([
-    oracle_instance_ARTH_WETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_USDC.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_USDT.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTH_ARTHX.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_WETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_USDC.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_ARTHX_USDT.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_USDC_WETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    oracle_instance_USDT_WETH.setPeriod(3600, { from: DEPLOYER_ADDRESS })
+    oracleInstanceARTHWETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHUSDC.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHUSDT.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHARTHX.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXWETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXUSDC.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceARTHXUSDT.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceUSDCWETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    oracleInstanceUSDTWETH.setPeriod(3600, { from: DEPLOYER_ADDRESS })
   ])
 }
