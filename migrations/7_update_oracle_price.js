@@ -18,7 +18,6 @@ module.exports = async function (deployer, network, accounts) {
 
   const DEPLOYER_ADDRESS = accounts[0]
 
-
   const oracleInstanceARTHWETH = await UniswapPairOracleARTHWETH.deployed()
   const oracleInstanceARTHUSDC = await UniswapPairOracleARTHUSDC.deployed()
   const oracleInstanceARTHUSDT = await UniswapPairOracleARTHUSDT.deployed()

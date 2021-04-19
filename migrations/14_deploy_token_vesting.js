@@ -20,5 +20,5 @@ module.exports = async function (deployer, network, accounts) {
 
   else await deployer.deploy(TokenVesting, METAMASK_ADDRESS, theTime, 86400, 86400 * 10, true, { from: METAMASK_ADDRESS })
 
-  console.log('\nDeployments done...')
+  console.log('\nDeployments done...\n')
 }

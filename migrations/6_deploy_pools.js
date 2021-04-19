@@ -84,7 +84,7 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nGetting deployed Pool instances...'))
   const poolInstanceUSDC = await PoolUSDC.deployed()
-  const poolInstanceUSDC = await PoolUSDT.deployed()
+  const poolInstanceUSDT = await PoolUSDT.deployed()
 
   console.log(chalk.yellow('\nSetting minting and redemtion fee...'))
   await Promise.all([
@@ -95,7 +95,7 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nRefreshing pool params...'))
   await Promise.all([
     await poolInstanceUSDC.setPoolParameters(TEN_MILLION, 1, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
-    await poolInstanceUSDC.setPoolParameters(TEN_MILLION, 1, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
+    await poolInstanceUSDT.setPoolParameters(TEN_MILLION, 1, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
   ])
 
   console.log(chalk.yellow('\nGetting ARTH and ARTHX oracles...'))
@@ -105,6 +105,6 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nLinking Collateral oracles...'))
   await Promise.all([
     poolInstanceUSDC.setCollatETHOracle(oracleInstanceUSDCWETH.address, wethInstance.address, { from: DEPLOYER_ADDRESS }),
-    poolInstanceUSDC.setCollatETHOracle(oracleInstanceUSDTWETH.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
+    poolInstanceUSDT.setCollatETHOracle(oracleInstanceUSDTWETH.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
   ])
 }

@@ -1,6 +1,5 @@
-const path = require('path')
-const envPath = path.join(__dirname, './.env')
-require('dotenv').config({ path: envPath })
+require('dotenv').config()
+
 const HDWalletProvider = require("truffle-hdwallet-provider")
 
 
@@ -16,34 +15,34 @@ module.exports = {
   networks: {
     development: {
       host: "127.0.0.1",
-      port: 8545,  // 8545
+      port: 8545,
       network_id: "*",
     },
     mainnet: {
-      // provider: providerFactory(),
+      provider: providerFactory(),
       network_id: 1,
       gas: 8000000,
-      gasPrice: 115000000000,  // 115 gwei,
+      gasPrice: 115000000000,  // 115 gwei.
     },
     ropsten: {
       provider: providerFactory(),
       network_id: 3,
-      // gas: 8000000,  // Make sure this gas allocation isn't over 4M, which is the max
-      // gasPrice: 30000000000,  // 30 gwei,
+      gas: 8000000,  // Make sure this gas allocation isn't over 4M, which is the max.
+      gasPrice: 30000000000,  // 30 gwei.
       skipDryRun: true
     },
     kovan: {
       provider: providerFactory(),
       network_id: 42,
-      gas: 8000000,  // Make sure this gas allocation isn't over 4M, which is the max
-      gasPrice: 30000000000,  // 30 gwei,
+      gas: 8000000,  // Make sure this gas allocation isn't over 4M, which is the max.
+      gasPrice: 30000000000,  // 30 gwei.
       skipDryRun: true
     },
     rinkeby: {
       provider: providerFactory(),
       network_id: 4,
-      // gas: 8000000,
-      skipDryRun: true  // Sure this gas allocation isn't over 4M, which is the max
+      gas: 8000000,
+      skipDryRun: true  // Sure this gas allocation isn't over 4M, which is the max.
     }
   },
   compilers: {
