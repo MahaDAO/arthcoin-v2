@@ -78,7 +78,7 @@ describe('ARTHPool', () => {
     ARTHController = await ethers.getContractFactory('ARTHController');
     RecollateralizationCurve = await ethers.getContractFactory('Sigmoid');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
-    ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
+    ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHGMUOracle');
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
   });
 

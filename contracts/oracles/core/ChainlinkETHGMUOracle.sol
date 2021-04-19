@@ -6,9 +6,11 @@ pragma experimental ABIEncoderV2;
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ISimpleOracle} from '../../interfaces/ISimpleOracle.sol';
 import {IChainlinkOracle} from '../../interfaces/IChainlinkOracle.sol';
-import {IChainlinkAggregatorV3} from '../../interfaces/IChainlinkAggregatorV3.sol';
+import {
+    IChainlinkAggregatorV3
+} from '../../interfaces/IChainlinkAggregatorV3.sol';
 
-contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
+contract ChainlinkETHGMUOracle is IChainlinkOracle {
     using SafeMath for uint256;
 
     /**
