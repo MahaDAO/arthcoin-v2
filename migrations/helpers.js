@@ -60,6 +60,7 @@ const getUSDT = async (network, deployer, artifacts, ownerAddr, genesisSupply, s
   if (addr) return IERC20.at(addr)
   if (MockUSDT.isDeployed()) return MockUSDT.deployed()
 
+  console.log(ownerAddr);
   console.log(chalk.yellow(`\nDeploying mock dai on ${network} network...`))
   await deployer.deploy(MockUSDT, ownerAddr, genesisSupply, symbol, decimals)
 
@@ -67,17 +68,17 @@ const getUSDT = async (network, deployer, artifacts, ownerAddr, genesisSupply, s
 }
 
 
-const getMahaToken = async (network, deployer, artifacts) => {
+const getMahaToken = async (network, deployer, artifacts, ownerAddr, genesisSupply, symbol, decimals) => {
   const IERC20 = artifacts.require('IERC20')
-  const MahaToken = artifacts.require('MahaToken')
+  const MahaToken = artifacts.require('MockMaha')
 
   const addr = knownContracts.MahaToken && knownContracts.MahaToken[network]
   if (addr) return IERC20.at(addr)
-
   if (MahaToken.isDeployed()) return MahaToken.deployed()
 
+  console.log(ownerAddr);
   console.log(chalk.yellow(`\nDeploying mahatoken on ${network} network...`))
-  await deployer.deploy(MahaToken)
+  await deployer.deploy(MahaToken, ownerAddr, genesisSupply, symbol, decimals)
 
   return MahaToken.deployed()
 }
