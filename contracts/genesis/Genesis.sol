@@ -149,6 +149,10 @@ contract Genesis is ERC20, Ownable {
         ethGMUOracle = oracle;
     }
 
+    function setHardCap(uint256 cap) external onlyOwner {
+        hardCap = cap;
+    }
+
     function mint(uint256 amount) public payable isActive {
         require(amount > 0, 'Genesis: amount = 0');
         require(msg.value == amount, 'Genesis: INVALID INPUT');
