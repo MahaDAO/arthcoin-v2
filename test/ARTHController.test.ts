@@ -46,7 +46,7 @@ describe('ARTHController', () => {
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ARTHController');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
-    ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
+    ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHGMUOracle');
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
   });
 
