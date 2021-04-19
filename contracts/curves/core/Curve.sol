@@ -6,15 +6,19 @@ import {Ownable} from '../../access/Ownable.sol';
 import {ICurve} from '../../interfaces/ICurve.sol';
 
 abstract contract Curve is ICurve, Ownable {
+    /// @notice Minimum X (e.g Collateral/Supply).
     uint256 public override minX;
 
+    /// @notice Maximum X (e.g Collateral/Supply).
     uint256 public override maxX;
 
+    /// @notice Minimum Y (e.g Discount/Price).
     uint256 public override minY;
 
+    /// @notice Maximum Y (e.g Discount/Price).
     uint256 public override maxY;
 
-    /// @notice Fixed Y(Price in some graphs) in case needed.
+    /// @notice Fixed Y(Discount/Price) in case needed.
     uint256 public override fixedY;
 
     event MinXChanged(uint256 old, uint256 latest);
