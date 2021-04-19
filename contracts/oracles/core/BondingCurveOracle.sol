@@ -2,22 +2,34 @@
 
 pragma solidity ^0.8.0;
 
-import {Ownable} from '../../access/Ownable.sol';
+import {Sigmoid} from '../../curves/core/Sigmoid.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {IUniswapPairOracle} from '../../interfaces/IUniswapPairOracle.sol';
 
-contract BondingCurveOracle is Ownable {
+contract BondingCurveOracle is Sigmoid {
     using SafeMath for uint256;
 
-    IUniswapPairOracle public oracle;
+    uint256 private _PRICE_PRECISION = 1e6;
 
-    uint256 public initialPrice = 10000e6;
+    constructor(
+        uint256 softCap, // 0% genesis collateral.
+        uint256 hardCap, // 100% genesis collateral.
+        uint256 initialCurvePrice,
+        uint256 finalCurvePrice,
+        uint256[] memory slots // Should represent 0.6 * 1 / (1 + e^-5x).
+    )
+        Sigmoid(
+            softCap,
+            hardCap,
+            initialCurvePrice,
+            finalCurvePrice,
+            true, // Increasing curve(Price increases with time/collateral)
+            slots
+        )
+    {}
 
-    constructor(IUniswapPairOracle oracle_) {
-        oracle = oracle_;
-    }
+    function getPrice(uint256 percentCollateral) public view returns (uint256) {
+        uint256 price = super.getY(percentCollateral);
 
-    function setOracle(IUniswapPairOracle oracle_) public onlyOwner {
-        oracle = oracle_;
+        return price.mul(_PRICE_PRECISION).div(1e18);
     }
 }
