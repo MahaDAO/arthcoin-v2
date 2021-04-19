@@ -6,7 +6,7 @@ import {ERC20} from './core/ERC20.sol';
 
 /**
  * @title  MahaToken.
- * @author Steven Enamake.
+ * @author Steven Enamakel.
  */
 contract MahaToken is ERC20 {
     address public upgradedAddress;
