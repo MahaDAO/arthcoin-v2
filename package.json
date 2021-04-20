@@ -1,7 +1,7 @@
 {
   "name": "arthcoin-protocol",
   "version": "2.0.0",
-  "description": "A lightweight implementation of the Basis Protocol on Ethereum",
+  "description": "A lightweight implementation of the ARTH Valuecoin protocol on Ethereum",
   "repository": "https://github.com/MahaDAO/arthcoin-v2",
   "license": "MIT",
   "scripts": {

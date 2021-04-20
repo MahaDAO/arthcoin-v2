@@ -430,19 +430,19 @@ contract ARTHController is AccessControl, IARTHController {
         return totalCollateralValueD18;
     }
 
-    function getCRForMint() public view override returns(uint256) {
+    function getCRForMint() public view override returns (uint256) {
         if (useGlobalCRForMint) return getGlobalCollateralRatio();
 
         return mintCollateralRatio;
     }
 
-    function getCRForRedeem() public view override returns(uint256) {
+    function getCRForRedeem() public view override returns (uint256) {
         if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
 
         return redeemCollateralRatio;
     }
 
-    function getCRForRecollateralize() public view override returns(uint256) {
+    function getCRForRecollateralize() public view override returns (uint256) {
         if (useGlobalCRForRecollateralize) return getGlobalCollateralRatio();
 
         return recollateralizeCollateralRatio;
