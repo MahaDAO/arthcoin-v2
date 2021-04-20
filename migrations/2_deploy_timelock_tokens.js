@@ -51,11 +51,11 @@ module.exports = async function (deployer, network, accounts) {
   console.log(` - NOTE: ARTHX name: ${arthxName}`)
   console.log(` - NOTE: ARTHX address: ${arthxInstance.address}`)
 
-  await helpers.getMahaToken(network, deployer, artifacts)
   await helpers.getDAI(network, deployer, artifacts, DEPLOYER_ADDRESS, MOCK_TOKEN_INITIAL_SUPPLY, 'DAI', 6)
   await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS, MOCK_TOKEN_INITIAL_SUPPLY, 'WETH', 6)
   await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, MOCK_TOKEN_INITIAL_SUPPLY, 'USDC', 6)
   await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, MOCK_TOKEN_INITIAL_SUPPLY, 'USDT', 6)
+  await helpers.getMahaToken(network, deployer, artifacts, DEPLOYER_ADDRESS, MOCK_TOKEN_INITIAL_SUPPLY, 'MAHA', 6)
 
   console.log(chalk.yellow('\nSetting appropriate token addresses...'))
   await arthControllerInstance.setARTHXAddress(arthxInstance.address, { from: DEPLOYER_ADDRESS })
