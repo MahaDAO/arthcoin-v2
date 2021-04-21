@@ -3,389 +3,363 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../interfaces/IARTH.sol';
-import '../interfaces/IARTHX.sol';
-import '../interfaces/IERC20.sol';
-import '../utils/math/SafeMath.sol';
-import '../interfaces/finnexus/IFNXCFNX.sol';
-import '../interfaces/ICREAMcrARTH.sol';
-import '../interfaces/finnexus/IFNXFPTB.sol';
-import '../interfaces/IARTHPool.sol';
-import '../assets/variants/Comp.sol';
-import '../interfaces/finnexus/IFNXOracle.sol';
-import '../interfaces/finnexus/IFNXMinePool.sol';
-import '../interfaces/finnexus/IFNXFPTARTH.sol';
-import '../oracles/core/UniswapPairOracle.sol';
-import '../access/AccessControl.sol';
-import '../interfaces/finnexus/IFNXManagerProxy.sol';
-import '../interfaces/finnexus/IFNXTokenConverter.sol';
-import '../interfaces/finnexus/IFNXIntegratedStake.sol';
-import '../interfaces/IARTHController.sol';
+import {Ownable} from "../access/Ownable.sol";
+import {IARTH} from "../interfaces/IARTH.sol";
+import {IARTHX} from "../interfaces/IARTHX.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
+import {IARTHPool} from "../interfaces/IARTHPool.sol";
+import {AccessControl} from "../access/AccessControl.sol";
+import {ICREAMcrARTH} from "../interfaces/ICREAMcrARTH.sol";
+import {IFNXCFNX} from "../interfaces/finnexus/IFNXCFNX.sol";
+import {IFNXFPTB} from "../interfaces/finnexus/IFNXFPTB.sol";
+import {IFNXOracle} from "../interfaces/finnexus/IFNXOracle.sol";
+import {IARTHController} from "../interfaces/IARTHController.sol";
+import {IFNXFPTARTH} from "../interfaces/finnexus/IFNXFPTARTH.sol";
+import {IFNXMinePool} from "../interfaces/finnexus/IFNXMinePool.sol";
+import {IFNXManagerProxy} from "../interfaces/finnexus/IFNXManagerProxy.sol";
+import {
+    IFNXTokenConverter
+} from "../interfaces/finnexus/IFNXTokenConverter.sol";
+import {
+    IFNXIntegratedStake
+} from "../interfaces/finnexus/IFNXIntegratedStake.sol";
 
-contract ARTHLendingAMO is AccessControl {
+contract ARTHLendingAMO is AccessControl, Ownable {
     using SafeMath for uint256;
 
-    /* ========== STATE VARIABLES ========== */
+    IARTH private _arth;
+    IARTHX private _arthx;
+    IARTHPool private _pool;
+    IERC20 private _collateral;
+    IARTHController private _controller;
 
-    IERC20 private collateralToken;
-    IARTHX private ARTHX;
-    IARTH private ARTH;
-    IARTHPool private pool;
-    IARTHController private controller;
-
-    // Cream
-    ICREAMcrARTH private crARTH =
+    ICREAMcrARTH private _crARTH =
         ICREAMcrARTH(0xb092b4601850E23903A42EaCBc9D8A0EeC26A4d5);
-
-    // FinNexus
-    // More addresses: https://github.com/FinNexus/FinNexus-Documentation/blob/master/content/developers/smart-contracts.md
-    IFNXFPTARTH private fnxFPT_ARTH =
-        IFNXFPTARTH(0x39ad661bA8a7C9D3A7E4808fb9f9D5223E22F763);
-    IFNXFPTB private fnxFPT_B =
+    IFNXFPTB private _fnxFPTB =
         IFNXFPTB(0x7E605Fb638983A448096D82fFD2958ba012F30Cd);
-    IFNXIntegratedStake private fnxIntegratedStake =
+    IFNXFPTARTH private _fnxFPTARTH =
+        IFNXFPTARTH(0x39ad661bA8a7C9D3A7E4808fb9f9D5223E22F763);
+    IFNXIntegratedStake private _fnxIntegratedStake =
         IFNXIntegratedStake(0x23e54F9bBe26eD55F93F19541bC30AAc2D5569b2);
-    IFNXMinePool private fnxMinePool =
+    IFNXMinePool private _fnxMinePool =
         IFNXMinePool(0x4e6005396F80a737cE80d50B2162C0a7296c9620);
-    IFNXTokenConverter private fnxTokenConverter =
+    IFNXTokenConverter private _fnxTokenConverter =
         IFNXTokenConverter(0x955282b82440F8F69E901380BeF2b603Fba96F3b);
-    IFNXManagerProxy private fnxManagerProxy =
+    IFNXManagerProxy private _fnxManagerProxy =
         IFNXManagerProxy(0xa2904Fd151C9d9D634dFA8ECd856E6B9517F9785);
-    IFNXOracle private fnxOracle =
+    IFNXOracle private _fnxOracle =
         IFNXOracle(0x43BD92bF3Bb25EBB3BdC2524CBd6156E3Fdd41F3);
-
-    // Reward Tokens
-    IFNXCFNX private CFNX =
+    IFNXCFNX private _cfnx =
         IFNXCFNX(0x9d7beb4265817a4923FAD9Ca9EF8af138499615d);
-    IERC20 private FNX = IERC20(0xeF9Cd7882c067686691B6fF49e650b43AFBBCC6B);
+    IERC20 private _fnx = IERC20(0xeF9Cd7882c067686691B6fF49e650b43AFBBCC6B);
 
-    address public collateralAddress;
-    address public pool_address;
-    address public ownerAddress;
-    address public timelock_address;
-    address public custodian_address;
+    address public timelock;
+    address public custodian;
 
-    uint256 public immutable missing_decimals;
-    uint256 private constant PRICE_PRECISION = 1e6;
+    bool public allowCream = true;
+    bool public allowFinnexus = true;
 
-    // Max amount of ARTH this contract mint
-    uint256 public mint_cap = uint256(100000e18);
+    uint256 public minCR = 850000;
+    uint256 public mintCap = uint256(100000e18);
 
-    // Minimum collateral ratio needed for new ARTH minting
-    uint256 public min_cr = 850000;
+    uint256 public mintedSumHistorical = 0;
+    uint256 public burnedSumHistorical = 0;
 
-    // Amount the contract borrowed
-    uint256 public minted_sum_historical = 0;
-    uint256 public burned_sum_historical = 0;
+    uint256 private constant _PRICE_PRECISION = 1e6;
+    uint256 public immutable COLLATERAL_MISSING_DECIMALS;
 
-    // Allowed strategies (can eventually be made into an array)
-    bool public allow_cream = true;
-    bool public allow_finnexus = true;
-
-    /* ========== CONSTRUCTOR ========== */
-
-    constructor(
-        address _arth_contract_address,
-        address _arthx_contract_address,
-        address _pool_address,
-        address _collateralAddress,
-        address _ownerAddress,
-        address _custodian_address,
-        address _timelock_address
-    ) {
-        ARTH = IARTH(_arth_contract_address);
-        ARTHX = IARTHX(_arthx_contract_address);
-        pool_address = _pool_address;
-        pool = IARTHPool(_pool_address);
-        collateralAddress = _collateralAddress;
-        collateralToken = IERC20(_collateralAddress);
-        timelock_address = _timelock_address;
-        ownerAddress = _ownerAddress;
-        custodian_address = _custodian_address;
-        missing_decimals = uint256(18).sub(collateralToken.decimals());
-
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    /* ========== MODIFIERS ========== */
+    event Recovered(address token, uint256 amount);
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == timelock_address || msg.sender == ownerAddress,
-            'You are not the owner or the governance timelock'
+            msg.sender == timelock || msg.sender == owner(),
+            "ARTHLendingAMO: You are not the owner or the governance timelock"
         );
         _;
     }
 
     modifier onlyCustodian() {
         require(
-            msg.sender == custodian_address,
-            'You are not the rewards custodian'
+            msg.sender == custodian,
+            "ARTHLendingAMO: You are not the rewards custodian"
         );
         _;
     }
 
-    /* ========== VIEWS ========== */
+    constructor(
+        IARTH arth,
+        IARTHX arthx,
+        IARTHPool pool,
+        IERC20 collateral,
+        address custodian_,
+        address timelock_
+    ) {
+        _arth = arth;
+        _arthx = arthx;
+        _pool = pool;
+        _collateral = collateral;
+
+        timelock = timelock_;
+        custodian = custodian_;
+        COLLATERAL_MISSING_DECIMALS = uint256(18).sub(_collateral.decimals());
+
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
 
     function showAllocations()
         external
         view
         returns (uint256[9] memory allocations)
     {
-        // IMPORTANT
-        // Should ONLY be used externally, because it may fail if any one of the functions below fail
+        // IMPORTANT: Should ONLY be used externally,
+        // because it may fail if any one of the functions below fail.
 
-        // All numbers given are in ARTH unless otherwise stated
-        allocations[0] = ARTH.balanceOf(address(this)); // Unallocated ARTH
+        // All numbers given are in ARTH unless otherwise stated.
+        allocations[0] = _arth.balanceOf(address(this)); // Unallocated ARTH
+
         allocations[1] = (
-            crARTH
+            _crARTH
                 .balanceOf(address(this))
-                .mul(crARTH.exchangeRateStored())
+                .mul(_crARTH.exchangeRateStored())
                 .div(1e18)
-        ); // Cream
-        allocations[2] = (fnxMinePool.getUserFPTABalance(address(this)))
+        ); // Cream.
+
+        allocations[2] = (_fnxMinePool.getUserFPTABalance(address(this)))
             .mul(1e8)
-            .div(fnxManagerProxy.getTokenNetworth()); // Staked FPT-ARTH
-        allocations[3] = (fnxFPT_ARTH.balanceOf(address(this))).mul(1e8).div(
-            fnxManagerProxy.getTokenNetworth()
-        ); // Free FPT-ARTH
-        allocations[4] = fnxTokenConverter.lockedBalanceOf(address(this)); // Unwinding CFNX
-        allocations[5] = fnxTokenConverter.getClaimAbleBalance(address(this)); // Claimable Unwound FNX
-        allocations[6] = FNX.balanceOf(address(this)); // Free FNX
+            .div(_fnxManagerProxy.getTokenNetworth()); // Staked FPT-ARTH.
 
-        uint256 sum_fnx = allocations[4];
-        sum_fnx = sum_fnx.add(allocations[5]);
-        sum_fnx = sum_fnx.add(allocations[6]);
-        allocations[7] = sum_fnx; // Total FNX possessed in various forms
+        allocations[3] = (_fnxFPTARTH.balanceOf(address(this))).mul(1e8).div(
+            _fnxManagerProxy.getTokenNetworth()
+        ); // Free FPT-ARTH.
 
-        uint256 sum_arth = allocations[0];
-        sum_arth = sum_arth.add(allocations[1]);
-        sum_arth = sum_arth.add(allocations[2]);
-        sum_arth = sum_arth.add(allocations[3]);
-        allocations[8] = sum_arth; // Total ARTH possessed in various forms
+        allocations[4] = _fnxTokenConverter.lockedBalanceOf(address(this)); // Unwinding CFNX.
+        allocations[5] = _fnxTokenConverter.getClaimAbleBalance(address(this)); // Claimable Unwound FNX.
+        allocations[6] = _fnx.balanceOf(address(this)); // Free FNX.
+
+        uint256 sumFNX = allocations[4];
+        sumFNX = sumFNX.add(allocations[5]);
+        sumFNX = sumFNX.add(allocations[6]);
+        allocations[7] = sumFNX; // Total FNX possessed in various forms.
+
+        uint256 sumARTH = allocations[0];
+        sumARTH = sumARTH.add(allocations[1]);
+        sumARTH = sumARTH.add(allocations[2]);
+        sumARTH = sumARTH.add(allocations[3]);
+        allocations[8] = sumARTH; // Total ARTH possessed in various forms
     }
 
     function showRewards() external view returns (uint256[1] memory rewards) {
-        // IMPORTANT
-        // Should ONLY be used externally, because it may fail if FNX.balanceOf() fails
-        rewards[0] = FNX.balanceOf(address(this)); // FNX
+        // IMPORTANT: Should ONLY be used externally,
+        // because it may fail if FNX.balanceOf() fails.
+        rewards[0] = _fnx.balanceOf(address(this));
     }
 
     // In ARTH
     function mintedBalance() public view returns (uint256) {
-        if (minted_sum_historical >= burned_sum_historical)
-            return minted_sum_historical.sub(burned_sum_historical);
+        if (mintedSumHistorical >= burnedSumHistorical)
+            return mintedSumHistorical.sub(burnedSumHistorical);
         else return 0;
     }
 
-    /* ========== PUBLIC FUNCTIONS ========== */
-
-    // Needed for the Arth contract to not brick
+    // Needed for the Arth contract to not brick.
     function getCollateralGMUBalance() external pure returns (uint256) {
-        return 1e18; // 1 USDC
+        return 1e18; // 1 USDC.
     }
 
-    /* ========== RESTRICTED FUNCTIONS ========== */
-
     // This contract is essentially marked as a 'pool' so it can call OnlyPools functions like poolMint and poolBurnFrom
-    // on the main ARTH contract
-    function mintARTHForInvestments(uint256 arth_amount)
+    // on the main ARTH contract.
+    function mintARTHForInvestments(uint256 arthAmount)
         public
         onlyByOwnerOrGovernance
     {
-        uint256 borrowed_balance = mintedBalance();
-
-        // Make sure you aren't minting more than the mint cap
+        // Make sure you aren't minting more than the mint cap.
         require(
-            borrowed_balance.add(arth_amount) <= mint_cap,
-            'Borrow cap reached'
+            mintedBalance().add(arthAmount) <= mintCap,
+            "ARTHLendingAMO: Borrow cap reached"
         );
-        minted_sum_historical = minted_sum_historical.add(arth_amount);
 
-        // Make sure the current CR isn't already too low
+        mintedSumHistorical = mintedSumHistorical.add(arthAmount);
+
+        // Make sure the current CR isn't already too low.
         require(
-            controller.getGlobalCollateralRatio() > min_cr,
-            'Collateral ratio is already too low'
+            _controller.getGlobalCollateralRatio() > minCR,
+            "ARTHLendingAMO: Collateral ratio is already too low"
         );
 
         // Make sure the ARTH minting wouldn't push the CR down too much
-        uint256 current_collateral_E18 =
-            (controller.getGlobalCollateralValue()).mul(10**missing_decimals);
-        uint256 cur_arth_supply = ARTH.totalSupply();
-        uint256 new_arth_supply = cur_arth_supply.add(arth_amount);
-        uint256 new_cr =
-            (current_collateral_E18.mul(PRICE_PRECISION)).div(new_arth_supply);
+        uint256 currentCollateralE18 =
+            (_controller.getGlobalCollateralValue()).mul(
+                10**COLLATERAL_MISSING_DECIMALS
+            );
+
+        uint256 currentARTHSupply = _arth.totalSupply();
+        uint256 newARTHSupply = currentARTHSupply.add(arthAmount);
+        uint256 newCR =
+            (currentCollateralE18.mul(_PRICE_PRECISION)).div(newARTHSupply);
+
         require(
-            new_cr > min_cr,
-            'Minting would cause collateral ratio to be too low'
+            newCR > minCR,
+            "ARTHLendingAMO: Minting would cause collateral ratio to be too low"
         );
 
         // Mint the arth
-        ARTH.poolMint(address(this), arth_amount);
+        _arth.poolMint(address(this), arthAmount);
     }
 
     // Give USDC profits back
     function giveCollatBack(uint256 amount) public onlyByOwnerOrGovernance {
-        collateralToken.transfer(address(pool), amount);
+        _collateral.transfer(address(_pool), amount);
     }
 
     // Burn unneeded or excess ARTH
-    function burnARTH(uint256 arth_amount) public onlyByOwnerOrGovernance {
-        // ARTH.burn(arth_amount);
-        burned_sum_historical = burned_sum_historical.add(arth_amount);
+    function burnARTH(uint256 arthAmount) public onlyByOwnerOrGovernance {
+        // ARTH.burn(arthAmount);
+        burnedSumHistorical = burnedSumHistorical.add(arthAmount);
     }
 
     // Burn unneeded ARTHX
     function burnARTHX(uint256 amount) public onlyByOwnerOrGovernance {
-        ARTHX.approve(address(this), amount);
-        ARTHX.poolBurnFrom(address(this), amount);
+        _arthx.approve(address(this), amount);
+        _arthx.poolBurnFrom(address(this), amount);
     }
 
-    /* ==================== CREAM ==================== */
-
     // E18
-    function creamDeposit_ARTH(uint256 ARTH_amount)
+    function creamDepositARTH(uint256 arthAmount)
         public
         onlyByOwnerOrGovernance
     {
-        require(allow_cream, 'Cream strategy is disabled');
-        ARTH.approve(address(crARTH), ARTH_amount);
-        require(crARTH.mint(ARTH_amount) == 0, 'Mint failed');
+        require(allowCream, "ARTHLendingAMO: Cream strategy is disabled");
+        _arth.approve(address(_crARTH), arthAmount);
+        require(_crARTH.mint(arthAmount) == 0, "ARTHLendingAMO: Mint failed");
     }
 
     // E18
-    function creamWithdraw_ARTH(uint256 ARTH_amount)
+    function creamWithdrawARTH(uint256 arthAmount)
         public
         onlyByOwnerOrGovernance
     {
         require(
-            crARTH.redeemUnderlying(ARTH_amount) == 0,
-            'RedeemUnderlying failed'
+            _crARTH.redeemUnderlying(arthAmount) == 0,
+            "ARTHLendingAMO: RedeemUnderlying failed"
         );
     }
 
     // E8
-    function creamWithdraw_crARTH(uint256 crARTH_amount)
+    function creamWithdrawcrARTH(uint256 crarthAmount)
         public
         onlyByOwnerOrGovernance
     {
-        require(crARTH.redeem(crARTH_amount) == 0, 'Redeem failed');
+        require(
+            _crARTH.redeem(crarthAmount) == 0,
+            "ARTHLendingAMO: Redeem failed"
+        );
     }
 
-    /* ==================== FinNexus ==================== */
-
-    /* --== Staking ==-- */
-
-    function fnxIntegratedStakeFPTs_ARTH_FNX(
-        uint256 ARTH_amount,
-        uint256 FNX_amount,
-        uint256 lock_period
+    function fnxIntegratedStakeFPTsARTHFNX(
+        uint256 arthAmount,
+        uint256 fnxAmount,
+        uint256 lockPeriod
     ) public onlyByOwnerOrGovernance {
-        require(allow_finnexus, 'FinNexus strategy is disabled');
-        ARTH.approve(address(fnxIntegratedStake), ARTH_amount);
-        FNX.approve(address(fnxIntegratedStake), FNX_amount);
+        require(allowFinnexus, "ARTHLendingAMO: FinNexus strategy is disabled");
 
-        address[] memory fpta_tokens = new address[](1);
-        uint256[] memory fpta_amounts = new uint256[](1);
-        address[] memory fptb_tokens = new address[](1);
-        uint256[] memory fptb_amounts = new uint256[](1);
+        _arth.approve(address(_fnxIntegratedStake), arthAmount);
+        _fnx.approve(address(_fnxIntegratedStake), fnxAmount);
 
-        fpta_tokens[0] = address(ARTH);
-        fpta_amounts[0] = ARTH_amount;
-        fptb_tokens[0] = address(FNX);
-        fptb_amounts[0] = FNX_amount;
+        address[] memory fptaTokens = new address[](1);
+        uint256[] memory fptaAmounts = new uint256[](1);
+        address[] memory fptbTokens = new address[](1);
+        uint256[] memory fptbAmounts = new uint256[](1);
 
-        fnxIntegratedStake.stake(
-            fpta_tokens,
-            fpta_amounts,
-            fptb_tokens,
-            fptb_amounts,
-            lock_period
+        fptaTokens[0] = address(_arth);
+        fptaAmounts[0] = arthAmount;
+        fptbTokens[0] = address(_fnx);
+        fptbAmounts[0] = fnxAmount;
+
+        _fnxIntegratedStake.stake(
+            fptaTokens,
+            fptaAmounts,
+            fptbTokens,
+            fptbAmounts,
+            lockPeriod
         );
     }
 
     // FPT-ARTH : FPT-B = 10:1 is the best ratio for staking. You can get it using the prices.
-    function fnxStakeARTHForFPT_ARTH(uint256 ARTH_amount, uint256 lock_period)
+    function fnxStakeARTHForFPTARTH(uint256 arthAmount, uint256 lockPeriod)
         public
         onlyByOwnerOrGovernance
     {
-        require(allow_finnexus, 'FinNexus strategy is disabled');
-        ARTH.approve(address(fnxIntegratedStake), ARTH_amount);
+        require(allowFinnexus, "ARTHLendingAMO: FinNexus strategy is disabled");
 
-        address[] memory fpta_tokens = new address[](1);
-        uint256[] memory fpta_amounts = new uint256[](1);
-        address[] memory fptb_tokens = new address[](0);
-        uint256[] memory fptb_amounts = new uint256[](0);
+        _arth.approve(address(_fnxIntegratedStake), arthAmount);
 
-        fpta_tokens[0] = address(ARTH);
-        fpta_amounts[0] = ARTH_amount;
+        address[] memory fptaTokens = new address[](1);
+        uint256[] memory fptaAmounts = new uint256[](1);
+        address[] memory fptbTokens = new address[](0);
+        uint256[] memory fptbAmounts = new uint256[](0);
 
-        fnxIntegratedStake.stake(
-            fpta_tokens,
-            fpta_amounts,
-            fptb_tokens,
-            fptb_amounts,
-            lock_period
+        fptaTokens[0] = address(_arth);
+        fptaAmounts[0] = arthAmount;
+
+        _fnxIntegratedStake.stake(
+            fptaTokens,
+            fptaAmounts,
+            fptbTokens,
+            fptbAmounts,
+            lockPeriod
         );
     }
 
-    /* --== Collect CFNX ==-- */
-
     function fnxCollectCFNX() public onlyByOwnerOrGovernance {
-        uint256 claimable_cfnx =
-            fnxMinePool.getMinerBalance(address(this), address(CFNX));
-        fnxMinePool.redeemMinerCoin(address(CFNX), claimable_cfnx);
+        uint256 claimablecFNX =
+            _fnxMinePool.getMinerBalance(address(this), address(_cfnx));
+        _fnxMinePool.redeemMinerCoin(address(_cfnx), claimablecFNX);
     }
 
-    /* --== UnStaking ==-- */
-
-    // FPT-ARTH = Staked ARTH
-    function fnxUnStakeFPT_ARTH(uint256 FPT_ARTH_amount)
+    function fnxUnStakeFPTARTH(uint256 fptARTHAmount)
         public
         onlyByOwnerOrGovernance
     {
-        fnxMinePool.unstakeFPTA(FPT_ARTH_amount);
+        _fnxMinePool.unstakeFPTA(fptARTHAmount);
     }
 
     // FPT-B = Staked FNX
-    function fnxUnStakeFPT_B(uint256 FPT_B_amount)
-        public
-        onlyByOwnerOrGovernance
-    {
-        fnxMinePool.unstakeFPTB(FPT_B_amount);
+    function fnxUnStakeFPTB(uint256 fptBAmount) public onlyByOwnerOrGovernance {
+        _fnxMinePool.unstakeFPTB(fptBAmount);
     }
 
     /* --== Unwrapping LP Tokens ==-- */
 
     // FPT-ARTH = Staked ARTH
-    function fnxUnRedeemFPT_ARTHForARTH(uint256 FPT_ARTH_amount)
+    function fnxUnRedeemFPTARTHForARTH(uint256 fptARTHAmount)
         public
         onlyByOwnerOrGovernance
     {
-        fnxFPT_ARTH.approve(address(fnxManagerProxy), FPT_ARTH_amount);
-        fnxManagerProxy.redeemCollateral(FPT_ARTH_amount, address(ARTH));
+        _fnxFPTARTH.approve(address(_fnxManagerProxy), fptARTHAmount);
+        _fnxManagerProxy.redeemCollateral(fptARTHAmount, address(_arth));
     }
 
     // FPT-B = Staked FNX
-    function fnxUnStakeFPT_BForFNX(uint256 FPT_B_amount)
+    function fnxUnStakeFPTBForFNX(uint256 fptBAmount)
         public
         onlyByOwnerOrGovernance
     {
-        fnxFPT_B.approve(address(fnxManagerProxy), FPT_B_amount);
-        fnxManagerProxy.redeemCollateral(FPT_B_amount, address(FNX));
+        _fnxFPTB.approve(address(_fnxManagerProxy), fptBAmount);
+        _fnxManagerProxy.redeemCollateral(fptBAmount, address(_fnx));
     }
 
     /* --== Convert CFNX to FNX ==-- */
 
     // Has to be done in batches, since it unlocks over several months
     function fnxInputCFNXForUnwinding() public onlyByOwnerOrGovernance {
-        uint256 cfnx_amount = CFNX.balanceOf(address(this));
-        CFNX.approve(address(fnxTokenConverter), cfnx_amount);
-        fnxTokenConverter.inputCfnxForInstallmentPay(cfnx_amount);
+        uint256 cfnxAmount = _cfnx.balanceOf(address(this));
+        _cfnx.approve(address(_fnxTokenConverter), cfnxAmount);
+        _fnxTokenConverter.inputCfnxForInstallmentPay(cfnxAmount);
     }
 
-    function fnxClaimFNX_From_CFNX() public onlyByOwnerOrGovernance {
-        fnxTokenConverter.claimFnxExpiredReward();
+    function fnxClaimFNXFromCFNX() public onlyByOwnerOrGovernance {
+        _fnxTokenConverter.claimFnxExpiredReward();
     }
 
     /* --== Combination Functions ==-- */
@@ -393,71 +367,59 @@ contract ARTHLendingAMO is AccessControl {
     function fnxCFNXCollectConvertUnwind() public onlyByOwnerOrGovernance {
         fnxCollectCFNX();
         fnxInputCFNXForUnwinding();
-        fnxClaimFNX_From_CFNX();
+        fnxClaimFNXFromCFNX();
     }
 
     /* ========== Custodian ========== */
 
     function withdrawRewards() public onlyCustodian {
-        FNX.transfer(custodian_address, FNX.balanceOf(address(this)));
+        _fnx.transfer(custodian, _fnx.balanceOf(address(this)));
     }
 
     /* ========== RESTRICTED GOVERNANCE FUNCTIONS ========== */
 
-    function setTimelock(address new_timelock)
+    function setTimelock(address newTimelock) external onlyByOwnerOrGovernance {
+        timelock = newTimelock;
+    }
+
+    function setMiscRewardsCustodian(address newCustodian)
         external
         onlyByOwnerOrGovernance
     {
-        timelock_address = new_timelock;
+        custodian = newCustodian;
     }
 
-    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
-        ownerAddress = _ownerAddress;
+    function setPool(IARTHPool pool) external onlyByOwnerOrGovernance {
+        _pool = pool;
     }
 
-    function setMiscRewardsCustodian(address _custodian_address)
+    function setMintCap(uint256 cap) external onlyByOwnerOrGovernance {
+        mintCap = cap;
+    }
+
+    function setMinimumCollateralRatio(uint256 cr)
         external
         onlyByOwnerOrGovernance
     {
-        custodian_address = _custodian_address;
+        minCR = cr;
     }
 
-    function setPool(address _pool_address) external onlyByOwnerOrGovernance {
-        pool_address = _pool_address;
-        pool = IARTHPool(_pool_address);
-    }
-
-    function setMintCap(uint256 _mint_cap) external onlyByOwnerOrGovernance {
-        mint_cap = _mint_cap;
-    }
-
-    function setMinimumCollateralRatio(uint256 _min_cr)
+    function setAllowedStrategies(bool creamFlag, bool finnexusFlag)
         external
         onlyByOwnerOrGovernance
     {
-        min_cr = _min_cr;
+        allowCream = creamFlag;
+        allowFinnexus = finnexusFlag;
     }
 
-    function setAllowedStrategies(bool _cream, bool _finnexus)
-        external
-        onlyByOwnerOrGovernance
-    {
-        allow_cream = _cream;
-        allow_finnexus = _finnexus;
-    }
-
-    function recoverERC20(address tokenAddress, uint256 tokenAmount)
+    function recoverERC20(address token, uint256 amount)
         external
         onlyByOwnerOrGovernance
     {
         // Can only be triggered by owner or governance, not custodian
         // Tokens are sent to the custodian, as a sort of safeguard
 
-        IERC20(tokenAddress).transfer(custodian_address, tokenAmount);
-        emit Recovered(tokenAddress, tokenAmount);
+        IERC20(token).transfer(custodian, amount);
+        emit Recovered(token, amount);
     }
-
-    /* ========== EVENTS ========== */
-
-    event Recovered(address token, uint256 amount);
 }

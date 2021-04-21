@@ -1,0 +1,16 @@
+{
+  "extends": "solhint:default",
+  "rules": {
+    "const-name-snakecase": "warn",
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "private-vars-leading-underscore": [
+      "warn",
+      {
+        "strict": false
+      }
+    ]
+  }
+}

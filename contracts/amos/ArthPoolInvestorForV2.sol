@@ -3,186 +3,174 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../interfaces/IARTH.sol';
-import '../interfaces/IARTHX.sol';
-import '../interfaces/IERC20.sol';
-import '../utils/math/SafeMath.sol';
-import '../interfaces/IARTHPool.sol';
-import '../assets/variants/Comp.sol';
-import '../interfaces/compound/IcUSDCPartial.sol';
-import '../interfaces/yearn/IyUSDCV2Partial.sol';
-import '../interfaces/aave/IAAVEaUSDCPartial.sol';
-import '../oracles/core/UniswapPairOracle.sol';
-import '../access/AccessControl.sol';
-import '../interfaces/aave/IAAVELendingPoolPartial.sol';
-import '../interfaces/compound/ICompComptrollerPartial.sol';
-import '../interfaces/IARTHController.sol';
+import {Ownable} from "../access/Ownable.sol";
+import {IARTH} from "../interfaces/IARTH.sol";
+import {IARTHX} from "../interfaces/IARTHX.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
+import {Comp} from "../assets/variants/Comp.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
+import {IARTHPool} from "../interfaces/IARTHPool.sol";
+import {AccessControl} from "../access/AccessControl.sol";
+import {IARTHController} from "../interfaces/IARTHController.sol";
+import {IcUSDCPartial} from "../interfaces/compound/IcUSDCPartial.sol";
+import {IUniswapPairOracle} from "../interfaces/IUniswapPairOracle.sol";
+import {IyUSDCV2Partial} from "../interfaces/yearn/IyUSDCV2Partial.sol";
+import {IAAVEaUSDCPartial} from "../interfaces/aave/IAAVEaUSDCPartial.sol";
+import {
+    IAAVELendingPoolPartial
+} from "../interfaces/aave/IAAVELendingPoolPartial.sol";
+import {
+    ICompComptrollerPartial
+} from "../interfaces/compound/ICompComptrollerPartial.sol";
 
 /**
- *  Original code written by:
- *  - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
- *  Code modified by:
- *  - Steven Enamakel, Yash Agrawal & Sagar Behara.
- *  Lower APY: yearn, AAVE, Compound
- *  Higher APY: KeeperDAO, BZX, Harvest
+ * Original code written by:
+ * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
+ *
+ * Lower APY: yearn, AAVE, Compound
+ * Higher APY: KeeperDAO, BZX, Harvest
  */
-contract ARTHPoolInvestorForV2 is AccessControl {
+contract ARTHPoolInvestorForV2 is AccessControl, Ownable {
     using SafeMath for uint256;
 
-    /* ========== STATE VARIABLES ========== */
+    IARTH private _arth;
+    IARTHX private _arthx;
+    IARTHPool private _pool;
+    IERC20 private _collateral;
+    IARTHController private _controller;
 
-    IERC20 private collateralToken;
-    IARTHX private ARTHX;
-    IARTH private ARTH;
-    IARTHPool private pool;
-    IARTHController private controller;
-
-    // Pools and vaults
-    IyUSDCV2Partial private yUSDC_V2 =
+    IyUSDCV2Partial private _yUSDCV2 =
         IyUSDCV2Partial(0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9);
-    IAAVELendingPoolPartial private aaveUSDC_Pool =
+    IAAVELendingPoolPartial private _aaveUSDCPool =
         IAAVELendingPoolPartial(0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9);
-    IAAVEaUSDCPartial private aaveUSDC_Token =
+    IAAVEaUSDCPartial private _aaveUSDCToken =
         IAAVEaUSDCPartial(0xBcca60bB61934080951369a648Fb03DF4F96263C);
-    IcUSDCPartial private cUSDC =
+    IcUSDCPartial private _cUSDC =
         IcUSDCPartial(0x39AA39c021dfbaE8faC545936693aC917d5E7563);
 
-    // Reward Tokens
-    Comp private COMP = Comp(0xc00e94Cb662C3520282E6f5717214004A7f26888);
-    ICompComptrollerPartial private CompController =
+    Comp private _comp = Comp(0xc00e94Cb662C3520282E6f5717214004A7f26888);
+    ICompComptrollerPartial private _compController =
         ICompComptrollerPartial(0x3d9819210A31b4961b30EF54bE2aeD79B9c9Cd3B);
 
-    address public collateralAddress;
-    address public pool_address;
-    address public ownerAddress;
-    address public timelock_address;
-    address public custodian_address;
-    address public weth_address = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public timelock;
+    address public custodian;
+    address public weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
-    uint256 public immutable missing_decimals;
-    uint256 private constant PRICE_PRECISION = 1e6;
+    uint256 public borrowCap = uint256(20000e6);
 
-    // Max amount of collateral this contract can borrow from the ArthPool
-    uint256 public borrow_cap = uint256(20000e6);
+    uint256 public borrowedBalance = 0;
+    uint256 public borrowedHistorical = 0;
+    uint256 public paidBackHistorical = 0;
 
-    // Amount the contract borrowed
-    uint256 public borrowed_balance = 0;
-    uint256 public borrowed_historical = 0;
-    uint256 public paid_back_historical = 0;
+    bool public allowAave = true;
+    bool public allowYearn = true;
+    bool public allowCompound = true;
 
-    // Allowed strategies (can eventually be made into an array)
-    bool public allow_yearn = true;
-    bool public allow_aave = true;
-    bool public allow_compound = true;
+    uint256 private constant _PRICE_PRECISION = 1e6;
+    uint256 public immutable COLLATERAL_MISSING_DECIMALS;
 
-    /* ========== MODIFIERS ========== */
+    event Recovered(address token, uint256 amount);
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == timelock_address || msg.sender == ownerAddress,
-            'You are not the owner or the governance timelock'
+            msg.sender == timelock || msg.sender == owner(),
+            "ARTHPoolInvestorForV2: You are not the owner or the governance timelock"
         );
         _;
     }
 
     modifier onlyCustodian() {
         require(
-            msg.sender == custodian_address,
-            'You are not the rewards custodian'
+            msg.sender == custodian,
+            "ARTHPoolInvestorForV2: You are not the rewards custodian"
         );
         _;
     }
 
-    /* ========== CONSTRUCTOR ========== */
-
     constructor(
-        address _arth_contract_address,
-        address _arthx_contract_address,
-        address _pool_address,
-        address _collateralAddress,
-        address _ownerAddress,
-        address _custodian_address,
-        address _timelock_address
+        IARTH arth,
+        IARTHX arthx,
+        IARTHPool pool,
+        IERC20 collateral,
+        address custodian_,
+        address timelock_
     ) {
-        ARTH = IARTH(_arth_contract_address);
-        ARTHX = IARTHX(_arthx_contract_address);
-        pool_address = _pool_address;
-        pool = IARTHPool(_pool_address);
-        collateralAddress = _collateralAddress;
-        collateralToken = IERC20(_collateralAddress);
-        timelock_address = _timelock_address;
-        ownerAddress = _ownerAddress;
-        custodian_address = _custodian_address;
-        missing_decimals = uint256(18).sub(collateralToken.decimals());
+        _arth = arth;
+        _arthx = arthx;
+        _pool = pool;
+        _collateral = collateral;
+
+        timelock = timelock_;
+        custodian = custodian_;
+        COLLATERAL_MISSING_DECIMALS = uint256(18).sub(_collateral.decimals());
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
-
-    /* ========== VIEWS ========== */
 
     function showAllocations()
         external
         view
         returns (uint256[5] memory allocations)
     {
-        // IMPORTANT
-        // Should ONLY be used externally, because it may fail if any one of the functions below fail
+        // IMPORTANT: Should ONLY be used externally,
+        // because it may fail if any one of the functions below fail.
 
         // All numbers given are assuming xyzUSDC, etc. is converted back to actual USDC
-        allocations[0] = collateralToken.balanceOf(address(this)); // Unallocated
-        allocations[1] = (yUSDC_V2.balanceOf(address(this)))
-            .mul(yUSDC_V2.pricePerShare())
+        allocations[0] = _collateral.balanceOf(address(this)); // Unallocated
+
+        allocations[1] = (_yUSDCV2.balanceOf(address(this)))
+            .mul(_yUSDCV2.pricePerShare())
             .div(1e6); // yearn
-        allocations[2] = aaveUSDC_Token.balanceOf(address(this)); // AAVE
+
+        allocations[2] = _aaveUSDCToken.balanceOf(address(this)); // AAVE
         allocations[3] = (
-            cUSDC.balanceOf(address(this)).mul(cUSDC.exchangeRateStored()).div(
-                1e18
-            )
+            _cUSDC
+                .balanceOf(address(this))
+                .mul(_cUSDC.exchangeRateStored())
+                .div(1e18)
         ); // Compound. Note that cUSDC is E8
 
-        uint256 sum_tally = 0;
+        uint256 sumTally = 0;
         for (uint256 i = 1; i < 5; i++) {
             if (allocations[i] > 0) {
-                sum_tally = sum_tally.add(allocations[i]);
+                sumTally = sumTally.add(allocations[i]);
             }
         }
 
-        allocations[4] = sum_tally; // Total Staked
+        allocations[4] = sumTally; // Total Staked
     }
 
     function showRewards() external view returns (uint256[1] memory rewards) {
         // IMPORTANT
         // Should ONLY be used externally, because it may fail if COMP.balanceOf() fails
-        rewards[0] = COMP.balanceOf(address(this)); // COMP
+        rewards[0] = _comp.balanceOf(address(this)); // COMP
     }
-
-    /* ========== PUBLIC FUNCTIONS ========== */
 
     // Needed for the Arth contract to function
     function getCollateralGMUBalance() external view returns (uint256) {
         // Needs to mimic the ArthPool value and return in E18
-        // Only thing different should be borrowed_balance vs balanceOf()
-        if (pool.collateralPricePaused() == true) {
+        // Only thing different should be borrowedBalance vs balanceOf()
+        if (_pool.collateralPricePaused() == true) {
             return
-                borrowed_balance
-                    .mul(10**missing_decimals)
-                    .mul(pool.pausedPrice())
-                    .div(PRICE_PRECISION);
+                borrowedBalance
+                    .mul(10**COLLATERAL_MISSING_DECIMALS)
+                    .mul(_pool.pausedPrice())
+                    .div(_PRICE_PRECISION);
         } else {
-            uint256 eth_usd_price = controller.getETHGMUPrice();
-            uint256 eth_collat_price =
-                UniswapPairOracle(pool.collateralETHOracleAddress()).consult(
-                    weth_address,
-                    (PRICE_PRECISION * (10**missing_decimals))
+            uint256 ethGMUPrice = _controller.getETHGMUPrice();
+            uint256 ethCollateralPrice =
+                IUniswapPairOracle(_pool.collateralETHOracleAddress()).consult(
+                    weth,
+                    (_PRICE_PRECISION * (10**COLLATERAL_MISSING_DECIMALS))
                 );
+            uint256 collateralGMUPrice =
+                ethGMUPrice.mul(_PRICE_PRECISION).div(ethCollateralPrice);
 
-            uint256 collat_usd_price =
-                eth_usd_price.mul(PRICE_PRECISION).div(eth_collat_price);
             return
-                borrowed_balance
-                    .mul(10**missing_decimals)
-                    .mul(collat_usd_price)
-                    .div(PRICE_PRECISION); //.mul(getCollateralPrice()).div(1e6);
+                borrowedBalance
+                    .mul(10**COLLATERAL_MISSING_DECIMALS)
+                    .mul(collateralGMUPrice)
+                    .div(_PRICE_PRECISION); //.mul(getCollateralPrice()).div(1e6);
         }
     }
 
@@ -191,194 +179,189 @@ contract ARTHPoolInvestorForV2 is AccessControl {
     // on the main ARTH contract
     // It mints ARTH from nothing, and redeems it on the target pool for collateral and ARTHX.
     // The burn can be called separately later on
-    function mintRedeemPart1(uint256 arth_amount)
+    function mintRedeemPart1(uint256 arthAmount)
         public
         onlyByOwnerOrGovernance
     {
         require(
-            allow_yearn || allow_aave || allow_compound,
-            'All strategies are currently off'
+            allowYearn || allowAave || allowCompound,
+            "ARTHPoolInvestorForV2: All strategies are currently off"
         );
-        uint256 redemptionFee = pool.redemptionFee();
-        uint256 col_price_usd = pool.getCollateralPrice();
-        uint256 globalCollateralRatio = controller.getGlobalCollateralRatio();
-        uint256 redeem_amount_E6 =
-            (arth_amount.mul(uint256(1e6).sub(redemptionFee))).div(1e6).div(
-                10**missing_decimals
+
+        uint256 redemptionFee = _pool.redemptionFee();
+        uint256 collateralPriceGMU = _pool.getCollateralPrice();
+        uint256 globalCollateralRatio = _controller.getGlobalCollateralRatio();
+
+        uint256 redeemAmountE6 =
+            (arthAmount.mul(uint256(1e6).sub(redemptionFee))).div(1e6).div(
+                10**COLLATERAL_MISSING_DECIMALS
             );
-        uint256 expected_collat_amount =
-            redeem_amount_E6.mul(globalCollateralRatio).div(1e6);
-        expected_collat_amount = expected_collat_amount.mul(1e6).div(
-            col_price_usd
+        uint256 expectedCollateralAmount =
+            redeemAmountE6.mul(globalCollateralRatio).div(1e6);
+
+        expectedCollateralAmount = expectedCollateralAmount.mul(1e6).div(
+            collateralPriceGMU
         );
 
         require(
-            borrowed_balance.add(expected_collat_amount) <= borrow_cap,
-            'Borrow cap reached'
+            borrowedBalance.add(expectedCollateralAmount) <= borrowCap,
+            "Borrow cap reached"
         );
-        borrowed_balance = borrowed_balance.add(expected_collat_amount);
-        borrowed_historical = borrowed_historical.add(expected_collat_amount);
+
+        borrowedBalance = borrowedBalance.add(expectedCollateralAmount);
+        borrowedHistorical = borrowedHistorical.add(expectedCollateralAmount);
 
         // Mint the arth
-        ARTH.poolMint(address(this), arth_amount);
+        _arth.poolMint(address(this), arthAmount);
 
         // Redeem the arth
-        ARTH.approve(address(pool), arth_amount);
-        pool.redeemFractionalARTH(arth_amount, 0, 0);
+        _arth.approve(address(_pool), arthAmount);
+        _pool.redeemFractionalARTH(arthAmount, 0, 0);
     }
 
     function mintRedeemPart2() public onlyByOwnerOrGovernance {
-        pool.collectRedemption();
+        _pool.collectRedemption();
     }
 
     function giveCollatBack(uint256 amount) public onlyByOwnerOrGovernance {
         // Still paying back principal
-        if (amount <= borrowed_balance) {
-            borrowed_balance = borrowed_balance.sub(amount);
+        if (amount <= borrowedBalance) {
+            borrowedBalance = borrowedBalance.sub(amount);
         }
         // Pure profits
         else {
-            borrowed_balance = 0;
+            borrowedBalance = 0;
         }
-        paid_back_historical = paid_back_historical.add(amount);
-        collateralToken.transfer(address(pool), amount);
+
+        paidBackHistorical = paidBackHistorical.add(amount);
+        _collateral.transfer(address(_pool), amount);
     }
 
     function burnARTHX(uint256 amount) public onlyByOwnerOrGovernance {
-        ARTHX.approve(address(this), amount);
-        ARTHX.poolBurnFrom(address(this), amount);
+        _arthx.approve(address(this), amount);
+        _arthx.poolBurnFrom(address(this), amount);
     }
 
-    /* ========== yearn V2 ========== */
+    function yDepositUSDC(uint256 usdcAmount) public onlyByOwnerOrGovernance {
+        require(
+            allowYearn,
+            "ARTHPoolInvestorForV2: yearn strategy is currently off"
+        );
 
-    function yDepositUSDC(uint256 USDC_amount) public onlyByOwnerOrGovernance {
-        require(allow_yearn, 'yearn strategy is currently off');
-        collateralToken.approve(address(yUSDC_V2), USDC_amount);
-        yUSDC_V2.deposit(USDC_amount);
-    }
-
-    // E6
-    function yWithdrawUSDC(uint256 yUSDC_amount)
-        public
-        onlyByOwnerOrGovernance
-    {
-        yUSDC_V2.withdraw(yUSDC_amount);
-    }
-
-    /* ========== AAVE V2 ========== */
-
-    function aaveDepositUSDC(uint256 USDC_amount)
-        public
-        onlyByOwnerOrGovernance
-    {
-        require(allow_aave, 'AAVE strategy is currently off');
-        collateralToken.approve(address(aaveUSDC_Pool), USDC_amount);
-        aaveUSDC_Pool.deposit(collateralAddress, USDC_amount, address(this), 0);
+        _collateral.approve(address(_yUSDCV2), usdcAmount);
+        _yUSDCV2.deposit(usdcAmount);
     }
 
     // E6
-    function aaveWithdrawUSDC(uint256 aUSDC_amount)
-        public
-        onlyByOwnerOrGovernance
-    {
-        aaveUSDC_Pool.withdraw(collateralAddress, aUSDC_amount, address(this));
+    function yWithdrawUSDC(uint256 yusdcAmount) public onlyByOwnerOrGovernance {
+        _yUSDCV2.withdraw(yusdcAmount);
     }
 
-    /* ========== Compound cUSDC + COMP ========== */
-
-    function compoundMint_cUSDC(uint256 USDC_amount)
+    function aaveDepositUSDC(uint256 usdcAmount)
         public
         onlyByOwnerOrGovernance
     {
-        require(allow_compound, 'Compound strategy is currently off');
-        collateralToken.approve(address(cUSDC), USDC_amount);
-        cUSDC.mint(USDC_amount);
+        require(
+            allowAave,
+            "ARTHPoolInvestorForV2: AAVE strategy is currently off"
+        );
+
+        _collateral.approve(address(_aaveUSDCPool), usdcAmount);
+        _aaveUSDCPool.deposit(
+            address(_collateral),
+            usdcAmount,
+            address(this),
+            0
+        );
+    }
+
+    // E6
+    function aaveWithdrawUSDC(uint256 ausdcAmount)
+        public
+        onlyByOwnerOrGovernance
+    {
+        _aaveUSDCPool.withdraw(
+            address(_collateral),
+            ausdcAmount,
+            address(this)
+        );
+    }
+
+    function compoundMintcUSDC(uint256 usdcAmount)
+        public
+        onlyByOwnerOrGovernance
+    {
+        require(
+            allowCompound,
+            "ARTHPoolInvestorForV2: Compound strategy is currently off"
+        );
+
+        _collateral.approve(address(_cUSDC), usdcAmount);
+        _cUSDC.mint(usdcAmount);
     }
 
     // E8
-    function compoundRedeem_cUSDC(uint256 cUSDC_amount)
+    function compoundRedeem_cUSDC(uint256 cusdcAmount)
         public
         onlyByOwnerOrGovernance
     {
         // NOTE that cUSDC is E8, NOT E6
-        cUSDC.redeem(cUSDC_amount);
+        _cUSDC.redeem(cusdcAmount);
     }
 
     function compoundCollectCOMP() public onlyByOwnerOrGovernance {
         address[] memory cTokens = new address[](1);
-        cTokens[0] = address(cUSDC);
-        CompController.claimComp(address(this), cTokens);
+        cTokens[0] = address(_cUSDC);
+        _compController.claimComp(address(this), cTokens);
 
         // CompController.claimComp(address(this), );
     }
 
-    /* ========== Custodian ========== */
-
     function withdrawRewards() public onlyCustodian {
-        COMP.transfer(custodian_address, COMP.balanceOf(address(this)));
+        _comp.transfer(custodian, _comp.balanceOf(address(this)));
     }
 
-    /* ========== RESTRICTED FUNCTIONS ========== */
+    function setTimelock(address newTimelock) external onlyByOwnerOrGovernance {
+        timelock = newTimelock;
+    }
 
-    function setTimelock(address new_timelock)
+    function setWETH(address newWETH) external onlyByOwnerOrGovernance {
+        weth = newWETH;
+    }
+
+    function setMiscRewardsCustodian(address newCustodian)
         external
         onlyByOwnerOrGovernance
     {
-        timelock_address = new_timelock;
+        custodian = newCustodian;
     }
 
-    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
-        ownerAddress = _ownerAddress;
+    function setPool(IARTHPool pool) external onlyByOwnerOrGovernance {
+        _pool = pool;
     }
 
-    function setWethAddress(address _weth_address)
-        external
-        onlyByOwnerOrGovernance
-    {
-        weth_address = _weth_address;
-    }
-
-    function setMiscRewardsCustodian(address _custodian_address)
-        external
-        onlyByOwnerOrGovernance
-    {
-        custodian_address = _custodian_address;
-    }
-
-    function setPool(address _pool_address) external onlyByOwnerOrGovernance {
-        pool_address = _pool_address;
-        pool = IARTHPool(_pool_address);
-    }
-
-    function setBorrowCap(uint256 _borrow_cap)
-        external
-        onlyByOwnerOrGovernance
-    {
-        borrow_cap = _borrow_cap;
+    function setBorrowCap(uint256 cap) external onlyByOwnerOrGovernance {
+        borrowCap = cap;
     }
 
     function setAllowedStrategies(
-        bool _yearn,
-        bool _aave,
-        bool _compound
+        bool yearnFlag,
+        bool aaveFlag,
+        bool compoundFlag
     ) external onlyByOwnerOrGovernance {
-        allow_yearn = _yearn;
-        allow_aave = _aave;
-        allow_compound = _compound;
+        allowYearn = yearnFlag;
+        allowAave = aaveFlag;
+        allowCompound = compoundFlag;
     }
 
-    function emergencyRecoverERC20(address tokenAddress, uint256 tokenAmount)
+    function emergencyRecoverERC20(address token, uint256 amount)
         external
         onlyByOwnerOrGovernance
     {
         // Can only be triggered by owner or governance, not custodian
         // Tokens are sent to the custodian, as a sort of safeguard
 
-        IERC20(tokenAddress).transfer(custodian_address, tokenAmount);
-        emit Recovered(tokenAddress, tokenAmount);
+        IERC20(token).transfer(custodian, amount);
+        emit Recovered(token, amount);
     }
-
-    /* ========== EVENTS ========== */
-
-    event Recovered(address token, uint256 amount);
 }

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import './AccessControl.sol';
-import '../utils/structs/EnumerableSet.sol';
+import "./AccessControl.sol";
+import "../utils/structs/EnumerableSet.sol";
 
 /**
  * @dev External interface of AccessControlEnumerable declared to support ERC165 detection.

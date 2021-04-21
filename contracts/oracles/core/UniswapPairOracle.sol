@@ -2,12 +2,16 @@
 
 pragma solidity ^0.8.0;
 
-import {FixedPoint} from '../../utils/math/FixedPoint.sol';
-import {IUniswapPairOracle} from '../../interfaces/IUniswapPairOracle.sol';
-import {UniswapV2Library} from '../../uniswaps/UniswapV2Library.sol';
-import {IUniswapV2Pair} from '../../interfaces/uniswap/IUniswapV2Pair.sol';
-import {UniswapV2OracleLibrary} from '../../uniswaps/UniswapV2OracleLibrary.sol';
-import {IUniswapV2Factory} from '../../interfaces/uniswap/IUniswapV2Factory.sol';
+import {FixedPoint} from "../../utils/math/FixedPoint.sol";
+import {IUniswapPairOracle} from "../../interfaces/IUniswapPairOracle.sol";
+import {UniswapV2Library} from "../../uniswaps/UniswapV2Library.sol";
+import {IUniswapV2Pair} from "../../interfaces/uniswap/IUniswapV2Pair.sol";
+import {
+    UniswapV2OracleLibrary
+} from "../../uniswaps/UniswapV2OracleLibrary.sol";
+import {
+    IUniswapV2Factory
+} from "../../interfaces/uniswap/IUniswapV2Factory.sol";
 
 /// @dev Fixed window oracle that recomputes the average price for the entire period once every period
 ///  Note that the price average is only guaranteed to be over at least 1 period, but may be over a longer period
@@ -43,7 +47,7 @@ contract UniswapPairOracle is IUniswapPairOracle {
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == ownerAddress || msg.sender == timelockAddress,
-            'You are not an owner or the governance timelock'
+            "You are not an owner or the governance timelock"
         );
         _;
     }
@@ -71,7 +75,7 @@ contract UniswapPairOracle is IUniswapPairOracle {
         (reserve0, reserve1, blockTimestampLast) = _pair.getReserves();
         require(
             reserve0 != 0 && reserve1 != 0,
-            'UniswapPairOracle: NO_RESERVES'
+            "UniswapPairOracle: NO_RESERVES"
         ); // Ensure that there's liquidity in the pair
 
         ownerAddress = _ownerAddress;
@@ -131,7 +135,7 @@ contract UniswapPairOracle is IUniswapPairOracle {
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
 
         // Ensure that at least one full period has passed since the last update
-        require(timeElapsed >= PERIOD, 'UniswapPairOracle: PERIOD_NOT_ELAPSED');
+        require(timeElapsed >= PERIOD, "UniswapPairOracle: PERIOD_NOT_ELAPSED");
 
         // Overflow is desired, casting never truncates
         // Cumulative price is in (uq112x112 price * seconds) units so we simply wrap it after division by time elapsed
@@ -160,13 +164,13 @@ contract UniswapPairOracle is IUniswapPairOracle {
         // Ensure that the price is not stale
         require(
             (timeElapsed < (PERIOD + CONSULT_LENIENCY)) || ALLOW_STALE_CONSULTS,
-            'UniswapPairOracle: PRICE_IS_STALE_NEED_TO_CALL_UPDATE'
+            "UniswapPairOracle: PRICE_IS_STALE_NEED_TO_CALL_UPDATE"
         );
 
         if (token == token0) {
             amountOut = price0Average.mul(amountIn).decode144();
         } else {
-            require(token == token1, 'UniswapPairOracle: INVALID_TOKEN');
+            require(token == token1, "UniswapPairOracle: INVALID_TOKEN");
             amountOut = price1Average.mul(amountIn).decode144();
         }
     }

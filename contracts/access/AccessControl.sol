@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import '../utils/Context.sol';
-import '../utils/introspection/ERC165.sol';
+import "../utils/Context.sol";
+import "../utils/introspection/ERC165.sol";
 
 /**
  * @dev External interface of AccessControl declared to support ERC165 detection.
@@ -160,7 +160,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
     function grantRole(bytes32 role, address account) public virtual override {
         require(
             hasRole(getRoleAdmin(role), _msgSender()),
-            'AccessControl: sender must be an admin to grant'
+            "AccessControl: sender must be an admin to grant"
         );
 
         _grantRole(role, account);
@@ -178,7 +178,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
     function revokeRole(bytes32 role, address account) public virtual override {
         require(
             hasRole(getRoleAdmin(role), _msgSender()),
-            'AccessControl: sender must be an admin to revoke'
+            "AccessControl: sender must be an admin to revoke"
         );
 
         _revokeRole(role, account);
@@ -205,7 +205,7 @@ abstract contract AccessControl is Context, IAccessControl, ERC165 {
     {
         require(
             account == _msgSender(),
-            'AccessControl: can only renounce roles for self'
+            "AccessControl: can only renounce roles for self"
         );
 
         _revokeRole(role, account);
