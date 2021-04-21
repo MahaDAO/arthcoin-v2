@@ -3,17 +3,17 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {Math} from '../../utils/math/Math.sol';
-import {CustomPausable} from '../../security/CustomPausable.sol';
-import {IARTH} from '../../interfaces/IARTH.sol';
-import {IERC20} from '../../interfaces/IERC20.sol';
-import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {SafeERC20} from '../../utils/SafeERC20.sol';
-import {StringHelpers} from '../../utils/StringHelpers.sol';
-import {IARTHController} from '../../interfaces/IARTHController.sol';
-import {ReentrancyGuard} from '../../utils/ReentrancyGuard.sol';
-import {TransferHelper} from '../../uniswaps/TransferHelper.sol';
-import {IStakingRewardsDual} from '../../interfaces/IStakingRewardsDual.sol';
+import {Math} from "../../utils/math/Math.sol";
+import {CustomPausable} from "../../security/CustomPausable.sol";
+import {IARTH} from "../../interfaces/IARTH.sol";
+import {IERC20} from "../../interfaces/IERC20.sol";
+import {SafeMath} from "../../utils/math/SafeMath.sol";
+import {SafeERC20} from "../../utils/SafeERC20.sol";
+import {StringHelpers} from "../../utils/StringHelpers.sol";
+import {IARTHController} from "../../interfaces/IARTHController.sol";
+import {ReentrancyGuard} from "../../utils/ReentrancyGuard.sol";
+import {TransferHelper} from "../../uniswaps/TransferHelper.sol";
+import {IStakingRewardsDual} from "../../interfaces/IStakingRewardsDual.sol";
 
 /**
  * @title  StakingRewardsDualV2
@@ -33,10 +33,6 @@ contract StakingRewardsDualV2 is
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    /**
-     * State variables.
-     */
-
     struct LockedStake {
         bytes32 kekId;
         uint256 startTimestamp;
@@ -48,7 +44,6 @@ contract StakingRewardsDualV2 is
     IERC20 public stakingToken;
     IERC20 public rewardsToken0;
     IERC20 public rewardsToken1;
-    IARTH private _ARTH;
     IARTHController private _arthController;
 
     uint256 public periodFinish;
@@ -97,7 +92,7 @@ contract StakingRewardsDualV2 is
 
     uint256 private constant _PRICE_PRECISION = 1e6;
     uint256 private constant _MULTIPLIER_BASE = 1e6;
-    string private _lockedStakeMinTimeStr = '604800'; // 7 days on genesis
+    string private _lockedStakeMinTimeStr = "604800"; // 7 days on genesis
 
     uint256 private _stakingTokenSupply = 0;
     uint256 private _stakingTokenBoostedSupply = 0;
@@ -106,10 +101,6 @@ contract StakingRewardsDualV2 is
     mapping(address => uint256) private _boostedBalances;
     mapping(address => uint256) private _unlockedBalances;
     mapping(address => LockedStake[]) private _lockedStakes;
-
-    /**
-     * Events.
-     */
 
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount, address sourceAddress);
@@ -145,14 +136,10 @@ contract StakingRewardsDualV2 is
     event LockedStakeMinTime(uint256 secs);
     event MaxCRBoostMultiplier(uint256 multiplier);
 
-    /**
-     * Modifiers.
-     */
-
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == ownerAddress || msg.sender == timelockAddress,
-            'You are not the owner or the governance timelock'
+            "You are not the owner or the governance timelock"
         );
         _;
     }
@@ -162,25 +149,25 @@ contract StakingRewardsDualV2 is
             msg.sender == ownerAddress ||
                 msg.sender == timelockAddress ||
                 validMigrators[msg.sender] == true,
-            'You are not the owner, governance timelock, or a migrator'
+            "You are not the owner, governance timelock, or a migrator"
         );
         _;
     }
 
     modifier isMigrating() {
-        require(migrationsOn == true, 'Contract is not in migration');
+        require(migrationsOn == true, "Contract is not in migration");
         _;
     }
 
     modifier notWithdrawalsPaused() {
-        require(withdrawalsPaused == false, 'Withdrawals are paused');
+        require(withdrawalsPaused == false, "Withdrawals are paused");
         _;
     }
 
     modifier notRewardsCollectionPaused() {
         require(
             rewardsCollectionPaused == false,
-            'Rewards collection is paused'
+            "Rewards collection is paused"
         );
         _;
     }
@@ -199,26 +186,22 @@ contract StakingRewardsDualV2 is
         _;
     }
 
-    /**
-     * Constructor.
-     */
-
     constructor(
         address _owner,
-        address _rewardsToken0,
-        address _rewardsToken1,
-        address _stakingToken,
-        address _arthAddress,
+        IERC20 _rewardsToken0,
+        IERC20 _rewardsToken1,
+        IERC20 _stakingToken,
+        IARTHController controller,
         address _timelockAddress,
         uint256 _poolWeight0,
         uint256 _poolWeight1
     ) {
         ownerAddress = _owner;
 
-        _ARTH = IARTH(_arthAddress);
-        rewardsToken0 = IERC20(_rewardsToken0);
-        rewardsToken1 = IERC20(_rewardsToken1);
-        stakingToken = IERC20(_stakingToken);
+        rewardsToken0 = _rewardsToken0;
+        rewardsToken1 = _rewardsToken1;
+        stakingToken = _stakingToken;
+        _arthController = controller;
 
         poolWeight0 = _poolWeight0;
         poolWeight1 = _poolWeight1;
@@ -269,7 +252,7 @@ contract StakingRewardsDualV2 is
         if (!migrationsOn) {
             require(
                 tokenAddress != address(stakingToken),
-                'Cannot withdraw staking tokens unless migration is on'
+                "Cannot withdraw staking tokens unless migration is on"
             ); // Only Governance / Timelock can trigger a migration
         }
         // Only the owner address can ever receive the recovery withdrawal
@@ -284,7 +267,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
-            'Previous rewards period must be complete before changing the duration for the new period'
+            "Previous rewards period must be complete before changing the duration for the new period"
         );
         rewardsDuration = _rewardsDuration;
         emit RewardsDurationUpdated(rewardsDuration);
@@ -296,11 +279,11 @@ contract StakingRewardsDualV2 is
     ) external onlyByOwnerOrGovernance {
         require(
             _lockedStakeMaxMultiplier >= 1,
-            'Multiplier must be greater than or equal to 1'
+            "Multiplier must be greater than or equal to 1"
         );
         require(
             _crBoostMaxMultiplier >= 1,
-            'Max CR Boost must be greater than or equal to 1'
+            "Max CR Boost must be greater than or equal to 1"
         );
 
         lockedStakeMaxMultiplier = _lockedStakeMaxMultiplier;
@@ -316,11 +299,11 @@ contract StakingRewardsDualV2 is
     ) external onlyByOwnerOrGovernance {
         require(
             _lockedStakeTimeForMaxMultiplier >= 1,
-            'Multiplier Max Time must be greater than or equal to 1'
+            "Multiplier Max Time must be greater than or equal to 1"
         );
         require(
             _lockedStakeMinTime >= 1,
-            'Multiplier Min Time must be greater than or equal to 1'
+            "Multiplier Min Time must be greater than or equal to 1"
         );
 
         lockedStakeTimeForMaxMultiplier = _lockedStakeTimeForMaxMultiplier;
@@ -361,6 +344,13 @@ contract StakingRewardsDualV2 is
         rewardsCollectionPaused = !rewardsCollectionPaused;
     }
 
+    function setARTHController(IARTHController controller)
+        external
+        onlyByOwnerOrGovernance
+    {
+        _arthController = controller;
+    }
+
     function setRewardRates(
         uint256 _newRate,
         uint256 _newRate1,
@@ -381,7 +371,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             migratorApprovedForStaker(stakerAddress, msg.sender),
-            'msg.sender is either an invalid migrator or the staker has not approved them'
+            "msg.sender is either an invalid migrator or the staker has not approved them"
         );
 
         _stake(stakerAddress, msg.sender, amount);
@@ -395,7 +385,7 @@ contract StakingRewardsDualV2 is
     ) external isMigrating {
         require(
             migratorApprovedForStaker(stakerAddress, msg.sender),
-            'msg.sender is either an invalid migrator or the staker has not approved them'
+            "msg.sender is either an invalid migrator or the staker has not approved them"
         );
 
         _stakeLocked(stakerAddress, msg.sender, amount, secs);
@@ -408,7 +398,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             migratorApprovedForStaker(stakerAddress, msg.sender),
-            'msg.sender is either an invalid migrator or the staker has not approved them'
+            "msg.sender is either an invalid migrator or the staker has not approved them"
         );
 
         _withdraw(stakerAddress, msg.sender, _unlockedBalances[stakerAddress]);
@@ -421,7 +411,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             migratorApprovedForStaker(stakerAddress, msg.sender),
-            'msg.sender is either an invalid migrator or the staker has not approved them'
+            "msg.sender is either an invalid migrator or the staker has not approved them"
         );
 
         _withdrawLocked(stakerAddress, msg.sender, kekId);
@@ -534,7 +524,7 @@ contract StakingRewardsDualV2 is
         return _boostedBalances[account];
     }
 
-    function _lockedStakesOf(address account)
+    function lockedStakesOf(address account)
         external
         view
         returns (LockedStake[] memory)
@@ -625,9 +615,9 @@ contract StakingRewardsDualV2 is
     function stakerAllowMigrator(address migratorAddress) public {
         require(
             stakerAllowedMigrators[msg.sender][migratorAddress] == false,
-            'Address already exists'
+            "Address already exists"
         );
-        require(validMigrators[migratorAddress], 'Invalid migrator address');
+        require(validMigrators[migratorAddress], "Invalid migrator address");
         stakerAllowedMigrators[msg.sender][migratorAddress] = true;
     }
 
@@ -668,7 +658,7 @@ contract StakingRewardsDualV2 is
     {
         require(
             validMigrators[migratorAddress] == false,
-            'address already exists'
+            "address already exists"
         );
         validMigrators[migratorAddress] = true;
         validMigratorsArray.push(migratorAddress);
@@ -710,12 +700,12 @@ contract StakingRewardsDualV2 is
         require(
             (paused == false && migrationsOn == false) ||
                 validMigrators[msg.sender] == true,
-            'Staking is paused, or migration is happening'
+            "Staking is paused, or migration is happening"
         );
-        require(amount > 0, 'Cannot stake 0');
+        require(amount > 0, "Cannot stake 0");
         require(
             greylist[stakerAddress] == false,
-            'address has been greylisted'
+            "address has been greylisted"
         );
 
         // Pull the tokens from the sourceAddress
@@ -752,25 +742,25 @@ contract StakingRewardsDualV2 is
         require(
             (paused == false && migrationsOn == false) ||
                 validMigrators[msg.sender] == true,
-            'Staking is paused, or migration is happening'
+            "Staking is paused, or migration is happening"
         );
-        require(amount > 0, 'Cannot stake 0');
-        require(secs > 0, 'Cannot wait for a negative number');
+        require(amount > 0, "Cannot stake 0");
+        require(secs > 0, "Cannot wait for a negative number");
         require(
             greylist[stakerAddress] == false,
-            'address has been greylisted'
+            "address has been greylisted"
         );
         require(
             secs >= lockedStakeMinTime,
             StringHelpers.strConcat(
-                'Minimum stake time not met (',
+                "Minimum stake time not met (",
                 _lockedStakeMinTimeStr,
-                ')'
+                ")"
             )
         );
         require(
             secs <= lockedStakeTimeForMaxMultiplier,
-            'You are trying to stake for too long'
+            "You are trying to stake for too long"
         );
 
         uint256 multiplier = stakingMultiplier(secs);
@@ -819,7 +809,7 @@ contract StakingRewardsDualV2 is
         address destinationAddress,
         uint256 amount
     ) internal nonReentrant notWithdrawalsPaused updateReward(stakerAddress) {
-        require(amount > 0, 'Cannot withdraw 0');
+        require(amount > 0, "Cannot withdraw 0");
 
         // Staking token balance and boosted balance
         _unlockedBalances[stakerAddress] = _unlockedBalances[stakerAddress].sub(
@@ -855,12 +845,12 @@ contract StakingRewardsDualV2 is
                 break;
             }
         }
-        require(thisStake.kekId == kekId, 'Stake not found');
+        require(thisStake.kekId == kekId, "Stake not found");
         require(
             block.timestamp >= thisStake.endingTimestamp ||
                 stakesUnlocked == true ||
                 validMigrators[msg.sender] == true,
-            'Stake is still locked!'
+            "Stake is still locked!"
         );
 
         uint256 theAmount = thisStake.amount;
@@ -932,7 +922,7 @@ contract StakingRewardsDualV2 is
     // If the period expired, renew it
     function _retroCatchUp() internal {
         // Failsafe check
-        require(block.timestamp > periodFinish, 'Period has not expired yet!');
+        require(block.timestamp > periodFinish, "Period has not expired yet!");
 
         // Ensure the provided reward amount is not more than the balance in the contract.
         // This keeps the reward rate in the right range, preventing overflows due to
@@ -948,14 +938,14 @@ contract StakingRewardsDualV2 is
                 .mul(crBoostMultiplier())
                 .mul(numPeriodsElapsed + 1)
                 .div(_PRICE_PRECISION) <= balance0,
-            'Not enough ARTHX available for rewards!'
+            "Not enough ARTHX available for rewards!"
         );
 
         if (token1RewardsOn) {
             require(
                 rewardRate1.mul(rewardsDuration).mul(numPeriodsElapsed + 1) <=
                     balance1,
-                'Not enough token1 available for rewards!'
+                "Not enough token1 available for rewards!"
             );
         }
 

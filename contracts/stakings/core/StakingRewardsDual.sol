@@ -3,18 +3,18 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {Math} from '../../utils/math/Math.sol';
-import {CustomPausable} from '../../security/CustomPausable.sol';
-import {IARTH} from '../../interfaces/IARTH.sol';
-import {IERC20} from '../../interfaces/IERC20.sol';
-import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {SafeERC20} from '../../utils/SafeERC20.sol';
-import {IStakingRewards} from '../../interfaces/IStakingRewards.sol';
-import {StringHelpers} from '../../utils/StringHelpers.sol';
-import {IARTHController} from '../../interfaces/IARTHController.sol';
-import {ReentrancyGuard} from '../../utils/ReentrancyGuard.sol';
-import {TransferHelper} from '../../uniswaps/TransferHelper.sol';
-import {IStakingRewardsDual} from '../../interfaces/IStakingRewardsDual.sol';
+import {Math} from "../../utils/math/Math.sol";
+import {CustomPausable} from "../../security/CustomPausable.sol";
+import {IARTH} from "../../interfaces/IARTH.sol";
+import {IERC20} from "../../interfaces/IERC20.sol";
+import {SafeMath} from "../../utils/math/SafeMath.sol";
+import {SafeERC20} from "../../utils/SafeERC20.sol";
+import {IStakingRewards} from "../../interfaces/IStakingRewards.sol";
+import {StringHelpers} from "../../utils/StringHelpers.sol";
+import {IARTHController} from "../../interfaces/IARTHController.sol";
+import {ReentrancyGuard} from "../../utils/ReentrancyGuard.sol";
+import {TransferHelper} from "../../uniswaps/TransferHelper.sol";
+import {IStakingRewardsDual} from "../../interfaces/IStakingRewardsDual.sol";
 
 /**
  * @title  StakingRewardsDual.
@@ -26,13 +26,13 @@ import {IStakingRewardsDual} from '../../interfaces/IStakingRewardsDual.sol';
  * Modified originally from Synthetixio
  * - https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
  */
-contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausable {
+contract StakingRewardsDual is
+    IStakingRewardsDual,
+    ReentrancyGuard,
+    CustomPausable
+{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-
-    /**
-     * State variables.
-     */
 
     struct LockedStake {
         bytes32 kekId;
@@ -42,10 +42,9 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         uint256 multiplier; // 6 decimals of precision. 1x = 1000000.
     }
 
-    IERC20 public _stakingToken;
-    IERC20 public _rewardsToken0;
-    IERC20 public _rewardsToken1;
-    IARTH private _ARTH;
+    IERC20 public stakingToken;
+    IERC20 public rewardsToken0;
+    IERC20 public rewardsToken1;
     IARTHController private _arthController;
 
     // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision.
@@ -80,7 +79,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
     uint256 private constant _PRICE_PRECISION = 1e6;
     uint256 private constant _MULTIPLIER_BASE = 1e6;
 
-    string private _lockedStakeMinTimeStr = '604800'; // 7 days on genesis
+    string private _lockedStakeMinTimeStr = "604800"; // 7 days on genesis
 
     mapping(address => bool) public greylist;
     mapping(address => uint256) public rewards0;
@@ -94,10 +93,6 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
     mapping(address => uint256) private _unlockedBalances;
 
     mapping(address => LockedStake[]) private _lockedStakes;
-
-    /**
-     * Modifier.
-     */
 
     modifier updateReward(address account) {
         // Need to retro-adjust some things if the period hasn't been renewed, then start a new one
@@ -122,14 +117,10 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == ownerAddress || msg.sender == timelockAddress,
-            'You are not the owner or the governance timelock'
+            "You are not the owner or the governance timelock"
         );
         _;
     }
-
-    /**
-     * Events.
-     */
 
     event RewardPaid(
         address indexed user,
@@ -150,25 +141,22 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
     event StakeLocked(address indexed user, uint256 amount, uint256 secs);
     event WithdrawnLocked(address indexed user, uint256 amount, bytes32 kekId);
 
-    /**
-     * Constructor.
-     */
     constructor(
         address _owner,
-        address __rewardsToken0,
-        address __rewardsToken1,
-        address __stakingToken,
-        address _arthAddress,
+        IERC20 _rewardsToken0,
+        IERC20 _rewardsToken1,
+        IERC20 _stakingToken,
+        IARTHController controller,
         address _timelockAddress,
         uint256 _poolWeight0,
         uint256 _poolWeight1
     ) {
         ownerAddress = _owner;
 
-        _ARTH = IARTH(_arthAddress);
-        _stakingToken = IERC20(__stakingToken);
-        _rewardsToken0 = IERC20(__rewardsToken0);
-        _rewardsToken1 = IERC20(__rewardsToken1);
+        stakingToken = _stakingToken;
+        rewardsToken0 = _rewardsToken0;
+        rewardsToken1 = _rewardsToken1;
+        _arthController = controller;
 
         poolWeight0 = _poolWeight0;
         poolWeight1 = _poolWeight1;
@@ -185,10 +173,6 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         isUnlockedStaked = false;
     }
 
-    /**
-     * External.
-     */
-
     function stake(uint256 amount)
         external
         override
@@ -196,12 +180,12 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         notPaused
         updateReward(msg.sender)
     {
-        require(amount > 0, 'Cannot stake 0');
-        require(greylist[msg.sender] == false, 'address has been greylisted');
+        require(amount > 0, "Cannot stake 0");
+        require(greylist[msg.sender] == false, "address has been greylisted");
 
         // Pull the tokens from the staker
         TransferHelper.safeTransferFrom(
-            address(_stakingToken),
+            address(stakingToken),
             msg.sender,
             address(this),
             amount
@@ -227,20 +211,20 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         notPaused
         updateReward(msg.sender)
     {
-        require(amount > 0, 'Cannot stake 0');
-        require(secs > 0, 'Cannot wait for a negative number');
-        require(greylist[msg.sender] == false, 'address has been greylisted');
+        require(amount > 0, "Cannot stake 0");
+        require(secs > 0, "Cannot wait for a negative number");
+        require(greylist[msg.sender] == false, "address has been greylisted");
         require(
             secs >= lockedStakeMinTime,
             StringHelpers.strConcat(
-                'Minimum stake time not met (',
+                "Minimum stake time not met (",
                 _lockedStakeMinTimeStr,
-                ')'
+                ")"
             )
         );
         require(
             secs <= lockedStakeTimeForMaxMultiplier,
-            'You are trying to stake for too long'
+            "You are trying to stake for too long"
         );
 
         uint256 multiplier = stakingMultiplier(secs);
@@ -259,7 +243,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
 
         // Pull the tokens from the staker
         TransferHelper.safeTransferFrom(
-            address(_stakingToken),
+            address(stakingToken),
             msg.sender,
             address(this),
             amount
@@ -339,7 +323,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         return _boostedBalances[account];
     }
 
-    function _lockedStakesOf(address account)
+    function lockedStakesOf(address account)
         external
         view
         returns (LockedStake[] memory)
@@ -348,7 +332,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
     }
 
     function stakingDecimals() external view returns (uint256) {
-        return _stakingToken.decimals();
+        return stakingToken.decimals();
     }
 
     function rewardsFor(address account)
@@ -380,7 +364,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         nonReentrant
         updateReward(msg.sender)
     {
-        require(amount > 0, 'Cannot withdraw 0');
+        require(amount > 0, "Cannot withdraw 0");
 
         // Staking token balance and boosted balance
         _unlockedBalances[msg.sender] = _unlockedBalances[msg.sender].sub(
@@ -393,7 +377,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         _stakingTokenBoostedSupply = _stakingTokenBoostedSupply.sub(amount);
 
         // Give the tokens to the withdrawer
-        _stakingToken.safeTransfer(msg.sender, amount);
+        stakingToken.safeTransfer(msg.sender, amount);
         emit Withdrawn(msg.sender, amount);
     }
 
@@ -414,11 +398,11 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
                 break;
             }
         }
-        require(thisStake.kekId == kekId, 'Stake not found');
+        require(thisStake.kekId == kekId, "Stake not found");
         require(
             block.timestamp >= thisStake.endingTimestamp ||
                 isUnlockedStaked == true,
-            'Stake is still locked!'
+            "Stake is still locked!"
         );
 
         uint256 theAmount = thisStake.amount;
@@ -444,7 +428,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
             delete _lockedStakes[msg.sender][theIndex];
 
             // Give the tokens to the withdrawer
-            _stakingToken.safeTransfer(msg.sender, theAmount);
+            stakingToken.safeTransfer(msg.sender, theAmount);
 
             emit WithdrawnLocked(msg.sender, theAmount, kekId);
         }
@@ -462,11 +446,18 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         onlyByOwnerOrGovernance
     {
         // Admin cannot withdraw the staking token from the contract
-        require(tokenAddress != address(_stakingToken));
+        require(tokenAddress != address(stakingToken));
 
         IERC20(tokenAddress).transfer(ownerAddress, tokenAmount);
 
         emit Recovered(tokenAddress, tokenAmount);
+    }
+
+    function setARTHController(IARTHController controller)
+        external
+        onlyByOwnerOrGovernance
+    {
+        _arthController = controller;
     }
 
     function setRewardsDuration(uint256 _rewardsDuration)
@@ -475,7 +466,7 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
     {
         require(
             periodFinish == 0 || block.timestamp > periodFinish,
-            'Previous rewards period must be complete before changing the duration for the new period'
+            "Previous rewards period must be complete before changing the duration for the new period"
         );
 
         rewardsDuration = _rewardsDuration;
@@ -489,11 +480,11 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
     ) external onlyByOwnerOrGovernance {
         require(
             _lockedStakeMaxMultiplier >= 1,
-            'Multiplier must be greater than or equal to 1'
+            "Multiplier must be greater than or equal to 1"
         );
         require(
             _crBoostMaxMultiplier >= 1,
-            'Max CR Boost must be greater than or equal to 1'
+            "Max CR Boost must be greater than or equal to 1"
         );
 
         lockedStakeMaxMultiplier = _lockedStakeMaxMultiplier;
@@ -509,11 +500,11 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
     ) external onlyByOwnerOrGovernance {
         require(
             _lockedStakeTimeForMaxMultiplier >= 1,
-            'Multiplier Max Time must be greater than or equal to 1'
+            "Multiplier Max Time must be greater than or equal to 1"
         );
         require(
             _lockedStakeMinTime >= 1,
-            'Multiplier Min Time must be greater than or equal to 1'
+            "Multiplier Min Time must be greater than or equal to 1"
         );
 
         lockedStakeTimeForMaxMultiplier = _lockedStakeTimeForMaxMultiplier;
@@ -562,22 +553,18 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         timelockAddress = _newTimelock;
     }
 
-    /**
-     * Public.
-     */
-
     function getReward() public override nonReentrant updateReward(msg.sender) {
         uint256 reward0 = rewards0[msg.sender];
         uint256 reward1 = rewards1[msg.sender];
         if (reward0 > 0) {
             rewards0[msg.sender] = 0;
-            _rewardsToken0.transfer(msg.sender, reward0);
-            emit RewardPaid(msg.sender, reward0, address(_rewardsToken0));
+            rewardsToken0.transfer(msg.sender, reward0);
+            emit RewardPaid(msg.sender, reward0, address(rewardsToken0));
         }
         if (reward1 > 0) {
             rewards1[msg.sender] = 0;
-            _rewardsToken1.transfer(msg.sender, reward1);
-            emit RewardPaid(msg.sender, reward1, address(_rewardsToken1));
+            rewardsToken1.transfer(msg.sender, reward1);
+            emit RewardPaid(msg.sender, reward1, address(rewardsToken1));
         }
     }
 
@@ -637,14 +624,10 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         );
     }
 
-    /**
-     * Internal.
-     */
-
     // If the period expired, renew it
     function _retroCatchUp() internal {
         // Failsafe check
-        require(block.timestamp > periodFinish, 'Period has not expired yet!');
+        require(block.timestamp > periodFinish, "Period has not expired yet!");
 
         // Ensure the provided reward amount is not more than the balance in the contract.
         // This keeps the reward rate in the right range, preventing overflows due to
@@ -653,8 +636,8 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         uint256 numPeriodsElapsed =
             uint256(block.timestamp.sub(periodFinish)) / rewardsDuration; // Floor division to the nearest period
 
-        uint256 balance0 = _rewardsToken0.balanceOf(address(this));
-        uint256 balance1 = _rewardsToken1.balanceOf(address(this));
+        uint256 balance0 = rewardsToken0.balanceOf(address(this));
+        uint256 balance1 = rewardsToken1.balanceOf(address(this));
 
         require(
             rewardRate0
@@ -662,14 +645,14 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
                 .mul(crBoostMultiplier())
                 .mul(numPeriodsElapsed + 1)
                 .div(_PRICE_PRECISION) <= balance0,
-            'Not enough ARTHX available for rewards!'
+            "Not enough ARTHX available for rewards!"
         );
 
         if (token1RewardsOn) {
             require(
                 rewardRate1.mul(rewardsDuration).mul(numPeriodsElapsed + 1) <=
                     balance1,
-                'Not enough token1 available for rewards!'
+                "Not enough token1 available for rewards!"
             );
         }
 
@@ -686,6 +669,6 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, CustomPausa
         rewardPerTokenStored1 = reward1;
         lastUpdateTime = lastTimeRewardApplicable();
 
-        emit RewardsPeriodRenewed(address(_stakingToken));
+        emit RewardsPeriodRenewed(address(stakingToken));
     }
 }

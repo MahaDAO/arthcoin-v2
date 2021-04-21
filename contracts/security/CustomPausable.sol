@@ -2,45 +2,28 @@
 
 pragma solidity ^0.8.0;
 
-import {Ownable} from '../access/Ownable.sol';
+import {Ownable} from "../access/Ownable.sol";
 
 /// Refer: https://docs.synthetix.io/contracts/Pausable
 abstract contract CustomPausable is Ownable {
-    /**
-     * State variables.
-     */
-
     bool public paused;
     uint256 public lastPauseTime;
 
-    /**
-     * Event.
-     */
     event PauseChanged(bool isPaused);
 
-    /**
-     * Modifier.
-     */
     modifier notPaused {
         require(
             !paused,
-            'Pausable: This action cannot be performed while the contract is paused'
+            "Pausable: This action cannot be performed while the contract is paused"
         );
         _;
     }
 
-    /**
-     * Constructor.
-     */
     constructor() {
         // This contract is abstract, and thus cannot be instantiated directly
-        require(owner() != address(0), 'Owner must be set');
+        require(owner() != address(0), "Owner must be set");
         // Paused will be false, and lastPauseTime will be 0 upon initialisation
     }
-
-    /**
-     * External.
-     */
 
     /**
      * @notice Change the paused state of the contract

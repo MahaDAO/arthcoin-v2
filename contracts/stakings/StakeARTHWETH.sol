@@ -3,26 +3,28 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import './core/StakingRewards.sol';
+import {IERC20} from "../interfaces/IERC20.sol";
+import {StakingRewards} from "./core/StakingRewards.sol";
+import {IARTHController} from "../interfaces/IARTHController.sol";
 
 contract StakeARTHWETH is StakingRewards {
     constructor(
-        address _owner,
-        address _rewardsDistribution,
-        address _rewardsToken,
-        address _stakingToken,
-        address _arthAddress,
-        address _timelockAddress,
-        uint256 _poolWeight
+        address owner,
+        address rewardsDistribution,
+        IERC20 rewardsToken,
+        IERC20 stakingToken,
+        IARTHController controller,
+        address timelockAddress,
+        uint256 poolWeight
     )
         StakingRewards(
-            _owner,
-            _rewardsDistribution,
-            _rewardsToken,
-            _stakingToken,
-            _arthAddress,
-            _timelockAddress,
-            _poolWeight
+            owner,
+            rewardsDistribution,
+            rewardsToken,
+            stakingToken,
+            controller,
+            timelockAddress,
+            poolWeight
         )
     {}
 }
