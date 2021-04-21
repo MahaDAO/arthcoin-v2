@@ -26,10 +26,6 @@ import {IUniswapPairOracle} from '../../interfaces/IUniswapPairOracle.sol';
 contract ARTHPool is AccessControl, IARTHPool {
     using SafeMath for uint256;
 
-    /**
-     * @dev Contract instances.
-     */
-
     IARTH private _ARTH;
     IARTHX private _ARTHX;
     IERC20 private _COLLATERAL;
@@ -59,8 +55,6 @@ contract ARTHPool is AccessControl, IARTHPool {
     uint256 public unclaimedPoolARTHX;
     uint256 public unclaimedPoolCollateral;
 
-    address public override collateralETHOracleAddress;
-
     mapping(address => uint256) public lastRedeemed;
     mapping(address => uint256) public borrowedCollateral;
     mapping(address => uint256) public redeemARTHXBalances;
@@ -83,20 +77,11 @@ contract ARTHPool is AccessControl, IARTHPool {
     address private _wethAddress;
     address private _ownerAddress;
     address private _timelockAddress;
-    address private _collateralAddress;
-    address private _arthContractAddress;
-    address private _arthxContractAddress;
 
-    /**
-     * Events.
-     */
     event Repay(address indexed from, uint256 amount);
     event Borrow(address indexed from, uint256 amount);
     event StabilityFeesCharged(address indexed from, uint256 fee);
 
-    /**
-     * Modifiers.
-     */
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == _timelockAddress || msg.sender == _ownerAddress,
@@ -143,32 +128,28 @@ contract ARTHPool is AccessControl, IARTHPool {
      */
 
     constructor(
-        address __arthContractAddress,
-        address __arthxContractAddress,
-        address __collateralAddress,
+        IARTH arth,
+        IARTHX arthx,
+        IERC20 collateral,
         address _creatorAddress,
         address __timelockAddress,
         address __MAHA,
         address __ARTHMAHAOracle,
         address __arthController,
-        uint256 _poolCeiling
+        uint256 _poolCeiling,
+        address __wethAddress
     ) {
         _MAHA = IERC20Burnable(__MAHA);
-        _ARTH = IARTH(__arthContractAddress);
-        _COLLATERAL = IERC20(__collateralAddress);
-        _ARTHX = IARTHX(__arthxContractAddress);
+        _ARTH = arth;
+        _COLLATERAL = collateral;
+        _ARTHX = arthx;
         _ARTHMAHAOracle = ISimpleOracle(__ARTHMAHAOracle);
         _arthController = IARTHController(__arthController);
-
         _ownerAddress = _creatorAddress;
         _timelockAddress = __timelockAddress;
-        _collateralAddress = __collateralAddress;
-        _arthContractAddress = __arthContractAddress;
-        _arthxContractAddress = __arthxContractAddress;
-
         poolCeiling = _poolCeiling;
         _missingDeciamls = uint256(18).sub(_COLLATERAL.decimals());
-
+        _wethAddress = __wethAddress;
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
         grantRole(_MINT_PAUSER, _timelockAddress);
@@ -178,9 +159,6 @@ contract ARTHPool is AccessControl, IARTHPool {
         grantRole(_COLLATERAL_PRICE_PAUSER, _timelockAddress);
     }
 
-    /**
-     * External.
-     */
     function setBuyBackCollateralBuffer(uint256 percent)
         external
         override
@@ -207,13 +185,12 @@ contract ARTHPool is AccessControl, IARTHPool {
         stabilityFee = percent;
     }
 
-    function setCollatETHOracle(
-        address _collateralWETHOracleAddress,
-        address __wethAddress
-    ) external override onlyByOwnerOrGovernance {
-        collateralETHOracleAddress = _collateralWETHOracleAddress;
-        _collateralETHOracle = IUniswapPairOracle(_collateralWETHOracleAddress);
-        _wethAddress = __wethAddress;
+    function setCollatETHOracle(IUniswapPairOracle _collateralWETHOracleAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        _collateralETHOracle = _collateralWETHOracleAddress;
     }
 
     function toggleMinting() external override {
@@ -263,12 +240,12 @@ contract ARTHPool is AccessControl, IARTHPool {
         recollatFee = newRecollateralizeFee;
     }
 
-    function setTimelock(address new_timelock)
+    function setTimelock(address newTimelock)
         external
         override
         onlyByOwnerOrGovernance
     {
-        _timelockAddress = new_timelock;
+        _timelockAddress = newTimelock;
     }
 
     function setOwner(address __ownerAddress)
@@ -363,7 +340,10 @@ contract ARTHPool is AccessControl, IARTHPool {
     {
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
-        require(_arthController.getCRForMint() == 0, 'ARTHPool: Collateral ratio != 0');
+        require(
+            _arthController.getCRForMint() == 0,
+            'ARTHPool: Collateral ratio != 0'
+        );
 
         uint256 arthAmountD18 =
             ARTHPoolLibrary.calcMintAlgorithmicARTH(
@@ -643,7 +623,8 @@ contract ARTHPool is AccessControl, IARTHPool {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
         uint256 arthxPrice = _arthController.getARTHXPrice();
         uint256 arthTotalSupply = _ARTH.totalSupply();
-        uint256 collateralRatioForRecollateralize = _arthController.getCRForRecollateralize();
+        uint256 collateralRatioForRecollateralize =
+            _arthController.getCRForRecollateralize();
         uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
         (uint256 collateralUnits, uint256 amountToRecollateralize) =
@@ -662,9 +643,9 @@ contract ARTHPool is AccessControl, IARTHPool {
         uint256 arthxPaidBack =
             amountToRecollateralize
                 .mul(
-                uint256(1e6)
-                    .add(getRecollateralizationDiscount())
-                    .sub(recollatFee)
+                uint256(1e6).add(getRecollateralizationDiscount()).sub(
+                    recollatFee
+                )
             )
                 .div(arthxPrice);
 
@@ -800,16 +781,23 @@ contract ARTHPool is AccessControl, IARTHPool {
                 .div(1e6);
     }
 
-    function getRecollateralizationDiscount() public view override returns (uint256) {
+    function getRecollateralizationDiscount()
+        public
+        view
+        override
+        returns (uint256)
+    {
         uint256 targetCollatValue = getTargetCollateralValue();
         uint256 currentCollatValue = _arthController.getGlobalCollateralValue();
 
-        uint256 percentCollateral = currentCollatValue.mul(100).div(targetCollatValue);
+        uint256 percentCollateral =
+            currentCollatValue.mul(100).div(targetCollatValue);
 
-        return _recollateralizeDiscountCruve
-            .getY(percentCollateral)
-            .mul(_PRICE_PRECISION)
-            .div(1e18);
+        return
+            _recollateralizeDiscountCruve
+                .getY(percentCollateral)
+                .mul(_PRICE_PRECISION)
+                .div(1e18);
     }
 
     function getCollateralPrice() public view override returns (uint256) {

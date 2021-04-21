@@ -7,10 +7,6 @@ import {SafeMath} from '../../utils/math/SafeMath.sol';
 library ARTHPoolLibrary {
     using SafeMath for uint256;
 
-    /**
-     * Data structs.
-     */
-
     struct MintFAParams {
         uint256 arthxPriceGMU;
         uint256 collateralPriceGMU;
@@ -27,10 +23,6 @@ library ARTHPoolLibrary {
     }
 
     uint256 private constant _PRICE_PRECISION = 1e6;
-
-    /**
-     * Public.
-     */
 
     function calcMint1t1ARTH(
         uint256 collateralPrice,

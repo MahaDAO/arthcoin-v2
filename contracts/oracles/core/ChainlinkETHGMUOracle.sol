@@ -13,28 +13,17 @@ import {
 contract ChainlinkETHGMUOracle is IChainlinkOracle {
     using SafeMath for uint256;
 
-    /**
-     * State variables.
-     */
-
     ISimpleOracle public gmuOracle;
-    IChainlinkAggregatorV3 internal priceFeed;
+    IChainlinkAggregatorV3 internal _priceFeed;
 
     uint256 public priceFeedDecimals = 8;
 
-    /**
-     * Constructor.
-     */
     constructor(address priceFeed_, ISimpleOracle gmuOracle_) {
-        priceFeed = IChainlinkAggregatorV3(priceFeed_);
+        _priceFeed = IChainlinkAggregatorV3(priceFeed_);
 
         gmuOracle = gmuOracle_;
-        priceFeedDecimals = priceFeed.decimals();
+        priceFeedDecimals = _priceFeed.decimals();
     }
-
-    /**
-     * Publics.
-     */
 
     function getGmuPrice() public view override returns (uint256) {
         // Considering that gmuOracle uses 1e18 as precision.
@@ -45,7 +34,7 @@ contract ChainlinkETHGMUOracle is IChainlinkOracle {
     }
 
     function getLatestUSDPrice() public view override returns (uint256) {
-        (, int256 price, , , ) = priceFeed.latestRoundData();
+        (, int256 price, , , ) = _priceFeed.latestRoundData();
 
         return uint256(price);
     }
@@ -56,6 +45,6 @@ contract ChainlinkETHGMUOracle is IChainlinkOracle {
     }
 
     function getDecimals() public view override returns (uint8) {
-        return priceFeed.decimals();
+        return _priceFeed.decimals();
     }
 }
