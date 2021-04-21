@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import '../interfaces/IERC20.sol';
-import '../utils/math/SafeMath.sol';
-import './TransferHelper.sol';
-import '../utils/math/Babylonian.sol';
-import './UniswapV2Library.sol';
-import '../interfaces/uniswap/IUniswapV2Pair.sol';
-import '../interfaces/uniswap/IUniswapV2Router01.sol';
+import "../interfaces/IERC20.sol";
+import "../utils/math/SafeMath.sol";
+import "./TransferHelper.sol";
+import "../utils/math/Babylonian.sol";
+import "./UniswapV2Library.sol";
+import "../interfaces/uniswap/IUniswapV2Pair.sol";
+import "../interfaces/uniswap/IUniswapV2Router01.sol";
 
 contract SwapToPrice {
     using SafeMath for uint256;
@@ -62,12 +62,12 @@ contract SwapToPrice {
         // true price is expressed as a ratio, so both values must be non-zero
         require(
             truePriceTokenA != 0 && truePriceTokenB != 0,
-            'ExampleSwapToPrice: ZERO_PRICE'
+            "ExampleSwapToPrice: ZERO_PRICE"
         );
         // caller can specify 0 for either if they wish to swap in only one direction, but not both
         require(
             maxSpendTokenA != 0 || maxSpendTokenB != 0,
-            'ExampleSwapToPrice: ZERO_SPEND'
+            "ExampleSwapToPrice: ZERO_SPEND"
         );
 
         bool aToB;
