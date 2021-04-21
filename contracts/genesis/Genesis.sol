@@ -3,17 +3,17 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from '../access/Ownable.sol';
-import {IARTH} from '../interfaces/IARTH.sol';
-import {IWETH} from '../interfaces/IWETH.sol';
-import {ERC20} from '../assets/core/ERC20.sol';
-import {IARTHX} from '../interfaces/IARTHX.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IERC20Mintable} from '../interfaces/IERC20Mintable.sol';
-import {IChainlinkOracle} from '../interfaces/IChainlinkOracle.sol';
-import {IBondingCurveOracle} from '../interfaces/IBondingCurveOracle.sol';
-import {IUniswapV2Factory} from '../interfaces/uniswap/IUniswapV2Factory.sol';
-import {IUniswapV2Router02} from '../interfaces/uniswap/IUniswapV2Router02.sol';
+import {Ownable} from "../access/Ownable.sol";
+import {IARTH} from "../interfaces/IARTH.sol";
+import {IWETH} from "../interfaces/IWETH.sol";
+import {ERC20} from "../assets/core/ERC20.sol";
+import {IARTHX} from "../interfaces/IARTHX.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
+import {IERC20Mintable} from "../interfaces/IERC20Mintable.sol";
+import {IChainlinkOracle} from "../interfaces/IChainlinkOracle.sol";
+import {IBondingCurveOracle} from "../interfaces/IBondingCurveOracle.sol";
+import {IUniswapV2Factory} from "../interfaces/uniswap/IUniswapV2Factory.sol";
+import {IUniswapV2Router02} from "../interfaces/uniswap/IUniswapV2Router02.sol";
 
 contract Genesis is ERC20, Ownable {
     using SafeMath for uint256;
@@ -54,7 +54,7 @@ contract Genesis is ERC20, Ownable {
     );
 
     modifier hasStarted() {
-        require(block.timestamp >= startTime, 'Genesis: not started');
+        require(block.timestamp >= startTime, "Genesis: not started");
         _;
     }
 
@@ -62,7 +62,7 @@ contract Genesis is ERC20, Ownable {
         require(
             block.timestamp >= startTime &&
                 block.timestamp <= startTime.add(duration),
-            'Genesis: not active'
+            "Genesis: not active"
         );
         _;
     }
@@ -70,7 +70,7 @@ contract Genesis is ERC20, Ownable {
     modifier hasEnded() {
         require(
             block.timestamp >= startTime.add(duration),
-            'Genesis: still active'
+            "Genesis: still active"
         );
         _;
     }
@@ -86,7 +86,7 @@ contract Genesis is ERC20, Ownable {
         uint256 hardCap_,
         uint256 startTime_,
         uint256 duration_
-    ) ERC20('ARTH Genesis', 'ARTH-GEN') {
+    ) ERC20("ARTH Genesis", "ARTH-GEN") {
         hardCap = hardCap_;
         duration = duration_;
         startTime = startTime_;
@@ -154,8 +154,8 @@ contract Genesis is ERC20, Ownable {
     }
 
     function mint(uint256 amount) public payable isActive {
-        require(amount > 0, 'Genesis: amount = 0');
-        require(msg.value == amount, 'Genesis: INVALID INPUT');
+        require(amount > 0, "Genesis: amount = 0");
+        require(msg.value == amount, "Genesis: INVALID INPUT");
 
         // 1. Get the value of ETH put as collateral.
         uint256 ethValue = msg.value.mul(getETHGMUPrice());
@@ -244,7 +244,7 @@ contract Genesis is ERC20, Ownable {
             tokenAddress = address(arthx);
         }
         // Fail safe check.
-        require(tokenAddress != address(0), 'Genesis: invalid address');
+        require(tokenAddress != address(0), "Genesis: invalid address");
 
         // Add liquidity to pair.
         (uint256 amountToken, uint256 amountETH, uint256 liquidity) =
@@ -257,15 +257,15 @@ contract Genesis is ERC20, Ownable {
                 block.timestamp
             );
 
-        require(liquidity > 0, 'Genesis: distribute pair failed');
-        require(amountETH > 0, 'Genesis: distribute pair failed');
-        require(amountToken > 0, 'Genesis: distribute pair failed');
+        require(liquidity > 0, "Genesis: distribute pair failed");
+        require(amountETH > 0, "Genesis: distribute pair failed");
+        require(amountToken > 0, "Genesis: distribute pair failed");
 
         emit Distribute(pair, amount, amount);
     }
 
     function _redeemARTHX(uint256 amount) internal isActive {
-        require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
+        require(balanceOf(msg.sender) >= amount, "Genesis: balance < amount");
 
         _burn(msg.sender, amount);
         arthx.poolMint(msg.sender, amount);
@@ -274,7 +274,7 @@ contract Genesis is ERC20, Ownable {
     }
 
     function _redeemARTHXAndMAHA(uint256 amount) internal hasEnded {
-        require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
+        require(balanceOf(msg.sender) >= amount, "Genesis: balance < amount");
 
         _burn(msg.sender, amount);
         arthx.poolMint(msg.sender, amount);

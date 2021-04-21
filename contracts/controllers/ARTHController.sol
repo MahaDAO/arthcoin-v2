@@ -3,7 +3,8 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from "../interfaces/IERC20.sol";
+import {Ownable} from "../access/Ownable.sol";
+import {IARTH} from "../interfaces/IARTH.sol";
 import {SafeMath} from "../utils/math/SafeMath.sol";
 import {IARTHPool} from "../interfaces/IARTHPool.sol";
 import {IARTHController} from "../interfaces/IARTHController.sol";
@@ -15,36 +16,20 @@ import {IUniswapPairOracle} from "../interfaces/IUniswapPairOracle.sol";
  * @title  ARTHStablecoin.
  * @author MahaDAO.
  */
-contract ARTHController is AccessControl, IARTHController {
+contract ARTHController is AccessControl, Ownable, IARTHController {
     using SafeMath for uint256;
-
-    /**
-     * Data structures.
-     */
 
     enum PriceChoice {ARTH, ARTHX}
 
-    /**
-     * State variables.
-     */
+    IARTH public arth;
 
-    IERC20 public ARTH;
-    IERC20 public ARTHX;
+    IChainlinkOracle private _ethGMUOracle;
+    IUniswapPairOracle private _arthETHOracle;
+    IUniswapPairOracle private _arthxETHOracle;
 
-    IChainlinkOracle private _ETHGMUPricer;
-    IUniswapPairOracle private _ARTHETHOracle;
-    IUniswapPairOracle private _ARTHXETHOracle;
-
-    address public wethAddress;
-    address public arthxAddress;
-    address public ownerAddress;
-    address public creatorAddress;
-    address public timelockAddress;
-    address public controllerAddress;
-    address public arthETHOracleAddress;
-    address public arthxETHOracleAddress;
-    address public ethGMUConsumerAddress;
-    address public DEFAULT_ADMIN_ADDRESS;
+    address public weth;
+    address public timelock;
+    address public controller;
 
     uint256 public arthStep; // Amount to change the collateralization ratio by upon refresing CR.
     uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
@@ -66,9 +51,6 @@ contract ARTHController is AccessControl, IARTHController {
     // Last time the refreshCollateralRatio function was called.
     uint256 public lastCallTime;
 
-    // This is to help with establishing the Uniswap pools, as they need liquidity.
-    uint256 public constant genesisSupply = 2000000e18; // 2M ARTH (testnet) & 5k (Mainnet).
-
     bool public useGlobalCRForMint = true;
     bool public useGlobalCRForRedeem = true;
     bool public useGlobalCRForRecollateralize = true;
@@ -82,16 +64,8 @@ contract ARTHController is AccessControl, IARTHController {
     bytes32 public constant COLLATERAL_RATIO_PAUSER =
         keccak256("COLLATERAL_RATIO_PAUSER");
 
-    address[] public arthPoolsArray; // These contracts are able to mint ARTH.
-
-    mapping(address => bool) public override arthPools;
-
     uint8 private _ethGMUPricerDecimals;
     uint256 private constant _PRICE_PRECISION = 1e6;
-
-    /**
-     * Modifiers.
-     */
 
     modifier onlyCollateralRatioPauser() {
         require(hasRole(COLLATERAL_RATIO_PAUSER, msg.sender));
@@ -99,7 +73,7 @@ contract ARTHController is AccessControl, IARTHController {
     }
 
     modifier onlyPools() {
-        require(arthPools[msg.sender] == true, "ARTHController: FORBIDDEN");
+        require(arth.pools(msg.sender) == true, "ARTHController: FORBIDDEN");
         _;
     }
 
@@ -113,9 +87,9 @@ contract ARTHController is AccessControl, IARTHController {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == ownerAddress ||
-                msg.sender == timelockAddress ||
-                msg.sender == controllerAddress,
+            msg.sender == owner() ||
+                msg.sender == timelock ||
+                msg.sender == controller,
             "ARTHController: FORBIDDEN"
         );
         _;
@@ -123,28 +97,20 @@ contract ARTHController is AccessControl, IARTHController {
 
     modifier onlyByOwnerGovernanceOrPool() {
         require(
-            msg.sender == ownerAddress ||
-                msg.sender == timelockAddress ||
-                arthPools[msg.sender] == true,
+            msg.sender == owner() ||
+                msg.sender == timelock ||
+                arth.pools(msg.sender) == true,
             "ARTHController: FORBIDDEN"
         );
         _;
     }
 
-    /**
-     * Constructor.
-     */
-
-    constructor(address _creatorAddress, address _timelockAddress) {
-        creatorAddress = _creatorAddress;
-        timelockAddress = _timelockAddress;
-
-        ownerAddress = _creatorAddress;
-        DEFAULT_ADMIN_ADDRESS = _msgSender();
+    constructor(address timelock_) {
+        timelock = timelock_;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        grantRole(COLLATERAL_RATIO_PAUSER, creatorAddress);
-        grantRole(COLLATERAL_RATIO_PAUSER, timelockAddress);
+        grantRole(COLLATERAL_RATIO_PAUSER, _msgSender());
+        grantRole(COLLATERAL_RATIO_PAUSER, timelock);
 
         arthStep = 2500; // 6 decimals of precision, equal to 0.25%.
         priceBand = 5000; // Collateral ratio will not adjust if between $0.995 and $1.005 at genesis.
@@ -152,10 +118,6 @@ contract ARTHController is AccessControl, IARTHController {
         refreshCooldown = 3600; // Refresh cooldown period is set to 1 hour (3600 seconds) at genesis.
         globalCollateralRatio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision).
     }
-
-    /**
-     * External.
-     */
 
     function toggleUseGlobalCRForMint(bool flag)
         external
@@ -210,6 +172,7 @@ contract ARTHController is AccessControl, IARTHController {
             isColalteralRatioPaused == false,
             "ARTHController: Collateral Ratio has been paused"
         );
+
         require(
             block.timestamp - lastCallTime >= refreshCooldown,
             "ARTHController: must wait till callable again"
@@ -237,62 +200,8 @@ contract ARTHController is AccessControl, IARTHController {
         lastCallTime = block.timestamp; // Set the time of the last expansion
     }
 
-    /// @notice Adds collateral addresses supported.
-    /// @dev    Collateral must be an ERC20.
-    function addPool(address poolAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        require(
-            arthPools[poolAddress] == false,
-            "ARTHController: address present"
-        );
-
-        arthPools[poolAddress] = true;
-        arthPoolsArray.push(poolAddress);
-    }
-
-    function removePool(address poolAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        require(
-            arthPools[poolAddress] == true,
-            "ARTHController: address absent"
-        );
-
-        // Delete from the mapping.
-        delete arthPools[poolAddress];
-
-        // 'Delete' from the array by setting the address to 0x0
-        for (uint256 i = 0; i < arthPoolsArray.length; i++) {
-            if (arthPoolsArray[i] == poolAddress) {
-                arthPoolsArray[i] = address(0); // This will leave a null in the array and keep the indices the same.
-                break;
-            }
-        }
-    }
-
-    /**
-     * Public.
-     */
-
-    function setGlobalCollateralRatio(uint256 _globalCollateralRatio)
-        public
-        override
-        onlyAdmin
-    {
-        globalCollateralRatio = _globalCollateralRatio;
-    }
-
-    function setARTHXAddress(address _arthxAddress)
-        public
-        override
-        onlyByOwnerOrGovernance
-    {
-        arthxAddress = _arthxAddress;
+    function setGlobalCollateralRatio(uint256 ratio) public override onlyAdmin {
+        globalCollateralRatio = ratio;
     }
 
     function setPriceTarget(uint256 newPriceTarget)
@@ -311,33 +220,29 @@ contract ARTHController is AccessControl, IARTHController {
         refreshCooldown = newCooldown;
     }
 
-    function setETHGMUOracle(address _ethGMUConsumerAddress)
+    function setETHGMUOracle(IChainlinkOracle oracle)
         public
         override
         onlyByOwnerOrGovernance
     {
-        ethGMUConsumerAddress = _ethGMUConsumerAddress;
-        _ETHGMUPricer = IChainlinkOracle(ethGMUConsumerAddress);
-        _ethGMUPricerDecimals = _ETHGMUPricer.getDecimals();
+        _ethGMUOracle = oracle;
+        _ethGMUPricerDecimals = _ethGMUOracle.getDecimals();
     }
 
-    function setARTHXETHOracle(
-        address _arthxOracleAddress,
-        address _wethAddress
-    ) public override onlyByOwnerOrGovernance {
-        arthxETHOracleAddress = _arthxOracleAddress;
-        _ARTHXETHOracle = IUniswapPairOracle(_arthxOracleAddress);
-        wethAddress = _wethAddress;
-    }
-
-    function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
+    function setARTHXETHOracle(IUniswapPairOracle oracle)
         public
         override
         onlyByOwnerOrGovernance
     {
-        arthETHOracleAddress = _arthOracleAddress;
-        _ARTHETHOracle = IUniswapPairOracle(_arthOracleAddress);
-        wethAddress = _wethAddress;
+        _arthxETHOracle = IUniswapPairOracle(oracle);
+    }
+
+    function setARTHETHOracle(IUniswapPairOracle oracle)
+        public
+        override
+        onlyByOwnerOrGovernance
+    {
+        _arthETHOracle = oracle;
     }
 
     function toggleCollateralRatio() public override onlyCollateralRatioPauser {
@@ -368,20 +273,12 @@ contract ARTHController is AccessControl, IARTHController {
         redemptionFee = fee;
     }
 
-    function setOwner(address _ownerAddress)
+    function setPriceBand(uint256 band)
         public
         override
         onlyByOwnerOrGovernance
     {
-        ownerAddress = _ownerAddress;
-    }
-
-    function setPriceBand(uint256 _priceBand)
-        public
-        override
-        onlyByOwnerOrGovernance
-    {
-        priceBand = _priceBand;
+        priceBand = band;
     }
 
     function setTimelock(address newTimelock)
@@ -389,7 +286,7 @@ contract ARTHController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        timelockAddress = newTimelock;
+        timelock = newTimelock;
     }
 
     function getRefreshCooldown() external view override returns (uint256) {
@@ -406,7 +303,7 @@ contract ARTHController is AccessControl, IARTHController {
 
     function getETHGMUPrice() public view override returns (uint256) {
         return
-            uint256(_ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
+            uint256(_ethGMUOracle.getLatestPrice()).mul(_PRICE_PRECISION).div(
                 uint256(10)**_ethGMUPricerDecimals
             );
     }
@@ -418,11 +315,12 @@ contract ARTHController is AccessControl, IARTHController {
     function getGlobalCollateralValue() public view override returns (uint256) {
         uint256 totalCollateralValueD18 = 0;
 
-        for (uint256 i = 0; i < arthPoolsArray.length; i++) {
+        for (uint256 i = 0; i < arth.getAllPoolsCount(); i++) {
+            address pool = arth.getPool(i);
             // Exclude null addresses.
-            if (arthPoolsArray[i] != address(0)) {
+            if (pool != address(0)) {
                 totalCollateralValueD18 = totalCollateralValueD18.add(
-                    IARTHPool(arthPoolsArray[i]).getCollateralGMUBalance()
+                    IARTHPool(pool).getCollateralGMUBalance()
                 );
             }
         }
@@ -466,7 +364,7 @@ contract ARTHController is AccessControl, IARTHController {
         return (
             getARTHPrice(), // ARTH price.
             getARTHXPrice(), // ARTHX price.
-            ARTH.totalSupply(), // ARTH total supply.
+            arth.totalSupply(), // ARTH total supply.
             globalCollateralRatio, // Global collateralization ratio.
             getGlobalCollateralValue(), // Global collateral value.
             mintingFee, // Minting fee.
@@ -475,10 +373,6 @@ contract ARTHController is AccessControl, IARTHController {
         );
     }
 
-    /**
-     * Internal.
-     */
-
     /// @param choice 'ARTH' or 'ARTHX'.
     function _getOraclePrice(PriceChoice choice)
         internal
@@ -486,7 +380,7 @@ contract ARTHController is AccessControl, IARTHController {
         returns (uint256)
     {
         uint256 eth2GMUPrice =
-            uint256(_ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
+            uint256(_ethGMUOracle.getLatestPrice()).mul(_PRICE_PRECISION).div(
                 uint256(10)**_ethGMUPricerDecimals
             );
 
@@ -494,11 +388,11 @@ contract ARTHController is AccessControl, IARTHController {
 
         if (choice == PriceChoice.ARTH) {
             priceVsETH = uint256(
-                _ARTHETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTH if you put in _PRICE_PRECISION WETH ?
+                _arthETHOracle.consult(weth, _PRICE_PRECISION) // How much ARTH if you put in _PRICE_PRECISION WETH ?
             );
         } else if (choice == PriceChoice.ARTHX) {
             priceVsETH = uint256(
-                _ARTHXETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTHX if you put in _PRICE_PRECISION WETH ?
+                _arthxETHOracle.consult(weth, _PRICE_PRECISION) // How much ARTHX if you put in _PRICE_PRECISION WETH ?
             );
         } else
             revert(

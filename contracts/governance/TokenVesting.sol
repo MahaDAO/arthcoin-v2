@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {IERC20} from '../interfaces/IERC20.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
+import {IERC20} from "../interfaces/IERC20.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
 
 /**
  * @title TokenVesting
@@ -23,13 +23,13 @@ contract TokenVesting {
     cliff period of a year and a duration of four years, are safe to use.
     */
 
-    IERC20 public ARTHX;
+    IERC20 public arthx;
 
-    bool public _revoked;
-    bool public _revocable;
+    bool public revoked;
+    bool public revocable;
 
-    address public _timelockAddress;
-    address public _arthxContractAddress;
+    address public timelock;
+    address public arthxContractAddress;
 
     // Durations and timestamps are expressed in UNIX time, the same units as block.timestamp.
     uint256 private _cliff;
@@ -40,9 +40,6 @@ contract TokenVesting {
     address private _owner; // Owner(grantor) of the tokens.
     address private _beneficiary; // Beneficiary of tokens after they are released.
 
-    /**
-     * Events.
-     */
     event TokenVestingRevoked();
     event TokensReleased(uint256 amount);
 
@@ -54,7 +51,7 @@ contract TokenVesting {
      * @param cliffDuration duration in seconds of the cliff in which tokens will begin to vest
      * @param start the time (as Unix time) at which point vesting starts
      * @param duration duration in seconds of the period in which the tokens will vest
-     * @param revocable whether the vesting is revocable or not
+     * @param revocable_ whether the vesting is revocable or not
      */
 
     constructor(
@@ -62,44 +59,40 @@ contract TokenVesting {
         uint256 start,
         uint256 cliffDuration,
         uint256 duration,
-        bool revocable
+        bool revocable_
     ) {
         require(
             beneficiary != address(0),
-            'TokenVesting: beneficiary is the zero address'
+            "TokenVesting: beneficiary is the zero address"
         );
         require(
             cliffDuration <= duration,
-            'TokenVesting: cliff is longer than duration'
+            "TokenVesting: cliff is longer than duration"
         );
-        require(duration > 0, 'TokenVesting: duration is 0');
+        require(duration > 0, "TokenVesting: duration is 0");
         require(
             start.add(duration) > block.timestamp,
-            'TokenVesting: final time is before current time'
+            "TokenVesting: final time is before current time"
         );
 
         _beneficiary = beneficiary;
-        _revocable = revocable;
+        revocable = revocable_;
         _duration = duration;
         _cliff = start.add(cliffDuration);
         _start = start;
         _owner = msg.sender;
     }
 
-    /**
-     * Public.
-     */
-
     function setARTHXAddress(address arthxAddress) public {
-        require(msg.sender == _owner, 'must be set by the owner');
+        require(msg.sender == _owner, "must be set by the owner");
 
-        _arthxContractAddress = arthxAddress;
-        ARTHX = IERC20(arthxAddress);
+        arthxContractAddress = arthxAddress;
+        arthx = IERC20(arthxAddress);
     }
 
-    function setTimelockAddress(address timelockAddress) public {
-        require(msg.sender == _owner, 'TokenVesting: must be set by the owner');
-        _timelockAddress = timelockAddress;
+    function setTimelockAddress(address newTimelock) public {
+        require(msg.sender == _owner, "TokenVesting: must be set by the owner");
+        timelock = newTimelock;
     }
 
     /**
@@ -108,15 +101,15 @@ contract TokenVesting {
     function release() public {
         require(
             msg.sender == _beneficiary,
-            'must be the beneficiary to release tokens'
+            "must be the beneficiary to release tokens"
         );
         uint256 unreleased = _releasableAmount();
 
-        require(unreleased > 0, 'TokenVesting: no tokens are due');
+        require(unreleased > 0, "TokenVesting: no tokens are due");
 
         _released = _released.add(unreleased);
 
-        ARTHX.transfer(_beneficiary, unreleased);
+        arthx.transfer(_beneficiary, unreleased);
 
         emit TokensReleased(unreleased);
     }
@@ -127,20 +120,20 @@ contract TokenVesting {
      */
     function revoke() public {
         require(
-            msg.sender == _timelockAddress,
-            'Must be called by the timelock contract'
+            msg.sender == timelock,
+            "Must be called by the timelock contract"
         );
-        require(_revocable, 'TokenVesting: cannot revoke');
-        require(!_revoked, 'TokenVesting: token already revoked');
+        require(revocable, "TokenVesting: cannot revoke");
+        require(!revoked, "TokenVesting: token already revoked");
 
-        uint256 balance = ARTHX.balanceOf(address(this));
+        uint256 balance = arthx.balanceOf(address(this));
 
         uint256 unreleased = _releasableAmount();
         uint256 refund = balance.sub(unreleased);
 
-        _revoked = true;
+        revoked = true;
 
-        ARTHX.transfer(_owner, refund);
+        arthx.transfer(_owner, refund);
 
         emit TokenVestingRevoked();
     }
@@ -149,12 +142,12 @@ contract TokenVesting {
     function recoverERC20(address tokenAddress, uint256 tokenAmount) external {
         require(
             msg.sender == _beneficiary,
-            'Must be called by the beneficiary'
+            "Must be called by the beneficiary"
         );
         // Cannot recover the staking token or the rewards token
         require(
-            tokenAddress != _arthxContractAddress,
-            'Cannot withdraw the ARTHX through this function'
+            tokenAddress != arthxContractAddress,
+            "Cannot withdraw the ARTHX through this function"
         );
 
         IERC20(tokenAddress).transfer(_beneficiary, tokenAmount);
@@ -192,7 +185,7 @@ contract TokenVesting {
      * @return true if the vesting is revocable.
      */
     function getRevocable() public view returns (bool) {
-        return _revocable;
+        return revocable;
     }
 
     /**
@@ -206,7 +199,7 @@ contract TokenVesting {
      * @return true if the token is revoked.
      */
     function getRevoked() public view returns (bool) {
-        return _revoked;
+        return revoked;
     }
 
     /**
@@ -220,12 +213,12 @@ contract TokenVesting {
      * @dev Calculates the amount that has already vested.
      */
     function _vestedAmount() private view returns (uint256) {
-        uint256 currentBalance = ARTHX.balanceOf(address(this));
+        uint256 currentBalance = arthx.balanceOf(address(this));
         uint256 totalBalance = currentBalance.add(_released);
 
         if (block.timestamp < _cliff) {
             return 0;
-        } else if (block.timestamp >= _start.add(_duration) || _revoked) {
+        } else if (block.timestamp >= _start.add(_duration) || revoked) {
             return totalBalance;
         } else {
             return totalBalance.mul(block.timestamp.sub(_start)).div(_duration);

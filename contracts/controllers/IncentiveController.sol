@@ -3,26 +3,22 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {SafeCast} from '../utils/math/SafeCast.sol';
-import {SignedSafeMath} from '../utils/math/SignedSafeMath.sol';
+import {SafeCast} from "../utils/math/SafeCast.sol";
+import {SignedSafeMath} from "../utils/math/SignedSafeMath.sol";
 
-import {IARTH} from '../interfaces/IARTH.sol';
-import {Math} from '../utils/math/Math.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IIncentiveController} from '../interfaces/IIncentive.sol';
-import {AccessControl} from '../access/AccessControl.sol';
-import {IChainlinkOracle} from '../interfaces/IChainlinkOracle.sol';
-import {IUniswapPairOracle} from '../interfaces/IUniswapPairOracle.sol';
-import {IUniswapV2Pair} from '../interfaces/uniswap/IUniswapV2Pair.sol';
+import {IARTH} from "../interfaces/IARTH.sol";
+import {Math} from "../utils/math/Math.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
+import {IIncentiveController} from "../interfaces/IIncentive.sol";
+import {AccessControl} from "../access/AccessControl.sol";
+import {IChainlinkOracle} from "../interfaces/IChainlinkOracle.sol";
+import {IUniswapPairOracle} from "../interfaces/IUniswapPairOracle.sol";
+import {IUniswapV2Pair} from "../interfaces/uniswap/IUniswapV2Pair.sol";
 
 contract IncentiveController is AccessControl, IIncentiveController {
     using SafeCast for int256;
     using SafeMath for uint256;
     using SignedSafeMath for int256;
-
-    /**
-     * Data structures.
-     */
 
     struct TimeWeightInfo {
         uint32 blockNo;
@@ -30,10 +26,6 @@ contract IncentiveController is AccessControl, IIncentiveController {
         uint32 growthRate;
         bool active;
     }
-
-    /**
-     * State varaibles.
-     */
 
     IARTH public ARTH;
     IChainlinkOracle public ethGMUPricer;
@@ -51,21 +43,13 @@ contract IncentiveController is AccessControl, IIncentiveController {
 
     mapping(address => bool) private _exempt;
 
-    /**
-     * Modifiers.
-     */
-
     modifier onlyAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'Controller: FORBIDDEN'
+            "Controller: FORBIDDEN"
         );
         _;
     }
-
-    /**
-     * Constructor.
-     */
 
     constructor(
         IARTH ARTH_,
@@ -101,7 +85,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
         return reserveARTH.mul(_PRICE_PRECISION).div(reserveOther);
     }
 
-    function getCurrentArthPrice() internal view returns (uint256) {
+    function _getCurrentArthPrice() internal view returns (uint256) {
         // Get the ETH/GMU price first, and cut it down to 1e6 precision.
         uint256 ethToGMUPrice =
             uint256(ethGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
@@ -190,7 +174,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
 
             incentivizedAmount = amount.sub(
                 amountToPeg,
-                'UniswapIncentive: Underflow'
+                "UniswapIncentive: Underflow"
             );
         }
 
@@ -222,7 +206,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
         if (penalty != 0) {
             require(
                 penalty < amount,
-                'UniswapIncentive: Burn exceeds trade size'
+                "UniswapIncentive: Burn exceeds trade size"
             );
 
             ARTH.poolBurnFrom(address(uniswapPairAddress), penalty);
@@ -235,7 +219,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
         address,
         uint256 amountIn
     ) public override {
-        require(sender != receiver, 'UniswapIncentive: cannot send self');
+        require(sender != receiver, "UniswapIncentive: cannot send self");
         updateOracle();
 
         if (_isPair(sender)) {
@@ -340,7 +324,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
         view
         returns (uint256, uint256)
     {
-        uint256 price = getCurrentArthPrice();
+        uint256 price = _getCurrentArthPrice();
         (uint256 reservesARTH, uint256 reservesQuote) = getReserves();
 
         uint256 initialDeviation = _deviationBelowPeg(price);

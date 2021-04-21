@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {Curve} from './Curve.sol';
-import {Math} from '../../utils/math/Math.sol';
-import {SafeMath} from '../../utils/math/SafeMath.sol';
+import {Curve} from "./Curve.sol";
+import {Math} from "../../utils/math/Math.sol";
+import {SafeMath} from "../../utils/math/SafeMath.sol";
 
 contract Sigmoid is Curve {
     using SafeMath for uint256;

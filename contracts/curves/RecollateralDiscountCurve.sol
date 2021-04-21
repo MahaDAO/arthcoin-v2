@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {Sigmoid} from './core/Sigmoid.sol';
-import {Math} from '../utils/math/Math.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
+import {Sigmoid} from "./core/Sigmoid.sol";
+import {Math} from "../utils/math/Math.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
 
 contract RecollateralDiscountCurve is Sigmoid {
     using SafeMath for uint256;

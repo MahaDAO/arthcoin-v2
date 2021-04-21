@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {Ownable} from '../../access/Ownable.sol';
-import {ICurve} from '../../interfaces/ICurve.sol';
+import {Ownable} from "../../access/Ownable.sol";
+import {ICurve} from "../../interfaces/ICurve.sol";
 
 abstract contract Curve is ICurve, Ownable {
     /// @notice Minimum X (e.g Collateral/Supply).
