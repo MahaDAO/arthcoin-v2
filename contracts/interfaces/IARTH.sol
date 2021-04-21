@@ -11,16 +11,19 @@ interface IARTH is IERC20, IAnyswapV4ERC20 {
 
     function removePool(address pool) external;
 
-    function setGovernance(address _governance) external;
+    function setGovernance(address newGovernance) external;
 
     function poolMint(address who, uint256 amount) external;
 
     function poolBurnFrom(address who, uint256 amount) external;
 
-    function setIncentiveController(IIncentiveController _incentiveController)
-        external;
+    function setIncentiveController(IIncentiveController controller) external;
 
-    function genesisSupply() external view returns (uint256);
+    function getGenesisSupply() external pure returns (uint256);
 
     function pools(address pool) external view returns (bool);
+
+    function getPool(uint256 index) external view returns (address);
+
+    function getAllPoolsCount() external view returns (uint256);
 }

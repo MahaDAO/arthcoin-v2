@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import '../core/ERC20.sol';
-import '../../utils/math/SafeMath.sol';
-import '../../access/Ownable.sol';
+import "../core/ERC20.sol";
+import "../../access/Ownable.sol";
+import "../../utils/math/SafeMath.sol";
 
 // SushiToken with Governance.
-contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {
+contract SushiToken is ERC20("SushiToken", "SUSHI"), Ownable {
     using SafeMath for uint256;
 
     /// @notice Creates `_amount` token to `_to`. Must only be called by the owner (MasterChef).
@@ -40,12 +40,12 @@ contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {
     /// @notice The EIP-712 typehash for the contract's domain
     bytes32 public constant DOMAIN_TYPEHASH =
         keccak256(
-            'EIP712Domain(string name,uint256 chainId,address verifyingContract)'
+            "EIP712Domain(string name,uint256 chainId,address verifyingContract)"
         );
 
     /// @notice The EIP-712 typehash for the delegation struct used by the contract
     bytes32 public constant DELEGATION_TYPEHASH =
-        keccak256('Delegation(address delegatee,uint256 nonce,uint256 expiry)');
+        keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
 
     /// @notice A record of states for signing / validating signatures
     mapping(address => uint256) public nonces;
@@ -102,7 +102,7 @@ contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {
                 abi.encode(
                     DOMAIN_TYPEHASH,
                     keccak256(bytes(name())),
-                    getChainId(),
+                    _getChainId(),
                     address(this)
                 )
             );
@@ -114,21 +114,21 @@ contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {
 
         bytes32 digest =
             keccak256(
-                abi.encodePacked('\x19\x01', domainSeparator, structHash)
+                abi.encodePacked("\x19\x01", domainSeparator, structHash)
             );
 
         address signatory = ecrecover(digest, v, r, s);
         require(
             signatory != address(0),
-            'SUSHI::delegateBySig: invalid signature'
+            "SUSHI::delegateBySig: invalid signature"
         );
         require(
             nonce == nonces[signatory]++,
-            'SUSHI::delegateBySig: invalid nonce'
+            "SUSHI::delegateBySig: invalid nonce"
         );
         require(
             block.timestamp <= expiry,
-            'SUSHI::delegateBySig: signature expired'
+            "SUSHI::delegateBySig: signature expired"
         );
         return _delegate(signatory, delegatee);
     }
@@ -158,7 +158,7 @@ contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {
     {
         require(
             blockNumber < block.number,
-            'SUSHI::getPriorVotes: not yet determined'
+            "SUSHI::getPriorVotes: not yet determined"
         );
 
         uint32 nCheckpoints = numCheckpoints[account];
@@ -239,9 +239,9 @@ contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {
         uint256 newVotes
     ) internal {
         uint32 blockNumber =
-            safe32(
+            _safe32(
                 block.number,
-                'SUSHI::_writeCheckpoint: block number exceeds 32 bits'
+                "SUSHI::_writeCheckpoint: block number exceeds 32 bits"
             );
 
         if (
@@ -260,7 +260,7 @@ contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {
         emit DelegateVotesChanged(delegatee, oldVotes, newVotes);
     }
 
-    function safe32(uint256 n, string memory errorMessage)
+    function _safe32(uint256 n, string memory errorMessage)
         internal
         pure
         returns (uint32)
@@ -269,7 +269,7 @@ contract SushiToken is ERC20('SushiToken', 'SUSHI'), Ownable {
         return uint32(n);
     }
 
-    function getChainId() internal view returns (uint256) {
+    function _getChainId() internal view returns (uint256) {
         uint256 chainId;
         assembly {
             chainId := chainid()

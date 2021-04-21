@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import '../core/ERC20.sol';
-import '../../utils/Arrays.sol';
-import '../../utils/Counters.sol';
+import "../core/ERC20.sol";
+import "../../utils/Arrays.sol";
+import "../../utils/Counters.sol";
 
 /**
  * @dev This contract extends an ERC20 token with a snapshot mechanism. When a snapshot is created, the balances and
@@ -143,11 +143,11 @@ abstract contract ERC20Snapshot is ERC20 {
         view
         returns (bool, uint256)
     {
-        require(snapshotId > 0, 'ERC20Snapshot: id is 0');
+        require(snapshotId > 0, "ERC20Snapshot: id is 0");
         // solhint-disable-next-line max-line-length
         require(
             snapshotId <= _currentSnapshotId.current(),
-            'ERC20Snapshot: nonexistent id'
+            "ERC20Snapshot: nonexistent id"
         );
 
         // When a valid snapshot is queried, there are three possibilities:

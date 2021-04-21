@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import {IERC20} from '../../interfaces/IERC20.sol';
-import {Address} from '../../utils/Address.sol';
-import {Context} from '../../utils/Context.sol';
-import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {CustomPausable} from '../../security/CustomPausable.sol';
+import {Address} from "../../utils/Address.sol";
+import {Context} from "../../utils/Context.sol";
+import {IERC20} from "../../interfaces/IERC20.sol";
+import {SafeMath} from "../../utils/math/SafeMath.sol";
+import {CustomPausable} from "../../security/CustomPausable.sol";
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -41,17 +41,11 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
     mapping(address => uint256) internal _balances;
     mapping(address => mapping(address => uint256)) internal _allowances;
 
-    /**
-     * Modifiers
-     */
     modifier onlyNonBlacklisted(address who) {
-        require(!getIsBlacklisted(who), 'ERC20Custom: address is blacklisted');
+        require(!getIsBlacklisted(who), "ERC20Custom: address is blacklisted");
         _;
     }
 
-    /**
-     * Constructor.
-     */
     constructor() {}
 
     /**
@@ -163,7 +157,7 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
             _msgSender(),
             _allowances[sender][_msgSender()].sub(
                 amount,
-                'ERC20: transfer amount exceeds allowance'
+                "ERC20: transfer amount exceeds allowance"
             )
         );
 
@@ -219,7 +213,7 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
             spender,
             _allowances[_msgSender()][spender].sub(
                 subtractedValue,
-                'ERC20: decreased allowance below zero'
+                "ERC20: decreased allowance below zero"
             )
         );
         return true;
@@ -246,14 +240,14 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
         address recipient,
         uint256 amount
     ) internal virtual notPaused onlyNonBlacklisted(sender) {
-        require(sender != address(0), 'ERC20: transfer from the zero address');
-        require(recipient != address(0), 'ERC20: transfer to the zero address');
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
 
         _beforeTokenTransfer(sender, recipient, amount);
 
         _balances[sender] = _balances[sender].sub(
             amount,
-            'ERC20: transfer amount exceeds balance'
+            "ERC20: transfer amount exceeds balance"
         );
         _balances[recipient] = _balances[recipient].add(amount);
         emit Transfer(sender, recipient, amount);
@@ -275,7 +269,7 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
         virtual
         onlyNonBlacklisted(account)
     {
-        require(account != address(0), 'ERC20: mint to the zero address');
+        require(account != address(0), "ERC20: mint to the zero address");
 
         _beforeTokenTransfer(address(0), account, amount);
 
@@ -314,7 +308,7 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
         uint256 decreasedAllowance =
             allowance(account, _msgSender()).sub(
                 amount,
-                'ERC20: burn amount exceeds allowance'
+                "ERC20: burn amount exceeds allowance"
             );
 
         _approve(account, _msgSender(), decreasedAllowance);
@@ -339,13 +333,13 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
         virtual
         onlyNonBlacklisted(account)
     {
-        require(account != address(0), 'ERC20: burn from the zero address');
+        require(account != address(0), "ERC20: burn from the zero address");
 
         _beforeTokenTransfer(account, address(0), amount);
 
         _balances[account] = _balances[account].sub(
             amount,
-            'ERC20: burn amount exceeds balance'
+            "ERC20: burn amount exceeds balance"
         );
         _totalSupply = _totalSupply.sub(amount);
         emit Transfer(account, address(0), amount);
@@ -369,8 +363,8 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
         address spender,
         uint256 amount
     ) internal virtual {
-        require(owner != address(0), 'ERC20: approve from the zero address');
-        require(spender != address(0), 'ERC20: approve to the zero address');
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
@@ -393,7 +387,7 @@ abstract contract ERC20Custom is CustomPausable, IERC20 {
             _msgSender(),
             _allowances[account][_msgSender()].sub(
                 amount,
-                'ERC20: burn amount exceeds allowance'
+                "ERC20: burn amount exceeds allowance"
             )
         );
     }

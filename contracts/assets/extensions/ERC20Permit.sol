@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import '../../interfaces/IERC20Permit.sol';
-import '../core/ERC20.sol';
-import '../../utils/cryptography/draft-EIP712.sol';
-import '../../utils/cryptography/ECDSA.sol';
-import '../../utils/Counters.sol';
+import "../../interfaces/IERC20Permit.sol";
+import "../core/ERC20.sol";
+import "../../utils/cryptography/draft-EIP712.sol";
+import "../../utils/cryptography/ECDSA.sol";
+import "../../utils/Counters.sol";
 
 /**
  * @dev Implementation of the ERC20 Permit extension allowing approvals to be made via signatures, as defined in
@@ -26,7 +26,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
     // solhint-disable-next-line var-name-mixedcase
     bytes32 private immutable _PERMIT_TYPEHASH =
         keccak256(
-            'Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)'
+            "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
 
     /**
@@ -34,7 +34,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
      *
      * It's a good idea to use the same `name` that is defined as the ERC20 token name.
      */
-    constructor(string memory name) EIP712(name, '1') {}
+    constructor(string memory name) EIP712(name, "1") {}
 
     /**
      * @dev See {IERC20Permit-permit}.
@@ -49,7 +49,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
         bytes32 s
     ) public virtual override {
         // solhint-disable-next-line not-rely-on-time
-        require(block.timestamp <= deadline, 'ERC20Permit: expired deadline');
+        require(block.timestamp <= deadline, "ERC20Permit: expired deadline");
 
         bytes32 structHash =
             keccak256(
@@ -66,7 +66,7 @@ abstract contract ERC20Permit is ERC20, IERC20Permit, EIP712 {
         bytes32 hash = _hashTypedDataV4(structHash);
 
         address signer = ECDSA.recover(hash, v, r, s);
-        require(signer == owner, 'ERC20Permit: invalid signature');
+        require(signer == owner, "ERC20Permit: invalid signature");
 
         _nonces[owner].increment();
         _approve(owner, spender, value);

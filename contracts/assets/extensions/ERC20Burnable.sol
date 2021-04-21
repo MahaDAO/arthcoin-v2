@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import '../core/ERC20.sol';
-import '../../utils/Context.sol';
+import "../core/ERC20.sol";
+import "../../utils/Context.sol";
 
 /**
  * @dev Extension of {ERC20} that allows token holders to destroy both their own
@@ -35,7 +35,7 @@ abstract contract ERC20Burnable is Context, ERC20 {
         uint256 currentAllowance = allowance(account, _msgSender());
         require(
             currentAllowance >= amount,
-            'ERC20: burn amount exceeds allowance'
+            "ERC20: burn amount exceeds allowance"
         );
         _approve(account, _msgSender(), currentAllowance - amount);
         _burn(account, amount);

@@ -3,14 +3,13 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IARTHX} from '../interfaces/IARTHX.sol';
-import {IARTH} from '../interfaces/IARTH.sol';
-import {IERC20} from '../interfaces/IERC20.sol';
-import {Context} from '../utils/Context.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {AnyswapV4ERC20} from './core/AnyswapV4ERC20.sol';
-import {IARTHController} from '../interfaces/IARTHController.sol';
-import {AccessControl} from '../access/AccessControl.sol';
+import {IARTHX} from "../interfaces/IARTHX.sol";
+import {IARTH} from "../interfaces/IARTH.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
+import {Context} from "../utils/Context.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
+import {AnyswapV4ERC20} from "./core/AnyswapV4ERC20.sol";
+import {AccessControl} from "../access/AccessControl.sol";
 
 /**
  * @title  ARTHShares.
@@ -22,92 +21,63 @@ import {AccessControl} from '../access/AccessControl.sol';
 contract ARTHShares is AnyswapV4ERC20, IARTHX {
     using SafeMath for uint256;
 
-    /**
-     * State variables.
-     */
-
-    /// @dev Controller for arth params.
-    IARTH private _ARTH;
-    IARTHController private _arthController;
+    IARTH private _arth;
 
     string public name;
     string public symbol;
+
+    // solhint-disable-next-line
     uint8 public constant override decimals = 18;
-    uint256 public constant genesisSupply = 10000e18; // 10k is printed upon genesis.
 
-    address public arthAddress;
+    uint256 public constant GENESIS_SUPPLY = 10000e18; // 10k is printed upon genesis.
+
+    address public oracle;
+    address public timelock;
     address public ownerAddress;
-    address public oracleAddress;
-    address public timelockAddress; // Governance timelock address.
-
-    /**
-     * Events.
-     */
 
     event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
-
     event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
-
-    /**
-     * Modifier.
-     */
 
     modifier onlyPools() {
         require(
-            _ARTH.pools(msg.sender) == true,
-            'Only arth pools can mint new ARTH'
+            _arth.pools(msg.sender) == true,
+            "ARTHX: Only arth pools can mint new ARTH"
         );
         _;
     }
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == ownerAddress || msg.sender == timelockAddress,
-            'You are not an owner or the governance timelock'
+            msg.sender == ownerAddress || msg.sender == timelock,
+            "ARTHX: You are not an owner or the governance timelock"
         );
         _;
     }
 
-    /**
-     * Constructor.
-     */
-
     constructor(
-        string memory _name,
-        string memory _symbol,
-        address _oracleAddress,
-        address _ownerAddress,
-        address _timelockAddress
-    ) AnyswapV4ERC20(_name) {
-        name = _name;
-        symbol = _symbol;
+        string memory name_,
+        string memory symbol_,
+        address oracle_,
+        address owner,
+        address timelock_
+    ) AnyswapV4ERC20(name_) {
+        name = name_;
+        symbol = symbol_;
 
-        ownerAddress = _ownerAddress;
-        oracleAddress = _oracleAddress;
-        timelockAddress = _timelockAddress;
+        ownerAddress = owner;
+        oracle = oracle_;
+        timelock = timelock_;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _mint(ownerAddress, genesisSupply);
+        _mint(ownerAddress, GENESIS_SUPPLY);
     }
-
-    /**
-     * External.
-     */
 
     function setOracle(address newOracle)
         external
         override
         onlyByOwnerOrGovernance
     {
-        oracleAddress = newOracle;
-    }
-
-    function setArthController(address _controller)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        _arthController = IARTHController(_controller);
+        oracle = newOracle;
     }
 
     function setTimelock(address newTimelock)
@@ -115,23 +85,15 @@ contract ARTHShares is AnyswapV4ERC20, IARTHX {
         override
         onlyByOwnerOrGovernance
     {
-        timelockAddress = newTimelock;
+        timelock = newTimelock;
     }
 
-    function setARTHAddress(address arthContractAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        _ARTH = IARTH(arthContractAddress);
+    function setARTH(IARTH arth) external override onlyByOwnerOrGovernance {
+        _arth = arth;
     }
 
-    function setOwner(address _ownerAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        ownerAddress = _ownerAddress;
+    function setOwner(address owner) external override onlyByOwnerOrGovernance {
+        ownerAddress = owner;
     }
 
     function mint(address to, uint256 amount) public onlyPools {

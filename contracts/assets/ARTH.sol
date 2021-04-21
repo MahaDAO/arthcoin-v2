@@ -3,12 +3,12 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IARTH} from '../interfaces/IARTH.sol';
-import {IERC20} from '../interfaces/IERC20.sol';
-import {ERC20Custom} from './core/ERC20Custom.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IIncentiveController} from '../interfaces/IIncentive.sol';
-import {AnyswapV4ERC20} from './core/AnyswapV4ERC20.sol';
+import {IARTH} from "../interfaces/IARTH.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
+import {ERC20Custom} from "./core/ERC20Custom.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
+import {AnyswapV4ERC20} from "./core/AnyswapV4ERC20.sol";
+import {IIncentiveController} from "../interfaces/IIncentive.sol";
 
 /**
  * @title  ARTHStablecoin.
@@ -22,22 +22,23 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
     address public governance;
     address[] public poolsArray;
 
-    string public constant symbol = 'ARTH';
-    string public constant name = 'ARTH Valuecoin';
+    string public symbol = "ARTH";
+    string public name = "ARTH Valuecoin";
 
+    // solhint-disable-next-line
     uint8 public constant override decimals = 18;
-    uint256 public constant override genesisSupply = 22000000e18;
+    uint256 public constant GENESIS_SUPPLY = 22000000e18;
 
     /// @dev Number of fractions that make up 1 ARTH.
     uint256 private _fractionsPerAmount = 1;
-
     uint256 private _MAX_UINT256 = type(uint256).max;
 
     /// @dev ARTH v1 already in circulation.
     uint256 private _INITIAL_AMOUNT_SUPPLY = 21107858507999546111302861;
-
     uint256 private _TOTAL_FRACTIONS =
         _MAX_UINT256 - (_MAX_UINT256 % _INITIAL_AMOUNT_SUPPLY);
+
+    uint256 private constant _REBASING_PRECISION = 1e6;
 
     mapping(address => bool) public override pools;
 
@@ -46,20 +47,20 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
     event PoolMinted(address indexed from, address indexed to, uint256 amount);
 
     modifier onlyPools() {
-        require(pools[msg.sender] == true, 'ARTH: not pool');
+        require(pools[msg.sender] == true, "ARTH: not pool");
         _;
     }
 
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner() || msg.sender == governance,
-            'ARTH: not owner or governance'
+            "ARTH: not owner or governance"
         );
         _;
     }
 
     constructor() AnyswapV4ERC20(name) {
-        _mint(msg.sender, genesisSupply);
+        _mint(msg.sender, GENESIS_SUPPLY);
     }
 
     function rebase(int256 supplyDelta)
@@ -84,7 +85,9 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         }
         */
 
-        _fractionsPerAmount = _TOTAL_FRACTIONS.div(totalSupply());
+        _fractionsPerAmount = _TOTAL_FRACTIONS.mul(_REBASING_PRECISION).div(
+            totalSupply()
+        );
 
         /*
             From this point forward, _fractionsPerAmount is taken as the source of truth.
@@ -122,8 +125,10 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
     /// @dev    Collateral Must be ERC20.
     /// @notice Adds collateral addresses supported.
     function addPool(address pool) external override onlyByOwnerOrGovernance {
-        require(pools[pool] == false, 'pool exists');
+        require(pools[pool] == false, "ARTH: pool exists");
+
         pools[pool] = true;
+        poolsArray.push(pool);
     }
 
     /// @notice Removes a pool.
@@ -132,20 +137,41 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         override
         onlyByOwnerOrGovernance
     {
-        require(pools[pool] == true, "pool doesn't exist");
+        require(pools[pool] == true, "ARTH: pool doesn't exist");
+
         delete pools[pool];
+
+        // 'Delete' from the array by setting the address to 0x0
+        for (uint256 i = 0; i < poolsArray.length; i++) {
+            if (poolsArray[i] == pool) {
+                poolsArray[i] = address(0); // This will leave a null in the array and keep the indices the same.
+                break;
+            }
+        }
     }
 
-    function setGovernance(address _governance) external override onlyOwner {
-        governance = _governance;
+    function getGenesisSupply() external pure override returns (uint256) {
+        return GENESIS_SUPPLY;
     }
 
-    function setIncentiveController(IIncentiveController _incentiveController)
+    function getPool(uint256 index) external view override returns (address) {
+        return poolsArray[index];
+    }
+
+    function getAllPoolsCount() external view override returns (uint256) {
+        return poolsArray.length;
+    }
+
+    function setGovernance(address newGovernance) external override onlyOwner {
+        governance = newGovernance;
+    }
+
+    function setIncentiveController(IIncentiveController controller)
         external
         override
         onlyByOwnerOrGovernance
     {
-        incentiveController = _incentiveController;
+        incentiveController = controller;
     }
 
     function balanceOf(address account)
@@ -162,7 +188,7 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         override
         onlyNonBlacklisted(account)
     {
-        require(account != address(0), 'ERC20: mint to the zero address');
+        require(account != address(0), "ERC20: mint to the zero address");
 
         uint256 fractionAmount = _convertAmountToFraction(amount);
         _beforeTokenTransfer(address(0), account, amount);
@@ -178,14 +204,14 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         override
         onlyNonBlacklisted(account)
     {
-        require(account != address(0), 'ERC20: burn from the zero address');
+        require(account != address(0), "ERC20: burn from the zero address");
 
         uint256 fractionAmount = _convertAmountToFraction(amount);
         _beforeTokenTransfer(account, address(0), amount);
 
         _balances[account] = _balances[account].sub(
             fractionAmount,
-            'ERC20: burn amount exceeds balance'
+            "ERC20: burn amount exceeds balance"
         );
 
         _totalSupply = _totalSupply.sub(amount);
@@ -217,7 +243,7 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         view
         returns (uint256)
     {
-        return fraction.div(_fractionsPerAmount);
+        return fraction.mul(_REBASING_PRECISION).div(_fractionsPerAmount);
     }
 
     function _convertAmountToFraction(uint256 amount)
@@ -225,6 +251,6 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         view
         returns (uint256)
     {
-        return amount.mul(_fractionsPerAmount);
+        return amount.mul(_fractionsPerAmount).div(_REBASING_PRECISION);
     }
 }

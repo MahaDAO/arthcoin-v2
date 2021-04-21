@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from '../interfaces/IERC20.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IARTHPool} from '../interfaces/IARTHPool.sol';
-import {IARTHController} from '../interfaces/IARTHController.sol';
-import {AccessControl} from '../access/AccessControl.sol';
-import {IChainlinkOracle} from '../interfaces/IChainlinkOracle.sol';
-import {IUniswapPairOracle} from '../interfaces/IUniswapPairOracle.sol';
+import {IERC20} from "../interfaces/IERC20.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
+import {IARTHPool} from "../interfaces/IARTHPool.sol";
+import {IARTHController} from "../interfaces/IARTHController.sol";
+import {AccessControl} from "../access/AccessControl.sol";
+import {IChainlinkOracle} from "../interfaces/IChainlinkOracle.sol";
+import {IUniswapPairOracle} from "../interfaces/IUniswapPairOracle.sol";
 
 /**
  * @title  ARTHStablecoin.
@@ -80,7 +80,7 @@ contract ARTHController is AccessControl, IARTHController {
     bool public isColalteralRatioPaused = false;
 
     bytes32 public constant COLLATERAL_RATIO_PAUSER =
-        keccak256('COLLATERAL_RATIO_PAUSER');
+        keccak256("COLLATERAL_RATIO_PAUSER");
 
     address[] public arthPoolsArray; // These contracts are able to mint ARTH.
 
@@ -99,14 +99,14 @@ contract ARTHController is AccessControl, IARTHController {
     }
 
     modifier onlyPools() {
-        require(arthPools[msg.sender] == true, 'ARTHController: FORBIDDEN');
+        require(arthPools[msg.sender] == true, "ARTHController: FORBIDDEN");
         _;
     }
 
     modifier onlyAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'ARTHController: FORBIDDEN'
+            "ARTHController: FORBIDDEN"
         );
         _;
     }
@@ -116,7 +116,7 @@ contract ARTHController is AccessControl, IARTHController {
             msg.sender == ownerAddress ||
                 msg.sender == timelockAddress ||
                 msg.sender == controllerAddress,
-            'ARTHController: FORBIDDEN'
+            "ARTHController: FORBIDDEN"
         );
         _;
     }
@@ -126,7 +126,7 @@ contract ARTHController is AccessControl, IARTHController {
             msg.sender == ownerAddress ||
                 msg.sender == timelockAddress ||
                 arthPools[msg.sender] == true,
-            'ARTHController: FORBIDDEN'
+            "ARTHController: FORBIDDEN"
         );
         _;
     }
@@ -208,11 +208,11 @@ contract ARTHController is AccessControl, IARTHController {
     function refreshCollateralRatio() external override {
         require(
             isColalteralRatioPaused == false,
-            'ARTHController: Collateral Ratio has been paused'
+            "ARTHController: Collateral Ratio has been paused"
         );
         require(
             block.timestamp - lastCallTime >= refreshCooldown,
-            'ARTHController: must wait till callable again'
+            "ARTHController: must wait till callable again"
         );
 
         uint256 currentPrice = getARTHPrice();
@@ -246,7 +246,7 @@ contract ARTHController is AccessControl, IARTHController {
     {
         require(
             arthPools[poolAddress] == false,
-            'ARTHController: address present'
+            "ARTHController: address present"
         );
 
         arthPools[poolAddress] = true;
@@ -260,7 +260,7 @@ contract ARTHController is AccessControl, IARTHController {
     {
         require(
             arthPools[poolAddress] == true,
-            'ARTHController: address absent'
+            "ARTHController: address absent"
         );
 
         // Delete from the mapping.
@@ -502,7 +502,7 @@ contract ARTHController is AccessControl, IARTHController {
             );
         } else
             revert(
-                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHX)'
+                "INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHX)"
             );
 
         return eth2GMUPrice.mul(_PRICE_PRECISION).div(priceVsETH);

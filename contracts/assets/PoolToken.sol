@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import {ERC20} from './core/ERC20.sol';
-import {IERC20} from '../interfaces/IERC20.sol';
-import {Math} from '../utils/math/Math.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {AccessControl} from '../access/AccessControl.sol';
+import {ERC20} from "./core/ERC20.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
+import {Math} from "../utils/math/Math.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
+import {AccessControl} from "../access/AccessControl.sol";
 
 /**
  * @title  PoolToken
@@ -15,26 +15,15 @@ import {AccessControl} from '../access/AccessControl.sol';
 contract PoolToken is AccessControl, ERC20 {
     using SafeMath for uint256;
 
-    /**
-     * State variables.
-     */
-
     IERC20[] public poolTokens;
     bool public enableWithdrawals = false;
-    bytes32 public constant GOVERNANCE_ROLE = keccak256('GOVERNANCE_ROLE');
+    bytes32 public constant GOVERNANCE_ROLE = keccak256("GOVERNANCE_ROLE");
 
-    /**
-     * Event.
-     */
     event ToggleWithdrawals(bool state);
     event TokenAdded(address indexed token);
     event Withdraw(address indexed who, uint256 amount);
     event TokenReplaced(address indexed token, uint256 index);
     event TokensRetrieved(address indexed token, address who, uint256 amount);
-
-    /**
-     * Modifier.
-     */
 
     modifier onlyAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()));
@@ -46,9 +35,6 @@ contract PoolToken is AccessControl, ERC20 {
         _;
     }
 
-    /**
-     * Constructor.
-     */
     constructor(
         string memory tokenName,
         string memory tokenSymbol,
@@ -59,10 +45,6 @@ contract PoolToken is AccessControl, ERC20 {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(GOVERNANCE_ROLE, _msgSender());
     }
-
-    /**
-     * External.
-     */
 
     function addPoolToken(IERC20 token) external onlyGovernance {
         poolTokens.push(token);
@@ -82,9 +64,9 @@ contract PoolToken is AccessControl, ERC20 {
     }
 
     function withdraw(uint256 amount) external {
-        require(enableWithdrawals, 'PoolToken: withdrawals disabled');
-        require(amount > 0, 'PoolToken: amount = 0');
-        require(amount <= balanceOf(msg.sender), 'PoolToken: amount > balance');
+        require(enableWithdrawals, "PoolToken: withdrawals disabled");
+        require(amount > 0, "PoolToken: amount = 0");
+        require(amount <= balanceOf(msg.sender), "PoolToken: amount > balance");
 
         // calculate how much share of the supply the user has
         uint256 percentage = amount.mul(1e8).div(totalSupply());
