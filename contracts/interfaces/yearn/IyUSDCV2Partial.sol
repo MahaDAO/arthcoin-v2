@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import '../IERC20.sol';
+import "../IERC20.sol";
 
 // https://etherscan.io/address/0x5f18C75AbDAe578b483E5F43f12a39cF75b973a9
 // Some functions were omitted for brevity. See the contract for details

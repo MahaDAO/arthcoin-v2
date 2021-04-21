@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IERC20} from './IERC20.sol';
+import {IERC20} from "./IERC20.sol";
 
 interface IStakingRewardsDualForMigrator {
     struct ILockedStake {

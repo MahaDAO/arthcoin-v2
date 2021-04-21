@@ -2,21 +2,21 @@
 
 pragma solidity ^0.8.0;
 
-import {SafeMath} from '../utils/math/SafeMath.sol';
+import {SafeMath} from "../utils/math/SafeMath.sol";
 
-import {UniswapV2Library} from '../uniswaps/UniswapV2Library.sol';
-import {IUniswapPairOracle} from '../interfaces/IUniswapPairOracle.sol';
+import {UniswapV2Library} from "../uniswaps/UniswapV2Library.sol";
+import {IUniswapPairOracle} from "../interfaces/IUniswapPairOracle.sol";
 
 contract MockUniswapPairOracle is IUniswapPairOracle {
     using SafeMath for uint256;
 
-    uint256 epoch;
-    uint256 period = 1;
+    uint256 public epoch;
+    uint256 public period = 1;
 
     uint256 public price = 1e18;
     bool public error;
 
-    uint256 startTime;
+    uint256 public startTime;
 
     constructor() {
         startTime = block.timestamp;
@@ -47,7 +47,7 @@ contract MockUniswapPairOracle is IUniswapPairOracle {
     }
 
     function update() external override {
-        require(!error, 'Oracle: mocked error');
+        require(!error, "Oracle: mocked error");
         emit Updated(0, 0);
     }
 

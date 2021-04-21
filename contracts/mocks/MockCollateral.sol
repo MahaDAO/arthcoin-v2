@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import {IERC20} from '../interfaces/IERC20.sol';
-import {Context} from '../utils/Context.sol';
-import {Address} from '../utils/Address.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
+import {IERC20} from "../interfaces/IERC20.sol";
+import {Context} from "../utils/Context.sol";
+import {Address} from "../utils/Address.sol";
+import {SafeMath} from "../utils/math/SafeMath.sol";
 
 /**
  * NOTE: Due to compiling issues, _name, _symbol, and _decimals were removed
@@ -43,7 +43,7 @@ contract MockCollateral is Context, IERC20 {
 
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
-    mapping(address => bool) used;
+    mapping(address => bool) public used;
 
     constructor(
         address _creatorAddress,
@@ -152,7 +152,7 @@ contract MockCollateral is Context, IERC20 {
             _msgSender(),
             _allowances[sender][_msgSender()].sub(
                 amount,
-                'ERC20: transfer amount exceeds allowance'
+                "ERC20: transfer amount exceeds allowance"
             )
         );
         return true;
@@ -207,7 +207,7 @@ contract MockCollateral is Context, IERC20 {
             spender,
             _allowances[_msgSender()][spender].sub(
                 subtractedValue,
-                'ERC20: decreased allowance below zero'
+                "ERC20: decreased allowance below zero"
             )
         );
         return true;
@@ -232,14 +232,14 @@ contract MockCollateral is Context, IERC20 {
         address recipient,
         uint256 amount
     ) internal virtual {
-        require(sender != address(0), 'ERC20: transfer from the zero address');
-        require(recipient != address(0), 'ERC20: transfer to the zero address');
+        require(sender != address(0), "ERC20: transfer from the zero address");
+        require(recipient != address(0), "ERC20: transfer to the zero address");
 
         _beforeTokenTransfer(sender, recipient, amount);
 
         _balances[sender] = _balances[sender].sub(
             amount,
-            'ERC20: transfer amount exceeds balance'
+            "ERC20: transfer amount exceeds balance"
         );
         _balances[recipient] = _balances[recipient].add(amount);
         emit Transfer(sender, recipient, amount);
@@ -255,7 +255,7 @@ contract MockCollateral is Context, IERC20 {
      * - `to` cannot be the zero address.
      */
     function _mint(address account, uint256 amount) internal virtual {
-        require(account != address(0), 'ERC20: mint to the zero address');
+        require(account != address(0), "ERC20: mint to the zero address");
 
         _beforeTokenTransfer(address(0), account, amount);
 
@@ -288,7 +288,7 @@ contract MockCollateral is Context, IERC20 {
         uint256 decreasedAllowance =
             allowance(account, _msgSender()).sub(
                 amount,
-                'ERC20: burn amount exceeds allowance'
+                "ERC20: burn amount exceeds allowance"
             );
 
         _approve(account, _msgSender(), decreasedAllowance);
@@ -307,13 +307,13 @@ contract MockCollateral is Context, IERC20 {
      * - `account` must have at least `amount` tokens.
      */
     function _burn(address account, uint256 amount) internal virtual {
-        require(account != address(0), 'ERC20: burn from the zero address');
+        require(account != address(0), "ERC20: burn from the zero address");
 
         _beforeTokenTransfer(account, address(0), amount);
 
         _balances[account] = _balances[account].sub(
             amount,
-            'ERC20: burn amount exceeds balance'
+            "ERC20: burn amount exceeds balance"
         );
         _totalSupply = _totalSupply.sub(amount);
         emit Transfer(account, address(0), amount);
@@ -337,8 +337,8 @@ contract MockCollateral is Context, IERC20 {
         address spender,
         uint256 amount
     ) internal virtual {
-        require(owner != address(0), 'ERC20: approve from the zero address');
-        require(spender != address(0), 'ERC20: approve to the zero address');
+        require(owner != address(0), "ERC20: approve from the zero address");
+        require(spender != address(0), "ERC20: approve to the zero address");
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
@@ -357,7 +357,7 @@ contract MockCollateral is Context, IERC20 {
             _msgSender(),
             _allowances[account][_msgSender()].sub(
                 amount,
-                'ERC20: burn amount exceeds allowance'
+                "ERC20: burn amount exceeds allowance"
             )
         );
     }
