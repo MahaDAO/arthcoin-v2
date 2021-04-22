@@ -5,8 +5,8 @@ pragma experimental ABIEncoderV2;
 
 import {IARTH} from "./IARTH.sol";
 import {IERC20} from "./IERC20.sol";
-import {IARTHController} from "./IARTHController.sol";
 import {IAnyswapV4ERC20} from "./IAnyswapV4ERC20.sol";
+import {IARTHXTaxController} from "./IARTHXTaxController.sol";
 
 /**
  * @title  ARTHShares.
@@ -24,4 +24,6 @@ interface IARTHX is IERC20, IAnyswapV4ERC20 {
     function poolMint(address account, uint256 amount) external;
 
     function poolBurnFrom(address account, uint256 amount) external;
+
+    function setTaxController(IARTHXTaxController controller) external;
 }

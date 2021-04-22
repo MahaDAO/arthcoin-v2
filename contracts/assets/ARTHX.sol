@@ -10,6 +10,7 @@ import {Context} from "../utils/Context.sol";
 import {SafeMath} from "../utils/math/SafeMath.sol";
 import {AnyswapV4ERC20} from "./core/AnyswapV4ERC20.sol";
 import {AccessControl} from "../access/AccessControl.sol";
+import {IARTHXTaxController} from "../interfaces/IARTHXTaxController.sol";
 
 /**
  * @title  ARTHShares.
@@ -22,36 +23,21 @@ contract ARTHShares is AnyswapV4ERC20, IARTHX {
     using SafeMath for uint256;
 
     IARTH private _arth;
+    IARTHXTaxController private _taxController;
 
     string public name;
     string public symbol;
-
-    bool public considerTax = true;
 
     // solhint-disable-next-line
     uint8 public constant override decimals = 18;
     uint256 public constant GENESIS_SUPPLY = 1e4 ether; // 10k is printed upon genesis.
 
-    uint256 public taxToBurnPercent = 4; // In %.
-    uint256 public taxToLiquidityPercent = 4; // In %.
-    uint256 public taxToHoldersPercent = 4; // In %.
-
     address public oracle;
     address public timelock;
     address public ownerAddress;
-    address public holderBeneficiary;
-    address public liquidityBeneficiary;
 
     event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
     event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
-    event TaxCharged(
-        address indexed from,
-        uint256 amountBurned,
-        address indexed liquidity,
-        uint256 amountToLiquidity,
-        address indexed holders,
-        uint256 amountToHodlers
-    );
 
     modifier onlyPools() {
         require(
@@ -111,49 +97,12 @@ contract ARTHShares is AnyswapV4ERC20, IARTHX {
         ownerAddress = owner;
     }
 
-    function setHolderBeneficiary(address beneficiary)
+    function setTaxController(IARTHXTaxController controller)
         external
+        override
         onlyByOwnerOrGovernance
     {
-        holderBeneficiary = beneficiary;
-    }
-
-    function setTaxToHoldersPercent(uint256 percent)
-        external
-        onlyByOwnerOrGovernance
-    {
-        require(percent >= 0 && percent <= 100, "ARTHX: percent invalid");
-
-        taxToHoldersPercent = percent;
-    }
-
-    function setTaxToLiquidityPercent(uint256 percent)
-        external
-        onlyByOwnerOrGovernance
-    {
-        require(percent >= 0 && percent <= 100, "ARTHX: percent invalid");
-
-        taxToLiquidityPercent = percent;
-    }
-
-    function setTaxToBurnPercent(uint256 percent)
-        external
-        onlyByOwnerOrGovernance
-    {
-        require(percent >= 0 && percent <= 100, "ARTHX: percent invalid");
-
-        taxToBurnPercent = percent;
-    }
-
-    function setLiquidityBeneficiary(address beneficiary)
-        external
-        onlyByOwnerOrGovernance
-    {
-        liquidityBeneficiary = beneficiary;
-    }
-
-    function toggleTax() external onlyByOwnerOrGovernance {
-        considerTax = !considerTax;
+        _taxController = controller;
     }
 
     function mint(address to, uint256 amount) public onlyPools {
@@ -186,42 +135,11 @@ contract ARTHShares is AnyswapV4ERC20, IARTHX {
         address recipient,
         uint256 amount
     ) internal virtual override notPaused onlyNonBlacklisted(sender) {
-        if (considerTax) {
-            amount = _payTax(amount);
-        }
+        // Check if tax mode is on, and if its is on tax the tx and transfer the
+        // remaining amount to `recipient`.
+        if (address(_taxController) != address(0))
+            amount = _taxController.chargeTax(_msgSender(), amount);
 
         super._transfer(sender, recipient, amount);
-    }
-
-    function _payTax(uint256 amount) internal returns (uint256) {
-        require(
-            taxToBurnPercent.add(taxToLiquidityPercent).add(
-                taxToHoldersPercent
-            ) <= 100,
-            "ARTHX: invalid tax rates"
-        );
-
-        uint256 amountToBurn = amount.mul(taxToBurnPercent).div(100);
-        _burnFrom(msg.sender, amountToBurn);
-
-        uint256 amountToLiquidity = amount.mul(taxToLiquidityPercent).div(100);
-        super._transfer(msg.sender, liquidityBeneficiary, amountToLiquidity);
-
-        uint256 amountToHolders = amount.mul(taxToHoldersPercent).div(100);
-        super._transfer(msg.sender, holderBeneficiary, amountToHolders);
-
-        emit TaxCharged(
-            msg.sender,
-            amountToBurn,
-            liquidityBeneficiary,
-            amountToLiquidity,
-            holderBeneficiary,
-            amountToHolders
-        );
-
-        return
-            amount.sub(amountToBurn).sub(amountToLiquidity).sub(
-                amountToHolders
-            );
     }
 }
