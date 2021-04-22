@@ -30,7 +30,7 @@ contract ARTHShares is AnyswapV4ERC20, IARTHX {
 
     // solhint-disable-next-line
     uint8 public constant override decimals = 18;
-    uint256 public constant GENESIS_SUPPLY = 10000e18; // 10k is printed upon genesis.
+    uint256 public constant GENESIS_SUPPLY = 1e4 ether; // 10k is printed upon genesis.
 
     uint256 public taxToBurnPercent = 4; // In %.
     uint256 public taxToLiquidityPercent = 4; // In %.

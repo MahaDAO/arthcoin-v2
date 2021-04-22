@@ -6,6 +6,14 @@
       "error",
       "double"
     ],
+    "max-line-length": [
+      "warn",
+      120
+    ],
+    "no-unused-vars": "warn",
+    "contract-name-camelcase": "warn",
+    "event-name-camelcase": "warn",
+    "func-name-mixedcase": "warn",
     "private-vars-leading-underscore": [
       "warn",
       {

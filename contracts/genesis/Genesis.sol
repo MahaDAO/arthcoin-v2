@@ -18,11 +18,11 @@ import {IUniswapV2Router02} from "../interfaces/uniswap/IUniswapV2Router02.sol";
 contract Genesis is ERC20, Ownable {
     using SafeMath for uint256;
 
-    IWETH public weth;
-    IARTH public arth;
-    IARTHX public arthx;
-    IERC20Mintable public maha;
-    IUniswapV2Router02 public router;
+    IWETH public immutable weth;
+    IARTH public immutable arth;
+    IARTHX public immutable arthx;
+    IERC20Mintable public immutable maha;
+    IUniswapV2Router02 public immutable router;
     IChainlinkOracle public ethGMUOracle;
     IBondingCurveOracle public curveOracle;
 
@@ -167,7 +167,7 @@ contract Genesis is ERC20, Ownable {
         emit Mint(msg.sender, amount, mintAmount);
     }
 
-    function redeem(uint256 amount) public {
+    function redeem(uint256 amount) external {
         if (block.timestamp >= startTime.add(duration)) {
             _redeemARTHXAndMAHA(amount);
             return;
@@ -176,7 +176,7 @@ contract Genesis is ERC20, Ownable {
         _redeemARTHX(amount);
     }
 
-    function distribute() public onlyOwner hasEnded {
+    function distribute() external onlyOwner hasEnded {
         uint256 balance = address(this).balance;
 
         uint256 arthETHPairAmount = balance.mul(arthETHPairPercent).div(100);

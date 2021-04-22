@@ -200,12 +200,16 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
         lastCallTime = block.timestamp; // Set the time of the last expansion
     }
 
-    function setGlobalCollateralRatio(uint256 ratio) public override onlyAdmin {
+    function setGlobalCollateralRatio(uint256 ratio)
+        external
+        override
+        onlyAdmin
+    {
         globalCollateralRatio = ratio;
     }
 
     function setPriceTarget(uint256 newPriceTarget)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -213,7 +217,7 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
     }
 
     function setRefreshCooldown(uint256 newCooldown)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -221,7 +225,7 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
     }
 
     function setETHGMUOracle(IChainlinkOracle oracle)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -230,7 +234,7 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
     }
 
     function setARTHXETHOracle(IUniswapPairOracle oracle)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -238,19 +242,23 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
     }
 
     function setARTHETHOracle(IUniswapPairOracle oracle)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
         _arthETHOracle = oracle;
     }
 
-    function toggleCollateralRatio() public override onlyCollateralRatioPauser {
+    function toggleCollateralRatio()
+        external
+        override
+        onlyCollateralRatioPauser
+    {
         isColalteralRatioPaused = !isColalteralRatioPaused;
     }
 
     function setMintingFee(uint256 fee)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -258,7 +266,7 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
     }
 
     function setArthStep(uint256 newStep)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -266,7 +274,7 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
     }
 
     function setRedemptionFee(uint256 fee)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -274,7 +282,7 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
     }
 
     function setPriceBand(uint256 band)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -282,7 +290,7 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
     }
 
     function setTimelock(address newTimelock)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -328,13 +336,13 @@ contract ARTHController is AccessControl, Ownable, IARTHController {
         return totalCollateralValueD18;
     }
 
-    function getCRForMint() public view override returns (uint256) {
+    function getCRForMint() external view override returns (uint256) {
         if (useGlobalCRForMint) return getGlobalCollateralRatio();
 
         return mintCollateralRatio;
     }
 
-    function getCRForRedeem() public view override returns (uint256) {
+    function getCRForRedeem() external view override returns (uint256) {
         if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
 
         return redeemCollateralRatio;

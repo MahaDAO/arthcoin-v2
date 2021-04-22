@@ -27,7 +27,7 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
 
     // solhint-disable-next-line
     uint8 public constant override decimals = 18;
-    uint256 public constant GENESIS_SUPPLY = 22000000e18;
+    uint256 public constant GENESIS_SUPPLY = 22_000_000 ether;
 
     /// @dev Number of fractions that make up 1 ARTH.
     uint256 private _fractionsPerAmount = 1;

@@ -717,7 +717,12 @@ contract ARTHPool is AccessControl, IARTHPool {
         return _arthController.getGlobalCollateralRatio();
     }
 
-    function getCollateralGMUBalance() public view override returns (uint256) {
+    function getCollateralGMUBalance()
+        external
+        view
+        override
+        returns (uint256)
+    {
         if (collateralPricePaused) {
             return
                 (
