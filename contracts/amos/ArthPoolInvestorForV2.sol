@@ -159,7 +159,8 @@ contract ARTHPoolInvestorForV2 is AccessControl, Ownable {
         } else {
             uint256 ethGMUPrice = _controller.getETHGMUPrice();
             uint256 ethCollateralPrice =
-                IUniswapPairOracle(_pool.collateralETHOracleAddress()).consult(
+                IUniswapPairOracle(_pool.getCollateralETHOracleAddress())
+                    .consult(
                     weth,
                     (_PRICE_PRECISION * (10**COLLATERAL_MISSING_DECIMALS))
                 );

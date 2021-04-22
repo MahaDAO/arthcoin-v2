@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {IUniswapPairOracle} from "./IUniswapPairOracle.sol";
+
 interface IARTHPool {
     function repay(uint256 amount) external;
 
@@ -11,10 +13,7 @@ interface IARTHPool {
 
     function setBuyBackCollateralBuffer(uint256 percent) external;
 
-    function setCollatETHOracle(
-        address collateralWETHOracleAddress,
-        address wethAddress
-    ) external;
+    function setCollatETHOracle(IUniswapPairOracle oracle) external;
 
     function toggleMinting() external;
 
@@ -98,5 +97,5 @@ interface IARTHPool {
 
     function pausedPrice() external view returns (uint256);
 
-    function collateralETHOracleAddress() external view returns (address);
+    function getCollateralETHOracleAddress() external view returns (address);
 }

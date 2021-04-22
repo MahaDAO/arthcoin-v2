@@ -3,18 +3,18 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IARTH} from '../../interfaces/IARTH.sol';
-import {IARTHPool} from '../../interfaces/IARTHPool.sol';
-import {IERC20} from '../../interfaces/IERC20.sol';
-import {IARTHX} from '../../interfaces/IARTHX.sol';
-import {ICurve} from '../../interfaces/ICurve.sol';
-import {SafeMath} from '../../utils/math/SafeMath.sol';
-import {ARTHPoolLibrary} from './ARTHPoolLibrary.sol';
-import {IARTHController} from '../../interfaces/IARTHController.sol';
-import {ISimpleOracle} from '../../interfaces/ISimpleOracle.sol';
-import {IERC20Burnable} from '../../interfaces/IERC20Burnable.sol';
-import {AccessControl} from '../../access/AccessControl.sol';
-import {IUniswapPairOracle} from '../../interfaces/IUniswapPairOracle.sol';
+import {IARTH} from "../../interfaces/IARTH.sol";
+import {IARTHPool} from "../../interfaces/IARTHPool.sol";
+import {IERC20} from "../../interfaces/IERC20.sol";
+import {IARTHX} from "../../interfaces/IARTHX.sol";
+import {ICurve} from "../../interfaces/ICurve.sol";
+import {SafeMath} from "../../utils/math/SafeMath.sol";
+import {ARTHPoolLibrary} from "./ARTHPoolLibrary.sol";
+import {IARTHController} from "../../interfaces/IARTHController.sol";
+import {ISimpleOracle} from "../../interfaces/ISimpleOracle.sol";
+import {IERC20Burnable} from "../../interfaces/IERC20Burnable.sol";
+import {AccessControl} from "../../access/AccessControl.sol";
+import {IUniswapPairOracle} from "../../interfaces/IUniswapPairOracle.sol";
 
 /**
  * @title  ARTHPool.
@@ -61,13 +61,13 @@ contract ARTHPool is AccessControl, IARTHPool {
     mapping(address => uint256) public redeemCollateralBalances;
 
     bytes32 private constant _RECOLLATERALIZE_PAUSER =
-        keccak256('RECOLLATERALIZE_PAUSER');
+        keccak256("RECOLLATERALIZE_PAUSER");
     bytes32 private constant _COLLATERAL_PRICE_PAUSER =
-        keccak256('COLLATERAL_PRICE_PAUSER');
-    bytes32 private constant _AMO_ROLE = keccak256('AMO_ROLE');
-    bytes32 private constant _MINT_PAUSER = keccak256('MINT_PAUSER');
-    bytes32 private constant _REDEEM_PAUSER = keccak256('REDEEM_PAUSER');
-    bytes32 private constant _BUYBACK_PAUSER = keccak256('BUYBACK_PAUSER');
+        keccak256("COLLATERAL_PRICE_PAUSER");
+    bytes32 private constant _AMO_ROLE = keccak256("AMO_ROLE");
+    bytes32 private constant _MINT_PAUSER = keccak256("MINT_PAUSER");
+    bytes32 private constant _REDEEM_PAUSER = keccak256("REDEEM_PAUSER");
+    bytes32 private constant _BUYBACK_PAUSER = keccak256("BUYBACK_PAUSER");
 
     uint256 private immutable _missingDeciamls;
     uint256 private constant _PRICE_PRECISION = 1e6;
@@ -85,7 +85,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == _timelockAddress || msg.sender == _ownerAddress,
-            'ArthPool: You are not the owner or the governance timelock'
+            "ArthPool: You are not the owner or the governance timelock"
         );
         _;
     }
@@ -93,7 +93,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     modifier onlyAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'ArthPool: You are not the admin'
+            "ArthPool: You are not the admin"
         );
         _;
     }
@@ -103,23 +103,23 @@ contract ARTHPool is AccessControl, IARTHPool {
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) ||
                 msg.sender == _timelockAddress ||
                 msg.sender == _ownerAddress,
-            'ArthPool: forbidden'
+            "ArthPool: forbidden"
         );
         _;
     }
 
     modifier onlyAMOS {
-        require(hasRole(_AMO_ROLE, _msgSender()), 'ArthPool: forbidden');
+        require(hasRole(_AMO_ROLE, _msgSender()), "ArthPool: forbidden");
         _;
     }
 
     modifier notRedeemPaused() {
-        require(redeemPaused == false, 'ArthPool: Redeeming is paused');
+        require(redeemPaused == false, "ArthPool: Redeeming is paused");
         _;
     }
 
     modifier notMintPaused() {
-        require(mintPaused == false, 'ArthPool: Minting is paused');
+        require(mintPaused == false, "ArthPool: Minting is paused");
         _;
     }
 
@@ -164,7 +164,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         override
         onlyAdminOrOwnerOrGovernance
     {
-        require(percent <= 100, 'ArthPool: percent > 100');
+        require(percent <= 100, "ArthPool: percent > 100");
         buybackCollateralBuffer = percent;
     }
 
@@ -180,17 +180,17 @@ contract ARTHPool is AccessControl, IARTHPool {
         override
         onlyAdminOrOwnerOrGovernance
     {
-        require(percent <= 100, 'ArthPool: percent > 100');
+        require(percent <= 100, "ArthPool: percent > 100");
 
         stabilityFee = percent;
     }
 
-    function setCollatETHOracle(IUniswapPairOracle _collateralWETHOracleAddress)
+    function setCollatETHOracle(IUniswapPairOracle oracle)
         external
         override
         onlyByOwnerOrGovernance
     {
-        _collateralETHOracle = _collateralWETHOracleAddress;
+        _collateralETHOracle = oracle;
     }
 
     function toggleMinting() external override {
@@ -259,7 +259,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     function borrow(uint256 _amount) external override onlyAMOS {
         require(
             _COLLATERAL.balanceOf(address(this)) > _amount,
-            'ArthPool: Insufficent funds in the pool'
+            "ArthPool: Insufficent funds in the pool"
         );
 
         _COLLATERAL.transfer(msg.sender, _amount);
@@ -276,7 +276,7 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         require(
             _COLLATERAL.balanceOf(msg.sender) >= amount,
-            'ArthPool: balance < required'
+            "ArthPool: balance < required"
         );
         _COLLATERAL.transferFrom(msg.sender, address(this), amount);
 
@@ -295,13 +295,13 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         require(
             _arthController.getCRForMint() >= _COLLATERAL_RATIO_MAX,
-            'ARHTPool: Collateral ratio < 1'
+            "ARHTPool: Collateral ratio < 1"
         );
         require(
             (_COLLATERAL.balanceOf(address(this)))
                 .sub(unclaimedPoolCollateral)
                 .add(collateralAmount) <= poolCeiling,
-            'ARTHPool: ceiling reached'
+            "ARTHPool: ceiling reached"
         );
 
         // 1 ARTH for each $1 worth of collateral.
@@ -318,12 +318,12 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         require(
             arthOutMin <= arthAmountD18,
-            'ARTHPool: Slippage limit reached'
+            "ARTHPool: Slippage limit reached"
         );
 
         require(
             _COLLATERAL.balanceOf(msg.sender) >= collateralAmount,
-            'ArthPool: balance < required'
+            "ArthPool: balance < required"
         );
         _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount);
 
@@ -342,7 +342,7 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         require(
             _arthController.getCRForMint() == 0,
-            'ARTHPool: Collateral ratio != 0'
+            "ARTHPool: Collateral ratio != 0"
         );
 
         uint256 arthAmountD18 =
@@ -354,7 +354,7 @@ contract ARTHPool is AccessControl, IARTHPool {
             1e6
         );
 
-        require(arthOutMin <= arthAmountD18, 'Slippage limit reached');
+        require(arthOutMin <= arthAmountD18, "Slippage limit reached");
 
         _ARTH.poolMint(msg.sender, arthAmountD18);
         _ARTHX.poolBurnFrom(msg.sender, arthxAmountD18);
@@ -375,7 +375,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         require(
             collateralRatioForMint < _COLLATERAL_RATIO_MAX &&
                 collateralRatioForMint > 0,
-            'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+            "ARTHPool: fails (.000001 <= Collateral ratio <= .999999)"
         );
 
         require(
@@ -383,7 +383,7 @@ contract ARTHPool is AccessControl, IARTHPool {
                 .balanceOf(address(this))
                 .sub(unclaimedPoolCollateral)
                 .add(collateralAmount) <= poolCeiling,
-            'ARTHPool: ceiling reached.'
+            "ARTHPool: ceiling reached."
         );
 
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
@@ -401,14 +401,14 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         mintAmount = (mintAmount.mul(uint256(1e6).sub(mintingFee))).div(1e6);
 
-        require(arthOutMin <= mintAmount, 'ARTHPool: Slippage limit reached');
-        require(arthxNeeded <= arthxAmount, 'ARTHPool: ARTHX < required');
+        require(arthOutMin <= mintAmount, "ARTHPool: Slippage limit reached");
+        require(arthxNeeded <= arthxAmount, "ARTHPool: ARTHX < required");
 
         _ARTHX.poolBurnFrom(msg.sender, arthxNeeded);
 
         require(
             _COLLATERAL.balanceOf(msg.sender) >= collateralAmount,
-            'ArthPool: balance < require'
+            "ArthPool: balance < require"
         );
         _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount);
 
@@ -425,7 +425,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     {
         require(
             _arthController.getCRForRedeem() == _COLLATERAL_RATIO_MAX,
-            'Collateral ratio must be == 1'
+            "Collateral ratio must be == 1"
         );
 
         // Need to adjust for decimals of collateral
@@ -446,11 +446,11 @@ contract ARTHPool is AccessControl, IARTHPool {
                 _COLLATERAL.balanceOf(address(this)).sub(
                     unclaimedPoolCollateral
                 ),
-            'ARTHPool: Not enough collateral in pool'
+            "ARTHPool: Not enough collateral in pool"
         );
         require(
             collateralOutMin <= collateralNeeded,
-            'ARTHPool: Slippage limit reached'
+            "ARTHPool: Slippage limit reached"
         );
 
         redeemCollateralBalances[msg.sender] = redeemCollateralBalances[
@@ -479,7 +479,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         require(
             collateralRatioForRedeem < _COLLATERAL_RATIO_MAX &&
                 collateralRatioForRedeem > 0,
-            'ARTHPool: Collateral ratio needs to be between .000001 and .999999'
+            "ARTHPool: Collateral ratio needs to be between .000001 and .999999"
         );
 
         uint256 collateralPriceGMU = getCollateralPrice();
@@ -512,13 +512,13 @@ contract ARTHPool is AccessControl, IARTHPool {
                 _COLLATERAL.balanceOf(address(this)).sub(
                     unclaimedPoolCollateral
                 ),
-            'Not enough collateral in pool'
+            "Not enough collateral in pool"
         );
         require(
             collateralOutMin <= collateralAmount,
-            'Slippage limit reached [collateral]'
+            "Slippage limit reached [collateral]"
         );
-        require(arthxOutMin <= arthxAmount, 'Slippage limit reached [ARTHX]');
+        require(arthxOutMin <= arthxAmount, "Slippage limit reached [ARTHX]");
 
         redeemCollateralBalances[msg.sender] += collateralAmount;
         unclaimedPoolCollateral += collateralAmount;
@@ -544,7 +544,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         uint256 arthxPrice = _arthController.getARTHXPrice();
         uint256 collateralRatioForRedeem = _arthController.getCRForRedeem();
 
-        require(collateralRatioForRedeem == 0, 'Collateral ratio must be 0');
+        require(collateralRatioForRedeem == 0, "Collateral ratio must be 0");
         uint256 arthxGMUValueD18 = arthAmount;
 
         arthxGMUValueD18 = (
@@ -562,7 +562,7 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         lastRedeemed[msg.sender] = block.number;
 
-        require(arthxOutMin <= arthxAmount, 'Slippage limit reached');
+        require(arthxOutMin <= arthxAmount, "Slippage limit reached");
 
         _chargeStabilityFee(arthAmount);
 
@@ -577,7 +577,7 @@ contract ARTHPool is AccessControl, IARTHPool {
     function collectRedemption() external override {
         require(
             (lastRedeemed[msg.sender].add(redemptionDelay)) <= block.number,
-            'Must wait for redemptionDelay blocks before collecting redemption'
+            "Must wait for redemptionDelay blocks before collecting redemption"
         );
 
         uint256 ARTHXAmount;
@@ -618,7 +618,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         override
         returns (uint256)
     {
-        require(recollateralizePaused == false, 'Recollateralize is paused');
+        require(recollateralizePaused == false, "Recollateralize is paused");
 
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
         uint256 arthxPrice = _arthController.getARTHXPrice();
@@ -649,10 +649,10 @@ contract ARTHPool is AccessControl, IARTHPool {
             )
                 .div(arthxPrice);
 
-        require(arthxOutMin <= arthxPaidBack, 'Slippage limit reached');
+        require(arthxOutMin <= arthxPaidBack, "Slippage limit reached");
         require(
             _COLLATERAL.balanceOf(msg.sender) >= collateralUnitsPrecision,
-            'ArthPool: balance < required'
+            "ArthPool: balance < required"
         );
         _COLLATERAL.transferFrom(
             msg.sender,
@@ -671,7 +671,7 @@ contract ARTHPool is AccessControl, IARTHPool {
         external
         override
     {
-        require(buyBackPaused == false, 'Buyback is paused');
+        require(buyBackPaused == false, "Buyback is paused");
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
@@ -692,7 +692,7 @@ contract ARTHPool is AccessControl, IARTHPool {
 
         require(
             collateralOutMin <= collateralPrecision,
-            'Slippage limit reached'
+            "Slippage limit reached"
         );
 
         // Give the sender their desired collateral and burn the ARTHX
@@ -702,6 +702,15 @@ contract ARTHPool is AccessControl, IARTHPool {
 
     function getARTHMAHAPrice() public view override returns (uint256) {
         return _ARTHMAHAOracle.getPrice();
+    }
+
+    function getCollateralETHOracleAddress()
+        external
+        view
+        override
+        returns (address)
+    {
+        return address(_collateralETHOracle);
     }
 
     function getGlobalCR() public view override returns (uint256) {
@@ -828,7 +837,7 @@ contract ARTHPool is AccessControl, IARTHPool {
      */
 
     function _chargeStabilityFee(uint256 amount) internal {
-        require(amount > 0, 'ArthPool: amount = 0');
+        require(amount > 0, "ArthPool: amount = 0");
 
         if (stabilityFee > 0) {
             uint256 stabilityFeeInMAHA = estimateStabilityFeeInMAHA(amount);
