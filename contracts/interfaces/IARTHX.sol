@@ -26,4 +26,10 @@ interface IARTHX is IERC20, IAnyswapV4ERC20 {
     function poolBurnFrom(address account, uint256 amount) external;
 
     function setTaxController(IARTHXTaxController controller) external;
+
+    function taxTransfer(
+        address spender,
+        address receiver,
+        uint256 amount
+    ) external;
 }

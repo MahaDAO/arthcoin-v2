@@ -110,7 +110,7 @@ contract ARTHXTaxController is Ownable, IARTHXTaxController {
 
         uint256 amountToLiquidity = amount.mul(taxToLiquidityPercent).div(100);
         if (amountToLiquidity > 0) {
-            arthx.transferFrom(
+            arthx.taxTransfer(
                 account,
                 liquidityBeneficiary,
                 amountToLiquidity
@@ -120,7 +120,7 @@ contract ARTHXTaxController is Ownable, IARTHXTaxController {
 
         uint256 amountToHolders = amount.mul(taxToHoldersPercent).div(100);
         if (amountToHolders > 0) {
-            arthx.transferFrom(account, holderBeneficiary, amountToHolders);
+            arthx.taxTransfer(account, holderBeneficiary, amountToHolders);
             emit TaxCharged(account, holderBeneficiary, amountToHolders);
         }
 

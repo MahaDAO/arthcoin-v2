@@ -39,6 +39,14 @@ contract ARTHShares is AnyswapV4ERC20, IARTHX {
     event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
     event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
 
+    modifier onlyTaxController() {
+        require(
+            _msgSender() == address(_taxController),
+            "ARTHX: FORBIDDEN"
+        );
+        _;
+    }
+
     modifier onlyPools() {
         require(
             _arth.pools(msg.sender) == true,
@@ -141,5 +149,13 @@ contract ARTHShares is AnyswapV4ERC20, IARTHX {
             amount = _taxController.chargeTax(_msgSender(), amount);
 
         super._transfer(sender, recipient, amount);
+    }
+
+    function taxTransfer(
+        address spender,
+        address receiver,
+        uint256 amount
+    ) external override notPaused onlyTaxController {
+        super._transfer(spender, receiver, amount);
     }
 }
