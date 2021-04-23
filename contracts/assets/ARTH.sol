@@ -3,12 +3,12 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IARTH} from "../interfaces/IARTH.sol";
-import {IERC20} from "../interfaces/IERC20.sol";
-import {ERC20Custom} from "./core/ERC20Custom.sol";
-import {SafeMath} from "../utils/math/SafeMath.sol";
-import {AnyswapV4ERC20} from "./core/AnyswapV4ERC20.sol";
-import {IIncentiveController} from "../interfaces/IIncentive.sol";
+import {IARTH} from '../interfaces/IARTH.sol';
+import {IERC20} from '../interfaces/IERC20.sol';
+import {ERC20Custom} from './core/ERC20Custom.sol';
+import {SafeMath} from '../utils/math/SafeMath.sol';
+import {AnyswapV4ERC20} from './core/AnyswapV4ERC20.sol';
+import {IIncentiveController} from '../interfaces/IIncentive.sol';
 
 /**
  * @title  ARTHStablecoin.
@@ -20,10 +20,13 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
     IIncentiveController public incentiveController;
 
     address public governance;
+    address public troveManagerAddress;
+    address public stabilityPoolAddress;
+    address public borrowerOperationsAddress;
     address[] public poolsArray;
 
-    string public symbol = "ARTH";
-    string public name = "ARTH Valuecoin";
+    string public symbol = 'ARTH';
+    string public name = 'ARTH Valuecoin';
 
     // solhint-disable-next-line
     uint8 public constant override decimals = 18;
@@ -45,16 +48,70 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
     event Rebase(uint256 supply);
     event PoolBurned(address indexed from, address indexed to, uint256 amount);
     event PoolMinted(address indexed from, address indexed to, uint256 amount);
+    event TroveManagerAddressChanged(address _troveManagerAddress);
+    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
+    event BorrowerOperationsAddressChanged(
+        address _newBorrowerOperationsAddress
+    );
 
     modifier onlyPools() {
-        require(pools[msg.sender] == true, "ARTH: not pool");
+        require(pools[msg.sender] == true, 'ARTH: not pool');
         _;
     }
 
     modifier onlyByOwnerOrGovernance() {
         require(
             msg.sender == owner() || msg.sender == governance,
-            "ARTH: not owner or governance"
+            'ARTH: not owner or governance'
+        );
+        _;
+    }
+
+    modifier requireValidRecipient(address _recipient) {
+        require(
+            _recipient != address(0) && _recipient != address(this),
+            'ARTH: Cannot transfer tokens directly to the ARTH token contract or the zero address'
+        );
+        require(
+            _recipient != stabilityPoolAddress &&
+                _recipient != troveManagerAddress &&
+                _recipient != borrowerOperationsAddress,
+            'ARTH: not owner or governance'
+        );
+        _;
+    }
+
+    modifier requireCallerIsBorrowerOperations() {
+        require(
+            msg.sender == borrowerOperationsAddress,
+            'ARTH: Caller is not BorrowerOperations'
+        );
+        _;
+    }
+
+    modifier requireCallerIsBOorTroveMorSP() {
+        require(
+            msg.sender == borrowerOperationsAddress ||
+                msg.sender == troveManagerAddress ||
+                msg.sender == stabilityPoolAddress,
+            'ARTH: Caller is not BorrowerOperations'
+        );
+        _;
+    }
+
+    modifier requireCallerIsStabilityPool() {
+        require(
+            msg.sender == stabilityPoolAddress,
+            'ARTH: Caller is not the StabilityPool'
+        );
+        _;
+    }
+
+    modifier requireCallerIsTroveMorSP() {
+        require(
+            msg.sender == troveManagerAddress ||
+                msg.sender == stabilityPoolAddress,
+            'ARTH: Caller is neither TroveManager nor StabilityPool'
         );
         _;
     }
@@ -125,7 +182,7 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
     /// @dev    Collateral Must be ERC20.
     /// @notice Adds collateral addresses supported.
     function addPool(address pool) external override onlyByOwnerOrGovernance {
-        require(pools[pool] == false, "ARTH: pool exists");
+        require(pools[pool] == false, 'ARTH: pool exists');
 
         pools[pool] = true;
         poolsArray.push(pool);
@@ -166,12 +223,52 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         governance = newGovernance;
     }
 
+    function setTroveManagerAddress(address _troveManagerAddress)
+        external
+        onlyOwner
+    {
+        troveManagerAddress = _troveManagerAddress;
+        emit TroveManagerAddressChanged(_troveManagerAddress);
+    }
+
+    function setStabilityPoolAddress(address _stabilityPoolAddress)
+        external
+        onlyOwner
+    {
+        stabilityPoolAddress = _stabilityPoolAddress;
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+    }
+
+    function setBorrowerOperationsAddress(address _borrowerOperationsAddress)
+        external
+        onlyOwner
+    {
+        borrowerOperationsAddress = _borrowerOperationsAddress;
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+    }
+
     function setIncentiveController(IIncentiveController controller)
         external
         override
         onlyByOwnerOrGovernance
     {
         incentiveController = controller;
+    }
+
+    function sendToPool(
+        address _sender,
+        address _poolAddress,
+        uint256 _amount
+    ) external override requireCallerIsStabilityPool {
+        _transfer(_sender, _poolAddress, _amount);
+    }
+
+    function returnFromPool(
+        address _poolAddress,
+        address _receiver,
+        uint256 _amount
+    ) external override requireCallerIsTroveMorSP {
+        _transfer(_poolAddress, _receiver, _amount);
     }
 
     function balanceOf(address account)
@@ -188,7 +285,7 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         override
         onlyNonBlacklisted(account)
     {
-        require(account != address(0), "ERC20: mint to the zero address");
+        require(account != address(0), 'ERC20: mint to the zero address');
 
         uint256 fractionAmount = _convertAmountToFraction(amount);
         _beforeTokenTransfer(address(0), account, amount);
@@ -204,14 +301,14 @@ contract ARTHStablecoin is AnyswapV4ERC20, IARTH {
         override
         onlyNonBlacklisted(account)
     {
-        require(account != address(0), "ERC20: burn from the zero address");
+        require(account != address(0), 'ERC20: burn from the zero address');
 
         uint256 fractionAmount = _convertAmountToFraction(amount);
         _beforeTokenTransfer(account, address(0), amount);
 
         _balances[account] = _balances[account].sub(
             fractionAmount,
-            "ERC20: burn amount exceeds balance"
+            'ERC20: burn amount exceeds balance'
         );
 
         _totalSupply = _totalSupply.sub(amount);

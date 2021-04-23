@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {IERC20} from "./IERC20.sol";
-import {IIncentiveController} from "./IIncentive.sol";
-import {IAnyswapV4ERC20} from "./IAnyswapV4ERC20.sol";
+import {IERC20} from './IERC20.sol';
+import {IIncentiveController} from './IIncentive.sol';
+import {IAnyswapV4ERC20} from './IAnyswapV4ERC20.sol';
 
 interface IARTH is IERC20, IAnyswapV4ERC20 {
     function addPool(address pool) external;
@@ -16,6 +16,18 @@ interface IARTH is IERC20, IAnyswapV4ERC20 {
     function poolMint(address who, uint256 amount) external;
 
     function poolBurnFrom(address who, uint256 amount) external;
+
+    function sendToPool(
+        address sender,
+        address poolAddress,
+        uint256 amount
+    ) external;
+
+    function returnFromPool(
+        address poolAddress,
+        address receiver,
+        uint256 amount
+    ) external;
 
     function setIncentiveController(IIncentiveController controller) external;
 
