@@ -33,7 +33,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     string public name;
     string public symbol;
     uint8 public constant override decimals = 18;
-    uint256 public constant genesisSupply = 10000e18; // 10k is printed upon genesis.
+    uint256 public constant genesisSupply = 1e4 ether; // 10k is printed upon genesis.
 
     address public arthAddress;
     address public ownerAddress;

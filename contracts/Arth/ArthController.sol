@@ -280,7 +280,7 @@ contract ArthController is AccessControl, IARTHController {
      */
 
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio)
-        public
+        external
         override
         onlyAdmin
     {
@@ -288,7 +288,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setARTHXAddress(address _arthxAddress)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -296,7 +296,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setPriceTarget(uint256 newPriceTarget)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -304,7 +304,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setRefreshCooldown(uint256 newCooldown)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -312,7 +312,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setETHGMUOracle(address _ethGMUConsumerAddress)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -324,14 +324,14 @@ contract ArthController is AccessControl, IARTHController {
     function setARTHXETHOracle(
         address _arthxOracleAddress,
         address _wethAddress
-    ) public override onlyByOwnerOrGovernance {
+    ) external override onlyByOwnerOrGovernance {
         arthxETHOracleAddress = _arthxOracleAddress;
         _ARTHXETHOracle = IUniswapPairOracle(_arthxOracleAddress);
         wethAddress = _wethAddress;
     }
 
     function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -340,12 +340,12 @@ contract ArthController is AccessControl, IARTHController {
         wethAddress = _wethAddress;
     }
 
-    function toggleCollateralRatio() public override onlyCollateralRatioPauser {
+    function toggleCollateralRatio() external override onlyCollateralRatioPauser {
         isColalteralRatioPaused = !isColalteralRatioPaused;
     }
 
     function setMintingFee(uint256 fee)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -353,7 +353,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setArthStep(uint256 newStep)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -361,7 +361,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setRedemptionFee(uint256 fee)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -369,7 +369,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setOwner(address _ownerAddress)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -377,7 +377,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setPriceBand(uint256 _priceBand)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -385,7 +385,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function setTimelock(address newTimelock)
-        public
+        external
         override
         onlyByOwnerOrGovernance
     {
@@ -430,26 +430,26 @@ contract ArthController is AccessControl, IARTHController {
         return totalCollateralValueD18;
     }
 
-    function getCRForMint() public view override returns(uint256) {
+    function getCRForMint() external view override returns(uint256) {
         if (useGlobalCRForMint) return getGlobalCollateralRatio();
 
         return mintCollateralRatio;
     }
 
-    function getCRForRedeem() public view override returns(uint256) {
+    function getCRForRedeem() external view override returns(uint256) {
         if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
 
         return redeemCollateralRatio;
     }
 
-    function getCRForRecollateralize() public view override returns(uint256) {
+    function getCRForRecollateralize() external view override returns(uint256) {
         if (useGlobalCRForRecollateralize) return getGlobalCollateralRatio();
 
         return recollateralizeCollateralRatio;
     }
 
     function getARTHInfo()
-        public
+        external
         view
         override
         returns (
