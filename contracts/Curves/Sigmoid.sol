@@ -2,61 +2,36 @@
 
 pragma solidity ^0.8.0;
 
+import {Curve} from './Curve.sol';
 import {Math} from '../utils/math/Math.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-
-import {Curve} from './Curve.sol';
 
 contract Sigmoid is Curve {
     using SafeMath for uint256;
 
-    uint256[24] private slots;
+    /// @dev Tells whether the curve is for discount(decreasing) or price(increasing)?
+    bool public isIncreasingCurve = true;
 
-    /**
-     * Constructor.
-     */
+    /// @dev Slots to generate a sigmoid curve.
+    uint256[] internal _slots;
 
-    // NOTE: x is % deviation, y is discount in 1e18 precision.
     constructor(
         uint256 _minX,
         uint256 _maxX,
         uint256 _minY,
-        uint256 _maxY
+        uint256 _maxY,
+        bool increasingCurve,
+        uint256[] memory slots
     ) {
-        minX = _minX;  // I.E 0%.
-        maxX = _maxX;  // I.E 100%.
-        minY = _minY;  // I.E 0.00669%.
-        maxY = _maxY;  // I.E 0.5%.
+        minX = _minX; // I.E 0%.
+        maxX = _maxX; // I.E 100%.
+        minY = _minY; // I.E 0.00669%.
+        maxY = _maxY; // I.E 0.5%.
 
-        slots[0] = 270099601612513200;  // 4%.
-        slots[1] = 240787403932528800;  // 8%.
-        slots[2] = 212606216264522750;  // 12%.
-        slots[3] = 186015311323432480;
-        slots[4] = 161364852821997060;
-        slots[5] = 138885129900589460;
-        slots[6] = 118689666864850910;
-        slots[7] = 100788968919645330;
-        slots[8] = 85110638940292770;
-        slots[9] = 71521753213270600;
-        slots[10] = 59850293471811120;
-        slots[11] = 49903617896353400;
-        slots[12] = 41483052206008160;
-        slots[13] = 34394505539321240;
-        slots[14] = 28455523906540110;
-        slots[15] = 23499433678058600;
-        slots[16] = 19377278819070276;
-        slots[17] = 15958196146119572;
-        slots[18] = 13128762561678342;
-        slots[19] = 10791725977254928;
-        slots[20] = 8864419015963841;
-        slots[21] = 7277060990564577;
-        slots[22] = 5971081120142552;
-        slots[23] = 4897542691895928;
+        isIncreasingCurve = increasingCurve;
+
+        _slots = slots;
     }
-
-    /**
-     * Public.
-     */
 
     function setMinX(uint256 x) public override onlyOwner {
         super.setMinX(x);
@@ -78,16 +53,18 @@ contract Sigmoid is Curve {
         super.setMaxY(y);
     }
 
-    function getY(uint256 x) public view override returns (uint256) {
-        if (x <= minX) return maxY;  // Fail safe to return after maxX.
-        if (x >= maxX) return minY;  // Fail safe to return after maxX.
+    function getY(uint256 x) public view virtual override returns (uint256) {
+        // If price(increasing curve) then should return minY(min price in beginning) in starting.
+        // else should return maxY(max discount in beginning) in start.
+        if (x <= minX) return isIncreasingCurve ? minY : maxY;
+        if (x >= maxX) return isIncreasingCurve ? maxY : minY;
 
-        uint256 slotWidth = maxX.sub(minX).div(slots.length);
+        uint256 slotWidth = maxX.sub(minX).div(_slots.length);
         uint256 xa = x.sub(minX).div(slotWidth);
-        uint256 xb = Math.min(xa.add(1), slots.length.sub(1));
+        uint256 xb = Math.min(xa.add(1), _slots.length.sub(1));
 
-        uint256 slope = slots[xa].sub(slots[xb]).mul(1e18).div(slotWidth);
-        uint256 wy = slots[xa].add(slope.mul(slotWidth.mul(xa)).div(1e18));
+        uint256 slope = _slots[xa].sub(_slots[xb]).mul(1e18).div(slotWidth);
+        uint256 wy = _slots[xa].add(slope.mul(slotWidth.mul(xa)).div(1e18));
 
         uint256 percentage = 0;
         if (wy > slope.mul(x).div(1e18)) {

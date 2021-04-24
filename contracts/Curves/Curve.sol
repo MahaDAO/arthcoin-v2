@@ -2,13 +2,20 @@
 
 pragma solidity ^0.8.0;
 
-import {ICurve} from './ICurve.sol';
 import {Ownable} from '../access/Ownable.sol';
+import {ICurve} from './ICurve.sol';
 
 abstract contract Curve is ICurve, Ownable {
-    /**
-     * Events.
-     */
+    uint256 public override minX;
+
+    uint256 public override maxX;
+
+    uint256 public override minY;
+
+    uint256 public override maxY;
+
+    /// @notice Fixed Y(Price in some graphs) in case needed.
+    uint256 public override fixedY;
 
     event MinXChanged(uint256 old, uint256 latest);
 
@@ -19,20 +26,6 @@ abstract contract Curve is ICurve, Ownable {
     event MaxYChanged(uint256 old, uint256 latest);
 
     event FixedYChanged(uint256 old, uint256 latest);
-
-    /**
-     * State variables.
-     */
-
-    uint256 public override minX;
-    uint256 public override maxX;
-    uint256 public override minY;
-    uint256 public override maxY;
-    uint256 public override fixedY; // Fixed Y(Price in some graphs) in case needed.
-
-    /**
-     * Public.
-     */
 
     function setMinX(uint256 x) public virtual onlyOwner {
         uint256 oldMinX = minX;
