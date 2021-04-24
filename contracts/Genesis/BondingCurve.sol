@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 
 import {Sigmoid} from '../Curves/Sigmoid.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
+import {IBondingCurveOracle} from './IBondingCurveOracle.sol';
 
-contract BondingCurve is Sigmoid {
+contract BondingCurve is Sigmoid, IBondingCurveOracle{
     using SafeMath for uint256;
-
-    uint256 private _PRICE_PRECISION = 1e6;
 
     constructor(
         uint256 softCap,
@@ -27,9 +26,12 @@ contract BondingCurve is Sigmoid {
         )
     {}
 
-    function getPrice(uint256 percentCollateral) public view returns (uint256) {
-        uint256 price = super.getY(percentCollateral);
-
-        return price.mul(_PRICE_PRECISION).div(1e18);
+    function getPrice(uint256 percentCollateral)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return super.getY(percentCollateral);
     }
 }

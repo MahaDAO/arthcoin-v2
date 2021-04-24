@@ -11,6 +11,8 @@ import {ICurve} from '../Curves/ICurve.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {Ownable} from '../access/Ownable.sol';
 import {IERC20Mintable} from '../ERC20/IERC20Mintable.sol';
+import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
+import {IBondingCurveOracle} from './IBondingCurveOracle.sol';
 import {IUniswapV2Factory} from '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 import {IUniswapV2Router02} from '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
@@ -21,12 +23,13 @@ contract Genesis is ERC20, Ownable {
      * @dev Contract instances.
      */
 
-    IWETH private _WETH;
-    IARTH private _ARTH;
-    IARTHX private _ARTHX;
-    ICurve private _CURVE;
-    IERC20Mintable private _MAHA;
-    IUniswapV2Router02 private _ROUTER;
+    IWETH private immutable _WETH;
+    IARTH private immutable _ARTH;
+    IARTHX private immutable _ARTHX;
+    IERC20Mintable private immutable _MAHA;
+    IUniswapV2Router02 private immutable _ROUTER;
+    IChainlinkOracle public ethGMUOracle;
+    IBondingCurveOracle public curveOracle;
 
     /**
      * State variables.
@@ -35,7 +38,6 @@ contract Genesis is ERC20, Ownable {
     uint256 public duration;
     uint256 public startTime;
 
-    uint256 public softCap = 100e18;
     uint256 public hardCap = 100e18;
 
     uint256 public arthETHPairPercent = 5; // In %.
@@ -46,13 +48,15 @@ contract Genesis is ERC20, Ownable {
     address payable public arthETHPairAddress;
     address payable public arthxETHPairAddress;
 
+    uint256 private constant _PRICE_PRECISION = 1e6;
+
     /**
      * Events.
      */
 
     event Mint(address indexed account, uint256 ethAmount, uint256 genAmount);
-    event RedeemARTH(address indexed account, uint256 amount);
-    event RedeemARTHAndMAHA(
+    event RedeemARTHX(address indexed account, uint256 amount);
+    event RedeemARTHXAndMAHA(
         address indexed account,
         uint256 arthAmount,
         uint256 mahaAmount
@@ -96,12 +100,15 @@ contract Genesis is ERC20, Ownable {
         IWETH __WETH,
         IARTH __ARTH,
         IARTHX __ARTHX,
-        ICurve __CURVE,
         IERC20Mintable __MAHA,
         IUniswapV2Router02 __ROUTER,
+        IChainlinkOracle _ethGmuOracle,
+        IBondingCurveOracle _curveOracle,
+        uint256 _hardCap,
         uint256 _startTime,
         uint256 _duration
     ) ERC20('ARTH Genesis', 'ARTH-GEN') {
+        hardCap = _hardCap;
         duration = _duration;
         startTime = _startTime;
 
@@ -109,8 +116,10 @@ contract Genesis is ERC20, Ownable {
         _ARTH = __ARTH;
         _MAHA = __MAHA;
         _ARTHX = __ARTHX;
-        _CURVE = __CURVE;
         _ROUTER = __ROUTER;
+
+        curveOracle = _curveOracle;
+        ethGMUOracle = _ethGmuOracle;
     }
 
     /**
@@ -131,8 +140,7 @@ contract Genesis is ERC20, Ownable {
         arthxETHPairAddress = _arthxETHPair;
     }
 
-    function setCaps(uint256 _softCap, uint256 _hardCap) external onlyOwner {
-        softCap = _softCap;
+    function setHardCap(uint256 _hardCap) external onlyOwner {
         hardCap = _hardCap;
     }
 
@@ -167,8 +175,12 @@ contract Genesis is ERC20, Ownable {
         arthxETHPairPercent = arthxPairPercent;
     }
 
-    function setCurve(ICurve curve) external onlyOwner {
-        _CURVE = curve;
+    function setCurve(IBondingCurveOracle curve) external onlyOwner {
+        curveOracle = curve;
+    }
+
+    function setETHGMUOracle(IChainlinkOracle oracle) external onlyOwner {
+        ethGMUOracle = oracle;
     }
 
     /**
@@ -179,28 +191,33 @@ contract Genesis is ERC20, Ownable {
         require(amount > 0, 'Genesis: amount = 0');
         require(msg.value == amount, 'Genesis: INVALID INPUT');
 
-        // Example:
-        // Curve price is 0.37(37e16 in 1e18 precision).
-        // Hence the amount to be minted becomes 1.37 i.e 137e16(1e18 + 37e16).
-        uint256 mintRateWithDiscount = uint256(1e18).add(getCurvePrice());
-        // Restore the precision to 1e18.
-        uint256 mintAmount = amount.mul(mintRateWithDiscount).div(1e18);
+        // // Example:
+        // // Curve price is 0.37(37e16 in 1e18 precision).
+        // // Hence the amount to be minted becomes 1.37 i.e 137e16(1e18 + 37e16).
+        // uint256 mintRateWithDiscount = uint256(1e18).add(getCurvePrice());
+        // // Restore the precision to 1e18.
+        // uint256 mintAmount = amount.mul(mintRateWithDiscount).div(1e18);
+
+        // 1. Get the value of ETH put as collateral.
+        uint256 ethValue = msg.value.mul(getETHGMUPrice());
+        // 2. Calculate the equivalent amount of tokens to mint based on curve/oracle.
+        uint256 mintAmount = ethValue.mul(1e18).div(getCurvePrice());
 
         _mint(msg.sender, mintAmount);
 
         emit Mint(msg.sender, amount, mintAmount);
     }
 
-    function redeem(uint256 amount) public {
+    function redeem(uint256 amount) external {
         if (block.timestamp >= startTime.add(duration)) {
-            _redeemARTHAndMAHA(amount);
+            _redeemARTHXAndMAHA(amount);
             return;
         }
 
-        _redeemARTH(amount);
+        _redeemARTHX(amount);
     }
 
-    function distribute() public onlyOwner hasEnded {
+    function distribute() external onlyOwner hasEnded {
         uint256 balance = address(this).balance;
 
         uint256 arthETHPairAmount = balance.mul(arthETHPairPercent).div(100);
@@ -212,13 +229,10 @@ contract Genesis is ERC20, Ownable {
         _distributeToUniswapPair(arthxETHPairAddress, arthxETHPairAmount);
     }
 
-    function getIsRaisedBelowSoftCap() public view returns (bool) {
-        return address(this).balance <= softCap;
-    }
-
-    function getIsRaisedBetweenCaps() public view returns (bool) {
-        return
-            address(this).balance > softCap && address(this).balance <= hardCap;
+    function getETHGMUPrice() public view returns (uint256) {
+        return ethGMUOracle.getLatestPrice().mul(_PRICE_PRECISION).div(
+                ethGMUOracle.getDecimals()
+            );
     }
 
     function getPercentRaised() public view returns (uint256) {
@@ -226,10 +240,10 @@ contract Genesis is ERC20, Ownable {
     }
 
     function getCurvePrice() public view returns (uint256) {
-        if (getIsRaisedBelowSoftCap())
-            return _CURVE.getY(getPercentRaised()/*.mul(1e18).div(100)*/);
-
-        return _CURVE.fixedY();
+        return
+            curveOracle.getPrice(getPercentRaised()).mul(_PRICE_PRECISION).div(
+                1e18
+            );
     }
 
     /**
@@ -294,16 +308,16 @@ contract Genesis is ERC20, Ownable {
         emit Distribute(pair, amount, amount);
     }
 
-    function _redeemARTH(uint256 amount) internal isActive {
+    function _redeemARTHX(uint256 amount) internal isActive {
         require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
 
         _burn(msg.sender, amount);
         _ARTH.poolMint(msg.sender, amount);
 
-        emit RedeemARTH(msg.sender, amount);
+        emit RedeemARTHX(msg.sender, amount);
     }
 
-    function _redeemARTHAndMAHA(uint256 amount) internal hasEnded {
+    function _redeemARTHXAndMAHA(uint256 amount) internal hasEnded {
         require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
 
         _burn(msg.sender, amount);
@@ -316,7 +330,7 @@ contract Genesis is ERC20, Ownable {
         // NOTE: need to be given and revoked MINTER ROLE accordingly.
         _MAHA.mint(msg.sender, mahaAmount);
 
-        emit RedeemARTHAndMAHA(msg.sender, amount, mahaAmount);
+        emit RedeemARTHXAndMAHA(msg.sender, amount, mahaAmount);
     }
 
     receive() external payable {
