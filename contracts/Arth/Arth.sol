@@ -41,11 +41,20 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     /// @notice This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant override genesisSupply = 22_000_000 ether; // 22M ARTH (testnet) & 5k (Mainnet).
 
+    address public troveManagerAddress;
+    address public stabilityPoolAddress;
+    address public borrowerOperationsAddress;
+
     mapping(address => bool) public override pools;
 
     event Rebase(uint256 supply);
     event PoolBurned(address indexed from, address indexed to, uint256 amount);
     event PoolMinted(address indexed from, address indexed to, uint256 amount);
+    event TroveManagerAddressChanged(address _troveManagerAddress);
+    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
+    event BorrowerOperationsAddressChanged(
+        address _newBorrowerOperationsAddress
+    );
 
     modifier onlyPools() {
         require(pools[msg.sender] == true, 'ARTH: not pool');
@@ -60,8 +69,97 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         _;
     }
 
+    modifier requireValidRecipient(address _recipient) {
+        require(
+            _recipient != address(0) && _recipient != address(this),
+            'ARTH: Cannot transfer tokens directly to the ARTH token contract or the zero address'
+        );
+        require(
+            _recipient != stabilityPoolAddress &&
+                _recipient != troveManagerAddress &&
+                _recipient != borrowerOperationsAddress,
+            'ARTH: not owner or governance'
+        );
+        _;
+    }
+
+    modifier requireCallerIsBorrowerOperations() {
+        require(
+            msg.sender == borrowerOperationsAddress,
+            'ARTH: Caller is not BorrowerOperations'
+        );
+        _;
+    }
+
+    modifier requireCallerIsBOorTroveMorSP() {
+        require(
+            msg.sender == borrowerOperationsAddress ||
+                msg.sender == troveManagerAddress ||
+                msg.sender == stabilityPoolAddress,
+            'ARTH: Caller is not BorrowerOperations'
+        );
+        _;
+    }
+
+    modifier requireCallerIsStabilityPool() {
+        require(
+            msg.sender == stabilityPoolAddress,
+            'ARTH: Caller is not the StabilityPool'
+        );
+        _;
+    }
+
+    modifier requireCallerIsTroveMorSP() {
+        require(
+            msg.sender == troveManagerAddress ||
+                msg.sender == stabilityPoolAddress,
+            'ARTH: Caller is neither TroveManager nor StabilityPool'
+        );
+        _;
+    }
+
     constructor() AnyswapV4Token(name) {
         _mint(msg.sender, genesisSupply);
+    }
+
+    function setTroveManagerAddress(address _troveManagerAddress)
+        external
+        onlyOwner
+    {
+        troveManagerAddress = _troveManagerAddress;
+        emit TroveManagerAddressChanged(_troveManagerAddress);
+    }
+
+    function setStabilityPoolAddress(address _stabilityPoolAddress)
+        external
+        onlyOwner
+    {
+        stabilityPoolAddress = _stabilityPoolAddress;
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+    }
+
+    function setBorrowerOperationsAddress(address _borrowerOperationsAddress)
+        external
+        onlyOwner
+    {
+        borrowerOperationsAddress = _borrowerOperationsAddress;
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+    }
+
+    function sendToPool(
+        address _sender,
+        address _poolAddress,
+        uint256 _amount
+    ) external override requireCallerIsStabilityPool {
+        _transfer(_sender, _poolAddress, _amount);
+    }
+
+    function returnFromPool(
+        address _poolAddress,
+        address _receiver,
+        uint256 _amount
+    ) external override requireCallerIsTroveMorSP {
+        _transfer(_poolAddress, _receiver, _amount);
     }
 
     function rebase(int256 supplyDelta)

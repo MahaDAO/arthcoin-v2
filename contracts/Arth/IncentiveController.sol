@@ -55,6 +55,14 @@ contract IncentiveController is AccessControl, IIncentiveController {
      * Modifiers.
      */
 
+    modifier onlyARTH() {
+        require(
+            _msgSender() == address(ARTH),
+            "IncentiveController: FORBIDDEN"
+        );
+        _;
+    }
+
     modifier onlyAdmin() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
@@ -234,7 +242,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
         address receiver,
         address,
         uint256 amountIn
-    ) public override {
+    ) public override onlyARTH {
         require(sender != receiver, 'UniswapIncentive: cannot send self');
         updateOracle();
 

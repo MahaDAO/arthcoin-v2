@@ -11,6 +11,7 @@ import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
+import {IARTHXTaxController} from "./IARTHXTaxController.sol";
 
 /**
  * @title  ARTHShares.
@@ -29,6 +30,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     /// @dev Controller for arth params.
     IARTH private _ARTH;
     IARTHController private _arthController;
+    IARTHXTaxController private _taxController;
 
     string public name;
     string public symbol;
@@ -56,6 +58,14 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         require(
             _ARTH.pools(msg.sender) == true,
             'Only arth pools can mint new ARTH'
+        );
+        _;
+    }
+
+     modifier onlyTaxController() {
+        require(
+            _msgSender() == address(_taxController),
+            "ARTHX: FORBIDDEN"
         );
         _;
     }
@@ -100,6 +110,14 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         onlyByOwnerOrGovernance
     {
         oracleAddress = newOracle;
+    }
+
+    function setTaxController(IARTHXTaxController controller)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        _taxController = controller;
     }
 
     function setArthController(address _controller)
@@ -157,5 +175,26 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     {
         super._burnFrom(account, amount);
         emit ARTHXBurned(account, address(this), amount);
+    }
+
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal virtual override notPaused onlyNonBlacklisted(sender) {
+        // Check if tax mode is on, and if its is on tax the tx and transfer the
+        // remaining amount to `recipient`.
+        if (address(_taxController) != address(0))
+            amount = _taxController.chargeTax(_msgSender(), amount);
+
+        super._transfer(sender, recipient, amount);
+    }
+
+    function taxTransfer(
+        address spender,
+        address receiver,
+        uint256 amount
+    ) external override notPaused onlyTaxController {
+        super._transfer(spender, receiver, amount);
     }
 }

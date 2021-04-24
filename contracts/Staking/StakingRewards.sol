@@ -168,7 +168,7 @@ contract StakingRewards is
 
         isLockedStakes = false;
         rewardRate = 380517503805175038; // (uint256(12000000e18)).div(365 * 86400); // Base emission rate of 12M ARTHX over the first year
-        rewardRate = rewardRate.mul(poolWeight).div(1e6);
+        rewardRate = rewardRate.mul(_poolWeight).div(1e6);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(_POOL_ROLE, _msgSender());
