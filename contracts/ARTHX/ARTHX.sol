@@ -54,7 +54,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     modifier onlyPools() {
         require(
-            _arthController.arthPools(msg.sender) == true,
+            _ARTH.pools(msg.sender) == true,
             'Only arth pools can mint new ARTH'
         );
         _;

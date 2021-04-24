@@ -1,9 +1,9 @@
-import 'solidity-coverage'
-import 'hardhat-gas-reporter'
-import '@nomiclabs/hardhat-ethers'
-import '@nomiclabs/hardhat-etherscan'
+import 'solidity-coverage';
+import 'hardhat-gas-reporter';
+import '@nomiclabs/hardhat-ethers';
+import '@nomiclabs/hardhat-etherscan';
 
-require('dotenv').config()
+require('dotenv').config();
 
 
 export default {
@@ -27,7 +27,7 @@ export default {
       accounts: [`0x${process.env.METAMASK_WALLET_SECRET}`]
     },
     development: {
-      url: "http://localhost:7545",
+      url: "http://localhost:8545",
       accounts: [process.env.METAMASK_WALLET_SECRET]
     }
   },
@@ -55,4 +55,4 @@ export default {
     // Obtain one at https://etherscan.io/
     apiKey: process.env.ETHERSCAN_API_KEY
   },
-}
+};

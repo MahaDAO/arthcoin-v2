@@ -10,49 +10,48 @@ import {Curve} from './Curve.sol';
 contract Sigmoid is Curve {
     using SafeMath for uint256;
 
-    uint256[26] private slots; // Note: 26 slots including slot 0
+    uint256[24] private slots;
 
     /**
      * Constructor.
      */
 
+    // NOTE: x is % deviation, y is discount in 1e18 precision.
     constructor(
         uint256 _minX,
         uint256 _maxX,
         uint256 _minY,
         uint256 _maxY
     ) {
-        minX = _minX;
-        maxX = _maxX;
-        minY = _minY;
-        maxY = _maxY;
+        minX = _minX;  // I.E 0%.
+        maxX = _maxX;  // I.E 100%.
+        minY = _minY;  // I.E 0.00669%.
+        maxY = _maxY;  // I.E 0.5%.
 
-        slots[0] = 5e17; // 0.5
-        slots[1] = 45e16; // 0.450
-        slots[2] = 40e16; // 0.401
-        slots[3] = 354e15; // 0.354
-        slots[4] = 31e16; // 0.310
-        slots[5] = 2689e14; // 0.2689
-        slots[6] = 2314e14; // 0.2314
-        slots[7] = 197e15; // 0.197
-        slots[8] = 167e15; // 0.167
-        slots[9] = 141e15; // 0.141
-        slots[10] = 1192e14; // 0.1192
-        slots[11] = 997e14; // 0.0997
-        slots[12] = 831e14; // 0.0831
-        slots[13] = 691e14; // 0.0691
-        slots[14] = 573e14; // 0.0573
-        slots[15] = 474e14; // 0.047
-        slots[16] = 391e14; // 0.0391
-        slots[17] = 322e14; // 0.0322
-        slots[18] = 265e14; // 0.0265
-        slots[19] = 218e14; // 0.0218
-        slots[20] = 179e14; // 0.0179
-        slots[21] = 147e14; // 0.0147
-        slots[22] = 121e14; // 0.0121
-        slots[23] = 995e13; // 0.00995
-        slots[24] = 816e13; // 0.00816
-        slots[25] = 669e13; // 0.00669
+        slots[0] = 270099601612513200;  // 4%.
+        slots[1] = 240787403932528800;  // 8%.
+        slots[2] = 212606216264522750;  // 12%.
+        slots[3] = 186015311323432480;
+        slots[4] = 161364852821997060;
+        slots[5] = 138885129900589460;
+        slots[6] = 118689666864850910;
+        slots[7] = 100788968919645330;
+        slots[8] = 85110638940292770;
+        slots[9] = 71521753213270600;
+        slots[10] = 59850293471811120;
+        slots[11] = 49903617896353400;
+        slots[12] = 41483052206008160;
+        slots[13] = 34394505539321240;
+        slots[14] = 28455523906540110;
+        slots[15] = 23499433678058600;
+        slots[16] = 19377278819070276;
+        slots[17] = 15958196146119572;
+        slots[18] = 13128762561678342;
+        slots[19] = 10791725977254928;
+        slots[20] = 8864419015963841;
+        slots[21] = 7277060990564577;
+        slots[22] = 5971081120142552;
+        slots[23] = 4897542691895928;
     }
 
     /**
@@ -80,10 +79,8 @@ contract Sigmoid is Curve {
     }
 
     function getY(uint256 x) public view override returns (uint256) {
-        if (x <= minX) return 0; // return maxY;
-
-        // Fail safe to return after maxX.
-        if (x >= maxX) return maxY;
+        if (x <= minX) return maxY;  // Fail safe to return after maxX.
+        if (x >= maxX) return minY;  // Fail safe to return after maxX.
 
         uint256 slotWidth = maxX.sub(minX).div(slots.length);
         uint256 xa = x.sub(minX).div(slotWidth);

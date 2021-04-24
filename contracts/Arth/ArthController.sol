@@ -69,6 +69,14 @@ contract ArthController is AccessControl, IARTHController {
     // This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant genesisSupply = 2000000e18; // 2M ARTH (testnet) & 5k (Mainnet).
 
+    bool public useGlobalCRForMint = true;
+    bool public useGlobalCRForRedeem = true;
+    bool public useGlobalCRForRecollateralize = true;
+
+    uint256 public mintCollateralRatio;
+    uint256 public redeemCollateralRatio;
+    uint256 public recollateralizeCollateralRatio;
+
     bool public isColalteralRatioPaused = false;
 
     bytes32 public constant COLLATERAL_RATIO_PAUSER =
@@ -148,6 +156,54 @@ contract ArthController is AccessControl, IARTHController {
     /**
      * External.
      */
+
+    function toggleUseGlobalCRForMint(bool flag)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        useGlobalCRForMint = flag;
+    }
+
+    function toggleUseGlobalCRForRedeem(bool flag)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        useGlobalCRForRedeem = flag;
+    }
+
+    function toggleUseGlobalCRForRecollateralize(bool flag)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        useGlobalCRForRecollateralize = flag;
+    }
+
+    function setMintCollateralRatio(uint256 val)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        mintCollateralRatio = val;
+    }
+
+    function setRedeemCollateralRatio(uint256 val)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        redeemCollateralRatio = val;
+    }
+
+    function setRecollateralizeCollateralRatio(uint256 val)
+        external
+        override
+        onlyByOwnerGovernanceOrPool
+    {
+        recollateralizeCollateralRatio = val;
+    }
 
     function refreshCollateralRatio() external override {
         require(
@@ -372,6 +428,24 @@ contract ArthController is AccessControl, IARTHController {
         }
 
         return totalCollateralValueD18;
+    }
+
+    function getCRForMint() public view override returns(uint256) {
+        if (useGlobalCRForMint) return getGlobalCollateralRatio();
+
+        return mintCollateralRatio;
+    }
+
+    function getCRForRedeem() public view override returns(uint256) {
+        if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
+
+        return redeemCollateralRatio;
+    }
+
+    function getCRForRecollateralize() public view override returns(uint256) {
+        if (useGlobalCRForRecollateralize) return getGlobalCollateralRatio();
+
+        return recollateralizeCollateralRatio;
     }
 
     function getARTHInfo()

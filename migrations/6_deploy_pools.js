@@ -78,8 +78,8 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nRefreshing pool params...'))
   await Promise.all([
-    await pool_instance_USDC.setPoolParameters(TEN_MILLION, 7500, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
-    await pool_instance_USDT.setPoolParameters(TEN_MILLION, 7500, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDC.setPoolParameters(TEN_MILLION, 1, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDT.setPoolParameters(TEN_MILLION, 1, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
   ])
 
   console.log(chalk.yellow('\nGetting ARTH and ARTHX oracles...'))

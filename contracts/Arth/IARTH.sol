@@ -21,4 +21,6 @@ interface IARTH is IERC20, IAnyswapV4Token {
         external;
 
     function genesisSupply() external view returns (uint256);
+
+    function pools(address pool) external view returns (bool);
 }

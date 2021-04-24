@@ -1,6 +1,6 @@
 const chalk = require('chalk')
 
-const Migrations = artifacts.require("Util/Migrations")
+const Migrations = artifacts.require("Migrations")
 
 
 module.exports = function (deployer, network, accounts) {
