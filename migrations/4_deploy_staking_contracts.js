@@ -8,6 +8,7 @@ const helpers = require('./helpers')
 const ARTHShares = artifacts.require("ARTHX/ARTHShares")
 const Timelock = artifacts.require("Governance/Timelock")
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
+const ARTHController = artifacts.require("Arth/ArthController")
 const StakingRewards_ARTH_WETH = artifacts.require("Staking/Variants/Stake_ARTH_WETH.sol")
 const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_USDC.sol")
 const StakingRewards_ARTH_ARTHX = artifacts.require("Staking/Variants/Stake_ARTH_ARTHX.sol")
@@ -22,6 +23,7 @@ module.exports = async function (deployer, network, accounts) {
   const arthxInstance = await ARTHShares.deployed()
   const timelockInstance = await Timelock.deployed()
   const arthInstance = await ARTHStablecoin.deployed()
+  const arthControllerInstance = await ARTHController.deployed()
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts)
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
@@ -40,7 +42,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       arthxInstance.address,
       pair_addr_ARTH_WETH,
-      arthInstance.address,
+      arthControllerInstance.address,
       timelockInstance.address,
       500000
     ),
@@ -50,7 +52,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       arthxInstance.address,
       pair_addr_ARTH_USDC,
-      arthInstance.address,
+      arthControllerInstance.address,
       timelockInstance.address,
       500000
     ),
@@ -60,7 +62,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       arthxInstance.address,
       pair_addr_ARTH_ARTHX,
-      arthInstance.address,
+      arthControllerInstance.address,
       timelockInstance.address,
       0
     ),
@@ -70,7 +72,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       arthxInstance.address,
       pair_addr_ARTHX_WETH,
-      arthInstance.address,
+      arthControllerInstance.address,
       timelockInstance.address,
       0
     )

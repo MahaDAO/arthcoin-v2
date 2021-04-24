@@ -51,7 +51,7 @@ contract StakingRewards is
 
     IERC20 public immutable rewardsToken;
     IERC20 public immutable stakingToken;
-    IARTHController private _arthController;
+    IARTHController private _arthController; // Not immutable because can be reset by the setter.
 
     // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
     uint256 public immutable poolWeight;
