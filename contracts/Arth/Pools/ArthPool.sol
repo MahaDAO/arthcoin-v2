@@ -197,6 +197,14 @@ contract ArthPool is AccessControl, IARTHPool {
         _recollateralizeDiscountCruve = curve;
     }
 
+    function setARTHController(IARTHController controller) external onlyAdminOrOwnerOrGovernance {
+        _arthController = controller;
+    }
+
+    function setARTHMAHAOracle(ISimpleOracle oracle) external onlyAdminOrOwnerOrGovernance {
+        _ARTHMAHAOracle = oracle;
+    }
+
     function setStabilityFee(uint256 percent)
         external
         override
