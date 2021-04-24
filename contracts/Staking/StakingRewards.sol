@@ -51,7 +51,6 @@ contract StakingRewards is
 
     IERC20 public immutable rewardsToken;
     IERC20 public immutable stakingToken;
-    IARTH private _ARTH;
     IARTHController private _arthController;
 
     // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
@@ -152,14 +151,15 @@ contract StakingRewards is
         address _rewardsDistribution,
         address _rewardsToken,
         address _stakingToken,
-        address _arthAddress,
+        address _arthControllerAddress,
         address _timelockAddress,
         uint256 _poolWeight
     ) {
         ownerAddress = _owner;
-        _ARTH = IARTH(_arthAddress);
         rewardsToken = IERC20(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
+
+        _arthController = IARTHController(_arthControllerAddress);
 
         poolWeight = _poolWeight;
         lastUpdateTime = block.timestamp;

@@ -29,7 +29,6 @@ contract ArthController is AccessControl, IARTHController {
      */
 
     IERC20 public ARTH;
-    IERC20 public ARTHX;
 
     IChainlinkOracle private _ETHGMUPricer;
     IUniswapPairOracle private _ARTHETHOracle;
@@ -67,7 +66,7 @@ contract ArthController is AccessControl, IARTHController {
     uint256 public lastCallTime;
 
     // This is to help with establishing the Uniswap pools, as they need liquidity.
-    uint256 public constant genesisSupply = 2000000e18; // 2M ARTH (testnet) & 5k (Mainnet).
+    uint256 public constant genesisSupply = 2_000_000 ether; // 2M ARTH (testnet) & 5k (Mainnet).
 
     bool public useGlobalCRForMint = true;
     bool public useGlobalCRForRedeem = true;
