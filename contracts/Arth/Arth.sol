@@ -36,6 +36,8 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     uint256 private _TOTAL_FRACTIONS =
         _MAX_UINT256 - (_MAX_UINT256 % _INITIAL_AMOUNT_SUPPLY);
 
+    uint256 private constant _REBASING_PRECISION = 1e6;
+
     /// @notice This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant override genesisSupply = 22000000e18; // 22M ARTH (testnet) & 5k (Mainnet).
 
@@ -84,7 +86,9 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         }
         */
 
-        _fractionsPerAmount = _TOTAL_FRACTIONS.div(totalSupply());
+         _fractionsPerAmount = _TOTAL_FRACTIONS.mul(_REBASING_PRECISION).div(
+            totalSupply()
+        );
 
         /*
             From this point forward, _fractionsPerAmount is taken as the source of truth.
@@ -215,7 +219,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         view
         returns (uint256)
     {
-        return fraction.div(_fractionsPerAmount);
+        return fraction.mul(_REBASING_PRECISION).div(_fractionsPerAmount);
     }
 
     function _convertAmountToFraction(uint256 amount)
@@ -223,6 +227,6 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         view
         returns (uint256)
     {
-        return amount.mul(_fractionsPerAmount);
+        return amount.mul(_fractionsPerAmount).div(_REBASING_PRECISION);
     }
 }

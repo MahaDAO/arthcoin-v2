@@ -290,6 +290,14 @@ contract StakingRewardsDualV2 is
         emit RewardsDurationUpdated(rewardsDuration);
     }
 
+    function setARTHController(IARTHController controller)
+        external
+        onlyByOwnerOrGovernance
+    {
+        _arthController = controller;
+    }
+
+
     function setMultipliers(
         uint256 _lockedStakeMaxMultiplier,
         uint256 _crBoostMaxMultiplier
