@@ -6,12 +6,16 @@ import {Ownable} from '../access/Ownable.sol';
 import {ICurve} from './ICurve.sol';
 
 abstract contract Curve is ICurve, Ownable {
+    /// @notice Minimum X (e.g Collateral/Supply).
     uint256 public override minX;
 
+    /// @notice Maximum X (e.g Collateral/Supply).
     uint256 public override maxX;
 
+    /// @notice Minimum Y (e.g Discount/Price).
     uint256 public override minY;
 
+    /// @notice Maximum Y (e.g Discount/Price).
     uint256 public override maxY;
 
     /// @notice Fixed Y(Price in some graphs) in case needed.
@@ -54,7 +58,7 @@ abstract contract Curve is ICurve, Ownable {
     function setMaxY(uint256 y) public virtual onlyOwner {
         uint256 oldMaxY = maxY;
         maxY = y;
-        emit MaxYChanged(oldMaxY, maxY);
+       emit MaxYChanged(oldMaxY, maxY);
     }
 
     function getY(uint256 x) external view virtual override returns (uint256);
