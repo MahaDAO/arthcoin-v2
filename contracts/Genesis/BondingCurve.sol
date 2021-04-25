@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import {Sigmoid} from '../Curves/Sigmoid.sol';
+import {IncreasingSigmoid} from '../Curves/IncreasingSigmoid.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IBondingCurveOracle} from './IBondingCurveOracle.sol';
 
-contract BondingCurve is Sigmoid, IBondingCurveOracle{
+contract BondingCurve is IncreasingSigmoid, IBondingCurveOracle{
     using SafeMath for uint256;
 
     constructor(
@@ -16,12 +16,11 @@ contract BondingCurve is Sigmoid, IBondingCurveOracle{
         uint256 finalCurvePrice,
         uint256[] memory slots // Should represent 0.6 * 1 / (1 + e^-5x).
     )
-        Sigmoid(
+        IncreasingSigmoid(
             softCap,
             hardCap,
             initialCurvePrice,
             finalCurvePrice,
-            true, // Increasing curve(Price increases with time/collateral)
             slots
         )
     {}

@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {Sigmoid} from '../../Curves/Sigmoid.sol';
+import {DecreasingSigmoid} from '../../Curves/DecreasingSigmoid.sol';
 
-contract RecollateralDiscountCurve is Sigmoid {
+contract RecollateralDiscountCurve is DecreasingSigmoid {
     constructor(
         uint256 _minX, // Ideally 0%.
         uint256 _maX, // Ideally should be 100%.
@@ -12,12 +12,11 @@ contract RecollateralDiscountCurve is Sigmoid {
         uint256 maxDiscount,
         uint256[] memory slots // Should represent 1 - ( 0.6 * 1 / (1 + e^-5x) ).
     )
-        Sigmoid(
+        DecreasingSigmoid(
             _minX,
             _maX,
             minDiscount,
             maxDiscount,
-            false, // Decreasing curve(Discount decreases with time/collateral)
             slots
         )
     {
