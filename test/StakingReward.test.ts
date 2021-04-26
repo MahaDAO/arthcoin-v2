@@ -6,7 +6,9 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 
 import { advanceBlock } from './utilities';
 
+
 chai.use(solidity);
+
 
 describe('Staking Reward', () => {
   const { provider } = ethers;
@@ -19,44 +21,30 @@ describe('Staking Reward', () => {
   let ARTH: ContractFactory;
   let MAHA: ContractFactory;
   let ARTHX: ContractFactory;
-  let ARTHPool: ContractFactory;
   let SimpleOracle: ContractFactory;
   let MockCollateral: ContractFactory;
   let ARTHController: ContractFactory;
-  let ARTHPoolLibrary: ContractFactory;
+  let StakingRewards: ContractFactory;
   let MockUniswapOracle: ContractFactory;
   let ChainlinkETHGMUOracle: ContractFactory;
-  let RecollateralizationCurve: ContractFactory;
   let MockChainlinkAggregatorV3: ContractFactory;
-  let StakingRewards: ContractFactory;
-  let RewardsDistributionRecipient: ContractFactory;
-  let TransferHelper: ContractFactory;
 
   let dai: Contract;
   let arth: Contract;
   let maha: Contract;
   let arthx: Contract;
-  let arthPool: Contract;
   let gmuOracle: Contract;
+  let stakingRewards: Contract;
   let arthMahaOracle: Contract;
   let arthController: Contract;
-  let arthPoolLibrary: Contract;
   let daiETHUniswapOracle: Contract;
   let arthETHUniswapOracle: Contract;
   let chainlinkETHGMUOracle: Contract;
   let arthxETHUniswapOracle: Contract;
-  let recollaterizationCurve: Contract;
   let mockChainlinkAggregatorV3: Contract;
-  let stakingRewards: Contract;
-  let transferHelper: Contract;
 
-  before(' - Setup accounts & deploy libraries', async () => {
+  before(' - Setup accounts', async () => {
     [owner, whale] = await ethers.getSigners();
-
-    ARTHPoolLibrary = await ethers.getContractFactory('ArthPoolLibrary');
-    arthPoolLibrary = await ARTHPoolLibrary.deploy();
-    //TransferHelper = await ethers.getContractFactory('Uniswap/TransferHelper');
-    //transferHelper = await TransferHelper.deploy();
   });
 
   before(' - Fetch contract factories', async () => {
@@ -64,18 +52,12 @@ describe('Staking Reward', () => {
     ARTHX = await ethers.getContractFactory('ARTHShares');
     ARTH = await ethers.getContractFactory('ARTHStablecoin');
     MockCollateral = await ethers.getContractFactory('MockCollateral');
-    // ARTHPool = await ethers.getContractFactory('ArthPool', {
-    //   libraries: {
-    //     ArthPoolLibrary: arthPoolLibrary.address
-    //   }
-    // });
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
+    StakingRewards = await ethers.getContractFactory('StakingRewards');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
     ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
-    RecollateralizationCurve = await ethers.getContractFactory('RecollateralizeDiscountCurve');
-    StakingRewards = await ethers.getContractFactory('StakingRewards');
   });
 
   beforeEach(' - Deploy contracts', async () => {
@@ -89,13 +71,15 @@ describe('Staking Reward', () => {
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
     arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH);
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
+
     chainlinkETHGMUOracle = await ChainlinkETHGMUOracle.deploy(
       mockChainlinkAggregatorV3.address,
       gmuOracle.address
     );
+
     arthx = await ARTHX.deploy('ARTHX', 'ARTHX', arthxETHUniswapOracle.address, owner.address, owner.address);
     arthController = await ARTHController.deploy(owner.address, owner.address);
-    recollaterizationCurve = await RecollateralizationCurve.deploy(arth.address, arthController.address);
+
     stakingRewards = await StakingRewards.deploy(
       owner.address,
       owner.address,
@@ -118,24 +102,12 @@ describe('Staking Reward', () => {
   })
 
   describe('- Test Staking Rewards', async () => {
-    beforeEach(' - Approve collateral', async () => {
-      //dai.approve(arthPool.address, ETH);
-    })
-
     it(' - Test Stake', async () => {
       let myBalance = await arth.balanceOf(owner.address);
       let stakingRewardsBalance = await arth.balanceOf(stakingRewards.address);
-      // console.log('my balance', myBalance.toString());
-      // console.log('staking contract balance', stakingRewardsBalance.toString());
 
       await arth.approve(stakingRewards.address, ETH);
       await stakingRewards.stake(ETH);
-
-      let myBalance2 = await arth.balanceOf(owner.address);
-      let stakingRewardsBalance2 = await arth.balanceOf(stakingRewards.address);
-
-      // console.log('my balance', myBalance2.toString());
-      // console.log('staking contract balance', stakingRewardsBalance2.toString());
 
       expect(await arth.balanceOf(stakingRewards.address))
         .to
@@ -206,10 +178,6 @@ describe('Staking Reward', () => {
     })
 
     it(' - Test stake locked for', async () => {
-      let myBalance = await arth.balanceOf(owner.address);
-      let whalesBalance = await arth.balanceOf(whale.address);
-      let stakingRewardsBalance = await arth.balanceOf(stakingRewards.address);
-
       await arth.connect(owner).approve(stakingRewards.address, ETH);
       await expect(stakingRewards.stakeLockedFor(whale.address, ETH, 0))
         .to
@@ -218,12 +186,8 @@ describe('Staking Reward', () => {
         );
     })
 
-    //604800, 94,608,000
+    // 604800, 94,608,000
     it(' - Test stake locked for less then 7 days', async () => {
-      let myBalance = await arth.balanceOf(owner.address);
-      let whalesBalance = await arth.balanceOf(whale.address);
-      let stakingRewardsBalance = await arth.balanceOf(stakingRewards.address);
-
       await arth.connect(owner).approve(stakingRewards.address, ETH);
       let sec = 604700
       await expect(stakingRewards.stakeLockedFor(whale.address, ETH, sec))
@@ -234,10 +198,6 @@ describe('Staking Reward', () => {
     })
 
     it(' - Test stake locked for more then 3 years', async () => {
-      let myBalance = await arth.balanceOf(owner.address);
-      let whalesBalance = await arth.balanceOf(whale.address);
-      let stakingRewardsBalance = await arth.balanceOf(stakingRewards.address);
-
       await arth.connect(owner).approve(stakingRewards.address, ETH);
       let sec = 94608001
       await expect(stakingRewards.stakeLockedFor(whale.address, ETH, sec))

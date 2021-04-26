@@ -76,8 +76,8 @@ describe('ARTHPool', () => {
 
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
-    RecollateralizationCurve = await ethers.getContractFactory('Sigmoid');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
+    RecollateralizationCurve = await ethers.getContractFactory('MockRecollateralizeCurve');
     ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
   });
@@ -122,12 +122,7 @@ describe('ARTHPool', () => {
       ETH.mul(90000)
     );
 
-    recollaterizationCurve = await RecollateralizationCurve.deploy(
-      0,  // Xmin(0%)
-      100,  // Xmax(100%)
-      ETH.mul(669).div(100000),  // Ymin- Sigmoid maximum.
-      ETH.mul(50).div(100),  // Ymax- Sigmoid minimum.
-    );
+    recollaterizationCurve = await RecollateralizationCurve.deploy();
   });
 
   beforeEach(' - Set some contract variables', async () => {
@@ -1637,8 +1632,7 @@ describe('ARTHPool', () => {
         .eq(0);
 
       const expectedMint = ETH
-        .sub(ETH.div(1000))
-        .add(ETH.mul(50).div(100));
+        .sub(ETH.div(1000));
 
       await arthPool.recollateralizeARTH(ETH, expectedMint);
 
@@ -1698,7 +1692,6 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(1063829).div(1e6);  // Collateral's value.
       const expectedMint = suppliedCollteralValue  // Amount to recollateralize as per ARTHX price and collatera's value.
         .sub(suppliedCollteralValue.div(1000))
-        .add(suppliedCollteralValue.mul(50).div(100))  // 50% discount on 0% collateral fulfilled.
         .mul(1e6)
         .div(1063829);
 
@@ -1760,7 +1753,6 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(1063829).div(1e6);  // Collateral's value.
       const expectedMint = suppliedCollteralValue  // Amount to recollateralize as per ARTHX price and collatera's value.
         .sub(suppliedCollteralValue.div(1000))
-        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(943396);
 
@@ -1822,7 +1814,6 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(943396).div(1e6);  // Collateral's value.
       const expectedMint = suppliedCollteralValue  // Amount to recollateralize as per ARTHX price and collatera's value.
         .sub(suppliedCollteralValue.div(1000))
-        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(1063829);
 
@@ -1884,7 +1875,6 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(943396).div(1e6);
       const expectedMint = suppliedCollteralValue
         .sub(suppliedCollteralValue.div(1000))
-        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(943396);
 
@@ -1938,7 +1928,6 @@ describe('ARTHPool', () => {
 
       const expectedMint = ETH
         .sub(ETH.div(1000))
-        .add(ETH.mul(50).div(100))
 
       await arthPool.recollateralizeARTH(ETH, expectedMint);
 
@@ -2003,7 +1992,6 @@ describe('ARTHPool', () => {
         const suppliedCollteralValue = ETH.mul(1063829).div(1e6);
         const expectedMint = suppliedCollteralValue
           .sub(suppliedCollteralValue.div(1000))
-          .add(suppliedCollteralValue.mul(50).div(100))
           .mul(1e6)
           .div(1063829);
 
@@ -2070,7 +2058,6 @@ describe('ARTHPool', () => {
         const suppliedCollteralValue = ETH.mul(943396).div(1e6);
         const expectedMint = suppliedCollteralValue
           .sub(suppliedCollteralValue.div(1000))
-          .add(suppliedCollteralValue.mul(50).div(100))
           .mul(1e6)
           .div(943396);
 
@@ -2130,7 +2117,6 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(1063829).div(1e6);
       const expectedMint = suppliedCollteralValue
         .sub(suppliedCollteralValue.div(1000))
-        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(943396);
 
@@ -2190,7 +2176,6 @@ describe('ARTHPool', () => {
       const suppliedCollteralValue = ETH.mul(943396).div(1e6);  // Collateral's value.
       const expectedMint = suppliedCollteralValue
         .sub(suppliedCollteralValue.div(1000))
-        .add(suppliedCollteralValue.mul(50).div(100))
         .mul(1e6)
         .div(1063829);
 
