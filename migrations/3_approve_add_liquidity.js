@@ -20,8 +20,8 @@ module.exports = async function (deployer, network, accounts) {
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts)
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts)
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
-  const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
-  const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
+  const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts)
+  const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts)
 
   console.log(chalk.yellow('\nDeploying SwapToPrice'))
   await deployer.deploy(SwapToPrice, uniswapFactoryInstance.address, routerInstance.address);

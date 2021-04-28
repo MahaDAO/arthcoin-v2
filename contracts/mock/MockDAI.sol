@@ -5,10 +5,5 @@ pragma solidity ^0.8.0;
 import './MockCollateral.sol';
 
 contract MockDAI is MockCollateral {
-    constructor(
-        address _creatorAddress,
-        uint256 _genesisSupply,
-        string memory _symbol,
-        uint8 _decimals
-    ) MockCollateral(_creatorAddress, _genesisSupply, _symbol, _decimals) {}
+    constructor() MockCollateral(msg.sender, 100000e18, 'DAI', 18) {}
 }

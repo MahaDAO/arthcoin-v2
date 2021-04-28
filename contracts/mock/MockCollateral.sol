@@ -56,7 +56,6 @@ contract MockCollateral is Context, IERC20 {
         symbol = _symbol;
         decimals = _decimals;
 
-        _mint(creatorAddress, 10000000e18);
         _mint(creatorAddress, genesisSupply);
     }
 
