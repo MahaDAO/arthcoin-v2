@@ -12,6 +12,8 @@ import {IARTHXTaxController} from "./IARTHXTaxController.sol";
  * @author MahaDAO.
  */
 interface IARTHX is IERC20, IAnyswapV4Token {
+     function setTaxPercent(uint256 percent) external;
+
     function setOwner(address _ownerAddress) external;
 
     function setOracle(address newOracle) external;

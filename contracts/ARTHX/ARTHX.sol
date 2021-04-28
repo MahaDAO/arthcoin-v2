@@ -32,6 +32,8 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     IARTHController private _arthController;
     IARTHXTaxController private _taxController;
 
+    uint256 public taxPercent = 5; // In %.
+
     string public name;
     string public symbol;
     uint8 public constant override decimals = 18;
@@ -112,6 +114,14 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         oracleAddress = newOracle;
     }
 
+    function setTaxPercent(uint256 percent)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        taxPercent = percent;
+    }
+
     function setTaxController(IARTHXTaxController controller)
         external
         override
@@ -182,10 +192,12 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         address recipient,
         uint256 amount
     ) internal virtual override notPaused onlyNonBlacklisted(sender) {
-        // Check if tax mode is on, and if its is on tax the tx and transfer the
-        // remaining amount to `recipient`.
-        if (address(_taxController) != address(0))
-            amount = _taxController.chargeTax(_msgSender(), amount);
+        if (taxPercent > 0 && address(_taxController) != address(0)) {
+            uint256 taxAmount = amount.mul(taxPercent).div(100);
+            super._transfer(sender, address(_taxController), taxAmount);
+            _taxController.chargeTax(); // Should we call this here? Or have a call function in controller, which at once does this?
+            amount = amount.sub(taxAmount);
+        }
 
         super._transfer(sender, recipient, amount);
     }
