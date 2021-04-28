@@ -88,6 +88,14 @@ contract ArthController is AccessControl, IARTHController {
     uint8 private _ethGMUPricerDecimals;
     uint256 private constant _PRICE_PRECISION = 1e6;
 
+    event ToggleGlobalCRForMint(bool old, bool flag);
+    event ToggleGlobalCRForRedeem(bool old, bool flag);
+    event ToggleGlobalCRForRecollateralize(bool old, bool flag);
+
+    event UpdateMintCR(uint256 oldCR, uint256 cr);
+    event UpdateRedeemCR(uint256 oldCR, uint256 cr);
+    event UpdateRecollateralizeCR(uint256 oldCR, uint256 cr);
+
     /**
      * Modifiers.
      */
@@ -161,7 +169,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerGovernanceOrPool
     {
+        bool old = useGlobalCRForMint;
         useGlobalCRForMint = flag;
+        emit ToggleGlobalCRForMint(old, flag);
     }
 
     function toggleUseGlobalCRForRedeem(bool flag)
@@ -169,7 +179,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerGovernanceOrPool
     {
+        bool old = useGlobalCRForRedeem;
         useGlobalCRForRedeem = flag;
+        emit ToggleGlobalCRForRedeem(old, flag);
     }
 
     function toggleUseGlobalCRForRecollateralize(bool flag)
@@ -177,7 +189,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerGovernanceOrPool
     {
+        bool old = useGlobalCRForRecollateralize;
         useGlobalCRForRecollateralize = flag;
+        emit ToggleGlobalCRForRecollateralize(old, flag);
     }
 
     function setMintCollateralRatio(uint256 val)
@@ -185,7 +199,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerGovernanceOrPool
     {
+        uint256 old = mintCollateralRatio;
         mintCollateralRatio = val;
+        emit UpdateMintCR(old, val);
     }
 
     function setRedeemCollateralRatio(uint256 val)
@@ -193,7 +209,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerGovernanceOrPool
     {
+        uint256 old = redeemCollateralRatio;
         redeemCollateralRatio = val;
+        emit UpdateRedeemCR(old, val);
     }
 
     function setRecollateralizeCollateralRatio(uint256 val)
@@ -201,7 +219,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerGovernanceOrPool
     {
+        uint256 old = recollateralizeCollateralRatio;
         recollateralizeCollateralRatio = val;
+        emit UpdateRecollateralizeCR(old, val);
     }
 
     function refreshCollateralRatio() external override {
