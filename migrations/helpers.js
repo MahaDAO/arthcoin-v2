@@ -127,22 +127,22 @@ const getPairAddress = async (token1, token2, network, deployer, artifacts) => {
 };
 
 
-const isMainnet = (network) => network === 'mainnet' || network === 'bsc' || network === 'matic' || network === 'heco'
+const isMainnet = (network) => network === 'mainnet' || network === 'bsc' || network === 'matic' || network === 'heco';
 
 
 const getGMUOracle = async (network, deployer, artifacts) => {
-  const GMUOracle = artifacts.require('GMUOracle')
+  const GMUOracle = artifacts.require('GMUOracle');
 
-  const addr = knownContracts.GMUOracle && knownContracts.GMUOracle[network]
-  if (addr) return GMUOracle.at(addr)
+  const addr = knownContracts.GMUOracle && knownContracts.GMUOracle[network];
+  if (addr) return GMUOracle.at(addr);
 
-  if (GMUOracle.isDeployed()) return GMUOracle.deployed()
+  if (GMUOracle.isDeployed()) return GMUOracle.deployed();
 
-  console.log(chalk.yellow(`\nDeploying GMU/USD oracle...`))
-  await deployer.deploy(GMUOracle, 'GMU/USD', ONE)
+  console.log(chalk.yellow(`\nDeploying GMU/USD oracle...`));
+  await deployer.deploy(GMUOracle, 'GMU/USD', ONE);
 
-  return GMUOracle.deployed()
-}
+  return GMUOracle.deployed();
+};
 
 
 const getARTHMAHAOracle = async (network, deployer, artifacts) => {

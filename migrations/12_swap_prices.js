@@ -1,46 +1,43 @@
-const chalk = require('chalk')
-const BigNumber = require('bignumber.js')
+require('dotenv').config();
+const chalk = require('chalk');
+const BigNumber = require('bignumber.js');
+const helpers = require('./helpers');
 
-require('dotenv').config()
-const helpers = require('./helpers')
-
-
-const ARTHShares = artifacts.require("ARTHX/ARTHShares")
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin")
-const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH")
-const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC")
-const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT")
-const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH")
-const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH")
-const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHX")
-const UniswapPairOracle_ARTHX_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH")
-const UniswapPairOracle_ARTHX_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_USDC")
-const UniswapPairOracle_ARTHX_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_USDT")
+const ARTHShares = artifacts.require("ARTHX/ARTHShares");
+const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+const UniswapPairOracle_ARTH_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
+const UniswapPairOracle_ARTH_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDC");
+const UniswapPairOracle_ARTH_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_USDT");
+const UniswapPairOracle_USDC_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH");
+const UniswapPairOracle_USDT_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH");
+const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHX");
+const UniswapPairOracle_ARTHX_WETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
+const UniswapPairOracle_ARTHX_USDC = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_USDC");
+const UniswapPairOracle_ARTHX_USDT = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_USDT");
 
 
 module.exports = async function (deployer, network, accounts) {
+  const DEPLOYER_ADDRESS = accounts[0];
+  const ONE_HUNDRED_MILLION = new BigNumber("100000000e6");
 
-  const DEPLOYER_ADDRESS = accounts[0]
-  const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
-
-  const arthxInstance = await ARTHShares.deployed()
-  const arthInstance = await ARTHStablecoin.deployed()
-  const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts)
-  const oracle_instance_USDC_WETH = await UniswapPairOracle_USDC_WETH.deployed()
-  const oracle_instance_USDT_WETH = await UniswapPairOracle_USDT_WETH.deployed()
-  const oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed()
-  const oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed()
-  const oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.deployed()
-  const oracle_instance_ARTH_ARTHX = await UniswapPairOracle_ARTH_ARTHX.deployed()
-  const oracle_instance_ARTHX_WETH = await UniswapPairOracle_ARTHX_WETH.deployed()
-  const oracle_instance_ARTHX_USDC = await UniswapPairOracle_ARTHX_USDC.deployed()
-  const oracle_instance_ARTHX_USDT = await UniswapPairOracle_ARTHX_USDT.deployed()
-  const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
-  const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
-  const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
+  const arthxInstance = await ARTHShares.deployed();
+  const arthInstance = await ARTHStablecoin.deployed();
+  const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts);
+  const oracle_instance_USDC_WETH = await UniswapPairOracle_USDC_WETH.deployed();
+  const oracle_instance_USDT_WETH = await UniswapPairOracle_USDT_WETH.deployed();
+  const oracle_instance_ARTH_WETH = await UniswapPairOracle_ARTH_WETH.deployed();
+  const oracle_instance_ARTH_USDC = await UniswapPairOracle_ARTH_USDC.deployed();
+  const oracle_instance_ARTH_USDT = await UniswapPairOracle_ARTH_USDT.deployed();
+  const oracle_instance_ARTH_ARTHX = await UniswapPairOracle_ARTH_ARTHX.deployed();
+  const oracle_instance_ARTHX_WETH = await UniswapPairOracle_ARTHX_WETH.deployed();
+  const oracle_instance_ARTHX_USDC = await UniswapPairOracle_ARTHX_USDC.deployed();
+  const oracle_instance_ARTHX_USDT = await UniswapPairOracle_ARTHX_USDT.deployed();
+  const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6);
+  const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6);
 
   // TODO: Not sure about the swapToPriceInstance.swapToPrice parameters
-  return false
+  return false;
 
   console.log(chalk.yellow("\nApproving router..."))
   await Promise.all([
