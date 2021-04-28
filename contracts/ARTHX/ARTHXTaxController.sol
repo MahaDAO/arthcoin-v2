@@ -95,6 +95,7 @@ contract ARTHXTaxController is Ownable, IARTHXTaxController {
 
         uint256 amountToBurn = amount.mul(taxToBurnPercent).div(100);
         if (amountToBurn > 0) {
+            arthx.approve(address(this), amountToBurn); // Need to approve to self also for a burnFrom.
             arthx.poolBurnFrom(address(this), amountToBurn);
             emit TaxCharged(address(this), address(0), amountToBurn);
         }
