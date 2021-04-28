@@ -56,14 +56,14 @@ contract MockCollateral is Context, IERC20 {
         symbol = _symbol;
         decimals = _decimals;
 
-        _mint(creatorAddress, 1000000000000e18);
+        _mint(creatorAddress, 10000000e18);
         _mint(creatorAddress, genesisSupply);
     }
 
     function faucet() public {
         if (used[msg.sender] == false) {
             used[msg.sender] = true;
-            _mint(msg.sender, 1000000000000e18);
+            _mint(msg.sender, 10000000e18);
         }
     }
 
