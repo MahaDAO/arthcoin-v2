@@ -6,10 +6,10 @@ const HDWalletProvider = require("truffle-hdwallet-provider")
 
 const providerFactory = () => {
   return new HDWalletProvider(
-    [process.env.MNEMONIC_PHRASE],
+    process.env.METAMASK_WALLET_SECRET,
     process.env.NETWORK_ENDPOINT,
-  )
-}
+  );
+};
 
 
 module.exports = {
