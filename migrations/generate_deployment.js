@@ -7,18 +7,7 @@ const knownContracts = require('./known-contracts');
 
 const writeFile = util.promisify(fs.writeFile);
 const mkdir = util.promisify(fs.mkdir);
-
-
-// Deployment and ABI will be generated for contracts listed on here.
-// The deployment thus can be used on frontend.
-const exportedContracts = [
-  'ARTH',
-  'ARTHB',
-
-];
-
-
-// const Multicall = artifacts.require('Multicall');
+const Multicall = artifacts.require('Multicall');
 
 
 /**
@@ -71,9 +60,9 @@ module.exports = async (callback) => {
     const usdt = (await getUSDT(network, null, artifacts)).address;
     // const wbtc = (await getWB(network, null, artifacts)).address;
 
-    // const multicall = isMainnet ?
-    //   knownContracts.Multicall[network] :
-    //   (await Multicall.deployed()).address;
+    const multicall = isMainnet ?
+      knownContracts.Multicall[network] :
+      (await Multicall.deployed()).address;
 
     contracts.push({ contract: 'UniswapV2Factory', address: factory, abi: 'UniswapV2Factory' });
     contracts.push({ contract: 'UniswapV2Router02', address: router, abi: 'UniswapV2Router02' });
@@ -83,7 +72,7 @@ module.exports = async (callback) => {
     contracts.push({ contract: 'WETH', address: weth, abi: 'IWETH' });
     contracts.push({ contract: 'WBTC', address: dai, abi: 'IERC20' });
     contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
-    // contracts.push({ contract: 'Multicall', address: multicall, abi: 'Multicall' });
+    contracts.push({ contract: 'Multicall', address: multicall, abi: 'Multicall' });
 
 
     const abiDir = path.resolve(__dirname, `../output/abi`);

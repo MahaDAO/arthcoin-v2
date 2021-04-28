@@ -25,6 +25,9 @@ module.exports = {
     kovan: '0x2cc8688c5f75e365aaeeb4ea8d6a480405a48d2a',
     goerli: '0x77dca2c955b15e9de4dbbcf1246b4b85b651e50e'
   },
+  ETHUSDChainlinkOracleDefault: {
+    kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331'
+  },
   DAI: {
     mainnet: '0x6b175474e89094c44da98b954eedeac495271d0f',
   },
