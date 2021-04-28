@@ -21,18 +21,17 @@ const UniswapPairOracle_ARTHX_USDT = artifacts.require("Oracle/Variants/UniswapP
 
 
 module.exports = async function (deployer, network, accounts) {
+  const DEPLOYER_ADDRESS = accounts[0];
+  const ONE_HUNDRED_MILLION = new BigNumber("100000000e6");
 
-  const DEPLOYER_ADDRESS = accounts[0]
-  const ONE_HUNDRED_MILLION = new BigNumber("100000000e6")
-
-  const arthxInstance = await ARTHShares.deployed()
-  const timelockInstance = await Timelock.deployed()
-  const arthInstance = await ARTHStablecoin.deployed()
-  const arthController = await ARTHController.deployed()
-  const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS)
-  const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts)
-  const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDC', 6)
-  const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts, DEPLOYER_ADDRESS, ONE_HUNDRED_MILLION, 'USDT', 6)
+  const arthxInstance = await ARTHShares.deployed();
+  const timelockInstance = await Timelock.deployed();
+  const arthInstance = await ARTHStablecoin.deployed();
+  const arthController = await ARTHController.deployed();
+  const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts);
+  const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts);
+  const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nDeploying uniswap oracles...'))
   console.log(chalk.yellow(' - Starting ARTH oracle...'))

@@ -38,7 +38,7 @@ module.exports = async function (deployer, network, accounts) {
 
   await deployer.deploy(
     ARTHShares,
-    "Arth Share",
+    "ARTH Share",
     "ARTHX",
     DEPLOYER_ADDRESS, // Temporary address until oracle is deployed.
     DEPLOYER_ADDRESS,
