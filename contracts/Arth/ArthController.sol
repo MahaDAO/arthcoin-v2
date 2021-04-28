@@ -339,7 +339,11 @@ contract ArthController is AccessControl, IARTHController {
         wethAddress = _wethAddress;
     }
 
-    function toggleCollateralRatio() external override onlyCollateralRatioPauser {
+    function toggleCollateralRatio()
+        external
+        override
+        onlyCollateralRatioPauser
+    {
         isColalteralRatioPaused = !isColalteralRatioPaused;
     }
 
@@ -429,19 +433,22 @@ contract ArthController is AccessControl, IARTHController {
         return totalCollateralValueD18;
     }
 
-    function getCRForMint() external view override returns(uint256) {
+    function getCRForMint() external view override returns (uint256) {
         if (useGlobalCRForMint) return getGlobalCollateralRatio();
-
         return mintCollateralRatio;
     }
 
-    function getCRForRedeem() external view override returns(uint256) {
+    function getCRForRedeem() external view override returns (uint256) {
         if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
-
         return redeemCollateralRatio;
     }
 
-    function getCRForRecollateralize() external view override returns(uint256) {
+    function getCRForRecollateralize()
+        external
+        view
+        override
+        returns (uint256)
+    {
         if (useGlobalCRForRecollateralize) return getGlobalCollateralRatio();
 
         return recollateralizeCollateralRatio;

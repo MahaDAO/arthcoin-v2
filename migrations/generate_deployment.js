@@ -60,7 +60,7 @@ module.exports = async (callback) => {
     const usdt = (await getUSDT(network, null, artifacts)).address;
     // const wbtc = (await getWB(network, null, artifacts)).address;
 
-    const multicall = isMainnet ?
+    const multicall = knownContracts.Multicall[network] ?
       knownContracts.Multicall[network] :
       (await Multicall.deployed()).address;
 
@@ -100,4 +100,3 @@ module.exports = async (callback) => {
 
   callback();
 };
-
