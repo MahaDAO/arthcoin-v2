@@ -13,8 +13,6 @@ import {IOracle} from './IOracle.sol';
 contract Oracle is Ownable, IOracle {
     using SafeMath for uint256;
 
-    IERC20 public base;
-
     IUniswapPairOracle public pairOracle;
 
     /// @notice Price feed for base from chainlink.
@@ -22,6 +20,7 @@ contract Oracle is Ownable, IOracle {
 
     IChainlinkOracle public ethGMUOracle;
 
+    address public base;
     address public quote;
 
     uint256 public oraclePriceFeedDecimals = 8;
@@ -31,7 +30,7 @@ contract Oracle is Ownable, IOracle {
     uint256 private constant _PRICE_PRECISION = 1e6;
 
     constructor(
-        IERC20 base_,
+        address base_,
         address quote_,
         IUniswapPairOracle pairOracle_,
         IChainlinkOracle oracle_,
@@ -46,7 +45,7 @@ contract Oracle is Ownable, IOracle {
         ethGMUPriceFeedDecimals = ethGMUOracle.getDecimals();
         oraclePriceFeedDecimals = address(oracle) != address(0) ? oracle.getDecimals() : 0;
 
-        _TOKEN_MISSING_DECIMALS = uint256(18).sub(base.decimals());
+        _TOKEN_MISSING_DECIMALS = uint256(18).sub(IERC20(base).decimals());
     }
 
     function setOracle(IChainlinkOracle oracle_) public onlyOwner {
@@ -86,8 +85,11 @@ contract Oracle is Ownable, IOracle {
     }
 
     function getPrice() public view override returns (uint256) {
+        // If we have chainlink oracle for base set return that price.
+        // NOTE: this chainlink is subject to Aggregator being in BASE/USD and USD/GMU(Simple oracle).
         if (address(oracle) != address(0)) return getChainlinkPrice();
 
+        // Else return price from uni pair.
         return getPairPrice();
     }
 }
