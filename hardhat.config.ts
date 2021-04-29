@@ -5,31 +5,28 @@ import '@nomiclabs/hardhat-etherscan';
 
 require('dotenv').config();
 
-
 export default {
   default: 'mainnet',
   networks: {
-    hardhat: {
-
-    },
+    hardhat: {},
     mainnet: {
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
       accounts: [`0x${process.env.METAMASK_WALLET_SECRET}`],
       gasMultiplier: 1.2,
-      gasPrice: 100000000000
+      gasPrice: 100000000000,
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-      accounts: [`0x${process.env.METAMASK_WALLET_SECRET}`]
+      accounts: [`0x${process.env.METAMASK_WALLET_SECRET}`],
     },
-    goerli: {
-      url: `https://goerli.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-      accounts: [`0x${process.env.METAMASK_WALLET_SECRET}`]
+    rinkeby: {
+      url: process.env.NETWORK_ENDPOINT,
+      accounts: [process.env.METAMASK_WALLET_SECRET],
     },
     development: {
-      url: "http://localhost:8545",
-      accounts: [process.env.METAMASK_WALLET_SECRET]
-    }
+      url: 'http://localhost:8545',
+      accounts: [process.env.METAMASK_WALLET_SECRET],
+    },
   },
   solidity: {
     version: '0.8.0',
@@ -53,6 +50,6 @@ export default {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: process.env.ETHERSCAN_API_KEY,
   },
 };
