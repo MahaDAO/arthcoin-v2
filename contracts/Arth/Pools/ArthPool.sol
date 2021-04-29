@@ -197,11 +197,17 @@ contract ArthPool is AccessControl, IARTHPool {
         _recollateralizeDiscountCruve = curve;
     }
 
-    function setARTHController(IARTHController controller) external onlyAdminOrOwnerOrGovernance {
+    function setARTHController(IARTHController controller)
+        external
+        onlyAdminOrOwnerOrGovernance
+    {
         _arthController = controller;
     }
 
-    function setARTHMAHAOracle(ISimpleOracle oracle) external onlyAdminOrOwnerOrGovernance {
+    function setARTHMAHAOracle(ISimpleOracle oracle)
+        external
+        onlyAdminOrOwnerOrGovernance
+    {
         _ARTHMAHAOracle = oracle;
     }
 
@@ -371,7 +377,10 @@ contract ArthPool is AccessControl, IARTHPool {
     {
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
-        require(_arthController.getCRForMint() == 0, 'ARTHPool: Collateral ratio != 0');
+        require(
+            _arthController.getCRForMint() == 0,
+            'ARTHPool: Collateral ratio != 0'
+        );
 
         uint256 arthAmountD18 =
             ArthPoolLibrary.calcMintAlgorithmicARTH(
@@ -651,7 +660,8 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
         uint256 arthxPrice = _arthController.getARTHXPrice();
         uint256 arthTotalSupply = _ARTH.totalSupply();
-        uint256 collateralRatioForRecollateralize = _arthController.getCRForRecollateralize();
+        uint256 collateralRatioForRecollateralize =
+            _arthController.getCRForRecollateralize();
         uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
         (uint256 collateralUnits, uint256 amountToRecollateralize) =
@@ -670,9 +680,9 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 arthxPaidBack =
             amountToRecollateralize
                 .mul(
-                uint256(1e6)
-                    .add(getRecollateralizationDiscount())
-                    .sub(recollatFee)
+                uint256(1e6).add(getRecollateralizationDiscount()).sub(
+                    recollatFee
+                )
             )
                 .div(arthxPrice);
 
@@ -735,7 +745,12 @@ contract ArthPool is AccessControl, IARTHPool {
         return _arthController.getGlobalCollateralRatio();
     }
 
-    function getCollateralGMUBalance() external view override returns (uint256) {
+    function getCollateralGMUBalance()
+        external
+        view
+        override
+        returns (uint256)
+    {
         if (collateralPricePaused) {
             return
                 (
@@ -808,30 +823,38 @@ contract ArthPool is AccessControl, IARTHPool {
                 .div(1e6);
     }
 
-    function getRecollateralizationDiscount() public view override returns (uint256) {
+    function getRecollateralizationDiscount()
+        public
+        view
+        override
+        returns (uint256)
+    {
         uint256 targetCollatValue = getTargetCollateralValue();
         uint256 currentCollatValue = _arthController.getGlobalCollateralValue();
 
-        uint256 percentCollateral = currentCollatValue.mul(100).div(targetCollatValue);
+        uint256 percentCollateral =
+            currentCollatValue.mul(100).div(targetCollatValue);
 
-        return _recollateralizeDiscountCruve
-            .getY(percentCollateral)
-            .mul(_PRICE_PRECISION)
-            .div(1e18);
+        return
+            _recollateralizeDiscountCruve
+                .getY(percentCollateral)
+                .mul(_PRICE_PRECISION)
+                .div(1e18);
     }
 
     function getCollateralPrice() public view override returns (uint256) {
-        if (collateralPricePaused) return pausedPrice;
+        return 1000000;
+        // if (collateralPricePaused) return pausedPrice;
 
-        uint256 ethGMUPrice = _arthController.getETHGMUPrice();
+        // uint256 ethGMUPrice = _arthController.getETHGMUPrice();
 
-        return
-            ethGMUPrice.mul(_PRICE_PRECISION).div(
-                _collateralETHOracle.consult(
-                    _wethAddress,
-                    _PRICE_PRECISION * (10**_missingDeciamls)
-                )
-            );
+        // return
+        //     ethGMUPrice.mul(_PRICE_PRECISION).div(
+        //         _collateralETHOracle.consult(
+        //             _wethAddress,
+        //             _PRICE_PRECISION * (10**_missingDeciamls)
+        //         )
+        //     );
     }
 
     function estimateStabilityFeeInMAHA(uint256 amount)

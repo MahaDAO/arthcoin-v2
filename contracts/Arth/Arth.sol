@@ -184,7 +184,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         }
         */
 
-         _fractionsPerAmount = _TOTAL_FRACTIONS.mul(_REBASING_PRECISION).div(
+        _fractionsPerAmount = _TOTAL_FRACTIONS.mul(_REBASING_PRECISION).div(
             totalSupply()
         );
 
