@@ -23,9 +23,8 @@ interface IARTHPool {
 
     function setBuyBackCollateralBuffer(uint256 percent) external;
 
-    function setCollatETHOracle(
-        address collateralWETHOracleAddress,
-        address wethAddress
+    function setCollatGMUOracle(
+        address _collateralGMUOracleAddress
     ) external;
 
     function toggleMinting() external;
@@ -96,6 +95,8 @@ interface IARTHPool {
 
     function mintingFee() external returns (uint256);
 
+    function isWETHPool() external returns (bool);
+
     function redemptionFee() external returns (uint256);
 
     function buybackFee() external returns (uint256);
@@ -114,5 +115,5 @@ interface IARTHPool {
 
     function pausedPrice() external view returns (uint256);
 
-    function collateralETHOracleAddress() external view returns (address);
+    function collateralGMUOracleAddress() external view returns (address);
 }
