@@ -97,7 +97,7 @@ abstract contract AnyswapV4Token is
         address to,
         uint256 value,
         bytes calldata data
-    ) external override returns (bool) {
+    ) public virtual override returns (bool) {
         require(to != address(0) || to != address(this));
 
         uint256 balance = balanceOf(msg.sender);
@@ -118,7 +118,7 @@ abstract contract AnyswapV4Token is
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external override returns (bool) {
+    ) public virtual override returns (bool) {
         require(block.timestamp <= deadline, 'AnyswapV3ERC20: Expired permit');
 
         bytes32 hashStruct =

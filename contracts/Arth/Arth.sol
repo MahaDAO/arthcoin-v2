@@ -8,6 +8,7 @@ import {IERC20} from '../ERC20/IERC20.sol';
 import {ERC20Custom} from '../ERC20/ERC20Custom.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IIncentiveController} from './IIncentive.sol';
+import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 
 /**
@@ -151,7 +152,8 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         address _poolAddress,
         uint256 _amount
     ) external override requireCallerIsStabilityPool {
-        _transfer(_sender, _poolAddress, _amount);
+        // Don't incentivize or penalize the loan pools.
+        super._transfer(_sender, _poolAddress, _amount);
     }
 
     function returnFromPool(
@@ -159,7 +161,69 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         address _receiver,
         uint256 _amount
     ) external override requireCallerIsTroveMorSP {
-        _transfer(_poolAddress, _receiver, _amount);
+        // Don't incentivize or penalize the loan pools.
+       super. _transfer(_poolAddress, _receiver, _amount);
+    }
+
+    function transferAndCall(
+        address to,
+        uint256 value,
+        bytes calldata data
+    ) public requireValidRecipient(to) override(IAnyswapV4Token, AnyswapV4Token) returns (bool) {
+        return super.transferAndCall(
+            to,
+            value,
+            data
+        );
+    }
+
+    function transferWithPermit(
+        address target,
+        address to,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public requireValidRecipient(to) override(IAnyswapV4Token, AnyswapV4Token) returns (bool) {
+        return super.transferWithPermit(
+            target,
+            to,
+            value,
+            deadline,
+            v,
+            r,
+            s
+        );
+    }
+
+    function transfer(address recipient, uint256 amount)
+        public
+        virtual
+        override(IERC20, ERC20Custom)
+        requireValidRecipient(recipient)
+        returns (bool)
+    {
+        return super.transfer(recipient, amount);
+    }
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    )
+        public
+        virtual
+        override(IERC20, ERC20Custom)
+        requireValidRecipient(recipient)
+        onlyNonBlacklisted(_msgSender())
+        returns (bool)
+    {
+        return super.transferFrom(
+            sender,
+            recipient,
+            amount
+        );
     }
 
     function rebase(int256 supplyDelta)
