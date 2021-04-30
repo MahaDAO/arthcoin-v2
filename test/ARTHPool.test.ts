@@ -132,7 +132,7 @@ describe('ARTHPool', () => {
     await arthController.addPool(arthPool.address);
     await arthController.setGlobalCollateralRatio(0);
     await arthx.setArthController(arthController.address);
-    await arthPool.setCollatETHOracle(daiETHUniswapOracle.address, owner.address);
+    await arthPool.setCollatGMUOracle(daiETHUniswapOracle.address);
 
     await arthController.setARTHETHOracle(arthETHUniswapOracle.address, owner.address);
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
