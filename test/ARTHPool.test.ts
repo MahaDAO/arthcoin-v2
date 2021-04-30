@@ -29,6 +29,7 @@ describe('ARTHPool', () => {
   let ARTH: ContractFactory;
   let MAHA: ContractFactory;
   let ARTHX: ContractFactory;
+  let Oracle: ContractFactory;
   let ARTHPool: ContractFactory;
   let SimpleOracle: ContractFactory;
   let MockCollateral: ContractFactory;
@@ -43,6 +44,7 @@ describe('ARTHPool', () => {
   let arth: Contract;
   let maha: Contract;
   let arthx: Contract;
+  let oracle: Contract;
   let arthPool: Contract;
   let gmuOracle: Contract;
   let arthMahaOracle: Contract;
@@ -74,6 +76,7 @@ describe('ARTHPool', () => {
       }
     });
 
+    Oracle = await ethers.getContractFactory('Oracle');
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
@@ -122,6 +125,14 @@ describe('ARTHPool', () => {
       ETH.mul(90000)
     );
 
+    oracle = await Oracle.deploy(
+      dai.address,
+      owner.address, // Temp address for weth in mock oracles.
+      daiETHUniswapOracle.address,
+      '0x0000000000000000000000000000000000000000',
+      chainlinkETHGMUOracle.address
+    );
+
     recollaterizationCurve = await RecollateralizationCurve.deploy();
   });
 
@@ -132,7 +143,7 @@ describe('ARTHPool', () => {
     await arthController.addPool(arthPool.address);
     await arthController.setGlobalCollateralRatio(0);
     await arthx.setArthController(arthController.address);
-    await arthPool.setCollatGMUOracle(daiETHUniswapOracle.address);
+    await arthPool.setCollatGMUOracle(oracle.address);
 
     await arthController.setARTHETHOracle(arthETHUniswapOracle.address, owner.address);
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
