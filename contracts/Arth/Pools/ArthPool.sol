@@ -7,6 +7,7 @@ import {IARTH} from '../IARTH.sol';
 import {IARTHPool} from './IARTHPool.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {IARTHX} from '../../ARTHX/IARTHX.sol';
+import {IOracle} from '../../Oracle/IOracle.sol';
 import {ICurve} from '../../Curves/ICurve.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
@@ -36,8 +37,12 @@ contract ArthPool is AccessControl, IARTHPool {
     IERC20Burnable private _MAHA;
     ISimpleOracle private _ARTHMAHAOracle;
     IARTHController private _arthController;
+    IOracle private _collateralGMUOracle;
     ICurve private _recollateralizeDiscountCruve;
     IUniswapPairOracle private _collateralETHOracle;
+
+    /// @dev Necessary for fetching prices.
+    bool public override isWETHPool = false;
 
     bool public mintPaused = false;
     bool public redeemPaused = false;
@@ -59,7 +64,7 @@ contract ArthPool is AccessControl, IARTHPool {
     uint256 public unclaimedPoolARTHX;
     uint256 public unclaimedPoolCollateral;
 
-    address public override collateralETHOracleAddress;
+    address public override collateralGMUOracleAddress;
 
     mapping(address => uint256) public lastRedeemed;
     mapping(address => uint256) public borrowedCollateral;
@@ -152,7 +157,9 @@ contract ArthPool is AccessControl, IARTHPool {
         address __ARTHMAHAOracle,
         address __arthController,
         uint256 _poolCeiling
-    ) {
+    )
+    // bool isWETHPool_  // Commented because need to add in migrations as well.
+    {
         _MAHA = IERC20Burnable(__MAHA);
         _ARTH = IARTH(__arthContractAddress);
         _COLLATERAL = IERC20(__collateralAddress);
@@ -168,6 +175,8 @@ contract ArthPool is AccessControl, IARTHPool {
 
         poolCeiling = _poolCeiling;
         _missingDeciamls = uint256(18).sub(_COLLATERAL.decimals());
+
+        // isWETHPool = isWETHPool_;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
@@ -221,13 +230,13 @@ contract ArthPool is AccessControl, IARTHPool {
         stabilityFee = percent;
     }
 
-    function setCollatETHOracle(
-        address _collateralWETHOracleAddress,
-        address __wethAddress
-    ) external override onlyByOwnerOrGovernance {
-        collateralETHOracleAddress = _collateralWETHOracleAddress;
-        _collateralETHOracle = IUniswapPairOracle(_collateralWETHOracleAddress);
-        _wethAddress = __wethAddress;
+    function setCollatGMUOracle(address _collateralGMUOracleAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        collateralGMUOracleAddress = _collateralGMUOracleAddress;
+        _collateralGMUOracle = IOracle(_collateralGMUOracleAddress);
     }
 
     function toggleMinting() external override {
@@ -745,39 +754,15 @@ contract ArthPool is AccessControl, IARTHPool {
         return _arthController.getGlobalCollateralRatio();
     }
 
-    function getCollateralGMUBalance()
-        external
-        view
-        override
-        returns (uint256)
-    {
-        if (collateralPricePaused) {
-            return
-                (
-                    _COLLATERAL.balanceOf(address(this)).sub(
-                        unclaimedPoolCollateral
-                    )
-                )
-                    .mul(10**_missingDeciamls)
-                    .mul(pausedPrice)
-                    .div(_PRICE_PRECISION);
-        }
+    function getCollateralGMUBalance() public view override returns (uint256) {
+        uint256 collateralPrice = getCollateralPrice();
 
-        uint256 ethGMUPrice = _arthController.getETHGMUPrice();
-        uint256 ethCollateralPrice =
-            _collateralETHOracle.consult(
-                _wethAddress,
-                _PRICE_PRECISION * (10**_missingDeciamls)
-            );
-
-        uint256 collateralGMUPrice =
-            ethGMUPrice.mul(_PRICE_PRECISION).div(ethCollateralPrice);
-
-        return
+        return (
             (_COLLATERAL.balanceOf(address(this)).sub(unclaimedPoolCollateral))
                 .mul(10**_missingDeciamls)
-                .mul(collateralGMUPrice)
-                .div(_PRICE_PRECISION);
+                .mul(collateralPrice)
+                .div(_PRICE_PRECISION)
+        );
     }
 
     // Returns the value of excess collateral held in this Arth pool, compared to what is
@@ -843,18 +828,9 @@ contract ArthPool is AccessControl, IARTHPool {
     }
 
     function getCollateralPrice() public view override returns (uint256) {
-        return 1000000;
-        // if (collateralPricePaused) return pausedPrice;
-
-        // uint256 ethGMUPrice = _arthController.getETHGMUPrice();
-
-        // return
-        //     ethGMUPrice.mul(_PRICE_PRECISION).div(
-        //         _collateralETHOracle.consult(
-        //             _wethAddress,
-        //             _PRICE_PRECISION * (10**_missingDeciamls)
-        //         )
-        //     );
+        if (collateralPricePaused) return pausedPrice;
+        if (isWETHPool) _arthController.getETHGMUPrice();
+        return _collateralGMUOracle.getPrice();
     }
 
     function estimateStabilityFeeInMAHA(uint256 amount)

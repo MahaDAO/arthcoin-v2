@@ -17,8 +17,6 @@ contract ARTHXTaxController is Ownable, IARTHXTaxController {
 
     IARTHX public immutable arthx;
 
-    bool public override considerTax = true;
-
     uint256 public override taxToBurnPercent = 1; // In %.
     uint256 public override taxToLiquidityPercent = 2; // In %.
     uint256 public override taxToHoldersPercent = 2; // In %.
@@ -38,12 +36,10 @@ contract ARTHXTaxController is Ownable, IARTHXTaxController {
 
     constructor(
         IARTHX arthx_,
-        bool considerTax_,
         address holderBeneficiary_,
         address liquidityBeneficiary_
     ) {
         arthx = arthx_;
-        considerTax = considerTax_;
         holderBeneficiary = holderBeneficiary_;
         liquidityBeneficiary = liquidityBeneficiary_;
     }
@@ -90,43 +86,34 @@ contract ARTHXTaxController is Ownable, IARTHXTaxController {
         liquidityBeneficiary = beneficiary;
     }
 
-    function toggleTax() external override onlyOwner {
-        considerTax = !considerTax;
-    }
-
-    function chargeTax(address account, uint256 amount)
+    function chargeTax()
         external
         override
         onlyARTHX
-        returns (uint256)
     {
-        if (!considerTax) return amount; // Don't charge any tax and transfer 100% of intended amount to the receiver.
+        uint256 amount = arthx.balanceOf(address(this));
 
         uint256 amountToBurn = amount.mul(taxToBurnPercent).div(100);
         if (amountToBurn > 0) {
-            arthx.poolBurnFrom(account, amountToBurn);
-            emit TaxCharged(account, address(0), amountToBurn);
+            arthx.approve(address(this), amountToBurn); // Need to approve to self also for a burnFrom.
+            arthx.poolBurnFrom(address(this), amountToBurn);
+            emit TaxCharged(address(this), address(0), amountToBurn);
         }
 
         uint256 amountToLiquidity = amount.mul(taxToLiquidityPercent).div(100);
         if (amountToLiquidity > 0) {
             arthx.taxTransfer(
-                account,
+                address(this),
                 liquidityBeneficiary,
                 amountToLiquidity
             );
-            emit TaxCharged(account, liquidityBeneficiary, amountToLiquidity);
+            emit TaxCharged(address(this), liquidityBeneficiary, amountToLiquidity);
         }
 
         uint256 amountToHolders = amount.mul(taxToHoldersPercent).div(100);
         if (amountToHolders > 0) {
-            arthx.taxTransfer(account, holderBeneficiary, amountToHolders);
-            emit TaxCharged(account, holderBeneficiary, amountToHolders);
+            arthx.taxTransfer(address(this), holderBeneficiary, amountToHolders);
+            emit TaxCharged(address(this), holderBeneficiary, amountToHolders);
         }
-
-        return
-            amount.sub(amountToBurn).sub(amountToLiquidity).sub(
-                amountToHolders
-            );
     }
 }

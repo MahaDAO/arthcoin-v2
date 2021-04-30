@@ -5,5 +5,33 @@ pragma solidity ^0.8.0;
 import './MockCollateral.sol';
 
 contract MockWETH is MockCollateral {
-    constructor() MockCollateral(msg.sender, 100000e18, 'WETH', 18) {}
+    constructor(
+        address _creatorAddress,
+        uint256 _genesisSupply,
+        string memory _symbol,
+        uint8 _decimals
+    ) MockCollateral(_creatorAddress, _genesisSupply, _symbol, _decimals) {}
+
+    event Deposit(address indexed dst, uint256 wad);
+    event Withdrawal(address indexed src, uint256 wad);
+
+    receive() external payable {
+        deposit();
+    }
+
+    function deposit() public payable {
+        _mint(msg.sender, msg.value);
+        emit Deposit(msg.sender, msg.value);
+    }
+
+    function withdraw(uint256 wad) public {
+        require(balanceOf(msg.sender) >= wad);
+        _burn(msg.sender, wad);
+        (
+            bool success, /* bytes memory data */
+
+        ) = msg.sender.call{value: wad}('');
+        require(success, 'MockWETH: not withdrawn');
+        emit Withdrawal(msg.sender, wad);
+    }
 }

@@ -7,8 +7,6 @@ pragma solidity ^0.8.0;
  * @author MahaDAO.
  */
 interface IARTHXTaxController {
-    function considerTax() external view returns (bool);
-
     function taxToBurnPercent() external view returns (uint256);
 
     function taxToLiquidityPercent() external view returns (uint256);
@@ -29,9 +27,6 @@ interface IARTHXTaxController {
 
     function setLiquidityBeneficiary(address beneficiary) external;
 
-    function toggleTax() external;
-
-    function chargeTax(address account, uint256 amount)
-        external
-        returns (uint256);
+    function chargeTax()
+    external;
 }
