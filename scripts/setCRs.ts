@@ -14,7 +14,7 @@ async function main() {
 
   // await instance.setRedeemCollateralRatio(80 * 10000);
   // await instance.setMintCollateralRatio(90 * 10000);
-  await instance.setGlobalCollateralRatio(100 * 10000);
+  await instance.setGlobalCollateralRatio(90 * 10000);
   // await instance.toggleUseGlobalCRForRecollateralize(false);
   await instance.toggleUseGlobalCRForRedeem(true);
   // await instance.toggleUseGlobalCRForMint(false);

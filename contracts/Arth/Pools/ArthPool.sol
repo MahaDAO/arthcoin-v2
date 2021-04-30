@@ -762,6 +762,7 @@ contract ArthPool is AccessControl, IARTHPool {
                 .mul(10**_missingDeciamls)
                 .mul(collateralPrice)
                 .div(_PRICE_PRECISION)
+                .div(10**_missingDeciamls)
         );
     }
 
