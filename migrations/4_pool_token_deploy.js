@@ -17,4 +17,6 @@ module.exports = async function (deployer, network) {
     ],
     timelockInstance.address
   );
+
+  await arthx.setTaxDestination(PoolToken.address)
 };
