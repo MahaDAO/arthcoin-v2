@@ -20,6 +20,7 @@ module.exports = async function (deployer, network, accounts) {
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts);
   const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts);
+  const col_instance_MAHA = await helpers.getMahaToken(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nDeploying SwapToPrice'));
   await deployer.deploy(SwapToPrice, uniswapFactoryInstance.address, routerInstance.address);
@@ -27,17 +28,31 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nSetting uniswap pairs...'));
   console.log(chalk.yellow(' - Setting Pair including ARTH...'));
   await Promise.all([
+    // ARTH/WETH
     uniswapFactoryInstance.createPair(arthInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS }),
+    // ARTH/USDC
     uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDC.address, { from: DEPLOYER_ADDRESS }),
+    // ARTH/USDT
     uniswapFactoryInstance.createPair(arthInstance.address, col_instance_USDT.address, { from: DEPLOYER_ADDRESS }),
-    uniswapFactoryInstance.createPair(arthInstance.address, arthxInstance.address, { from: DEPLOYER_ADDRESS })
+    // ARTH/ARTHX
+    uniswapFactoryInstance.createPair(arthInstance.address, arthxInstance.address, { from: DEPLOYER_ADDRESS }),
+    // ARTH/MAHA
+    uniswapFactoryInstance.createPair(arthInstance.address, col_instance_MAHA.address, { from: DEPLOYER_ADDRESS })
   ]);
 
   console.log(chalk.yellow(' - Setting Pair including ARTHX...'));
   await Promise.all([
+    // ARTHX/WETH
     uniswapFactoryInstance.createPair(arthxInstance.address, wethInstance.address, { from: DEPLOYER_ADDRESS }),
+    // ARTHX/USDC
     uniswapFactoryInstance.createPair(arthxInstance.address, col_instance_USDC.address, { from: DEPLOYER_ADDRESS }),
+    // ARTHX/USDT
     uniswapFactoryInstance.createPair(arthxInstance.address, col_instance_USDT.address, { from: DEPLOYER_ADDRESS })
+  ]);
+
+  await Promise.all([
+    // MAHA/WETH
+    uniswapFactoryInstance.createPair(col_instance_MAHA.address, wethInstance.address, { from: DEPLOYER_ADDRESS })
   ]);
 
   if (!helpers.isMainnet(network)) {
@@ -51,7 +66,8 @@ module.exports = async function (deployer, network, accounts) {
     col_instance_USDC.approve(routerInstance.address, new BigNumber(2000000e6), { from: DEPLOYER_ADDRESS }),
     col_instance_USDT.approve(routerInstance.address, new BigNumber(2000000e6), { from: DEPLOYER_ADDRESS }),
     arthInstance.approve(routerInstance.address, new BigNumber(1000000e18), { from: DEPLOYER_ADDRESS }),
-    arthxInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: DEPLOYER_ADDRESS })
+    arthxInstance.approve(routerInstance.address, new BigNumber(5000000e18), { from: DEPLOYER_ADDRESS }),
+    col_instance_MAHA.approve(routerInstance.address, new BigNumber(5000000000e18), { from: DEPLOYER_ADDRESS })
   ]);
 
   console.log(chalk.yellow('\nAdding liquidity to pairs...'));
@@ -132,6 +148,30 @@ module.exports = async function (deployer, network, accounts) {
     routerInstance.addLiquidity(
       arthxInstance.address,
       col_instance_USDT.address,
+      new BigNumber(133333e15),
+      new BigNumber(100e6),
+      new BigNumber(133333e15),
+      new BigNumber(100e6),
+      DEPLOYER_ADDRESS,
+      new BigNumber(2105300114),
+      { from: DEPLOYER_ADDRESS }
+    ),
+    // ARTH/MAHA
+    routerInstance.addLiquidity(
+      arthInstance.address,
+      col_instance_MAHA.address,
+      new BigNumber(133333e15),
+      new BigNumber(100e6),
+      new BigNumber(133333e15),
+      new BigNumber(100e6),
+      DEPLOYER_ADDRESS,
+      new BigNumber(2105300114),
+      { from: DEPLOYER_ADDRESS }
+    ),
+    // MAHA/WETH
+    routerInstance.addLiquidity(
+      col_instance_MAHA.address,
+      wethInstance.address,
       new BigNumber(133333e15),
       new BigNumber(100e6),
       new BigNumber(133333e15),
