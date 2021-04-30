@@ -12,6 +12,8 @@ interface IARTHController {
 
     function removePool(address pool_address) external;
 
+    function getARTHSupply() external view returns (uint256);
+
     function getARTHInfo()
         external
         view
@@ -82,9 +84,9 @@ interface IARTHController {
 
     function setRecollateralizeCollateralRatio(uint256 val) external;
 
-    function getCRForMint() external view returns(uint256);
+    function getCRForMint() external view returns (uint256);
 
-    function getCRForRedeem() external view returns(uint256);
+    function getCRForRedeem() external view returns (uint256);
 
-    function getCRForRecollateralize() external view returns(uint256);
+    function getCRForRecollateralize() external view returns (uint256);
 }

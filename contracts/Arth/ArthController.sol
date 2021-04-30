@@ -458,6 +458,10 @@ contract ArthController is AccessControl, IARTHController {
         return mintCollateralRatio;
     }
 
+    function getARTHSupply() external view override returns (uint256) {
+        return ARTH.totalSupply();
+    }
+
     function getCRForRedeem() external view override returns (uint256) {
         if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
         return redeemCollateralRatio;

@@ -12,12 +12,20 @@ async function main() {
     deployements.ArthController.address
   );
 
+  const pool = await ethers.getContractAt(
+    'Pool_USDT',
+    deployements.Pool_USDT.address
+  );
+
+
   // await instance.setRedeemCollateralRatio(80 * 10000);
   // await instance.setMintCollateralRatio(90 * 10000);
   await instance.setGlobalCollateralRatio(90 * 10000);
   // await instance.toggleUseGlobalCRForRecollateralize(false);
   await instance.toggleUseGlobalCRForRedeem(true);
   // await instance.toggleUseGlobalCRForMint(false);
+
+  console.log(await pool.getAvailableExcessCollateralDV())
 }
 
 main()

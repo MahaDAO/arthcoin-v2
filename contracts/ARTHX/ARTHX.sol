@@ -27,7 +27,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     IARTHController private _arthController;
     address public taxDestination;
 
-    uint256 public taxPercent = 5; // In %.
+    uint256 public taxPercent = 0; // In %.
 
     string public name;
     string public symbol;

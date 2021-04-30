@@ -668,7 +668,7 @@ contract ArthPool is AccessControl, IARTHPool {
 
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
         uint256 arthxPrice = _arthController.getARTHXPrice();
-        uint256 arthTotalSupply = _ARTH.totalSupply();
+        uint256 arthTotalSupply = _arthController.getARTHSupply();
         uint256 collateralRatioForRecollateralize =
             _arthController.getCRForRecollateralize();
         uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
@@ -774,7 +774,7 @@ contract ArthPool is AccessControl, IARTHPool {
         override
         returns (uint256)
     {
-        uint256 totalSupply = _ARTH.totalSupply();
+        uint256 totalSupply = _arthController.getARTHSupply();
         uint256 globalCollateralRatio = getGlobalCR();
         uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
@@ -803,8 +803,8 @@ contract ArthPool is AccessControl, IARTHPool {
 
     function getTargetCollateralValue() public view returns (uint256) {
         return
-            _ARTH
-                .totalSupply()
+            _arthController
+                .getARTHSupply()
                 .mul(_arthController.getGlobalCollateralRatio())
                 .div(1e6);
     }
