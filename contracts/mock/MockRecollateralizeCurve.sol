@@ -9,7 +9,7 @@ contract MockRecollateralizeCurve {
         y = val;
     }
 
-    function getY(uint256 percent) public view returns (uint256) {
-       return y;
+    function getY(uint256 _percent) public view returns (uint256) {
+        return y;
     }
 }

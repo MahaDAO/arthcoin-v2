@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../StakingRewards.sol';
+import '../BoostedStaking.sol';
 
-contract Stake_ARTH_USDC is StakingRewards {
+contract StakeARTHX is BoostedStaking {
     constructor(
         address _owner,
         address _rewardsDistribution,
@@ -15,7 +15,7 @@ contract Stake_ARTH_USDC is StakingRewards {
         address _timelockAddress,
         uint256 _poolWeight
     )
-        StakingRewards(
+        BoostedStaking(
             _owner,
             _rewardsDistribution,
             _rewardsToken,

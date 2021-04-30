@@ -7,15 +7,15 @@ import {IARTHPool} from '../Arth/Pools/IARTHPool.sol';
 import {IARTHX} from '../ARTHX/IARTHX.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {ISimpleOracle} from '../Oracle/ISimpleOracle.sol';
-import {IStakingRewards} from '../Staking/IStakingRewards.sol';
+import {IBoostedStaking} from '../Staking/IBoostedStaking.sol';
 
 contract ArthPoolRouterWithPermit {
     IARTH private arth;
     IARTHX private arthx;
     IARTHPool private pool;
     IERC20 private collateral;
-    IStakingRewards private arthStakingPool;
-    IStakingRewards private arthxStakingPool;
+    IBoostedStaking private arthStakingPool;
+    IBoostedStaking private arthxStakingPool;
 
     /**
      * Constructor.
@@ -24,8 +24,8 @@ contract ArthPoolRouterWithPermit {
         IARTHPool _pool,
         IARTHX _arthx,
         IARTH _arth,
-        IStakingRewards _arthStakingPool,
-        IStakingRewards _arthxStakingPool
+        IBoostedStaking _arthStakingPool,
+        IBoostedStaking _arthxStakingPool
     ) {
         pool = _pool;
         arth = _arth;

@@ -26,10 +26,10 @@ module.exports = async (callback) => {
     { abi: 'ARTHShares', contract: 'ARTHShares' },
     { abi: 'ARTHStablecoin', contract: 'ARTHStablecoin' },
 
-    { abi: 'StakingRewards', contract: 'Stake_ARTH_WETH' },
-    { abi: 'StakingRewards', contract: 'Stake_ARTH_USDC' },
-    { abi: 'StakingRewards', contract: 'Stake_ARTH_ARTHX' },
-    { abi: 'StakingRewards', contract: 'Stake_ARTHX_WETH' },
+    { abi: 'BoostedStaking', contract: 'Stake_ARTH_WETH' },
+    { abi: 'BoostedStaking', contract: 'Stake_ARTH_USDC' },
+    { abi: 'BoostedStaking', contract: 'Stake_ARTH_ARTHX' },
+    { abi: 'BoostedStaking', contract: 'Stake_ARTHX_WETH' },
 
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_USDC' },
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_USDT' },
