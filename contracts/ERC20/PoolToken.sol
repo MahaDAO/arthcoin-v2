@@ -15,26 +15,15 @@ import {AccessControl} from '../access/AccessControl.sol';
 contract PoolToken is AccessControl, ERC20 {
     using SafeMath for uint256;
 
-    /**
-     * State variables.
-     */
-
     IERC20[] public poolTokens;
     bool public enableWithdrawals = false;
     bytes32 public constant GOVERNANCE_ROLE = keccak256('GOVERNANCE_ROLE');
 
-    /**
-     * Event.
-     */
     event ToggleWithdrawals(bool state);
     event TokenAdded(address indexed token);
     event Withdraw(address indexed who, uint256 amount);
     event TokenReplaced(address indexed token, uint256 index);
     event TokensRetrieved(address indexed token, address who, uint256 amount);
-
-    /**
-     * Modifier.
-     */
 
     modifier onlyAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()));
@@ -46,23 +35,15 @@ contract PoolToken is AccessControl, ERC20 {
         _;
     }
 
-    /**
-     * Constructor.
-     */
-    constructor(
-        string memory tokenName,
-        string memory tokenSymbol,
-        IERC20[] memory poolTokens_
-    ) ERC20(tokenName, tokenSymbol) {
+    constructor(IERC20[] memory poolTokens_, address owner)
+        ERC20('ARTH Rewards Token', 'ARTH-RT')
+    {
         poolTokens = poolTokens_;
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _setupRole(GOVERNANCE_ROLE, _msgSender());
+        _setupRole(DEFAULT_ADMIN_ROLE, owner);
+        _setupRole(GOVERNANCE_ROLE, owner);
+        _mint(msg.sender, 10000 * 1e18);
     }
-
-    /**
-     * External.
-     */
 
     function addPoolToken(IERC20 token) external onlyGovernance {
         poolTokens.push(token);

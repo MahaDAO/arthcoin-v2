@@ -6,20 +6,18 @@ const ARTHPoolRouter = artifacts.require("ArthPoolRouter");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 
-module.exports = async function (deployer, network, accounts) {
-  const DEPLOYER_ADDRESS = accounts[0];
-
-  const arthxInstance = await ARTHShares.deployed();
-  const arthInstance = await ARTHStablecoin.deployed();
-  const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
+module.exports = async function (deployer, network) {
+  const arthx = await ARTHShares.deployed();
+  const arth = await ARTHStablecoin.deployed();
+  const weth = await helpers.getWETH(network, deployer, artifacts);
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts);
 
   console.log('Deploying ARTHPoolRouter vesting...')
   await deployer.deploy(
     ARTHPoolRouter,
-    arthxInstance.address,
-    arthInstance.address,
-    wethInstance.address,
+    arthx.address,
+    arth.address,
+    weth.address,
     routerInstance.address
   )
 

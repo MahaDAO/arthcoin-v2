@@ -31,7 +31,7 @@ module.exports = async function (deployer, network, accounts) {
     uniswapFactory.createPair(arth.address, weth.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactory.createPair(arth.address, maha.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactory.createPair(arthx.address, weth.address, { from: DEPLOYER_ADDRESS }),
-  ]);
+  ]).catch(() => console.log('sdf'));
 
   console.log(chalk.yellow('\nApproving uniswap pairs....'));
   await Promise.all([
@@ -41,16 +41,18 @@ module.exports = async function (deployer, network, accounts) {
     arthx.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS })
   ]);
 
+  await weth.deposit({ value: new BigNumber(1e17) })
+
   console.log(chalk.yellow('\nAdding liquidity to pairs...'));
   await Promise.all([
     // ARTH / WETH
     uniswapRouter.addLiquidity(
       arth.address,
       weth.address,
-      new BigNumber(2200e18),
-      new BigNumber(1e18),
-      new BigNumber(2200e18),
-      new BigNumber(1e18),
+      new BigNumber(2200e16),
+      new BigNumber(1e16),
+      new BigNumber(2200e16),
+      new BigNumber(1e16),
       DEPLOYER_ADDRESS,
       new BigNumber(9999999999999),
       { from: DEPLOYER_ADDRESS }
@@ -59,10 +61,10 @@ module.exports = async function (deployer, network, accounts) {
     uniswapRouter.addLiquidity(
       arthx.address,
       weth.address,
-      new BigNumber(1100e18),
-      new BigNumber(1e18),
-      new BigNumber(1100e18),
-      new BigNumber(1e18),
+      new BigNumber(1100e16),
+      new BigNumber(1e16),
+      new BigNumber(1100e16),
+      new BigNumber(1e16),
       DEPLOYER_ADDRESS,
       new BigNumber(9999999999999),
       { from: DEPLOYER_ADDRESS }
