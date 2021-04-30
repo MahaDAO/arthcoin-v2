@@ -9,18 +9,6 @@ interface IARTHPool {
 
     function setStabilityFee(uint256 percent) external;
 
-    function setMintCollateralRatio(uint256 val) external;
-
-    function toggleUseGlobalCRForRedeem(bool flag) external;
-
-    function setRedeemCollateralRatio(uint256 val) external;
-
-    function setRecollateralizeCollateralRatio(uint256 val) external;
-
-    function toggleUseGlobalCRForRecollateralize(bool flag) external;
-
-    function toggleUseGlobalCRForMint(bool flag) external;
-
     function setBuyBackCollateralBuffer(uint256 percent) external;
 
     function setCollatETHOracle(
@@ -88,17 +76,13 @@ interface IARTHPool {
 
     function getGlobalCR() external view returns (uint256);
 
-    function getCRForMint() external view returns (uint256);
-
-    function getCRForRedeem() external view returns (uint256);
-
-    function getCRForRecollateralize() external view returns (uint256);
-
     function mintingFee() external returns (uint256);
 
     function redemptionFee() external returns (uint256);
 
     function buybackFee() external returns (uint256);
+
+    function getRecollateralizationDiscount() external view returns (uint256);
 
     function recollatFee() external returns (uint256);
 

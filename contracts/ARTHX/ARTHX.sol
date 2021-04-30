@@ -11,6 +11,7 @@ import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
+import {IARTHXTaxController} from "./IARTHXTaxController.sol";
 
 /**
  * @title  ARTHShares.
@@ -29,11 +30,14 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     /// @dev Controller for arth params.
     IARTH private _ARTH;
     IARTHController private _arthController;
+    IARTHXTaxController private _taxController;
+
+    uint256 public taxPercent = 5; // In %.
 
     string public name;
     string public symbol;
     uint8 public constant override decimals = 18;
-    uint256 public constant genesisSupply = 10000e18; // 10k is printed upon genesis.
+    uint256 public constant genesisSupply = 1e4 ether; // 10k is printed upon genesis.
 
     address public arthAddress;
     address public ownerAddress;
@@ -54,8 +58,16 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     modifier onlyPools() {
         require(
-            _arthController.arthPools(msg.sender) == true,
+            _ARTH.pools(msg.sender) == true,
             'Only arth pools can mint new ARTH'
+        );
+        _;
+    }
+
+     modifier onlyTaxController() {
+        require(
+            _msgSender() == address(_taxController),
+            "ARTHX: FORBIDDEN"
         );
         _;
     }
@@ -100,6 +112,22 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         onlyByOwnerOrGovernance
     {
         oracleAddress = newOracle;
+    }
+
+    function setTaxPercent(uint256 percent)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        taxPercent = percent;
+    }
+
+    function setTaxController(IARTHXTaxController controller)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        _taxController = controller;
     }
 
     function setArthController(address _controller)
@@ -157,5 +185,28 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     {
         super._burnFrom(account, amount);
         emit ARTHXBurned(account, address(this), amount);
+    }
+
+    function _transfer(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) internal virtual override notPaused onlyNonBlacklisted(sender) {
+        if (taxPercent > 0 && address(_taxController) != address(0)) {
+            uint256 taxAmount = amount.mul(taxPercent).div(100);
+            super._transfer(sender, address(_taxController), taxAmount);
+            _taxController.chargeTax(); // Should we call this here? Or have a call function in controller, which at once does this?
+            amount = amount.sub(taxAmount);
+        }
+
+        super._transfer(sender, recipient, amount);
+    }
+
+    function taxTransfer(
+        address spender,
+        address receiver,
+        uint256 amount
+    ) external override notPaused onlyTaxController {
+        super._transfer(spender, receiver, amount);
     }
 }

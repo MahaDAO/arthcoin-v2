@@ -11,4 +11,24 @@ contract MockWETH is MockCollateral {
         string memory _symbol,
         uint8 _decimals
     ) MockCollateral(_creatorAddress, _genesisSupply, _symbol, _decimals) {}
+
+    event  Deposit(address indexed dst, uint wad);
+    event  Withdrawal(address indexed src, uint wad);
+
+    receive() external payable {
+        deposit();
+    }
+
+    function deposit() public payable {
+        _mint(msg.sender, msg.value);
+        emit Deposit(msg.sender, msg.value);
+    }
+
+    function withdraw(uint wad) public {
+        require(balanceOf(msg.sender) >= wad);
+        _burn(msg.sender, wad);
+        (bool success, /* bytes memory data */) = msg.sender.call{value: wad}('');
+        require(success, 'MockWETH: not withdrawn');
+        emit Withdrawal(msg.sender, wad);
+    }
 }

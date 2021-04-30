@@ -69,4 +69,22 @@ interface IARTHController {
     function getGlobalCollateralValue() external view returns (uint256);
 
     function arthPools(address pool) external view returns (bool);
+
+    function toggleUseGlobalCRForMint(bool flag) external;
+
+    function toggleUseGlobalCRForRecollateralize(bool flag) external;
+
+    function setMintCollateralRatio(uint256 val) external;
+
+    function setRedeemCollateralRatio(uint256 val) external;
+
+    function toggleUseGlobalCRForRedeem(bool flag) external;
+
+    function setRecollateralizeCollateralRatio(uint256 val) external;
+
+    function getCRForMint() external view returns(uint256);
+
+    function getCRForRedeem() external view returns(uint256);
+
+    function getCRForRecollateralize() external view returns(uint256);
 }

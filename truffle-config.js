@@ -6,10 +6,10 @@ const HDWalletProvider = require("truffle-hdwallet-provider")
 
 const providerFactory = () => {
   return new HDWalletProvider(
-    [process.env.MNEMONIC_PHRASE],
+    process.env.METAMASK_WALLET_SECRET,
     process.env.NETWORK_ENDPOINT,
-  )
-}
+  );
+};
 
 
 module.exports = {
@@ -23,26 +23,27 @@ module.exports = {
       // provider: providerFactory(),
       network_id: 1,
       gas: 8000000,
-      gasPrice: 115000000000, // 115 gwei,
+      gasPrice: 115000000000,  // 115 gwei,
     },
     ropsten: {
-      // provider: providerFactory(),
+      provider: providerFactory(),
       network_id: 3,
-      gas: 8000000,      // Make sure this gas allocation isn't over 4M, which is the max
-      gasPrice: 30000000000, // 30 gwei,
+      // gas: 8000000,  // Make sure this gas allocation isn't over 4M, which is the max
+      // gasPrice: 30000000000,  // 30 gwei,
       skipDryRun: true
     },
     kovan: {
-      // provider: providerFactory(),
+      provider: providerFactory(),
       network_id: 42,
-      gas: 8000000,      // Make sure this gas allocation isn't over 4M, which is the max
-      gasPrice: 30000000000, // 30 gwei,
+      gas: 8000000,  // Make sure this gas allocation isn't over 4M, which is the max
+      gasPrice: 30000000000,  // 30 gwei,
       skipDryRun: true
     },
     rinkeby: {
-      // provider: providerFactory(),
+      provider: providerFactory(),
       network_id: 4,
-      gas: 8000000      //  Sure this gas allocation isn't over 4M, which is the max
+      // gas: 8000000,
+      skipDryRun: true  //  Sure this gas allocation isn't over 4M, which is the max
     }
   },
   compilers: {

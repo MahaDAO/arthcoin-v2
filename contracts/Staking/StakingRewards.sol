@@ -49,25 +49,24 @@ contract StakingRewards is
         uint256 multiplier; // 6 decimals of precision. 1x = 1000000
     }
 
-    IERC20 public rewardsToken;
-    IERC20 public stakingToken;
-    IARTH private _ARTH;
-    IARTHController private _arthController;
+    IERC20 public immutable rewardsToken;
+    IERC20 public immutable stakingToken;
+    IARTHController private _arthController; // Not immutable because can be reset by the setter.
 
     // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
-    uint256 public poolWeight;
+    uint256 public immutable poolWeight;
     // Max reward per second
     uint256 public rewardRate;
     uint256 public periodFinish;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored = 0;
     // uint256 public rewardsDuration = 86400 hours;
-    uint256 public rewardsDuration = 604800; // 7 * 86400  (7 days).
+    uint256 public rewardsDuration = 7 days;
 
-    uint256 public lockedStakeMinTime = 604800; // 7 * 86400  (7 days)
+    uint256 public lockedStakeMinTime = 7 days;
     string private lockedStakeMinTimeStr = '604800'; // 7 days on genesis
-    uint256 public lockedStakeMaxMultiplier = 3000000; // 6 decimals of precision. 1x = 1000000
-    uint256 public lockedStakeTimeGorMaxMultiplier = 3 * 365 * 86400; // 3 years
+    uint256 public lockedStakeMaxMultiplier = 3e6; // 6 decimals of precision. 1x = 1000000
+    uint256 public lockedStakeTimeGorMaxMultiplier = 3 * 365 days; // 3 years
 
     address public ownerAddress;
     address public timelockAddress; // Governance timelock address
@@ -81,7 +80,7 @@ contract StakingRewards is
     uint256 private constant _MULTIPLIER_BASE = 1e6;
     bytes32 private constant _POOL_ROLE = keccak256('_POOL_ROLE');
 
-    uint256 public crBoostMaxMultiplier = 3000000; // 6 decimals of precision. 1x = 1000000
+    uint256 public crBoostMaxMultiplier = 3e6; // 6 decimals of precision. 1x = 1000000
 
     mapping(address => bool) public greylist;
     mapping(address => uint256) public rewards;
@@ -152,14 +151,15 @@ contract StakingRewards is
         address _rewardsDistribution,
         address _rewardsToken,
         address _stakingToken,
-        address _arthAddress,
+        address _arthControllerAddress,
         address _timelockAddress,
         uint256 _poolWeight
     ) {
         ownerAddress = _owner;
-        _ARTH = IARTH(_arthAddress);
         rewardsToken = IERC20(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
+
+        _arthController = IARTHController(_arthControllerAddress);
 
         poolWeight = _poolWeight;
         lastUpdateTime = block.timestamp;
@@ -168,7 +168,7 @@ contract StakingRewards is
 
         isLockedStakes = false;
         rewardRate = 380517503805175038; // (uint256(12000000e18)).div(365 * 86400); // Base emission rate of 12M ARTHX over the first year
-        rewardRate = rewardRate.mul(poolWeight).div(1e6);
+        rewardRate = rewardRate.mul(_poolWeight).div(1e6);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(_POOL_ROLE, _msgSender());
@@ -184,6 +184,13 @@ contract StakingRewards is
         uint256 duration
     ) external override onlyPool {
         _stakeLocked(who, amount, duration);
+    }
+
+    function setArthController(address _controller)
+        external
+        onlyByOwnerOrGovernance
+    {
+        _arthController = IARTHController(_controller);
     }
 
     function withdraw(uint256 amount)
@@ -465,7 +472,7 @@ contract StakingRewards is
     }
 
     // Total locked liquidity tokens
-    function lockedBalanceOf(address account) public view returns (uint256) {
+    function lockedBalanceOf(address account) external view returns (uint256) {
         return _lockedBalances[account];
     }
 
@@ -490,7 +497,7 @@ contract StakingRewards is
         }
     }
 
-    function getReward() public override nonReentrant updateReward(msg.sender) {
+    function getReward() external override nonReentrant updateReward(msg.sender) {
         uint256 reward = rewards[msg.sender];
         if (reward > 0) {
             rewards[msg.sender] = 0;
