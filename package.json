@@ -20,7 +20,8 @@
     "migrate:dev": "rm -rf build/ && truffle migrate --network development --reset",
     "migrate:ropsten": "rm -rf build/ && truffle migrate --network ropsten --reset",
     "migrate:kovan": "rm -rf build/ && truffle migrate --network kovan --reset",
-    "generate-deployment": "truffle exec migrations/generate_deployment.js --network"
+    "migrate:rinkeby": "truffle migrate --network rinkeby",
+    "generate-deployment": "truffle exec migrations/generate_deployment.js --network rinkeby"
   },
   "devDependencies": {
     "@chainlink/contracts": "0.0.10",
