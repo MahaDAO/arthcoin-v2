@@ -1,23 +1,27 @@
 const chalk = require('chalk');
 require('dotenv').config();
 
-const StakingRewards_ARTH_WETH = artifacts.require("Staking/Variants/Stake_ARTH_WETH.sol");
-const StakingRewards_ARTH_USDC = artifacts.require("Staking/Variants/Stake_ARTH_USDC.sol");
-const StakingRewards_ARTH_ARTHX = artifacts.require("Staking/Variants/Stake_ARTH_ARTHX.sol");
-const StakingRewards_ARTHX_WETH = artifacts.require("Staking/Variants/Stake_ARTHX_WETH.sol");
-
+const StakeARTHMAHA = artifacts.require("Staking/Variants/StakeARTHMAHA.sol");
+const StakeARTH = artifacts.require("Staking/Variants/StakeARTH.sol");
+const StakeARTHWETH = artifacts.require("Staking/Variants/StakeARTHWETH.sol");
+const StakeARTHX = artifacts.require("Staking/Variants/StakeARTHX.sol");
+const StakeARTHXWETH = artifacts.require("Staking/Variants/StakeARTHXWETH.sol");
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-  stakingInstance_ARTH_WETH = await StakingRewards_ARTH_WETH.deployed();
-  stakingInstance_ARTH_USDC = await StakingRewards_ARTH_USDC.deployed();
-  stakingInstance_ARTH_ARTHX = await StakingRewards_ARTH_ARTHX.deployed();
-  stakingInstance_ARTHX_WETH = await StakingRewards_ARTHX_WETH.deployed();
+  stakeARTHMAHA = await StakeARTHMAHA.deployed();
+  stakeARTH = await StakeARTH.deployed();
+  stakeARTHWETH = await StakeARTHWETH.deployed();
+  stakeARTHX = await StakeARTHX.deployed();
+  stakeARTHXWETH = await StakeARTHXWETH.deployed();
 
   console.log(chalk.yellow.bold('\nInitializing the staking rewards...'));
   await Promise.all([
-    stakingInstance_ARTH_WETH.initializeDefault({ from: DEPLOYER_ADDRESS }),
-    stakingInstance_ARTH_USDC.initializeDefault({ from: DEPLOYER_ADDRESS }),
+    stakeARTHMAHA.initializeDefault({ from: DEPLOYER_ADDRESS }),
+    stakeARTH.initializeDefault({ from: DEPLOYER_ADDRESS }),
+    stakeARTHWETH.initializeDefault({ from: DEPLOYER_ADDRESS }),
+    stakeARTHX.initializeDefault({ from: DEPLOYER_ADDRESS }),
+    stakeARTHXWETH.initializeDefault({ from: DEPLOYER_ADDRESS }),
   ]);
 };

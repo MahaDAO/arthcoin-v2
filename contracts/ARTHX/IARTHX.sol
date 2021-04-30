@@ -5,14 +5,13 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from '../ERC20/IERC20.sol';
 import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
-import {IARTHXTaxController} from "./IARTHXTaxController.sol";
 
 /**
  * @title  ARTHShares.
  * @author MahaDAO.
  */
 interface IARTHX is IERC20, IAnyswapV4Token {
-     function setTaxPercent(uint256 percent) external;
+    function setTaxPercent(uint256 percent) external;
 
     function setOwner(address _ownerAddress) external;
 
@@ -28,11 +27,5 @@ interface IARTHX is IERC20, IAnyswapV4Token {
 
     function poolBurnFrom(address account, uint256 amount) external;
 
-    function setTaxController(IARTHXTaxController controller) external;
-
-    function taxTransfer(
-        address spender,
-        address receiver,
-        uint256 amount
-    ) external;
+    function setTaxDestination(address _taxDestination) external;
 }

@@ -11,7 +11,6 @@ import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
-import {IARTHXTaxController} from './IARTHXTaxController.sol';
 
 /**
  * @title  ARTHShares.
@@ -23,14 +22,10 @@ import {IARTHXTaxController} from './IARTHXTaxController.sol';
 contract ARTHShares is AnyswapV4Token, IARTHX {
     using SafeMath for uint256;
 
-    /**
-     * State variables.
-     */
-
     /// @dev Controller for arth params.
     IARTH private _ARTH;
     IARTHController private _arthController;
-    IARTHXTaxController private _taxController;
+    address public taxDestination;
 
     uint256 public taxPercent = 5; // In %.
 
@@ -52,20 +47,11 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
 
-    /**
-     * Modifier.
-     */
-
     modifier onlyPools() {
         require(
             _ARTH.pools(msg.sender) == true,
             'Only arth pools can mint new ARTH'
         );
-        _;
-    }
-
-    modifier onlyTaxController() {
-        require(_msgSender() == address(_taxController), 'ARTHX: FORBIDDEN');
         _;
     }
 
@@ -119,12 +105,12 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         taxPercent = percent;
     }
 
-    function setTaxController(IARTHXTaxController controller)
+    function setTaxDestination(address _taxDestination)
         external
         override
         onlyByOwnerOrGovernance
     {
-        _taxController = controller;
+        taxDestination = _taxDestination;
     }
 
     function setArthController(address _controller)
@@ -189,21 +175,12 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         address recipient,
         uint256 amount
     ) internal virtual override whenNotPaused onlyNonBlacklisted(sender) {
-        if (taxPercent > 0 && address(_taxController) != address(0)) {
+        if (taxPercent > 0 && taxDestination != address(0)) {
             uint256 taxAmount = amount.mul(taxPercent).div(100);
-            super._transfer(sender, address(_taxController), taxAmount);
-            _taxController.chargeTax(); // Should we call this here? Or have a call function in controller, which at once does this?
+            super._transfer(sender, taxDestination, taxAmount);
             amount = amount.sub(taxAmount);
         }
 
         super._transfer(sender, recipient, amount);
-    }
-
-    function taxTransfer(
-        address spender,
-        address receiver,
-        uint256 amount
-    ) external override whenNotPaused onlyTaxController {
-        super._transfer(spender, receiver, amount);
     }
 }
