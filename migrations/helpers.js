@@ -23,11 +23,11 @@ const getDAI = async (network, deployer, artifacts) => {
 
 
 const getWETH = async (network, deployer, artifacts) => {
-  const IERC20 = artifacts.require('IERC20');
-  const MockWETH = artifacts.require('MockWETH');
+  const IWETH = artifacts.require('IWETH');
+  const MockWETH = artifacts.require('WETH');
 
   const addr = knownContracts.WETH && knownContracts.WETH[network];
-  if (addr) return IERC20.at(addr);
+  if (addr) return IWETH.at(addr);
   if (MockWETH.isDeployed()) return MockWETH.deployed();
 
   console.log(chalk.yellow(`\nDeploying mock weth on ${network} network...`));

@@ -23,24 +23,14 @@ module.exports = {
       gas: 8000000,
       gasPrice: 115000000000,  // 115 gwei,
     },
-    ropsten: {
-      provider: providerFactory(),
-      network_id: 3,
-      // gas: 8000000,  // Make sure this gas allocation isn't over 4M, which is the max
-      // gasPrice: 30000000000,  // 30 gwei,
-      skipDryRun: true
-    },
-    kovan: {
-      provider: providerFactory(),
-      network_id: 42,
-      gas: 8000000,  // Make sure this gas allocation isn't over 4M, which is the max
-      gasPrice: 30000000000,  // 30 gwei,
-      skipDryRun: true
-    },
     rinkeby: {
-      provider: providerFactory(),
+      provider: function () {
+        return new HDWalletProvider(
+          [process.env.METAMASK_WALLET_SECRET],
+          'https://bitter-twilight-moon.quiknode.io/a7bc771b-a15c-49a6-9e23-a1106f86b2db/g9PahkWuM3pjJMRqNA39cUyZpov8PMSH5MbcKSJs4zrqyGwEsuUajCGSpWmFbvVU7HboSbF6lauR38Y0Zyr8NQ==/'
+        )
+      },
       network_id: 4,
-      // gas: 8000000,
       skipDryRun: true  //  Sure this gas allocation isn't over 4M, which is the max
     }
   },
