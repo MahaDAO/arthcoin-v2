@@ -11,7 +11,7 @@ import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
-import {IARTHXTaxController} from "./IARTHXTaxController.sol";
+import {IARTHXTaxController} from './IARTHXTaxController.sol';
 
 /**
  * @title  ARTHShares.
@@ -64,11 +64,8 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         _;
     }
 
-     modifier onlyTaxController() {
-        require(
-            _msgSender() == address(_taxController),
-            "ARTHX: FORBIDDEN"
-        );
+    modifier onlyTaxController() {
+        require(_msgSender() == address(_taxController), 'ARTHX: FORBIDDEN');
         _;
     }
 
@@ -191,7 +188,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         address sender,
         address recipient,
         uint256 amount
-    ) internal virtual override notPaused onlyNonBlacklisted(sender) {
+    ) internal virtual override whenNotPaused onlyNonBlacklisted(sender) {
         if (taxPercent > 0 && address(_taxController) != address(0)) {
             uint256 taxAmount = amount.mul(taxPercent).div(100);
             super._transfer(sender, address(_taxController), taxAmount);
@@ -206,7 +203,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         address spender,
         address receiver,
         uint256 amount
-    ) external override notPaused onlyTaxController {
+    ) external override whenNotPaused onlyTaxController {
         super._transfer(spender, receiver, amount);
     }
 }

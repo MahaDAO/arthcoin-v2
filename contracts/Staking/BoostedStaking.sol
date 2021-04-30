@@ -37,10 +37,6 @@ contract BoostedStaking is
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    /**
-     * State variables.
-     */
-
     struct LockedStake {
         bytes32 kekId;
         uint256 startTimestamp;
@@ -91,10 +87,6 @@ contract BoostedStaking is
     mapping(address => uint256) private _unlockedBalances;
     mapping(address => LockedStake[]) private _lockedStakes;
 
-    /**
-     * Events.
-     */
-
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
     event StakeLocked(address indexed user, uint256 amount, uint256 secs);
@@ -109,10 +101,6 @@ contract BoostedStaking is
     event LockedStakeTimeForMaxMultiplier(uint256 secs);
     event LockedStakeMinTime(uint256 secs);
     event MaxCRBoostMultiplier(uint256 multiplier);
-
-    /**
-     * Modifier.
-     */
 
     modifier onlyPool {
         require(hasRole(_POOL_ROLE, msg.sender), 'Staking: FORBIDDEN');
