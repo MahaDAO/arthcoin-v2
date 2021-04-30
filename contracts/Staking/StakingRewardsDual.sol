@@ -542,6 +542,14 @@ contract StakingRewardsDual is IStakingRewardsDual, ReentrancyGuard, Pausable {
         isUnlockedStaked = !isUnlockedStaked;
     }
 
+    function setARTHController(IARTHController controller)
+        external
+        onlyByOwnerOrGovernance
+    {
+        _arthController = controller;
+    }
+
+
     function setRewardRates(uint256 _newRate0, uint256 _newRate1)
         external
         onlyByOwnerOrGovernance

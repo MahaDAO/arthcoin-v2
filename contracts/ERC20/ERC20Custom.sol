@@ -35,7 +35,7 @@ import {Pausable} from '../Staking/Pausable.sol';
 abstract contract ERC20Custom is Pausable, IERC20 {
     using SafeMath for uint256;
 
-    uint256 private _totalSupply;
+    uint256 internal _totalSupply;
 
     mapping(address => bool) internal _blacklisted;
     mapping(address => uint256) internal _balances;
@@ -64,7 +64,7 @@ abstract contract ERC20Custom is Pausable, IERC20 {
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account) public view override returns (uint256) {
+    function balanceOf(address account) public virtual view override returns (uint256) {
         return _balances[account];
     }
 

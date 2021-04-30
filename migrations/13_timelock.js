@@ -15,14 +15,14 @@ module.exports = async function (deployer, network, accounts) {
   const timelockInstance = await Timelock.deployed()
   // const migrationHelperInstance = await MigrationHelper.deployed()
 
-  if (process.env.MIGRATION_MODE == 'ganache' || network == 'development') {
-    // Advance 2 days to catch things up.
-    await time.increase((2 * 86400) + 300 + 1)
-    await time.advanceBlock()
-  }
-  else {
-    console.log(chalk.red.bold('\nYou need to wait atleast 2 Days here.'))
-  }
+  // if (process.env.MIGRATION_MODE == 'ganache' || network == 'development') {
+  //   // Advance 2 days to catch things up.
+  //   await time.increase((2 * 86400) + 300 + 1)
+  //   await time.advanceBlock()
+  // }
+  // else {
+  //   console.log(chalk.red.bold('\nYou need to wait atleast 2 Days here.'))
+  // }
 
   console.log(chalk.yellow('\nSet the GOVERNANCE CONTRACT as the timelock admin [Phase 2].'))
 
