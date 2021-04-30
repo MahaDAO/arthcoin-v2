@@ -26,25 +26,21 @@ module.exports = async (callback) => {
     { abi: 'ARTHShares', contract: 'ARTHShares' },
     { abi: 'ARTHStablecoin', contract: 'ARTHStablecoin' },
 
-    { abi: 'BoostedStaking', contract: 'Stake_ARTH_WETH' },
-    { abi: 'BoostedStaking', contract: 'Stake_ARTH_USDC' },
-    { abi: 'BoostedStaking', contract: 'Stake_ARTH_ARTHX' },
-    { abi: 'BoostedStaking', contract: 'Stake_ARTHX_WETH' },
+    { abi: 'BoostedStaking', contract: 'StakeARTHMAHA' },
+    { abi: 'BoostedStaking', contract: 'StakeARTH' },
+    { abi: 'BoostedStaking', contract: 'StakeARTHWETH' },
+    { abi: 'BoostedStaking', contract: 'StakeARTHX' },
+    { abi: 'BoostedStaking', contract: 'StakeARTHXWETH' },
 
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_USDC' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_USDT' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_USDC_WETH' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_USDT_WETH' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_ARTHX' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTHX_WETH' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTHX_USDC' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTHX_USDT' },
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_WETH' },
+    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTHX_WETH' },
 
-
+    { abi: 'GMUOracle', contract: 'GMUOracle' },
+    { abi: 'SimpleOracle', contract: 'ARTHMAHAOracle' },
 
     { abi: 'ArthPool', contract: 'Pool_USDC' },
     { abi: 'ArthPool', contract: 'Pool_USDT' },
+    { abi: 'ArthPoolRouter', contract: 'ArthPoolRouter' },
   ];
 
   const deployments = {};
