@@ -523,7 +523,7 @@ contract BoostedStaking is
         // Pull the tokens from the staker
         TransferHelper.safeTransferFrom(
             address(stakingToken),
-            msg.sender,
+            who,
             address(this),
             amount
         );

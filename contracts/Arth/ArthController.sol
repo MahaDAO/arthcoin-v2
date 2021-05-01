@@ -142,7 +142,12 @@ contract ArthController is AccessControl, IARTHController {
      * Constructor.
      */
 
-    constructor(address _creatorAddress, address _timelockAddress) {
+    constructor(
+        IERC20 _arth,
+        address _creatorAddress,
+        address _timelockAddress
+    ) {
+        ARTH = _arth;
         creatorAddress = _creatorAddress;
         timelockAddress = _timelockAddress;
 
@@ -519,7 +524,6 @@ contract ArthController is AccessControl, IARTHController {
             uint256(_ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
                 uint256(10)**_ethGMUPricerDecimals
             );
-
         uint256 priceVsETH;
 
         if (choice == PriceChoice.ARTH) {

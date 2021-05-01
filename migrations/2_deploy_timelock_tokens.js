@@ -23,13 +23,14 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nDeploying tokens...'));
   await deployer.deploy(ARTHStablecoin);
-  const arthInstance = await ARTHStablecoin.deployed();
-  let arth_name = await arthInstance.name.call();
+  const arth = await ARTHStablecoin.deployed();
+  let arth_name = await arth.name.call();
   console.log(` - NOTE: ARTH name: ${arth_name}`);
 
   console.log(chalk.yellow(`\nDeploying ARTH controller...`));
   await deployer.deploy(
     ARTHController,
+    arth.address,
     DEPLOYER_ADDRESS,
     timelockInstance.address
   );

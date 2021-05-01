@@ -30,6 +30,8 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nLinking collateral pools to arth contract...'));
   await arth.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting ARTH address within ARTHX...'));
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });

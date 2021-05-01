@@ -7,7 +7,7 @@ import {ISimpleOracle} from './ISimpleOracle.sol';
 
 contract SimpleOracle is Ownable, ISimpleOracle {
     string public name;
-    uint256 public price = 1e18;
+    uint256 public price = 1e6;
 
     constructor(string memory _name, uint256 _price) {
         name = _name;
