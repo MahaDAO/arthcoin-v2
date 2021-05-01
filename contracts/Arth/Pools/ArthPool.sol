@@ -830,7 +830,7 @@ contract ArthPool is AccessControl, IARTHPool {
 
     function getCollateralPrice() public view override returns (uint256) {
         if (collateralPricePaused) return pausedPrice;
-        if (isWETHPool) _arthController.getETHGMUPrice();
+        if (isWETHPool) return _arthController.getETHGMUPrice();
         return _collateralGMUOracle.getPrice();
     }
 
