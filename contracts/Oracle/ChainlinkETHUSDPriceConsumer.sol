@@ -36,6 +36,7 @@ contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
 
     function getGmuPrice() public view override returns (uint256) {
         // Scale back gmuOracle to 8 deciamls precision(the same we expect from normal chainlink oracle).
+        // NOTE: assuming gmuOracle returns price in e6 format.
         return gmuOracle.getPrice().mul(100);
     }
 
