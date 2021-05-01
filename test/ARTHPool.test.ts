@@ -90,7 +90,7 @@ describe('ARTHPool', () => {
     maha = await MAHA.deploy();
     dai = await MockCollateral.deploy(owner.address, ETH.mul(10000), 'DAI', 18);
 
-    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH);
+    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH.div(1e12));
     daiETHUniswapOracle = await MockUniswapOracle.deploy();
     arthETHUniswapOracle = await MockUniswapOracle.deploy();
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
@@ -102,6 +102,8 @@ describe('ARTHPool', () => {
       gmuOracle.address
     );
 
+    await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));
+
     arthx = await ARTHX.deploy(
       'ARTHX',
       'ARTHX',
@@ -111,7 +113,7 @@ describe('ARTHPool', () => {
     );
 
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
-    arthController = await ARTHController.deploy(owner.address, owner.address);
+    arthController = await ARTHController.deploy(arth.address, owner.address, owner.address);
 
     arthPool = await ARTHPool.deploy(
       arth.address,

@@ -55,7 +55,7 @@ describe('ARTHController', () => {
 
   beforeEach(' - Deploy contracts', async () => {
     arth = await ARTH.deploy();
-    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH);
+    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH.div(1e12));
     arthETHUniswapOracle = await MockUniswapOracle.deploy();
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
@@ -81,6 +81,10 @@ describe('ARTHController', () => {
     await arthController.setARTHXETHOracle(
       arthxETHUniswapOracle.address,
       owner.address  // Dummy address for WETH.
+    );
+
+    await mockChainlinkAggregatorV3.setLatestPrice(
+      ETH.div(1e10) // Sets price to 1e8
     );
 
     await arthController.setGlobalCollateralRatio(0);
