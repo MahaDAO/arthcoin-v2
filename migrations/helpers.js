@@ -126,7 +126,7 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   const quote = await getWETH(network, deployer, artifacts);
   const ethGMUCustomChainlinkOracle = await getChainlinkETHUSDOracle(network, deployer, artifacts);
 
-  let usdcWETHAddr = knownContracts.UniswapUSDCWETHOracle[network];
+  let usdcWETHAddr = knownContracts.UniswapUSDCWETHOracle && knownContracts.UniswapUSDCWETHOracle[network];
   if (!usdcWETHAddr) {
     const Timelock = artifacts.require("Timelock");
     const timelock = await Timelock.deployed();
@@ -152,7 +152,7 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
     quote.address,
     usdcWETHAddr,
     usdcGMUCustomChainlinkOracleAddr,
-    ethGMUCustomChainlinkOracle
+    ethGMUCustomChainlinkOracle.address
   );
 
   return Oracle.deployed();
@@ -171,7 +171,7 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   const quote = await getWETH(network, deployer, artifacts);
   const ethGMUCustomChainlinkOracle = await getChainlinkETHUSDOracle(network, deployer, artifacts);
 
-  let usdtWETHAddr = knownContracts.UniswapUSDTWETHOracle[network];
+  let usdtWETHAddr = knownContracts.UniswapUSDTWETHOracle && knownContracts.UniswapUSDTWETHOracle[network];
   if (!usdtWETHAddr) {
     const Timelock = artifacts.require("Timelock");
     const timelock = await Timelock.deployed();
@@ -197,7 +197,7 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
     quote.address,
     usdtWETHAddr,
     usdtGMUCustomChainlinkOracleAddr,
-    ethGMUCustomChainlinkOracle
+    ethGMUCustomChainlinkOracle.address
   );
 
   return Oracle.deployed();
