@@ -58,4 +58,8 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nLinking ARTHX oracles...'));
   const oracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
   await arthController.setARTHXETHOracle(oracleARTHXWETH.address, weth.address, { from: DEPLOYER_ADDRESS });
+
+  console.log(chalk.yellowBright('\nDeploying collateral oracles'))
+  await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getUSDTOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
 };

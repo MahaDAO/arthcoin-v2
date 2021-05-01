@@ -77,11 +77,12 @@ module.exports = async function (deployer, network, accounts) {
   ]);
 
   console.log(chalk.yellow('\nGetting ARTH and ARTHX oracles...'));
-  const oracle_instance_USD_GMU = await helpers.getGMUOracle(network, deployer, artifacts);
+  const usdc_oracle_instance = await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  const usdt_oracle_instance = await helpers.getUSDTOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
 
   console.log(chalk.yellow('\nLinking Collateral oracles...'));
   await Promise.all([
-    pool_instance_USDC.setCollatGMUOracle(oracle_instance_USD_GMU.address, { from: DEPLOYER_ADDRESS }),
-    pool_instance_USDT.setCollatGMUOracle(oracle_instance_USD_GMU.address, { from: DEPLOYER_ADDRESS })
+    pool_instance_USDC.setCollatGMUOracle(usdc_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
+    pool_instance_USDT.setCollatGMUOracle(usdt_oracle_instance.address, { from: DEPLOYER_ADDRESS })
   ]);
 };

@@ -114,6 +114,96 @@ const getUniswapRouter = async (network, deployer, artifacts) => {
 };
 
 
+const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
+  const Oracle = artifacts.require('Oracle_USDC');
+  const USDC_WETH = artifacts.require('UniswapPairOracle_USDC_WETH');
+
+  const addr = knownContracts.OracleUSDC && knownContracts.OracleUSDC[network];
+  if (addr) return Oracle.at(addr);
+  if (Oracle.isDeployed()) return Oracle.deployed();
+
+  const base = await getUSDC(network, deployer, artifacts);
+  const quote = await getWETH(network, deployer, artifacts);
+  const ethGMUCustomChainlinkOracle = await getChainlinkETHUSDOracle(network, deployer, artifacts);
+
+  let usdcWETHAddr = knownContracts.UniswapUSDCWETHOracle[network];
+  if (!usdcWETHAddr) {
+    const Timelock = artifacts.require("Timelock");
+    const timelock = await Timelock.deployed();
+    const factory = await getUniswapFactory(network, deployer, artifacts);
+
+    await deployer.deploy(
+      USDC_WETH,
+      factory.address,
+      base.address,
+      quote.address,
+      ownerAddress,
+      timelock.address
+    )
+    usdcWETHAddr = (await USDC_WETH.deployed()).address
+  }
+
+  let usdcGMUCustomChainlinkOracleAddr = knownContracts.USDCGMUChainlinkOracle && knownContracts.USDCGMUChainlinkOracle[network];
+  if (!usdcGMUCustomChainlinkOracleAddr) usdcGMUCustomChainlinkOracleAddr = '0x0000000000000000000000000000000000000000';
+
+  await deployer.deploy(
+    Oracle,
+    base.address,
+    quote.address,
+    usdcWETHAddr,
+    usdcGMUCustomChainlinkOracleAddr,
+    ethGMUCustomChainlinkOracle
+  );
+
+  return Oracle.deployed();
+}
+
+
+const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
+  const Oracle = artifacts.require('Oracle_USDT');
+  const USDT_WETH = artifacts.require('UniswapPairOracle_USDT_WETH');
+
+  const addr = knownContracts.OracleUSDT && knownContracts.OracleUSDT[network];
+  if (addr) return Oracle.at(addr);
+  if (Oracle.isDeployed()) return Oracle.deployed();
+
+  const base = await getUSDT(network, deployer, artifacts);
+  const quote = await getWETH(network, deployer, artifacts);
+  const ethGMUCustomChainlinkOracle = await getChainlinkETHUSDOracle(network, deployer, artifacts);
+
+  let usdtWETHAddr = knownContracts.UniswapUSDTWETHOracle[network];
+  if (!usdtWETHAddr) {
+    const Timelock = artifacts.require("Timelock");
+    const timelock = await Timelock.deployed();
+    const factory = await getUniswapFactory(network, deployer, artifacts);
+
+    await deployer.deploy(
+      USDT_WETH,
+      factory.address,
+      base.address,
+      quote.address,
+      ownerAddress,
+      timelock.address
+    )
+    usdtWETHAddr = (await USDT_WETH.deployed()).address
+  }
+
+  let usdtGMUCustomChainlinkOracleAddr = knownContracts.USDTGMUChainlinkOracle && knownContracts.USDTGMUChainlinkOracle[network];
+  if (!usdtGMUCustomChainlinkOracle) usdtGMUCustomChainlinkOracleAddr = '0x0000000000000000000000000000000000000000';
+
+  await deployer.deploy(
+    Oracle,
+    base.address,
+    quote.address,
+    usdtWETHAddr,
+    usdtGMUCustomChainlinkOracleAddr,
+    ethGMUCustomChainlinkOracle
+  );
+
+  return Oracle.deployed();
+}
+
+
 const approveIfNot = async (token, spender, amount) => {
   console.log(` - Approving ${token.symbol ? (await token.symbol()) : token.address}`);
   await token.approve(spender, amount);
@@ -186,6 +276,8 @@ module.exports = {
   getPairAddress,
   getDAI,
   getWETH,
+  getUSDCOracle,
+  getUSDTOracle,
   getUSDC,
   getUSDT,
   getMahaToken,

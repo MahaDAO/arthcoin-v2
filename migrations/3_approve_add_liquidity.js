@@ -82,4 +82,49 @@ module.exports = async function (deployer, network, accounts) {
       { from: DEPLOYER_ADDRESS }
     )
   ]);
+
+  /* For testnet's to deploy uniswap oracle */
+  if (network != 'mainnet') {
+    const usdc = await helpers.getUSDC(network, deployer, artifacts);
+    const usdt = await helpers.getUSDT(network, deployer, artifacts);
+
+    await Promise.all([
+      uniswapFactory.createPair(usdc.address, weth.address, { from: DEPLOYER_ADDRESS }),
+      uniswapFactory.createPair(usdt.address, maha.address, { from: DEPLOYER_ADDRESS }),
+    ]).catch(() => console.log('sdf'));
+
+    console.log(chalk.yellow('\nApproving uniswap pairs....'));
+    await Promise.all([
+      weth.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
+      usdc.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
+      usdt.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
+    ]);
+
+    await Promise.all([
+      // USDC/WETH
+      uniswapRouter.addLiquidity(
+        usdc.address,
+        weth.address,
+        new BigNumber(2200e16),
+        new BigNumber(1e16),
+        new BigNumber(2200e16),
+        new BigNumber(1e16),
+        DEPLOYER_ADDRESS,
+        new BigNumber(9999999999999),
+        { from: DEPLOYER_ADDRESS }
+      ),
+      // USDT/WETH
+      uniswapRouter.addLiquidity(
+        usdt.address,
+        weth.address,
+        new BigNumber(2200e16),
+        new BigNumber(1e16),
+        new BigNumber(2200e16),
+        new BigNumber(1e16),
+        DEPLOYER_ADDRESS,
+        new BigNumber(9999999999999),
+        { from: DEPLOYER_ADDRESS }
+      ),
+    ]);
+  }
 };
