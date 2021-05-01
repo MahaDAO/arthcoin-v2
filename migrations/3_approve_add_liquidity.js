@@ -90,7 +90,7 @@ module.exports = async function (deployer, network, accounts) {
 
     await Promise.all([
       uniswapFactory.createPair(usdc.address, weth.address, { from: DEPLOYER_ADDRESS }),
-      uniswapFactory.createPair(usdt.address, maha.address, { from: DEPLOYER_ADDRESS }),
+      uniswapFactory.createPair(usdt.address, weth.address, { from: DEPLOYER_ADDRESS }),
     ]).catch(() => console.log('sdf'));
 
     console.log(chalk.yellow('\nApproving uniswap pairs....'));
