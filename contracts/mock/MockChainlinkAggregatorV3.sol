@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {AggregatorV3Interface} from '../Oracle/AggregatorV3Interface.sol';
 
 contract MockChainlinkAggregatorV3 is AggregatorV3Interface {
-    uint256 latestPrice = 1e8;
+    uint256 latestPrice = 2200 * 1e8;
 
     function getRoundData(uint80 _roundId)
         external

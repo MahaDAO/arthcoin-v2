@@ -6,7 +6,8 @@ import {IERC20} from './IERC20.sol';
 import {Address} from '../utils/Address.sol';
 import {Context} from '../utils/Context.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {Pausable} from '../Staking/Pausable.sol';
+import {Pausable} from '../security/Pausable.sol';
+import {Ownable} from '../access/Ownable.sol';
 
 /**
  * @dev Implementation of the {IERC20} interface.
@@ -32,7 +33,7 @@ import {Pausable} from '../Staking/Pausable.sol';
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-abstract contract ERC20Custom is Pausable, IERC20 {
+abstract contract ERC20Custom is Pausable, IERC20, Ownable {
     using SafeMath for uint256;
 
     uint256 internal _totalSupply;
@@ -64,7 +65,13 @@ abstract contract ERC20Custom is Pausable, IERC20 {
     /**
      * @dev See {IERC20-balanceOf}.
      */
-    function balanceOf(address account) public virtual view override returns (uint256) {
+    function balanceOf(address account)
+        public
+        view
+        virtual
+        override
+        returns (uint256)
+    {
         return _balances[account];
     }
 
@@ -239,7 +246,7 @@ abstract contract ERC20Custom is Pausable, IERC20 {
         address sender,
         address recipient,
         uint256 amount
-    ) internal virtual notPaused onlyNonBlacklisted(sender) {
+    ) internal virtual whenNotPaused onlyNonBlacklisted(sender) {
         require(sender != address(0), 'ERC20: transfer from the zero address');
         require(recipient != address(0), 'ERC20: transfer to the zero address');
 

@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {Math} from '../utils/math/Math.sol';
-import {Pausable} from './Pausable.sol';
+import {Pausable} from '../security/Pausable.sol';
 import {IARTH} from '../Arth/IARTH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {SafeERC20} from '../ERC20/SafeERC20.sol';
-import {IStakingRewards} from './IStakingRewards.sol';
+import {IBoostedStaking} from './IBoostedStaking.sol';
 import {StringHelpers} from '../utils/StringHelpers.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
 import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
@@ -18,28 +18,24 @@ import {AccessControl} from '../access/AccessControl.sol';
 import {RewardsDistributionRecipient} from './RewardsDistributionRecipient.sol';
 
 /**
- * @title  StakingRewards.
+ * @title  BoostedStaking.
  * @author MahaDAO.
  *
  * Original code written by:
  * - Travis Moore, Jason Huan, Same Kazemian, Sam Sun.
  *
  * Modified originally from Synthetixio
- * https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/StakingRewards.sol
+ * https://raw.githubusercontent.com/Synthetixio/synthetix/develop/contracts/BoostedStaking.sol
  */
-contract StakingRewards is
+contract BoostedStaking is
     AccessControl,
-    IStakingRewards,
+    IBoostedStaking,
     RewardsDistributionRecipient,
     ReentrancyGuard,
     Pausable
 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-
-    /**
-     * State variables.
-     */
 
     struct LockedStake {
         bytes32 kekId;
@@ -91,10 +87,6 @@ contract StakingRewards is
     mapping(address => uint256) private _unlockedBalances;
     mapping(address => LockedStake[]) private _lockedStakes;
 
-    /**
-     * Events.
-     */
-
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
     event StakeLocked(address indexed user, uint256 amount, uint256 secs);
@@ -109,10 +101,6 @@ contract StakingRewards is
     event LockedStakeTimeForMaxMultiplier(uint256 secs);
     event LockedStakeMinTime(uint256 secs);
     event MaxCRBoostMultiplier(uint256 multiplier);
-
-    /**
-     * Modifier.
-     */
 
     modifier onlyPool {
         require(hasRole(_POOL_ROLE, msg.sender), 'Staking: FORBIDDEN');
@@ -497,7 +485,12 @@ contract StakingRewards is
         }
     }
 
-    function getReward() external override nonReentrant updateReward(msg.sender) {
+    function getReward()
+        external
+        override
+        nonReentrant
+        updateReward(msg.sender)
+    {
         uint256 reward = rewards[msg.sender];
         if (reward > 0) {
             rewards[msg.sender] = 0;
@@ -521,7 +514,7 @@ contract StakingRewards is
     function _stake(address who, uint256 amount)
         internal
         nonReentrant
-        notPaused
+        whenNotPaused
         updateReward(who)
     {
         require(amount > 0, 'Cannot stake 0');
@@ -530,7 +523,7 @@ contract StakingRewards is
         // Pull the tokens from the staker
         TransferHelper.safeTransferFrom(
             address(stakingToken),
-            msg.sender,
+            who,
             address(this),
             amount
         );
@@ -550,7 +543,7 @@ contract StakingRewards is
         address who,
         uint256 amount,
         uint256 secs
-    ) internal nonReentrant notPaused updateReward(who) {
+    ) internal nonReentrant whenNotPaused updateReward(who) {
         require(amount > 0, 'Cannot stake 0');
         require(secs > 0, 'Cannot wait for a negative number');
         require(greylist[who] == false, 'address has been greylisted');

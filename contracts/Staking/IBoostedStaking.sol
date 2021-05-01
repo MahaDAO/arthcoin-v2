@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface IStakingRewards {
+interface IBoostedStaking {
     function stakeLockedFor(
         address who,
         uint256 amount,

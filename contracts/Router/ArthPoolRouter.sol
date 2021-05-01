@@ -8,7 +8,7 @@ import {IARTHX} from '../ARTHX/IARTHX.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {IWETH} from '../ERC20/IWETH.sol';
 import {ISimpleOracle} from '../Oracle/ISimpleOracle.sol';
-import {IStakingRewards} from '../Staking/IStakingRewards.sol';
+import {IBoostedStaking} from '../Staking/IBoostedStaking.sol';
 import {IUniswapV2Router02} from '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
 contract ArthPoolRouter {
@@ -35,7 +35,7 @@ contract ArthPoolRouter {
         uint256 amount,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IBoostedStaking stakingPool
     ) external {
         _mint1t1ARTHAndStake(
             pool,
@@ -52,7 +52,7 @@ contract ArthPoolRouter {
         uint256 arthxAmountD18,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IBoostedStaking stakingPool
     ) external {
         _mintAlgorithmicARTHAndStake(
             pool,
@@ -70,7 +70,7 @@ contract ArthPoolRouter {
         uint256 arthxAmount,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool,
+        IBoostedStaking stakingPool,
         bool swapWithUniswap,
         uint256 amountToSell
     ) external {
@@ -93,7 +93,7 @@ contract ArthPoolRouter {
         uint256 amount,
         uint256 arthxOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IBoostedStaking stakingPool
     ) external {
         _recollateralizeARTHAndStake(
             pool,
@@ -109,7 +109,7 @@ contract ArthPoolRouter {
         IARTHPool pool,
         uint256 arthxOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IBoostedStaking stakingPool
     ) external payable {
         weth.deposit{value: msg.value}();
         _recollateralizeARTHAndStake(
@@ -126,7 +126,7 @@ contract ArthPoolRouter {
         IARTHPool pool,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IBoostedStaking stakingPool
     ) external payable {
         weth.deposit{value: msg.value}();
         _mint1t1ARTHAndStake(
@@ -144,7 +144,7 @@ contract ArthPoolRouter {
         uint256 arthxAmount,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool,
+        IBoostedStaking stakingPool,
         bool swapWithUniswap,
         uint256 amountToSell
     ) external payable {
@@ -168,7 +168,7 @@ contract ArthPoolRouter {
         uint256 amount,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IBoostedStaking stakingPool
     ) internal {
         collateral.transferFrom(msg.sender, address(this), amount);
 
@@ -188,7 +188,7 @@ contract ArthPoolRouter {
         uint256 arthxAmountD18,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IBoostedStaking stakingPool
     ) internal {
         arthx.transferFrom(msg.sender, address(this), arthxAmountD18);
 
@@ -210,7 +210,7 @@ contract ArthPoolRouter {
         uint256 arthxAmount,
         uint256 arthOutMin,
         uint256 secs,
-        IStakingRewards stakingPool,
+        IBoostedStaking stakingPool,
         bool swapWithUniswap,
         uint256 amountToSell
     ) internal {
@@ -242,7 +242,7 @@ contract ArthPoolRouter {
         uint256 amount,
         uint256 arthxOutMin,
         uint256 secs,
-        IStakingRewards stakingPool
+        IBoostedStaking stakingPool
     ) internal {
         collateral.transferFrom(msg.sender, address(this), amount);
 
