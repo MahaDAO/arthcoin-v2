@@ -65,11 +65,11 @@ describe('Staking Reward', () => {
     maha = await MAHA.deploy();
     dai = await MockCollateral.deploy(owner.address, ETH.mul(10000), 'DAI', 18);
 
-    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH);
+    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH.div(1e12)); // Keep the price of gmuOracle as 1e6 for simplicity sake.
     daiETHUniswapOracle = await MockUniswapOracle.deploy();
     arthETHUniswapOracle = await MockUniswapOracle.deploy();
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
-    arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH);
+    arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH.div(1e12)); // Keep the price of gmuOracle as 1e6 for simplicity sake.
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
 
     chainlinkETHGMUOracle = await ChainlinkETHGMUOracle.deploy(
@@ -78,7 +78,7 @@ describe('Staking Reward', () => {
     );
 
     arthx = await ARTHX.deploy('ARTHX', 'ARTHX', arthxETHUniswapOracle.address, owner.address, owner.address);
-    arthController = await ARTHController.deploy(owner.address, owner.address);
+    arthController = await ARTHController.deploy(arth.address, owner.address, owner.address);
 
     stakingRewards = await StakingRewards.deploy(
       owner.address,
@@ -99,7 +99,9 @@ describe('Staking Reward', () => {
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
     await stakingRewards.setArthController(arthController.address);
     await maha.transfer(stakingRewards.address, ETH.mul(10000000000000));
-  })
+
+    await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
+  });
 
   describe('- Test Staking Rewards', async () => {
     it(' - Test Stake', async () => {
