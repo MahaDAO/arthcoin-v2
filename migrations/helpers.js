@@ -189,7 +189,7 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   }
 
   let usdtGMUCustomChainlinkOracleAddr = knownContracts.USDTGMUChainlinkOracle && knownContracts.USDTGMUChainlinkOracle[network];
-  if (!usdtGMUCustomChainlinkOracle) usdtGMUCustomChainlinkOracleAddr = '0x0000000000000000000000000000000000000000';
+  if (!usdtGMUCustomChainlinkOracleAddr) usdtGMUCustomChainlinkOracleAddr = '0x0000000000000000000000000000000000000000';
 
   await deployer.deploy(
     Oracle,

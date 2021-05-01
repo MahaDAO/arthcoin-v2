@@ -45,7 +45,7 @@ contract Oracle is Ownable, IOracle {
         ethGMUPriceFeedDecimals = ethGMUOracle.getDecimals();
         oraclePriceFeedDecimals = address(oracle) != address(0) ? oracle.getDecimals() : 0;
 
-        _TOKEN_MISSING_DECIMALS = uint256(18).sub(IERC20(base).decimals());
+        _TOKEN_MISSING_DECIMALS = uint256(18).sub(uint256(IERC20(base).decimals()));
     }
 
     function setOracle(IChainlinkOracle oracle_) public onlyOwner {
