@@ -24,6 +24,7 @@ describe('ARTHController', () => {
   let owner: SignerWithAddress;
   let timelock: SignerWithAddress;
   let attacker: SignerWithAddress;
+  let alternate: SignerWithAddress;
 
   let ARTH: ContractFactory;
   let MAHA: ContractFactory;
@@ -61,7 +62,7 @@ describe('ARTHController', () => {
   let mockChainlinkAggregatorV3: Contract;
 
   before(' - Setup accounts & deploy libraries', async () => {
-    [owner, timelock, attacker] = await ethers.getSigners();
+    [owner, timelock, attacker, alternate] = await ethers.getSigners();
 
     ARTHPoolLibrary = await ethers.getContractFactory('ArthPoolLibrary');
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
@@ -196,10 +197,10 @@ describe('ARTHController', () => {
       1000
     );
 
-    await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
-
     await daiARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
     await usdcARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
+
+    await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
   });
 
   describe('- Access restricted functions', async () => {
@@ -274,6 +275,211 @@ describe('ARTHController', () => {
       expect(await arthController.arthxAddress())
         .to
         .eq(owner.address);
+    });
+
+    it(' - Should not work if not (governance || owner || pool)', async () => {
+      await expect(arthController.connect(attacker).toggleUseGlobalCRForMint(true))
+        .to
+        .revertedWith('ARTHController: FORBIDDEN');
+    });
+
+    it(' - Should work if (governance || owner || pool)', async () => {
+      await arthController.addPool(alternate.address);  // Acts as mock pool to test access level funcs.
+
+      await expect(arthController.connect(owner).toggleUseGlobalCRForMint(false))
+        .to
+        .emit(arthController, 'ToggleGlobalCRForMint')
+        .withArgs(true, false);
+
+      expect(await arthController.useGlobalCRForMint())
+        .to
+        .eq(false);
+
+      await expect(arthController.connect(timelock).toggleUseGlobalCRForMint(true))
+        .to
+        .emit(arthController, 'ToggleGlobalCRForMint')
+        .withArgs(false, true);
+
+      expect(await arthController.useGlobalCRForMint())
+        .to
+        .eq(true);
+
+      await expect(arthController.connect(alternate).toggleUseGlobalCRForMint(true))
+        .to
+        .emit(arthController, 'ToggleGlobalCRForMint')
+        .withArgs(true, true);
+
+      expect(await arthController.useGlobalCRForMint())
+        .to
+        .eq(true);
+
+      await arthController.removePool(alternate.address);  // Revoked the mock access.
+      await expect(arthController.connect(alternate).toggleUseGlobalCRForMint(true))
+        .to
+        .revertedWith('ARTHController: FORBIDDEN');
+    });
+  });
+
+  describe('- Simpler Getters', async() => {
+    it(' - Should get global CR correctly', async() => {
+      expect(await arthController.getGlobalCollateralRatio())
+        .to
+        .eq(0);
+
+      await arthController.setGlobalCollateralRatio(1e3);
+      expect(await arthController.connect(owner).getGlobalCollateralRatio())
+        .to
+        .eq(1e3);
+
+      await arthController.setGlobalCollateralRatio(1e6);
+      expect(await arthController.connect(owner).getGlobalCollateralRatio())
+        .to
+        .eq(1e6);
+    });
+
+    it(' - Should get CR for mint correctly', async () => {
+      expect(await arthController.getCRForMint())
+        .to
+        .eq(0);
+
+      await arthController.setGlobalCollateralRatio(1e3);
+      expect(await arthController.connect(owner).getCRForMint())
+        .to
+        .eq(1e3);
+
+      await arthController.setGlobalCollateralRatio(1e6);
+      expect(await arthController.connect(owner).getCRForMint())
+        .to
+        .eq(1e6);
+
+      await arthController.connect(owner).toggleUseGlobalCRForMint(false);
+      expect(await arthController.getCRForMint())
+        .to
+        .eq(0);
+
+      await arthController.setMintCollateralRatio(1e3);
+      expect(await arthController.getCRForMint())
+        .to
+        .eq(1e3);
+
+      await arthController.setMintCollateralRatio(1e6);
+      expect(await arthController.getCRForMint())
+        .to
+        .eq(1e6);
+    });
+
+    it(' - Should work correctly', async() => {
+      expect(await arthController.getARTHSupply())
+        .to
+        .eq(await arth.totalSupply());
+
+      expect(await arthController.getRefreshCooldown())
+        .to
+        .eq(3600);
+    });
+
+    it(' - Should get CR for redeem correctly', async () => {
+      expect(await arthController.getCRForRedeem())
+        .to
+        .eq(0);
+
+      await arthController.setGlobalCollateralRatio(1e3);
+      expect(await arthController.connect(owner).getCRForRedeem())
+        .to
+        .eq(1e3);
+
+      await arthController.setGlobalCollateralRatio(1e6);
+      expect(await arthController.connect(owner).getCRForRedeem())
+        .to
+        .eq(1e6);
+
+      await arthController.connect(owner).toggleUseGlobalCRForRedeem(false);
+      expect(await arthController.getCRForRedeem())
+        .to
+        .eq(0);
+
+      await arthController.setRedeemCollateralRatio(1e3);
+      expect(await arthController.getCRForRedeem())
+        .to
+        .eq(1e3);
+
+      await arthController.setRedeemCollateralRatio(1e6);
+      expect(await arthController.getCRForRedeem())
+        .to
+        .eq(1e6);
+    });
+
+    it(' - Should get CR for recollateralize correctly', async () => {
+      expect(await arthController.getCRForRecollateralize())
+        .to
+        .eq(0);
+
+      await arthController.setGlobalCollateralRatio(1e3);
+      expect(await arthController.connect(owner).getCRForRecollateralize())
+        .to
+        .eq(1e3);
+
+      await arthController.setGlobalCollateralRatio(1e6);
+      expect(await arthController.connect(owner).getCRForRecollateralize())
+        .to
+        .eq(1e6);
+
+      await arthController.connect(owner).toggleUseGlobalCRForRecollateralize(false);
+      expect(await arthController.getCRForRecollateralize())
+        .to
+        .eq(0);
+
+      await arthController.setRecollateralizeCollateralRatio(1e3);
+      expect(await arthController.getCRForRecollateralize())
+        .to
+        .eq(1e3);
+
+      await arthController.setRecollateralizeCollateralRatio(1e6);
+      expect(await arthController.getCRForRecollateralize())
+        .to
+        .eq(1e6);
+    });
+
+    it(' - Should work correctly for ETH/GMU Price', async () => {
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(2200e6);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e6);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e9);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e7);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e7);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e5);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e4);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e2);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(5e7);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(5e5);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(5e9);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(5e7);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(35e4);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(35e2);
     });
   });
 
