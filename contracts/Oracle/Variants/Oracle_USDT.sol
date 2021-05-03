@@ -11,5 +11,5 @@ contract Oracle_USDT is Oracle {
         IUniswapPairOracle pairOracle_,
         IChainlinkOracle oracle_,
         IChainlinkOracle ethGMUOracle_
-    ) Oracle(base, quote, pairOracle_, oracle_, ethGMUOracle_) {}
+    ) Oracle(base, quote, pairOracle_, oracle_, ethGMUOracle_, 6) {}
 }

@@ -105,10 +105,10 @@ module.exports = async function (deployer, network, accounts) {
       uniswapRouter.addLiquidity(
         usdc.address,
         weth.address,
-        new BigNumber(2200e16),
-        new BigNumber(1e16),
-        new BigNumber(2200e16),
-        new BigNumber(1e16),
+        new BigNumber(2200e4),
+        new BigNumber(1e4),
+        new BigNumber(2200e4),
+        new BigNumber(1e4),
         DEPLOYER_ADDRESS,
         new BigNumber(9999999999999),
         { from: DEPLOYER_ADDRESS }
@@ -117,10 +117,10 @@ module.exports = async function (deployer, network, accounts) {
       uniswapRouter.addLiquidity(
         usdt.address,
         weth.address,
-        new BigNumber(2200e16),
-        new BigNumber(1e16),
-        new BigNumber(2200e16),
-        new BigNumber(1e16),
+        new BigNumber(2200e4),
+        new BigNumber(1e4),
+        new BigNumber(2200e4),
+        new BigNumber(1e4),
         DEPLOYER_ADDRESS,
         new BigNumber(9999999999999),
         { from: DEPLOYER_ADDRESS }
