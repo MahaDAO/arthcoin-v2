@@ -90,6 +90,10 @@ describe('ARTHController', () => {
     await arthController.setGlobalCollateralRatio(0);
   });
 
+  describe('- Access restricted functions', async () => {
+    it(' - ')
+  })
+
   describe('- Refresh collateral', async () => {
     it(' - Should not work if CR paused', async () => {
       await arthController.toggleCollateralRatio();
@@ -141,9 +145,7 @@ describe('ARTHController', () => {
       // Making sure that ARTH price > (target + band)
       expect(await arthController.getARTHPrice())
         .to
-        .gt(
-          1e6 + 2500
-        );
+        .gt(1e6 + 2500);
 
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())
@@ -164,9 +166,8 @@ describe('ARTHController', () => {
       // Making sure that ARTH price > (target + band).
       expect(await arthController.getARTHPrice())
         .to
-        .gt(
-          1e6 + 2500
-        );
+        .gt(1e6 + 2500);
+
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())
         .to
@@ -185,9 +186,7 @@ describe('ARTHController', () => {
       // Making sure that still, ARTH price > (target + band)
       expect(await arthController.getARTHPrice())
         .to
-        .gt(
-          1e6 + 2500
-        );
+        .gt(1e6 + 2500);
 
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())
@@ -206,9 +205,7 @@ describe('ARTHController', () => {
       // Making sure that ARTH price = target.
       expect(await arthController.getARTHPrice())
         .to
-        .eq(
-          1e6
-        );
+        .eq(1e6);
 
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())
@@ -232,15 +229,12 @@ describe('ARTHController', () => {
       // Making sure that ARTH price > (target - band).
       expect(await arthController.getARTHPrice())
         .to
-        .gte(
-          1e6 - 5000
-        );
+        .gte(1e6 - 5000);
+
       // Making sure that ARTH price < (target)
       expect(await arthController.getARTHPrice())
         .to
-        .lt(
-          1e6
-        );
+        .lt(1e6);
 
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())
@@ -264,15 +258,12 @@ describe('ARTHController', () => {
       // Making sure that ARTH price < (target + band)
       expect(await arthController.getARTHPrice())
         .to
-        .lte(
-          1e6 + 5000
-        );
+        .lte(1e6 + 5000);
+
       // Making sure that ARTH price > (target)
       expect(await arthController.getARTHPrice())
         .to
-        .gt(
-          1e6
-        );
+        .gt(1e6);
 
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())
@@ -294,9 +285,8 @@ describe('ARTHController', () => {
       // Making sure that ARTH price < (target - band)
       expect(await arthController.getARTHPrice())
         .to
-        .lt(
-          1e6 - 2500
-        );
+        .lt(1e6 - 2500);
+
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())
         .to
@@ -316,9 +306,7 @@ describe('ARTHController', () => {
       // Making sure that still, ARTH price > (target - band)
       expect(await arthController.getARTHPrice())
         .to
-        .lt(
-          1e6 - 2500
-        );
+        .lt(1e6 - 2500);
 
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())
@@ -340,9 +328,7 @@ describe('ARTHController', () => {
       // Making sure that ARTH price > (target - band)
       expect(await arthController.getARTHPrice())
         .to
-        .lt(
-          1e6 - 2500
-        );
+        .lt(1e6 - 2500);
 
       // Making sure that CR ain't paused.
       expect(await arthController.isColalteralRatioPaused())

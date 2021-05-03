@@ -12,12 +12,9 @@ chai.use(solidity);
 
 /**
  * TODO: Add test cases where:
- *  - Access level check test cases.
- *
- *  - Fix Curve and consider that in test cases.
- *
- *  - DAI/ETH > 1 & ARTHX/ETH > 1, but prices are diff.
- *  - DAI/ETH < 1 & ARTHX/ETH < 1, but prices are diff.
+ * - Access level check test cases.
+ * - Fix Curve and consider that in test cases.
+ * - Recollateralize test cases with different collateral ratio.
  */
 describe('ARTHPool', () => {
   const { provider } = ethers;
