@@ -6,10 +6,10 @@ import '../Oracle.sol';
 
 contract Oracle_USDT is Oracle {
     constructor(
-        address base_,
-        address quote_,
-        IUniswapPairOracle pairOracle_,
-        IChainlinkOracle oracle_,
-        IChainlinkOracle ethGMUOracle_
-    ) Oracle(base, quote, pairOracle_, oracle_, ethGMUOracle_, 6) {}
+        address base,
+        address quote,
+        IUniswapPairOracle pairOracle,
+        IChainlinkOracle oracle,
+        IChainlinkOracle ethGMUOracle
+    ) Oracle(base, quote, pairOracle, oracle, ethGMUOracle) {}
 }

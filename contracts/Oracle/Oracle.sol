@@ -34,8 +34,7 @@ contract Oracle is Ownable, IOracle {
         address quote_,
         IUniswapPairOracle pairOracle_,
         IChainlinkOracle oracle_,
-        IChainlinkOracle ethGMUOracle_,
-        uint8 tokenMissingDecimals
+        IChainlinkOracle ethGMUOracle_
     ) {
         base = base_;
         quote = quote_;
@@ -46,7 +45,7 @@ contract Oracle is Ownable, IOracle {
         ethGMUPriceFeedDecimals = ethGMUOracle.getDecimals();
         oraclePriceFeedDecimals = address(oracle) != address(0) ? oracle.getDecimals() : 0;
 
-        _TOKEN_MISSING_DECIMALS = uint256(tokenMissingDecimals);
+        _TOKEN_MISSING_DECIMALS = uint256(18).sub(IERC20(base).decimals());
     }
 
     function setOracle(IChainlinkOracle oracle_) public onlyOwner {
