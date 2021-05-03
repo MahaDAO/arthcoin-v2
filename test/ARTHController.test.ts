@@ -26,73 +26,256 @@ describe('ARTHController', () => {
   let attacker: SignerWithAddress;
 
   let ARTH: ContractFactory;
+  let MAHA: ContractFactory;
+  let ARTHX: ContractFactory;
+  let Oracle: ContractFactory;
+  let ARTHPool: ContractFactory;
   let SimpleOracle: ContractFactory;
+  let MockCollateral: ContractFactory;
   let ARTHController: ContractFactory;
+  let ARTHPoolLibrary: ContractFactory;
   let MockUniswapOracle: ContractFactory;
   let ChainlinkETHGMUOracle: ContractFactory;
+  let RecollateralizationCurve: ContractFactory;
   let MockChainlinkAggregatorV3: ContractFactory;
 
+  let dai: Contract;
+  let usdc: Contract;
   let arth: Contract;
+  let maha: Contract;
+  let arthx: Contract;
   let gmuOracle: Contract;
+  let daiARTHPool: Contract;
+  let usdcARTHPool: Contract;
+  let daiPoolOracle: Contract;
+  let usdcPoolOracle: Contract;
+  let arthMahaOracle: Contract;
   let arthController: Contract;
+  let arthPoolLibrary: Contract;
+  let daiETHUniswapOracle: Contract;
+  let usdcETHUniswapOracle: Contract;
   let arthETHUniswapOracle: Contract;
   let chainlinkETHGMUOracle: Contract;
   let arthxETHUniswapOracle: Contract;
+  let recollaterizationCurve: Contract;
   let mockChainlinkAggregatorV3: Contract;
 
   before(' - Setup accounts & deploy libraries', async () => {
     [owner, timelock, attacker] = await ethers.getSigners();
+
+    ARTHPoolLibrary = await ethers.getContractFactory('ArthPoolLibrary');
+    arthPoolLibrary = await ARTHPoolLibrary.deploy();
   });
 
   before(' - Fetch contract factories', async () => {
+    MAHA = await ethers.getContractFactory('MahaToken');
+    ARTHX = await ethers.getContractFactory('ARTHShares');
     ARTH = await ethers.getContractFactory('ARTHStablecoin');
+    MockCollateral = await ethers.getContractFactory('MockCollateral');
+
+    ARTHPool = await ethers.getContractFactory('ArthPool', {
+      libraries: {
+        ArthPoolLibrary: arthPoolLibrary.address
+      }
+    });
+
+    Oracle = await ethers.getContractFactory('Oracle');
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
+    RecollateralizationCurve = await ethers.getContractFactory('MockRecollateralizeCurve');
     ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
     MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
   });
 
   beforeEach(' - Deploy contracts', async () => {
     arth = await ARTH.deploy();
-    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH.div(1e12));
+    maha = await MAHA.deploy();
+    dai = await MockCollateral.deploy(owner.address, ETH.mul(10000), 'DAI', 18);
+    usdc = await MockCollateral.deploy(owner.address, ETH.mul(10000), 'USDC', 18);
+
+    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH.div(1e12)); // Keep the price of simple oracle in 1e6 precision.
+    daiETHUniswapOracle = await MockUniswapOracle.deploy();
+    usdcETHUniswapOracle = await MockUniswapOracle.deploy();
     arthETHUniswapOracle = await MockUniswapOracle.deploy();
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
+    arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH.div(1e12));  // Keep the price of simple oracle in 1e6 precision.
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
 
     chainlinkETHGMUOracle = await ChainlinkETHGMUOracle.deploy(
       mockChainlinkAggregatorV3.address,
       gmuOracle.address
     );
-    arthController = await ARTHController.deploy(
-      arth.address,
+
+    arthx = await ARTHX.deploy(
+      'ARTHX',
+      'ARTHX',
+      arthxETHUniswapOracle.address,
       owner.address,
-      timelock.address
+      owner.address
     );
+
+    arthPoolLibrary = await ARTHPoolLibrary.deploy();
+    arthController = await ARTHController.deploy(arth.address, owner.address, timelock.address);
+
+    daiARTHPool = await ARTHPool.deploy(
+      arth.address,
+      arthx.address,
+      dai.address,
+      owner.address,
+      owner.address,
+      maha.address,
+      arthMahaOracle.address,
+      arthController.address,
+      ETH.mul(90000)
+    );
+    usdcARTHPool = await ARTHPool.deploy(
+      arth.address,
+      arthx.address,
+      usdc.address,
+      owner.address,
+      owner.address,
+      maha.address,
+      arthMahaOracle.address,
+      arthController.address,
+      ETH.mul(90000)
+    );
+
+    daiPoolOracle = await Oracle.deploy(
+      dai.address,
+      owner.address, // Temp address for weth in mock oracles.
+      daiETHUniswapOracle.address,
+      '0x0000000000000000000000000000000000000000',
+      chainlinkETHGMUOracle.address
+    );
+
+    usdcPoolOracle = await Oracle.deploy(
+      usdc.address,
+      owner.address, // Temp address for weth in mock oracles.
+      daiETHUniswapOracle.address,
+      '0x0000000000000000000000000000000000000000',
+      chainlinkETHGMUOracle.address
+    );
+
+    recollaterizationCurve = await RecollateralizationCurve.deploy();
   });
 
   beforeEach(' - Set some contract variables', async () => {
     await arthController.setETHGMUOracle(chainlinkETHGMUOracle.address);
+    await arthx.setARTHAddress(arth.address);
 
-    await arthController.setARTHETHOracle(
-      arthETHUniswapOracle.address,
-      owner.address  // Dummy address for WETH.
-    );
-    await arthController.setARTHXETHOracle(
-      arthxETHUniswapOracle.address,
-      owner.address  // Dummy address for WETH.
-    );
+    await arth.addPool(daiARTHPool.address);
+    await arth.addPool(usdcARTHPool.address);
 
-    await mockChainlinkAggregatorV3.setLatestPrice(
-      ETH.div(1e10) // Sets price to 1e8
-    );
+    await arthController.addPool(daiARTHPool.address);
+    await arthController.addPool(usdcARTHPool.address);
 
     await arthController.setGlobalCollateralRatio(0);
+    await arthx.setArthController(arthController.address);
+
+    await daiARTHPool.setCollatGMUOracle(daiPoolOracle.address);
+    await usdcARTHPool.setCollatGMUOracle(usdcPoolOracle.address);
+
+    await arthController.setARTHETHOracle(arthETHUniswapOracle.address, owner.address);
+    await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
+
+    await daiARTHPool.setPoolParameters(
+      ETH.mul(2),
+      1,
+      1000,
+      1000,
+      1000,
+      1000
+    );
+    await usdcARTHPool.setPoolParameters(
+      ETH.mul(2),
+      1,
+      1000,
+      1000,
+      1000,
+      1000
+    );
+
+    await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
+
+    await daiARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
+    await usdcARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
   });
 
   describe('- Access restricted functions', async () => {
-    it(' - ')
-  })
+    it(' - Should not work if not COLLATERAL_RATIO_PAUSER', async() => {
+      await expect(arthController.connect(attacker).toggleCollateralRatio())
+        .to
+        .revertedWith('');
+    });
+
+    it(' - Should work if COLLATERAL_RATIO_PAUSER', async () => {
+      await expect(arthController.connect(owner).toggleCollateralRatio())
+        .to
+        .not
+        .reverted;
+
+      expect(await arthController.isColalteralRatioPaused())
+        .to
+        .eq(true);
+
+      await expect(arthController.connect(timelock).toggleCollateralRatio())
+        .to
+        .not
+        .reverted;
+
+      expect(await arthController.isColalteralRatioPaused())
+        .to
+        .eq(false);
+    });
+
+    it(' - Should not work if not DEFAULT_ADMIN_ROLE', async () => {
+      await expect(arthController.connect(attacker).setGlobalCollateralRatio(1e5))
+        .to
+        .revertedWith('ARTHController: FORBIDDEN');
+
+      await expect(arthController.connect(timelock).setGlobalCollateralRatio(1e5))
+        .to
+        .revertedWith('ARTHController: FORBIDDEN');
+    });
+
+    it(' - Should work if DEFAULT_ADMIN_ROLE', async () => {
+      await expect(arthController.connect(owner).setGlobalCollateralRatio(1e5))
+        .to
+        .not
+        .reverted;
+
+      expect(await arthController.globalCollateralRatio())
+        .to
+        .eq(1e5);
+    });
+
+    it(' - Should not work if not (governance || owner)', async () => {
+      await expect(arthController.connect(attacker).setARTHXAddress(arth.address))  // Mock address to test access level.
+        .to
+        .revertedWith('ARTHController: FORBIDDEN');
+    });
+
+    it(' - Should not work if (governance || owner)', async () => {
+      await expect(arthController.connect(owner).setARTHXAddress(arth.address))  // Mock address to test access level.
+        .to
+        .not
+        .reverted;
+
+      expect(await arthController.arthxAddress())
+        .to
+        .eq(arth.address);
+
+      await expect(arthController.connect(timelock).setARTHXAddress(owner.address))  // Mock address to test access level.
+        .to
+        .not
+        .reverted;
+
+      expect(await arthController.arthxAddress())
+        .to
+        .eq(owner.address);
+    });
+  });
 
   describe('- Refresh collateral', async () => {
     it(' - Should not work if CR paused', async () => {

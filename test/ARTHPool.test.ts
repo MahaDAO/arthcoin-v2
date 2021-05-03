@@ -15,6 +15,7 @@ chai.use(solidity);
  * - Access level check test cases.
  * - Fix Curve and consider that in test cases.
  * - Recollateralize test cases with different collateral ratio.
+ * - Getters.
  */
 describe('ARTHPool', () => {
   const { provider } = ethers;
