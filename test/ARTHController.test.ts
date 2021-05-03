@@ -204,7 +204,7 @@ describe('ARTHController', () => {
   });
 
   describe('- Access restricted functions', async () => {
-    it(' - Should not work if not COLLATERAL_RATIO_PAUSER', async() => {
+    it(' - Should not work if not COLLATERAL_RATIO_PAUSER', async () => {
       await expect(arthController.connect(attacker).toggleCollateralRatio())
         .to
         .revertedWith('');
@@ -320,8 +320,8 @@ describe('ARTHController', () => {
     });
   });
 
-  describe('- Simpler Getters', async() => {
-    it(' - Should get global CR correctly', async() => {
+  describe('- Simpler Getters', async () => {
+    it(' - Should get global CR correctly', async () => {
       expect(await arthController.getGlobalCollateralRatio())
         .to
         .eq(0);
@@ -368,7 +368,7 @@ describe('ARTHController', () => {
         .eq(1e6);
     });
 
-    it(' - Should work correctly', async() => {
+    it(' - Should work correctly', async () => {
       expect(await arthController.getARTHSupply())
         .to
         .eq(await arth.totalSupply());
@@ -480,6 +480,65 @@ describe('ARTHController', () => {
       expect(await arthController.getETHGMUPrice())
         .to
         .eq(35e2);
+    });
+
+    it(' - get Arth price', async () => {
+      expect(await arthController.getARTHPrice())
+        .to
+        .eq(1e6);
+    });
+
+    it(' - get Arthx price', async () => {
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1e6);
+    });
+
+    it(' - get Arth info', async () => {
+      let totalSupply = await arthController.getARTHSupply()
+      let globalCollateralRatio = await arthController.getGlobalCollateralRatio()
+      let globalCollateralValue = await arthController.getGlobalCollateralValue()
+
+      let mintingFee = 1e6
+      await arthController.setMintingFee(mintingFee)
+
+      let redemtionFee = 1e6
+      await arthController.setRedemptionFee(redemtionFee)
+
+      let gmuPrice = await arthController.getETHGMUPrice()
+
+      let arthInfo = await arthController.getARTHInfo()
+      expect(arthInfo[0])
+        .to
+        .eq(1e6);
+
+      expect(arthInfo[1])
+        .to
+        .eq(1e6);
+
+      expect(arthInfo[2])
+        .to
+        .eq(totalSupply);
+
+      expect(arthInfo[3])
+        .to
+        .eq(globalCollateralRatio);
+
+      expect(arthInfo[4])
+        .to
+        .eq(globalCollateralValue);
+
+      expect(arthInfo[5])
+        .to
+        .eq(mintingFee);
+
+      expect(arthInfo[6])
+        .to
+        .eq(redemtionFee);
+
+      expect(arthInfo[7])
+        .to
+        .eq(gmuPrice);
     });
   });
 
