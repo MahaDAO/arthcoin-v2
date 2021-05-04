@@ -440,61 +440,7 @@ describe('ARTHController', () => {
         .eq(1e6);
     });
 
-    it(' - Should work correctly for ETH/GMU Price', async () => {
-      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthController.getETHGMUPrice())
-        .to
-        .eq(2200e6);
-
-      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
-      expect(await arthController.getETHGMUPrice())
-        .to
-        .eq(1e6);
-
-      await mockChainlinkAggregatorV3.setLatestPrice(1e9);
-      expect(await arthController.getETHGMUPrice())
-        .to
-        .eq(1e7);
-
-      await mockChainlinkAggregatorV3.setLatestPrice(1e7);
-      expect(await arthController.getETHGMUPrice())
-        .to
-        .eq(1e5);
-
-      await mockChainlinkAggregatorV3.setLatestPrice(1e4);
-      expect(await arthController.getETHGMUPrice())
-        .to
-        .eq(1e2);
-
-      await mockChainlinkAggregatorV3.setLatestPrice(5e7);
-      expect(await arthController.getETHGMUPrice())
-        .to
-        .eq(5e5);
-
-      await mockChainlinkAggregatorV3.setLatestPrice(5e9);
-      expect(await arthController.getETHGMUPrice())
-        .to
-        .eq(5e7);
-
-      await mockChainlinkAggregatorV3.setLatestPrice(35e4);
-      expect(await arthController.getETHGMUPrice())
-        .to
-        .eq(35e2);
-    });
-
-    it(' - get Arth price', async () => {
-      expect(await arthController.getARTHPrice())
-        .to
-        .eq(1e6);
-    });
-
-    it(' - get Arthx price', async () => {
-      expect(await arthController.getARTHXPrice())
-        .to
-        .eq(1e6);
-    });
-
-    it(' - get Arth info', async () => {
+    it(' - Should get ARTH info correctly', async () => {
       let totalSupply = await arthController.getARTHSupply()
       let globalCollateralRatio = await arthController.getGlobalCollateralRatio()
       let globalCollateralValue = await arthController.getGlobalCollateralValue()
@@ -540,6 +486,142 @@ describe('ARTHController', () => {
         .to
         .eq(gmuPrice);
     });
+  });
+
+  describe('- Prices', async() => {
+    it(' - Should work correctly for ETH/GMU Price', async () => {
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(2200e6);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e6);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e9);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e7);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e7);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e5);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e4);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e2);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(5e7);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(5e5);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(5e9);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(5e7);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(35e4);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(35e2);
+
+      await gmuOracle.setPrice(1e4);
+      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(1e4);
+
+      await gmuOracle.setPrice(5e3);
+      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(5e3);
+
+      await gmuOracle.setPrice(5e3);
+      await mockChainlinkAggregatorV3.setLatestPrice(2e7);
+      expect(await arthController.getETHGMUPrice())
+        .to
+        .eq(10e2);
+    });
+
+    it(' - Should work correctly for ARTH price', async () => {
+      expect(await arthController.getARTHPrice())
+        .to
+        .eq(1e6);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(2e7);
+      expect(await arthController.getARTHPrice())
+        .to
+        .eq(2e5);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
+      await arthETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthController.getARTHPrice())
+        .to
+        .eq(943396);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(2e7);
+      await arthETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthController.getARTHPrice())
+        .to
+        .eq(188679);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
+      await arthETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthController.getARTHPrice())
+        .to
+        .eq(1063829);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(2e7);
+      await arthETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthController.getARTHPrice())
+        .to
+        .eq(212765);
+    });
+
+    it(' - Should work correctly for ARTHX price', async () => {
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1e6);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(2e7);
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(2e5);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
+      await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(943396);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(2e7);
+      await arthxETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(188679);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(1e8);
+      await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(1063829);
+
+      await mockChainlinkAggregatorV3.setLatestPrice(2e7);
+      await arthxETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthController.getARTHXPrice())
+        .to
+        .eq(212765);
+    });
+  });
+
+  describe('- Collateral value', async() => {
+
   });
 
   describe('- Refresh collateral', async () => {
