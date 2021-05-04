@@ -6,9 +6,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 
 import { advanceBlock } from './utilities';
 
-
 chai.use(solidity);
-
 
 describe('Staking Reward', () => {
   const { provider } = ethers;
@@ -55,9 +53,15 @@ describe('Staking Reward', () => {
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
     StakingRewards = await ethers.getContractFactory('BoostedStaking');
-    MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
-    ChainlinkETHGMUOracle = await ethers.getContractFactory('ChainlinkETHUSDPriceConsumer');
-    MockChainlinkAggregatorV3 = await ethers.getContractFactory('MockChainlinkAggregatorV3');
+    MockUniswapOracle = await ethers.getContractFactory(
+      'MockUniswapPairOracle'
+    );
+    ChainlinkETHGMUOracle = await ethers.getContractFactory(
+      'ChainlinkETHUSDPriceConsumer'
+    );
+    MockChainlinkAggregatorV3 = await ethers.getContractFactory(
+      'MockChainlinkAggregatorV3'
+    );
   });
 
   beforeEach(' - Deploy contracts', async () => {
@@ -77,8 +81,16 @@ describe('Staking Reward', () => {
       gmuOracle.address
     );
 
-    arthx = await ARTHX.deploy('ARTHX', 'ARTHX', arthxETHUniswapOracle.address, owner.address, owner.address);
-    arthController = await ARTHController.deploy(arth.address, owner.address, owner.address);
+    arthx = await ARTHX.deploy(
+      arthxETHUniswapOracle.address,
+      owner.address,
+      owner.address
+    );
+    arthController = await ARTHController.deploy(
+      arth.address,
+      owner.address,
+      owner.address
+    );
 
     stakingRewards = await StakingRewards.deploy(
       owner.address,
@@ -88,7 +100,7 @@ describe('Staking Reward', () => {
       arth.address,
       owner.address,
       1000
-    )
+    );
   });
 
   beforeEach(' - Set some contract variables', async () => {
@@ -96,11 +108,14 @@ describe('Staking Reward', () => {
     await arthx.setARTHAddress(arth.address);
     await arthController.setGlobalCollateralRatio(0);
     await arthx.setArthController(arthController.address);
-    await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
+    await arthController.setARTHXETHOracle(
+      arthxETHUniswapOracle.address,
+      owner.address
+    );
     await stakingRewards.setArthController(arthController.address);
     await maha.transfer(stakingRewards.address, ETH.mul(10000000000000));
 
-    await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
+    await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10)); // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
   });
 
   describe('- Test Staking Rewards', async () => {
@@ -111,28 +126,22 @@ describe('Staking Reward', () => {
       await arth.approve(stakingRewards.address, ETH);
       await stakingRewards.stake(ETH);
 
-      expect(await arth.balanceOf(stakingRewards.address))
-        .to
-        .eq(
-          await stakingRewardsBalance.add(ETH)
-        )
+      expect(await arth.balanceOf(stakingRewards.address)).to.eq(
+        await stakingRewardsBalance.add(ETH)
+      );
 
-      expect(await arth.balanceOf(owner.address))
-        .to
-        .eq(
-          await myBalance.sub(ETH)
-        )
-    })
+      expect(await arth.balanceOf(owner.address)).to.eq(
+        await myBalance.sub(ETH)
+      );
+    });
 
     it(' - Stake should fail for grey listed addresses', async () => {
       await stakingRewards.greylistAddress(owner.address);
 
-      await expect(stakingRewards.stake(ETH))
-        .to
-        .revertedWith(
-          'address has been greylisted'
-        )
-    })
+      await expect(stakingRewards.stake(ETH)).to.revertedWith(
+        'address has been greylisted'
+      );
+    });
 
     it(' - Test stake for', async () => {
       let myBalance = await arth.balanceOf(owner.address);
@@ -140,101 +149,74 @@ describe('Staking Reward', () => {
       let stakingRewardsBalance = await arth.balanceOf(stakingRewards.address);
 
       await arth.connect(owner).approve(stakingRewards.address, ETH);
-      await stakingRewards.stakeFor(whale.address, ETH)
+      await stakingRewards.stakeFor(whale.address, ETH);
 
-      expect(await arth.balanceOf(stakingRewards.address))
-        .to
-        .eq(
-          await stakingRewardsBalance.add(ETH)
-        )
+      expect(await arth.balanceOf(stakingRewards.address)).to.eq(
+        await stakingRewardsBalance.add(ETH)
+      );
 
-      expect(await arth.balanceOf(owner.address))
-        .to
-        .eq(
-          await myBalance.sub(ETH)
-        )
+      expect(await arth.balanceOf(owner.address)).to.eq(
+        await myBalance.sub(ETH)
+      );
 
-      expect(await arth.balanceOf(whale.address))
-        .to
-        .eq(
-          whalesBalance
-        )
+      expect(await arth.balanceOf(whale.address)).to.eq(whalesBalance);
 
-      let stakingContractsStakes = await stakingRewards.totalSupply()
+      let stakingContractsStakes = await stakingRewards.totalSupply();
       console.log('total Stake', stakingContractsStakes.toString());
 
-      expect(await stakingRewards.totalSupply())
-        .to
-        .eq(
-          ETH
-        )
+      expect(await stakingRewards.totalSupply()).to.eq(ETH);
 
-      let unlockedBalances = await stakingRewards.unlockedBalanceOf(whale.address)
+      let unlockedBalances = await stakingRewards.unlockedBalanceOf(
+        whale.address
+      );
       console.log('total unlock balance', unlockedBalances.toString());
 
-      expect(await stakingRewards.unlockedBalanceOf(whale.address))
-        .to
-        .eq(
-          ETH
-        )
-    })
+      expect(await stakingRewards.unlockedBalanceOf(whale.address)).to.eq(ETH);
+    });
 
     it(' - Test stake locked for', async () => {
       await arth.connect(owner).approve(stakingRewards.address, ETH);
-      await expect(stakingRewards.stakeLockedFor(whale.address, ETH, 0))
-        .to
-        .revertedWith(
-          'Cannot wait for a negative number'
-        );
-    })
+      await expect(
+        stakingRewards.stakeLockedFor(whale.address, ETH, 0)
+      ).to.revertedWith('Cannot wait for a negative number');
+    });
 
     // 604800, 94,608,000
     it(' - Test stake locked for less then 7 days', async () => {
       await arth.connect(owner).approve(stakingRewards.address, ETH);
-      let sec = 604700
-      await expect(stakingRewards.stakeLockedFor(whale.address, ETH, sec))
-        .to
-        .revertedWith(
-          'Minimum stake time not met (' + 604800 + ')'
-        );
-    })
+      let sec = 604700;
+      await expect(
+        stakingRewards.stakeLockedFor(whale.address, ETH, sec)
+      ).to.revertedWith('Minimum stake time not met (' + 604800 + ')');
+    });
 
     it(' - Test stake locked for more then 3 years', async () => {
       await arth.connect(owner).approve(stakingRewards.address, ETH);
-      let sec = 94608001
-      await expect(stakingRewards.stakeLockedFor(whale.address, ETH, sec))
-        .to
-        .revertedWith(
-          'You are trying to stake for too long'
-        );
-    })
+      let sec = 94608001;
+      await expect(
+        stakingRewards.stakeLockedFor(whale.address, ETH, sec)
+      ).to.revertedWith('You are trying to stake for too long');
+    });
 
     it(' - Test withdraw fail for amount 0', async () => {
-
-      await expect(stakingRewards.withdraw(0))
-        .to
-        .revertedWith(
-          'Cannot withdraw 0'
-        );
-    })
+      await expect(stakingRewards.withdraw(0)).to.revertedWith(
+        'Cannot withdraw 0'
+      );
+    });
 
     it(' - Test withdraw ', async () => {
       await arth.connect(owner).approve(stakingRewards.address, ETH);
-      await stakingRewards.stakeFor(whale.address, ETH)
+      await stakingRewards.stakeFor(whale.address, ETH);
 
-      let whalesBalance = await stakingRewards.balanceOf(whale.address)
+      let whalesBalance = await stakingRewards.balanceOf(whale.address);
       console.log(whalesBalance.toString());
 
-      await stakingRewards.connect(whale).withdraw(ETH)
+      await stakingRewards.connect(whale).withdraw(ETH);
 
-      let whalesBalance2 = await stakingRewards.balanceOf(whale.address)
+      let whalesBalance2 = await stakingRewards.balanceOf(whale.address);
       console.log(whalesBalance2.toString());
 
-      expect(await stakingRewards.balanceOf(whale.address))
-        .to
-        .eq(
-          0
-        )
-    })
-  })
-})
+      expect(await stakingRewards.balanceOf(whale.address)).to.eq(0);
+    });
+  });
+});
