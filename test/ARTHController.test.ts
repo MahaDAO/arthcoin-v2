@@ -153,7 +153,7 @@ describe('ARTHController', () => {
     usdcPoolOracle = await Oracle.deploy(
       usdc.address,
       owner.address, // Temp address for weth in mock oracles.
-      daiETHUniswapOracle.address,
+      usdcETHUniswapOracle.address,
       '0x0000000000000000000000000000000000000000',
       chainlinkETHGMUOracle.address
     );
@@ -626,15 +626,12 @@ describe('ARTHController', () => {
       await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
     });
 
-    it(' - Should work correctly when (DAI/ETH = 1) && (USDC/ETH = 1) && (DAI Pool Bal. = USDC Pool Bal.)', async() => {
+    it(' - Should work correctly when DAI/ETH = 1) && (USDC/ETH = 1) && (DAI Pool Bal. != USDC Pool Bal.)', async () => {
       expect(await arthController.getGlobalCollateralValue())
         .to
         .eq(ETH.mul(4));
-    });
 
-    it(' - Should work correctly when DAI/ETH = 1) && (USDC/ETH = 1) && (DAI Pool Bal. != USDC Pool Bal.)', async () => {
       await dai.transfer(daiARTHPool.address, ETH);
-
       expect(await arthController.getGlobalCollateralValue())
         .to
         .eq(ETH.mul(5));
@@ -646,7 +643,7 @@ describe('ARTHController', () => {
     });
 
     it(
-      ' - Should work correctly when DAI/ETH > 1) && (USDC/ETH > 1) && (DAI Pool Bal. == USDC Pool Bal.) && (DAI/ETH = USD/ETH)',
+      ' - Should work correctly when DAI/ETH > 1) && (USDC/ETH > 1) && (DAI/ETH = USD/ETH)',
       async () => {
         await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
         await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
@@ -663,21 +660,6 @@ describe('ARTHController', () => {
           .eq(
             ETH.mul(4).mul(1063829).div(1e6)
           );
-      }
-    );
-
-    it(
-      ' - Should work correctly when DAI/ETH > 1) && (USDC/ETH > 1) && (DAI Pool Bal. != USDC Pool Bal.) && (DAI/ETH = USD/ETH)',
-      async () => {
-        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice())
-          .to
-          .eq(1063829);
-        expect(await usdcARTHPool.getCollateralPrice())
-          .to
-          .eq(1063829);
 
         await dai.transfer(daiARTHPool.address, ETH);
         expect(await arthController.getGlobalCollateralValue())
@@ -694,7 +676,7 @@ describe('ARTHController', () => {
     );
 
     it(
-      ' - Should work correctly when DAI/ETH < 1) && (USDC/ETH < 1) && (DAI Pool Bal. == USDC Pool Bal.) && (DAI/ETH = USD/ETH)',
+      ' - Should work correctly when DAI/ETH < 1) && (USDC/ETH < 1) && (DAI/ETH = USD/ETH)',
       async () => {
         await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
         await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
@@ -711,21 +693,6 @@ describe('ARTHController', () => {
           .eq(
             ETH.mul(4).mul(943396).div(1e6)
           );
-      }
-    );
-
-    it(
-      ' - Should work correctly when DAI/ETH < 1) && (USDC/ETH < 1) && (DAI Pool Bal. != USDC Pool Bal.) && (DAI/ETH = USD/ETH)',
-      async () => {
-        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice())
-          .to
-          .eq(943396);
-        expect(await usdcARTHPool.getCollateralPrice())
-          .to
-          .eq(943396);
 
         await dai.transfer(daiARTHPool.address, ETH);
         expect(await arthController.getGlobalCollateralValue())
@@ -738,6 +705,112 @@ describe('ARTHController', () => {
         expect(await arthController.getGlobalCollateralValue())
           .to
           .eq(ETH.mul(7).mul(943396).div(1e6));
+      }
+    );
+
+    it(
+      ' - Should work correctly when DAI/ETH > 1) && (USDC/ETH < 1) && (DAI/ETH = USD/ETH)',
+      async () => {
+        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        // Making sure that prices of collateral are set properly.
+        expect(await daiARTHPool.getCollateralPrice())
+          .to
+          .eq(1063829);
+        expect(await usdcARTHPool.getCollateralPrice())
+          .to
+          .eq(943396);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH.mul(2).mul(943396).div(1e6)
+              )
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH.mul(2).mul(943396).div(1e6)
+              )
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH.mul(4).mul(943396).div(1e6)
+              )
+          );
+      }
+    );
+
+    it(
+      ' - Should work correctly when DAI/ETH < 1) && (USDC/ETH > 1) && (DAI/ETH = USD/ETH)',
+      async () => {
+        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        // Making sure that prices of collateral are set properly.
+        expect(await daiARTHPool.getCollateralPrice())
+          .to
+          .eq(943396);
+        expect(await usdcARTHPool.getCollateralPrice())
+          .to
+          .eq(1063829);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(943396)
+              .div(1e6)
+              .add(
+                ETH.mul(2).mul(1063829).div(1e6)
+              )
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(943396)
+              .div(1e6)
+              .add(
+                ETH.mul(2).mul(1063829).div(1e6)
+              )
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH.mul(4).mul(1063829).div(1e6)
+              )
+          );
       }
     );
   });
