@@ -25,12 +25,14 @@ describe('ARTHController', () => {
   let timelock: SignerWithAddress;
   let attacker: SignerWithAddress;
 
+  let ARTH: ContractFactory;
   let SimpleOracle: ContractFactory;
   let ARTHController: ContractFactory;
   let MockUniswapOracle: ContractFactory;
   let ChainlinkETHGMUOracle: ContractFactory;
   let MockChainlinkAggregatorV3: ContractFactory;
 
+  let arth: Contract;
   let gmuOracle: Contract;
   let arthController: Contract;
   let arthETHUniswapOracle: Contract;
@@ -43,6 +45,7 @@ describe('ARTHController', () => {
   });
 
   before(' - Fetch contract factories', async () => {
+    ARTH = await ethers.getContractFactory('ARTHStablecoin');
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
@@ -51,7 +54,8 @@ describe('ARTHController', () => {
   });
 
   beforeEach(' - Deploy contracts', async () => {
-    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH);
+    arth = await ARTH.deploy();
+    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH.div(1e12));
     arthETHUniswapOracle = await MockUniswapOracle.deploy();
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
@@ -61,6 +65,7 @@ describe('ARTHController', () => {
       gmuOracle.address
     );
     arthController = await ARTHController.deploy(
+      arth.address,
       owner.address,
       timelock.address
     );
@@ -76,6 +81,10 @@ describe('ARTHController', () => {
     await arthController.setARTHXETHOracle(
       arthxETHUniswapOracle.address,
       owner.address  // Dummy address for WETH.
+    );
+
+    await mockChainlinkAggregatorV3.setLatestPrice(
+      ETH.div(1e10) // Sets price to 1e8
     );
 
     await arthController.setGlobalCollateralRatio(0);

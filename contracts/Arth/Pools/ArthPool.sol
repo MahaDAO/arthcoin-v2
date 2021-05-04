@@ -830,7 +830,7 @@ contract ArthPool is AccessControl, IARTHPool {
 
     function getCollateralPrice() public view override returns (uint256) {
         if (collateralPricePaused) return pausedPrice;
-        if (isWETHPool) _arthController.getETHGMUPrice();
+        if (isWETHPool) return _arthController.getETHGMUPrice();
         return _collateralGMUOracle.getPrice();
     }
 
@@ -840,7 +840,8 @@ contract ArthPool is AccessControl, IARTHPool {
         returns (uint256)
     {
         uint256 stabilityFeeInARTH = amount.mul(stabilityFee).div(100);
-        return getARTHMAHAPrice().mul(stabilityFeeInARTH).div(1e18); // NOTE: this is might change asper ARTH's decimals and price precision.
+        // Considering Simple oracle precision is set to 1e6 and ARTH is in 18 decimals.
+        return getARTHMAHAPrice().mul(stabilityFeeInARTH).div(1e6);
     }
 
     /**

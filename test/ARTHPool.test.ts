@@ -29,6 +29,7 @@ describe('ARTHPool', () => {
   let ARTH: ContractFactory;
   let MAHA: ContractFactory;
   let ARTHX: ContractFactory;
+  let Oracle: ContractFactory;
   let ARTHPool: ContractFactory;
   let SimpleOracle: ContractFactory;
   let MockCollateral: ContractFactory;
@@ -43,6 +44,7 @@ describe('ARTHPool', () => {
   let arth: Contract;
   let maha: Contract;
   let arthx: Contract;
+  let oracle: Contract;
   let arthPool: Contract;
   let gmuOracle: Contract;
   let arthMahaOracle: Contract;
@@ -74,6 +76,7 @@ describe('ARTHPool', () => {
       }
     });
 
+    Oracle = await ethers.getContractFactory('Oracle');
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
@@ -87,11 +90,11 @@ describe('ARTHPool', () => {
     maha = await MAHA.deploy();
     dai = await MockCollateral.deploy(owner.address, ETH.mul(10000), 'DAI', 18);
 
-    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH);
+    gmuOracle = await SimpleOracle.deploy('GMU/USD', ETH.div(1e12)); // Keep the price of simple oracle in 1e6 precision.
     daiETHUniswapOracle = await MockUniswapOracle.deploy();
     arthETHUniswapOracle = await MockUniswapOracle.deploy();
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
-    arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH);
+    arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH.div(1e12));  // Keep the price of simple oracle in 1e6 precision.
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
 
     chainlinkETHGMUOracle = await ChainlinkETHGMUOracle.deploy(
@@ -108,7 +111,7 @@ describe('ARTHPool', () => {
     );
 
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
-    arthController = await ARTHController.deploy(owner.address, owner.address);
+    arthController = await ARTHController.deploy(arth.address, owner.address, owner.address);
 
     arthPool = await ARTHPool.deploy(
       arth.address,
@@ -122,6 +125,14 @@ describe('ARTHPool', () => {
       ETH.mul(90000)
     );
 
+    oracle = await Oracle.deploy(
+      dai.address,
+      owner.address, // Temp address for weth in mock oracles.
+      daiETHUniswapOracle.address,
+      '0x0000000000000000000000000000000000000000',
+      chainlinkETHGMUOracle.address
+    );
+
     recollaterizationCurve = await RecollateralizationCurve.deploy();
   });
 
@@ -132,7 +143,7 @@ describe('ARTHPool', () => {
     await arthController.addPool(arthPool.address);
     await arthController.setGlobalCollateralRatio(0);
     await arthx.setArthController(arthController.address);
-    await arthPool.setCollatGMUOracle(daiETHUniswapOracle.address);
+    await arthPool.setCollatGMUOracle(oracle.address);
 
     await arthController.setARTHETHOracle(arthETHUniswapOracle.address, owner.address);
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
@@ -145,6 +156,8 @@ describe('ARTHPool', () => {
       1000,
       1000
     );
+
+    await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
 
     await arthPool.setRecollateralizationCurve(recollaterizationCurve.address);
   });
