@@ -488,7 +488,7 @@ describe('ARTHController', () => {
     });
   });
 
-  describe('- Prices', async() => {
+  describe('- Prices', async () => {
     it(' - Should work correctly for ETH/GMU Price', async () => {
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
       expect(await arthController.getETHGMUPrice())
@@ -620,8 +620,8 @@ describe('ARTHController', () => {
     });
   });
 
-  describe('- Collateral value', async() => {
-    beforeEach(' - Transfer tokens to pools', async() => {
+  describe('- Collateral value', async () => {
+    beforeEach(' - Transfer tokens to pools', async () => {
       await dai.transfer(daiARTHPool.address, ETH.mul(2));
       await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
     });
@@ -805,7 +805,7 @@ describe('ARTHController', () => {
           .eq(
             ETH
               .mul(3)
-              .mul(1063829)
+              .mul(943396)
               .div(1e6)
               .add(
                 ETH.mul(4).mul(1063829).div(1e6)
