@@ -109,8 +109,6 @@ describe('ARTHController', () => {
     );
 
     arthx = await ARTHX.deploy(
-      'ARTHX',
-      'ARTHX',
       arthxETHUniswapOracle.address,
       owner.address,
       owner.address
