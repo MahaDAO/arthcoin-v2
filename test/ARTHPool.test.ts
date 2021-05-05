@@ -465,14 +465,14 @@ describe('ARTHPool', () => {
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
       expect(await arthPool.getCollateralPrice())
         .to
-        .eq(2340423800);
+        .eq(2340425531) // 2340423800); // Since we divide by weth price in this ecosystem.
 
       await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
       expect(await arthPool.getCollateralPrice())
         .to
-        .eq(2075471200);
+        .eq(2075471698); // 2075471200); // Since we divide by weth price in this ecosystem.
     });
   });
 
