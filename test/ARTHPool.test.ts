@@ -12,7 +12,6 @@ chai.use(solidity);
 
 /**
  * TODO: Add test cases where:
- * - Access level check test cases.
  * - Fix Curve and consider that in test cases.
  * - Recollateralize test cases with different collateral ratio.
  * - Getters.
@@ -23,6 +22,8 @@ describe('ARTHPool', () => {
   const ETH = utils.parseEther('1');
 
   let owner: SignerWithAddress;
+  let timelock: SignerWithAddress;
+  let attacker: SignerWithAddress;
 
   let ARTH: ContractFactory;
   let MAHA: ContractFactory;
@@ -56,7 +57,7 @@ describe('ARTHPool', () => {
   let mockChainlinkAggregatorV3: Contract;
 
   before(' - Setup accounts & deploy libraries', async () => {
-    [owner] = await ethers.getSigners();
+    [owner, timelock, attacker] = await ethers.getSigners();
 
     ARTHPoolLibrary = await ethers.getContractFactory('ArthPoolLibrary');
     arthPoolLibrary = await ARTHPoolLibrary.deploy();
@@ -116,7 +117,7 @@ describe('ARTHPool', () => {
       arthx.address,
       dai.address,
       owner.address,
-      owner.address,
+      timelock.address,
       maha.address,
       arthMahaOracle.address,
       arthController.address,
@@ -158,6 +159,189 @@ describe('ARTHPool', () => {
     await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
 
     await arthPool.setRecollateralizationCurve(recollaterizationCurve.address);
+  });
+
+  describe('- Some access restricted functions', async() => {
+    it(' - Should not work if not (owner || governance)', async() => {
+      expect(arthPool.connect(attacker).setCollatGMUOracle(oracle.address))
+        .to
+        .revertedWith('ArthPool: You are not the owner or the governance timelock');
+
+      expect(arthPool.connect(attacker).setTimelock(timelock.address))
+        .to
+        .revertedWith('ArthPool: You are not the owner or the governance timelock');
+
+      expect(arthPool.connect(attacker).setOwner(owner.address))
+        .to
+        .revertedWith('ArthPool: You are not the owner or the governance timelock');
+
+      expect(
+        arthPool
+          .connect(attacker)
+          .setPoolParameters(
+            ETH.mul(2),
+            1,
+            1000,
+            1000,
+            1000,
+            1000
+          )
+      )
+        .to
+        .revertedWith('ArthPool: You are not the owner or the governance timelock');
+    });
+
+    it(' - Should work if (owner || governance)', async () => {
+      expect(arthPool.connect(owner).setCollatGMUOracle(oracle.address))
+        .to
+        .not
+        .reverted;
+
+      expect(arthPool.connect(timelock).setCollatGMUOracle(oracle.address))
+        .to
+        .not
+        .reverted;
+
+      expect(arthPool.connect(owner).setTimelock(timelock.address))
+        .to
+        .not
+        .reverted;
+
+      expect(arthPool.connect(owner).setOwner(owner.address))
+        .to
+        .not
+        .reverted;
+
+      expect(
+        arthPool
+          .connect(owner)
+          .setPoolParameters(
+            ETH.mul(2),
+            1,
+            1000,
+            1000,
+            1000,
+            1000
+          )
+      )
+        .to
+        .not
+        .reverted;
+
+      expect(arthPool.connect(timelock).setTimelock(timelock.address))
+        .to
+        .not
+        .reverted;
+
+      expect(arthPool.connect(timelock).setOwner(owner.address))
+        .to
+        .not
+        .reverted;
+
+      expect(
+        arthPool
+          .connect(timelock)
+          .setPoolParameters(
+            ETH.mul(2),
+            1,
+            1000,
+            1000,
+            1000,
+            1000
+          )
+      )
+        .to
+        .not
+        .reverted;
+    });
+
+    it(' - Should not work if not (owner || admin || governance)', async() => {
+      expect(arthPool.connect(attacker).setBuyBackCollateralBuffer(10))
+        .to
+        .revertedWith('ArthPool: forbidden');
+
+      expect(arthPool.connect(attacker).setRecollateralizationCurve(recollaterizationCurve.address))
+        .to
+        .revertedWith('ArthPool: forbidden');
+
+      expect(arthPool.connect(attacker).setRecollateralizationCurve(recollaterizationCurve.address))
+        .to
+        .revertedWith('ArthPool: forbidden');
+
+      expect(arthPool.connect(attacker).setARTHController(arthController.address))
+        .to
+        .revertedWith('ArthPool: forbidden');
+
+      expect(arthPool.connect(attacker).setARTHMAHAOracle(arthMahaOracle.address))
+        .to
+        .revertedWith('ArthPool: forbidden');
+
+      expect(arthPool.connect(attacker).setStabilityFee(10))
+        .to
+        .revertedWith('ArthPool: forbidden');
+    });
+
+    it(' - Should work if not (owner || admin || governance)', async () => {
+      expect(arthPool.connect(owner).setBuyBackCollateralBuffer(10))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(owner).setRecollateralizationCurve(recollaterizationCurve.address))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(owner).setRecollateralizationCurve(recollaterizationCurve.address))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(owner).setARTHController(arthController.address))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(owner).setARTHMAHAOracle(arthMahaOracle.address))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(owner).setStabilityFee(10))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(timelock).setBuyBackCollateralBuffer(10))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(timelock).setRecollateralizationCurve(recollaterizationCurve.address))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(timelock).setRecollateralizationCurve(recollaterizationCurve.address))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(timelock).setARTHController(arthController.address))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(timelock).setARTHMAHAOracle(arthMahaOracle.address))
+        .to
+        .not
+        .reverted
+
+      expect(arthPool.connect(timelock).setStabilityFee(10))
+        .to
+        .not
+        .reverted
+    });
   });
 
   describe('- Mint 1:1 ARTH', async () => {
@@ -1607,7 +1791,7 @@ describe('ARTHPool', () => {
     })
 
     it(' - Should not recollateralize when paused', async () => {
-      await arthPool.toggleRecollateralize();
+      await arthPool.connect(timelock).toggleRecollateralize();
 
       await expect(arthPool.recollateralizeARTH(ETH, 0))
         .to
@@ -2221,10 +2405,10 @@ describe('ARTHPool', () => {
   describe('- Buyback ARTHX', async () => {
     beforeEach(' - Approve collateral', async () => {
       await arthx.approve(arthPool.address, ETH);
-    })
+    });
 
     it(' - Should not buyback when paused', async () => {
-      await arthPool.toggleBuyBack();
+      await arthPool.connect(timelock).toggleBuyBack();
 
       await expect(arthPool.buyBackARTHX(ETH, 0))
         .to
