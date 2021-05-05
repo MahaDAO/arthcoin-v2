@@ -460,12 +460,14 @@ describe('ARTHPool', () => {
         .to
         .eq(1063829);
 
+      await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
       expect(await arthPool.getCollateralPrice())
         .to
         .eq(2340423800);
 
+      await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
       expect(await arthPool.getCollateralPrice())
