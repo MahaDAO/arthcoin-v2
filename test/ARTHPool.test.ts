@@ -117,7 +117,7 @@ describe('ARTHPool', () => {
     arthController = await ARTHController.deploy(
       arth.address,
       owner.address,
-      owner.address
+      timelock.address
     );
 
     arthPool = await ARTHPool.deploy(
@@ -348,6 +348,129 @@ describe('ARTHPool', () => {
         .to
         .not
         .reverted
+    });
+
+    it(' - Should work only for various pauser if given appropriate role', async() => {
+      expect(arthPool.connect(owner).toggleMinting())
+        .to
+        .revertedWith('');
+      expect(arthPool.connect(attacker).toggleMinting())
+        .to
+        .revertedWith('');
+
+      await arthPool.connect(timelock).toggleMinting();
+      expect(await arthPool.mintPaused())
+        .to
+        .eq(true);
+
+      expect(arthPool.connect(owner).toggleRedeeming())
+        .to
+        .revertedWith('');
+      expect(arthPool.connect(attacker).toggleRedeeming())
+        .to
+        .revertedWith('');
+
+      await arthPool.connect(timelock).toggleRedeeming();
+      expect(await arthPool.redeemPaused())
+        .to
+        .eq(true);
+
+      expect(arthPool.connect(owner).toggleRecollateralize())
+        .to
+        .revertedWith('');
+      expect(arthPool.connect(attacker).toggleRecollateralize())
+        .to
+        .revertedWith('');
+
+      await arthPool.connect(timelock).toggleRecollateralize();
+      expect(await arthPool.recollateralizePaused())
+        .to
+        .eq(true);
+
+      expect(arthPool.connect(owner).toggleBuyBack())
+        .to
+        .revertedWith('');
+      expect(arthPool.connect(attacker).toggleBuyBack())
+        .to
+        .revertedWith('');
+
+      await arthPool.connect(timelock).toggleBuyBack();
+      expect(await arthPool.buyBackPaused())
+        .to
+        .eq(true);
+
+      expect(arthPool.connect(owner).toggleCollateralPrice(1e6))
+        .to
+        .revertedWith('');
+      expect(arthPool.connect(attacker).toggleCollateralPrice(1e6))
+        .to
+        .revertedWith('');
+
+      await arthPool.connect(timelock).toggleCollateralPrice(1e6);
+      expect(await arthPool.collateralPricePaused())
+        .to
+        .eq(true);
+      expect(await arthPool.pausedPrice())
+        .to
+        .eq(1e6);
+    });
+  });
+
+  describe('- Getters', async() => {
+    it(' - Should get ARTH/MAHA price properly', async() => {
+      expect(await arthPool.getARTHMAHAPrice())
+        .to
+        .eq(1e6);
+
+      await arthMahaOracle.setPrice(3e6);
+      expect(await arthPool.getARTHMAHAPrice())
+        .to
+        .eq(3e6);
+
+      await arthMahaOracle.setPrice(2e4);
+      expect(await arthPool.getARTHMAHAPrice())
+        .to
+        .eq(2e4);
+
+      await arthMahaOracle.setPrice(10e6);
+      expect(await arthPool.getARTHMAHAPrice())
+        .to
+        .eq(10e6);
+    });
+
+    it(' - Should get global collateral ratio properly', async() => {
+      await arthController.setGlobalCollateralRatio(1e6);
+      expect(await arthPool.getGlobalCR())
+        .to
+        .eq(1e6);
+
+      await arthController.setGlobalCollateralRatio(1e3);
+      expect(await arthPool.getGlobalCR())
+        .to
+        .eq(1e3);
+    });
+
+    it(' - Should get collateral price', async () => {
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(1e6);
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(1063829);
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(2340423800);
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(2075471200);
     });
   });
 
