@@ -5,6 +5,7 @@ const knownContracts = require('./known-contracts');
 
 
 const ONE = new BigNumber('1e18');
+const ONEE6 = new BigNumber('1e6');
 
 
 const getDAI = async (network, deployer, artifacts) => {
@@ -225,7 +226,7 @@ const getGMUOracle = async (network, deployer, artifacts) => {
   if (GMUOracle.isDeployed()) return GMUOracle.deployed();
 
   console.log(chalk.yellow(`\nDeploying GMU/USD oracle...`));
-  await deployer.deploy(GMUOracle, 'GMU/USD', ONE);
+  await deployer.deploy(GMUOracle, 'GMU/USD', ONEE6);
 
   return GMUOracle.deployed();
 };
@@ -240,7 +241,7 @@ const getARTHMAHAOracle = async (network, deployer, artifacts) => {
   if (ARTHMAHAOracle.isDeployed()) return ARTHMAHAOracle.deployed()
 
   console.log(chalk.yellow(`\nDeploying ARTH/MAHA oracle...`))
-  await deployer.deploy(ARTHMAHAOracle, 'ARTH/MAHA', ONE)
+  await deployer.deploy(ARTHMAHAOracle, 'ARTH/MAHA', ONEE6)
 
   return ARTHMAHAOracle.deployed()
 }
