@@ -117,6 +117,7 @@ const getUniswapRouter = async (network, deployer, artifacts) => {
 const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   const Oracle = artifacts.require('Oracle_USDC');
   const USDC_WETH = artifacts.require('UniswapPairOracle_USDC_WETH');
+  const MockUSDCGMUChainlinkOracle = artifacts.require('MockUSDCGMUChainlinkOracle');
 
   const addr = knownContracts.OracleUSDC && knownContracts.OracleUSDC[network];
   if (addr) return Oracle.at(addr);
@@ -144,7 +145,10 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   }
 
   let usdcGMUCustomChainlinkOracleAddr = knownContracts.USDCGMUChainlinkOracle && knownContracts.USDCGMUChainlinkOracle[network];
-  if (!usdcGMUCustomChainlinkOracleAddr) usdcGMUCustomChainlinkOracleAddr = '0x0000000000000000000000000000000000000000';
+  if (!usdcGMUCustomChainlinkOracleAddr) {
+    await deployer.deploy(MockUSDCGMUChainlinkOracle);
+    usdcGMUCustomChainlinkOracleAddr = (await MockUSDCGMUChainlinkOracle.deployed()).address;
+  }
 
   await deployer.deploy(
     Oracle,
@@ -162,6 +166,7 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
 const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   const Oracle = artifacts.require('Oracle_USDT');
   const USDT_WETH = artifacts.require('UniswapPairOracle_USDT_WETH');
+  const MockUSDTGMUChainlinkOracle = artifacts.require('MockUSDTGMUChainlinkOracle');
 
   const addr = knownContracts.OracleUSDT && knownContracts.OracleUSDT[network];
   if (addr) return Oracle.at(addr);
@@ -189,7 +194,10 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   }
 
   let usdtGMUCustomChainlinkOracleAddr = knownContracts.USDTGMUChainlinkOracle && knownContracts.USDTGMUChainlinkOracle[network];
-  if (!usdtGMUCustomChainlinkOracleAddr) usdtGMUCustomChainlinkOracleAddr = '0x0000000000000000000000000000000000000000';
+  if (!usdtGMUCustomChainlinkOracleAddr) {
+    await deployer.deploy(MockUSDTGMUChainlinkOracle);
+    usdtGMUCustomChainlinkOracleAddr = (await MockUSDTGMUChainlinkOracle.deployed()).address;
+  }
 
   await deployer.deploy(
     Oracle,

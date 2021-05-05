@@ -6,9 +6,7 @@ import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-wit
 
 import { advanceBlock } from './utilities';
 
-
 chai.use(solidity);
-
 
 describe('Staking Reward', () => {
   const { provider } = ethers;
@@ -77,8 +75,16 @@ describe('Staking Reward', () => {
       gmuOracle.address
     );
 
-    arthx = await ARTHX.deploy('ARTHX', 'ARTHX', arthxETHUniswapOracle.address, owner.address, owner.address);
-    arthController = await ARTHController.deploy(arth.address, owner.address, owner.address);
+    arthx = await ARTHX.deploy(
+      arthxETHUniswapOracle.address,
+      owner.address,
+      owner.address
+    );
+    arthController = await ARTHController.deploy(
+      arth.address,
+      owner.address,
+      owner.address
+    );
 
     boostedStaking = await BoostedStaking.deploy(
       owner.address,
@@ -88,7 +94,7 @@ describe('Staking Reward', () => {
       arthController.address, // arthController
       owner.address,
       1000
-    )
+    );
   });
 
   beforeEach(' - Set some contract variables', async () => {
@@ -120,12 +126,10 @@ describe('Staking Reward', () => {
           await stakingRewardsBalance.add(ETH)
         )
 
-      expect(await arth.balanceOf(owner.address))
-        .to
-        .eq(
-          await myBalance.sub(ETH)
-        )
-    })
+      expect(await arth.balanceOf(owner.address)).to.eq(
+        await myBalance.sub(ETH)
+      );
+    });
 
     // it(' - Stake should fail for grey listed addresses', async () => {
     //   await boostedStaking.greylistAddress(owner.address);

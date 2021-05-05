@@ -1,14 +1,12 @@
-const chalk = require('chalk')
-
-const Migrations = artifacts.require("Util/Migrations")
-const Multicall = artifacts.require('Multicall')
+const chalk = require('chalk');
+const Migrations = artifacts.require("Util/Migrations");
+const Multicall = artifacts.require('Multicall');
 
 
 module.exports = async function (deployer, network, accounts) {
+  console.log(chalk.yellow("\nUsing following accounts: "));
+  console.log(accounts);
 
-  console.log(chalk.yellow("\nUsing following accounts: "))
-  console.log(accounts)
-
-  deployer.deploy(Migrations)
+  deployer.deploy(Migrations);
   if (network === 'development') await deployer.deploy(Multicall);
-}
+};

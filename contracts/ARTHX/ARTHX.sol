@@ -68,14 +68,12 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
      */
 
     constructor(
-        string memory _name,
-        string memory _symbol,
         address _oracleAddress,
         address _ownerAddress,
         address _timelockAddress
-    ) AnyswapV4Token(_name) {
-        name = _name;
-        symbol = _symbol;
+    ) AnyswapV4Token('ARTH Shares') {
+        name = 'ARTH Shares';
+        symbol = 'ARTHX';
 
         ownerAddress = _ownerAddress;
         oracleAddress = _oracleAddress;
