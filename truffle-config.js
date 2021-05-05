@@ -1,15 +1,6 @@
 require('dotenv').config();
 const HDWalletProvider = require("truffle-hdwallet-provider");
 
-
-const providerFactory = () => {
-  return new HDWalletProvider(
-    process.env.METAMASK_WALLET_SECRET,
-    process.env.NETWORK_ENDPOINT,
-  );
-};
-
-
 module.exports = {
   networks: {
     development: {
@@ -26,12 +17,12 @@ module.exports = {
     rinkeby: {
       provider: function () {
         return new HDWalletProvider(
-          [process.env.METAMASK_WALLET_SECRET],
+          process.env.METAMASK_WALLET_SECRET,
           'https://bitter-twilight-moon.quiknode.io/a7bc771b-a15c-49a6-9e23-a1106f86b2db/g9PahkWuM3pjJMRqNA39cUyZpov8PMSH5MbcKSJs4zrqyGwEsuUajCGSpWmFbvVU7HboSbF6lauR38Y0Zyr8NQ==/'
         )
       },
       network_id: 4,
-      skipDryRun: true  //  Sure this gas allocation isn't over 4M, which is the max
+      skipDryRun: true
     }
   },
   compilers: {

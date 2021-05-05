@@ -11,13 +11,13 @@ export default {
     hardhat: {},
     mainnet: {
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-      accounts: [`0x${process.env.METAMASK_WALLET_SECRET}`],
+      accounts: [process.env.METAMASK_WALLET_SECRET],
       gasMultiplier: 1.2,
       gasPrice: 100000000000,
     },
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-      accounts: [`0x${process.env.METAMASK_WALLET_SECRET}`],
+      accounts: [process.env.METAMASK_WALLET_SECRET],
     },
     rinkeby: {
       url: process.env.NETWORK_ENDPOINT,
