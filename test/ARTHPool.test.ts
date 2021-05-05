@@ -460,6 +460,11 @@ describe('ARTHPool', () => {
         .to
         .eq(1063829);
 
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(943396);
+
       await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
@@ -467,12 +472,26 @@ describe('ARTHPool', () => {
         .to
         .eq(2340425531) // 2340423800); // Since we divide by weth price in this ecosystem.
 
+      await gmuOracle.setPrice(1e3);
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(2340425); // Since we divide by weth price in this ecosystem.
+
       await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
       expect(await arthPool.getCollateralPrice())
         .to
         .eq(2075471698); // 2075471200); // Since we divide by weth price in this ecosystem.
+
+      await gmuOracle.setPrice(1e3);
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthPool.getCollateralPrice())
+        .to
+        .eq(2075471); // Since we divide by weth price in this ecosystem.
     });
   });
 
