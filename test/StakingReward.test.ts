@@ -315,10 +315,11 @@ describe('Staking Reward', () => {
     });
   });
 
-  describe('- Stake for', async() => {
+  describe('- Stake for', async () => {
     beforeEach(' - Approve staking token', async () => {
       await arth.approve(boostedStaking.address, ETH.mul(2));
       await arth.connect(whale).approve(boostedStaking.address, ETH.mul(2));
+      await arth.connect(whale2).approve(boostedStaking.address, ETH.mul(2));
     });
 
     it(' - Stake for with 1 account', async () => {
@@ -357,6 +358,120 @@ describe('Staking Reward', () => {
         .to
         .eq(
           ETH
+        )
+    })
+
+    it(' - Stake for with 2 account', async () => {
+      const myBalance = await arth.balanceOf(owner.address);
+      const whalesBalance = await arth.balanceOf(whale.address);
+      const whales2Balance = await arth.balanceOf(whale2.address);
+
+      const stakingRewardsBalance = await arth.balanceOf(boostedStaking.address);
+
+      await arth.connect(whale).approve(boostedStaking.address, ETH);
+      await arth.connect(whale2).approve(boostedStaking.address, ETH);
+
+      await boostedStaking.connect(owner).stakeFor(whale.address, ETH)
+      await boostedStaking.connect(owner).stakeFor(whale2.address, ETH)
+
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          stakingRewardsBalance.add(ETH).mul(2)
+        );
+
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(
+          whalesBalance.sub(ETH)
+        );
+
+      expect(await arth.balanceOf(whale2.address))
+        .to
+        .eq(
+          whales2Balance.sub(ETH)
+        );
+
+      let stakingContractsStakes = await boostedStaking.totalSupply()
+      console.log('total Stakes of boostedstaking', stakingContractsStakes.toString());
+
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(
+          ETH.mul(2)
+        );
+
+      let unlockedBalances = await boostedStaking.unlockedBalanceOf(whale.address)
+      console.log('total unlock balance of whale', unlockedBalances.toString());
+
+      expect(await boostedStaking.unlockedBalanceOf(whale.address))
+        .to
+        .eq(
+          ETH
+        )
+
+      expect(await boostedStaking.unlockedBalanceOf(whale2.address))
+        .to
+        .eq(
+          ETH
+        )
+    })
+
+    it(' - Stake for with 2 account with different amount', async () => {
+      const myBalance = await arth.balanceOf(owner.address);
+      const whalesBalance = await arth.balanceOf(whale.address);
+      const whales2Balance = await arth.balanceOf(whale2.address);
+
+      const stakingRewardsBalance = await arth.balanceOf(boostedStaking.address);
+
+      await arth.connect(whale).approve(boostedStaking.address, ETH);
+      await arth.connect(whale2).approve(boostedStaking.address, ETH.mul(2));
+
+      await boostedStaking.connect(owner).stakeFor(whale.address, ETH)
+      await boostedStaking.connect(owner).stakeFor(whale2.address, ETH.mul(2))
+
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          stakingRewardsBalance.add((ETH).mul(3))
+        );
+
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(
+          whalesBalance.sub(ETH)
+        );
+
+      expect(await arth.balanceOf(whale2.address))
+        .to
+        .eq(
+          whales2Balance.sub(ETH.mul(2))
+        );
+
+      let stakingContractsStakes = await boostedStaking.totalSupply()
+      console.log('total Stakes of boostedstaking', stakingContractsStakes.toString());
+
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(
+          ETH.mul(3)
+        );
+
+      let unlockedBalances = await boostedStaking.unlockedBalanceOf(whale.address)
+      console.log('total unlock balance of whale', unlockedBalances.toString());
+
+      expect(await boostedStaking.unlockedBalanceOf(whale.address))
+        .to
+        .eq(
+          ETH
+        )
+
+      expect(await boostedStaking.unlockedBalanceOf(whale2.address))
+        .to
+        .eq(
+          ETH.mul(2)
         )
     })
 
@@ -399,7 +514,7 @@ describe('Staking Reward', () => {
         );
     });
 
-    it(' - Test withdraw ', async () => {
+    it(' - Test withdraw with one account', async () => {
       await arth.connect(owner).approve(boostedStaking.address, ETH);
       await boostedStaking.stake(ETH)
 
@@ -412,6 +527,48 @@ describe('Staking Reward', () => {
       console.log('Balance of owner address after withdraw in boosted staking', ownersBalance2.toString());
 
       expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(
+          0
+        )
+    });
+
+    it(' - Test withdraw with two account', async () => {
+      await arth.connect(owner).approve(boostedStaking.address, ETH);
+      await boostedStaking.connect(owner).stake(ETH)
+
+      await arth.connect(whale).approve(boostedStaking.address, ETH);
+      await boostedStaking.connect(whale).stake(ETH)
+
+      let ownersBalance1 = await boostedStaking.balanceOf(owner.address)
+      console.log('Balance after stake in boosted staking', ownersBalance1.toString());
+
+      await boostedStaking.connect(owner).withdraw(ETH)
+
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(
+          ETH
+        )
+
+      await boostedStaking.connect(whale).withdraw(ETH)
+
+      let ownersBalance2 = await boostedStaking.balanceOf(owner.address)
+      console.log('Balance of owner address after withdraw in boosted staking', ownersBalance2.toString());
+
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(
+          0
+        )
+
+      expect(await boostedStaking.balanceOf(whale.address))
+        .to
+        .eq(
+          0
+        )
+
+      expect(await boostedStaking.totalSupply())
         .to
         .eq(
           0
