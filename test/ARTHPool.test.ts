@@ -551,6 +551,63 @@ describe('ARTHPool', () => {
           BigNumber.from('2075471').mul(ETH).div(1e6)
         ); // Since we divide by weth price in this ecosystem.
     });
+
+    it(' - Should estimate MAHA stability fee properly', async() => {
+      expect(await arthPool.estimateStabilityFeeInMAHA(ETH))
+        .to
+        .eq(
+          BigNumber.from('10000000000000000')
+        );
+
+      await arthMahaOracle.setPrice(1e3);
+      expect(await arthPool.estimateStabilityFeeInMAHA(ETH))
+        .to
+        .eq(
+          BigNumber.from('10000000000000')
+        );
+
+      await arthMahaOracle.setPrice(2e4);
+      expect(await arthPool.estimateStabilityFeeInMAHA(ETH))
+        .to
+        .eq(
+          BigNumber.from('200000000000000')
+        );
+
+      await arthMahaOracle.setPrice(5e7);
+      expect(await arthPool.estimateStabilityFeeInMAHA(ETH))
+        .to
+        .eq(
+          BigNumber.from('500000000000000000')
+        );
+    });
+
+    it('- Should return Target collateral value properly', async() => {
+      await arthController.connect(owner).setGlobalCollateralRatio(0)
+      expect(await arthPool.getTargetCollateralValue())
+        .to
+        .eq(0);
+
+      await arthController.connect(owner).setGlobalCollateralRatio(1e6)
+      expect(await arthPool.getTargetCollateralValue())
+        .to
+        .eq(
+          BigNumber.from('22000000000000000000000000') // 22_000_000e18 genesis.
+        );
+
+      await arthController.connect(owner).setGlobalCollateralRatio(1e3)
+      expect(await arthPool.getTargetCollateralValue())
+        .to
+        .eq(
+          BigNumber.from('22000000000000000000000') // 22_000_000e18 genesis.
+        );
+
+      await arthController.connect(owner).setGlobalCollateralRatio(3e5)
+      expect(await arthPool.getTargetCollateralValue())
+        .to
+        .eq(
+          BigNumber.from('6600000000000000000000000')
+        );
+    });
   });
 
   describe('- Mint 1:1 ARTH', async () => {
