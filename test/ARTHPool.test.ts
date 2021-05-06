@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import chai, { expect } from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { Contract, ContractFactory, utils } from 'ethers';
+import { BigNumber, Contract, ContractFactory, utils } from 'ethers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 import { advanceBlock } from './utilities';
@@ -450,7 +450,7 @@ describe('ARTHPool', () => {
         .eq(1e3);
     });
 
-    it(' - Should get collateral price', async () => {
+    it(' - Should get collateral price properly', async () => {
       expect(await arthPool.getCollateralPrice())
         .to
         .eq(1e6);
@@ -492,6 +492,64 @@ describe('ARTHPool', () => {
       expect(await arthPool.getCollateralPrice())
         .to
         .eq(2075471); // Since we divide by weth price in this ecosystem.
+    });
+
+    it(' - Should get collateral balance properly', async () => {
+      expect(await arthPool.getCollateralGMUBalance())
+        .to
+        .eq(0);
+
+      await dai.transfer(arthPool.address, ETH);
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      expect(await arthPool.getCollateralGMUBalance())
+        .to
+        .eq(
+          BigNumber.from('1063829000000000000')
+        );
+
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      expect(await arthPool.getCollateralGMUBalance())
+        .to
+        .eq(
+          BigNumber.from('943396000000000000')
+        );
+
+      await gmuOracle.setPrice(1e6);
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthPool.getCollateralGMUBalance())
+        .to
+        .eq(
+          BigNumber.from('2340425531').mul(ETH).div(1e6)
+        ) // Since we divide by weth price in this ecosystem.
+
+      await gmuOracle.setPrice(1e3);
+      await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthPool.getCollateralGMUBalance())
+        .to
+        .eq(
+          BigNumber.from('2340425').mul(ETH).div(1e6)
+        ); // Since we divide by weth price in this ecosystem.
+
+      await gmuOracle.setPrice(1e6);
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthPool.getCollateralGMUBalance())
+        .to
+        .eq(
+          BigNumber.from('2075471698').mul(ETH).div(1e6)
+        ); // Since we divide by weth price in this ecosystem.
+
+      await gmuOracle.setPrice(1e3);
+      await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+      await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+      expect(await arthPool.getCollateralGMUBalance())
+        .to
+        .eq(
+          BigNumber.from('2075471').mul(ETH).div(1e6)
+        ); // Since we divide by weth price in this ecosystem.
     });
   });
 
