@@ -925,13 +925,49 @@ describe('Staking Reward', () => {
     });
 
     it(' - Should not withdraw for non staker', async() => {
-      expect(boostedStaking.connect(owner).withdraw(ETH))
+      await expect(boostedStaking.connect(owner).withdraw(ETH))
         .to
         .revertedWith('');
 
-      expect(boostedStaking.connect(whale).withdraw(ETH))
+      await expect(boostedStaking.connect(whale).withdraw(ETH))
         .to
         .revertedWith('');
+    });
+
+    it(' - Should not work if withdrawing > staked', async () => {
+      const ownerARTHBalanceBeforeStaking = await arth.balanceOf(owner.address);
+      const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
+
+      await boostedStaking.stake(ETH);
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBeforeStaking.sub(ETH));
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking.add(ETH));
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(ETH);
+
+      await expect(boostedStaking.connect(owner).withdraw(ETH.mul(105).div(100)))
+        .to
+        .revertedWith('');
+
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH);
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBeforeStaking.sub(ETH));
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking.add(ETH));
     });
 
     it(' - Should work for 1 account', async () => {
