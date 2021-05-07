@@ -5,11 +5,12 @@ pragma solidity ^0.8.0;
 interface IBoostedStaking {
     function stakeLockedFor(
         address who,
+        address from,
         uint256 amount,
         uint256 duration
     ) external;
 
-    function stakeFor(address who, uint256 amount) external;
+    function stakeFor(address who, address from, uint256 amount) external;
 
     function stakeLocked(uint256 amount, uint256 secs) external;
 

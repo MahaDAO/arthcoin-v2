@@ -168,10 +168,11 @@ contract BoostedStaking is
 
     function stakeLockedFor(
         address who,
+        address from,
         uint256 amount,
         uint256 duration
     ) external override onlyPool {
-        _stakeLocked(who, amount, duration);
+        _stakeLocked(who, from, amount, duration);
     }
 
     function setArthController(address _controller)
@@ -360,16 +361,16 @@ contract BoostedStaking is
         timelockAddress = _newTimelock;
     }
 
-    function stakeFor(address who, uint256 amount) external override onlyPool {
-        _stake(who, amount);
+    function stakeFor(address who, address from, uint256 amount) external override onlyPool {
+        _stake(who, from, amount);
     }
 
     function stake(uint256 amount) external override {
-        _stake(msg.sender, amount);
+        _stake(msg.sender, msg.sender, amount);
     }
 
     function stakeLocked(uint256 amount, uint256 secs) external override {
-        _stakeLocked(msg.sender, amount, secs);
+        _stakeLocked(msg.sender, msg.sender, amount, secs);
     }
 
     function totalSupply() external view override returns (uint256) {
@@ -511,7 +512,7 @@ contract BoostedStaking is
      * Internal.
      */
 
-    function _stake(address who, uint256 amount)
+    function _stake(address who, address from, uint256 amount)
         internal
         nonReentrant
         whenNotPaused
@@ -523,7 +524,7 @@ contract BoostedStaking is
         // Pull the tokens from the staker
         TransferHelper.safeTransferFrom(
             address(stakingToken),
-            who,
+            from,
             address(this),
             amount
         );
@@ -541,6 +542,7 @@ contract BoostedStaking is
 
     function _stakeLocked(
         address who,
+        address from,
         uint256 amount,
         uint256 secs
     ) internal nonReentrant whenNotPaused updateReward(who) {
@@ -575,7 +577,7 @@ contract BoostedStaking is
         // Pull the tokens from the staker or the operator
         TransferHelper.safeTransferFrom(
             address(stakingToken),
-            msg.sender,
+            from,
             address(this),
             amount
         );
