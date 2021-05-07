@@ -127,7 +127,7 @@ describe('Staking Reward', () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(await boostedStaking.stake(ETH))
+      await expect(boostedStaking.stake(ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(owner.address, ETH);
@@ -153,7 +153,7 @@ describe('Staking Reward', () => {
         .eq(ETH);
 
       // Stake once again.
-      expect(await boostedStaking.stake(ETH))
+      await expect(boostedStaking.stake(ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(owner.address, ETH);
@@ -181,7 +181,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(await boostedStaking.stake(ETH))
+      await expect(boostedStaking.stake(ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(owner.address, ETH);
@@ -209,7 +209,7 @@ describe('Staking Reward', () => {
         .to
         .eq(0);
 
-      expect(await boostedStaking.connect(whale).stake(ETH))
+      await expect(boostedStaking.connect(whale).stake(ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale.address, ETH);
@@ -247,7 +247,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(await boostedStaking.stake(ETH))
+      await expect(boostedStaking.stake(ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(owner.address, ETH);
@@ -274,7 +274,7 @@ describe('Staking Reward', () => {
         .to
         .eq(0);
 
-      expect(await boostedStaking.connect(whale).stake(ETH.mul(2)))
+      await expect(boostedStaking.connect(whale).stake(ETH.mul(2)))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale.address, ETH.mul(2));
@@ -359,7 +359,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+      await expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale.address, ETH)
@@ -402,11 +402,11 @@ describe('Staking Reward', () => {
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+      await expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale.address, ETH)
-      expect(await boostedStaking.connect(owner).stakeFor(whale2.address, ETH))
+      await expect(boostedStaking.connect(owner).stakeFor(whale2.address, ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale2.address, ETH)
@@ -452,11 +452,11 @@ describe('Staking Reward', () => {
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+      await expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale.address, ETH)
-      expect(boostedStaking.connect(owner).stakeFor(whale2.address, ETH.mul(2)))
+      await expect(boostedStaking.connect(owner).stakeFor(whale2.address, ETH.mul(2)))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale2.address, ETH.mul(2))
@@ -539,12 +539,12 @@ describe('Staking Reward', () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(await boostedStaking.stakeLocked(ETH, 41472000))
+      await expect(boostedStaking.stakeLocked(ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(owner.address, ETH, 41472000);
 
-      expect(arth.balanceOf(boostedStaking.address))
+      expect(await arth.balanceOf(boostedStaking.address))
         .to
         .eq(
           contractARTHBalanceBefore.add(ETH)
@@ -565,7 +565,7 @@ describe('Staking Reward', () => {
         .eq(ETH);
 
       // Stake once again.
-      expect(boostedStaking.stakeLocked(ETH, 41472000))
+      await expect(boostedStaking.stakeLocked(ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(owner.address, ETH, 41472000);
@@ -593,7 +593,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(boostedStaking.stakeLocked(ETH, 41472000))
+      await expect(boostedStaking.stakeLocked(ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(owner.address, ETH, 41472000);
@@ -621,7 +621,7 @@ describe('Staking Reward', () => {
         .to
         .eq(0);
 
-      expect(await boostedStaking.connect(whale).stakeLocked(ETH, 41472000))
+      await expect(await boostedStaking.connect(whale).stakeLocked(ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale.address, ETH, 41472000);
@@ -659,7 +659,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(await boostedStaking.stakeLocked(ETH, 41472000))
+      await expect(await boostedStaking.stakeLocked(ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(owner.address, ETH, 41472000);
@@ -687,7 +687,7 @@ describe('Staking Reward', () => {
         .to
         .eq(0);
 
-      expect(await boostedStaking.connect(whale).stakeLocked(ETH.mul(2), 41472000))
+      await expect(await boostedStaking.connect(whale).stakeLocked(ETH.mul(2), 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale.address, ETH.mul(2), 41472000);
@@ -781,7 +781,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale.address, ETH, 41472000);
@@ -816,12 +816,12 @@ describe('Staking Reward', () => {
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale.address, ETH, 41472000);
 
-      expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale2.address, ETH, 41472000);
@@ -861,17 +861,17 @@ describe('Staking Reward', () => {
         .eq(0);
     });
 
-    it(' - Shoudl work for 2 accounts with different amounts', async () => {
+    it(' - Should work for 2 accounts with different amounts', async () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale.address, ETH, 41472000);
-      expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH.mul(2), 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH.mul(2), 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale2.address, ETH.mul(2), 41472000);
@@ -996,7 +996,7 @@ describe('Staking Reward', () => {
         .eq(HALF_ETH);
       expect(await arth.balanceOf(owner.address))
         .to
-        .eq(ownerARTHBalanceBeforeStaking.add(HALF_ETH));
+        .eq(ownerARTHBalanceBeforeStaking.sub(HALF_ETH));
       expect(await arth.balanceOf(boostedStaking.address))
         .to
         .eq(contractARTHBalanceBeforeStaking.add(HALF_ETH));
