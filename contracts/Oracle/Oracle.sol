@@ -50,7 +50,7 @@ contract Oracle is Ownable, IOracle {
 
     function setOracle(IChainlinkOracle oracle_) public onlyOwner {
         oracle = oracle_;
-        oraclePriceFeedDecimals = oracle.getDecimals();
+        oraclePriceFeedDecimals = address(oracle) != address(0) ? oracle.getDecimals() : 0;
     }
 
     function getETHGMUPrice() public view override returns (uint256) {

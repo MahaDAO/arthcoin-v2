@@ -47,12 +47,14 @@ describe('ARTHPool', () => {
   let arthMahaOracle: Contract;
   let arthController: Contract;
   let arthPoolLibrary: Contract;
+  let daiChainlinkOracle: Contract;
   let daiETHUniswapOracle: Contract;
   let arthETHUniswapOracle: Contract;
   let chainlinkETHGMUOracle: Contract;
   let arthxETHUniswapOracle: Contract;
   let recollaterizationCurve: Contract;
   let mockChainlinkAggregatorV3: Contract;
+  let daiUSDMockChainlinkAggregatorV3: Contract;
 
   before(' - Setup accounts & deploy libraries', async () => {
     [owner, timelock, attacker] = await ethers.getSigners();
@@ -101,6 +103,12 @@ describe('ARTHPool', () => {
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
     arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH.div(1e12)); // Keep the price of simple oracle in 1e6 precision.
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
+    daiUSDMockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
+
+    daiChainlinkOracle = await ChainlinkETHGMUOracle.deploy(
+      daiUSDMockChainlinkAggregatorV3.address,
+      gmuOracle.address
+    );
 
     chainlinkETHGMUOracle = await ChainlinkETHGMUOracle.deploy(
       mockChainlinkAggregatorV3.address,
@@ -136,7 +144,7 @@ describe('ARTHPool', () => {
       dai.address,
       owner.address, // Temp address for weth in mock oracles.
       daiETHUniswapOracle.address,
-      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000', // daiChainlinkOracle.address,
       chainlinkETHGMUOracle.address
     );
 
@@ -450,7 +458,7 @@ describe('ARTHPool', () => {
         .eq(1e3);
     });
 
-    it(' - Should get collateral price properly', async () => {
+    it(' - Should get collateral price properly using uniswap oracle', async () => {
       expect(await arthPool.getCollateralPrice())
         .to
         .eq(1e6);
@@ -494,7 +502,53 @@ describe('ARTHPool', () => {
         .eq(2075471); // Since we divide by weth price in this ecosystem.
     });
 
-    it(' - Should get collateral balance properly', async () => {
+    // it(' - Should get collateral price properly using chainlink oracle', async () => {
+    //   expect(await arthPool.getCollateralPrice())
+    //     .to
+    //     .eq(1e6);
+
+    //   await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+    //   expect(await arthPool.getCollateralPrice())
+    //     .to
+    //     .eq(1063829);
+
+    //   await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+    //   expect(await arthPool.getCollateralPrice())
+    //     .to
+    //     .eq(943396);
+
+    //   await gmuOracle.setPrice(1e6);
+    //   await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+    //   await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+    //   expect(await arthPool.getCollateralPrice())
+    //     .to
+    //     .eq(2340425531) // 2340423800); // Since we divide by weth price in this ecosystem.
+
+    //   await gmuOracle.setPrice(1e3);
+    //   await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
+    //   await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+    //   expect(await arthPool.getCollateralPrice())
+    //     .to
+    //     .eq(2340425); // Since we divide by weth price in this ecosystem.
+
+    //   await gmuOracle.setPrice(1e6);
+    //   await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+    //   await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+    //   expect(await arthPool.getCollateralPrice())
+    //     .to
+    //     .eq(2075471698); // 2075471200); // Since we divide by weth price in this ecosystem.
+
+    //   await gmuOracle.setPrice(1e3);
+    //   await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
+    //   await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
+    //   expect(await arthPool.getCollateralPrice())
+    //     .to
+    //     .eq(2075471); // Since we divide by weth price in this ecosystem.
+    // });
+
+    it(' - Should get collateral balance properly using uniswap oracle', async () => {
+      await oracle.setOracle('0x0000000000000000000000000000000000000000');
+
       expect(await arthPool.getCollateralGMUBalance())
         .to
         .eq(0);
@@ -581,7 +635,7 @@ describe('ARTHPool', () => {
         );
     });
 
-    it('- Should return Target collateral value properly', async() => {
+    it(' - Should return Target collateral value properly', async() => {
       await arthController.connect(owner).setGlobalCollateralRatio(0)
       expect(await arthPool.getTargetCollateralValue())
         .to
