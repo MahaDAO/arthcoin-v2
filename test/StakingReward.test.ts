@@ -12,6 +12,7 @@ describe('Staking Reward', () => {
   const { provider } = ethers;
 
   const ETH = utils.parseEther('1');
+  const HALF_ETH = ETH.mul(50).div(100);
 
   let owner: SignerWithAddress;
   let whale: SignerWithAddress;
@@ -122,7 +123,7 @@ describe('Staking Reward', () => {
       await arth.connect(whale).approve(boostedStaking.address, ETH.mul(2));
     });
 
-    it(' - Stake with 1 account', async () => {
+    it(' - Should work for 1 account', async () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
@@ -175,7 +176,7 @@ describe('Staking Reward', () => {
         .eq(ETH.add(ETH));
     });
 
-    it(' - Stake with 2 accounts, once and use same amounts for stake', async () => {
+    it(' - Should work for 2 accounts with same amounts', async () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
@@ -241,7 +242,7 @@ describe('Staking Reward', () => {
         .eq(ETH);
     });
 
-    it(' - Stake with 2 accounts, once andd use different amounts for stake', async () => {
+    it(' - Should work for 2 accounts with different amounts', async () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
@@ -307,7 +308,7 @@ describe('Staking Reward', () => {
         );
     });
 
-    it(' - Stake should fail for grey listed addresses', async () => {
+    it(' - Should fail for grey listed addresses', async () => {
       await boostedStaking.greylistAddress(owner.address);
       await expect(boostedStaking.stake(ETH))
         .to
@@ -327,12 +328,41 @@ describe('Staking Reward', () => {
       await arth.connect(whale2).approve(boostedStaking.address, ETH.mul(2));
     });
 
-    it(' - Stake for with 1 account', async () => {
+     it(' - Should fail if called by non pool address', async () => {
+      await expect(boostedStaking.connect(whale).stakeFor(whale2.address, ETH))
+        .to
+        .revertedWith('Staking: FORBIDDEN');
+
+      await expect(boostedStaking.connect(timelock).stakeFor(whale2.address, ETH))
+        .to
+        .revertedWith('Staking: FORBIDDEN');
+
+      await expect(boostedStaking.connect(whale2).stakeFor(whale2.address, ETH))
+        .to
+        .revertedWith('Staking: FORBIDDEN');
+    });
+
+    it(' - Should fail for grey listed addresses', async () => {
+      await boostedStaking.greylistAddress(whale.address);
+      await expect(boostedStaking.stakeFor(whale.address, ETH))
+        .to
+        .revertedWith('address has been greylisted');
+
+      await boostedStaking.greylistAddress(whale2.address);
+      await expect(boostedStaking.stakeFor(whale2.address, ETH))
+        .to
+        .revertedWith('address has been greylisted');
+    });
+
+    it(' - Should work for 1 account', async () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await boostedStaking.connect(owner).stakeFor(whale.address, ETH)
+      expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+        .to
+        .emit(boostedStaking, 'Staked')
+        .withArgs(whale.address, ETH)
 
       expect(await arth.balanceOf(boostedStaking.address))
         .to
@@ -366,14 +396,20 @@ describe('Staking Reward', () => {
         );
     });
 
-    it(' - Stake for with 2 account, once with same amounts', async () => {
+    it(' - Should work for 2 accounts with same amounts', async () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await boostedStaking.connect(owner).stakeFor(whale.address, ETH)
-      await boostedStaking.connect(owner).stakeFor(whale2.address, ETH)
+      expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+        .to
+        .emit(boostedStaking, 'Staked')
+        .withArgs(whale.address, ETH)
+      expect(await boostedStaking.connect(owner).stakeFor(whale2.address, ETH))
+        .to
+        .emit(boostedStaking, 'Staked')
+        .withArgs(whale2.address, ETH)
 
       expect(await arth.balanceOf(boostedStaking.address))
         .to
@@ -410,19 +446,25 @@ describe('Staking Reward', () => {
         .eq(0);
     });
 
-    it(' - Stake for with 2 account, once and with different amount', async () => {
+    it(' - Should work for 2 accounts with different amounts', async () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await boostedStaking.connect(owner).stakeFor(whale.address, ETH)
-      await boostedStaking.connect(owner).stakeFor(whale2.address, ETH.mul(2))
+      expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+        .to
+        .emit(boostedStaking, 'Staked')
+        .withArgs(whale.address, ETH)
+      expect(boostedStaking.connect(owner).stakeFor(whale2.address, ETH.mul(2)))
+        .to
+        .emit(boostedStaking, 'Staked')
+        .withArgs(whale2.address, ETH.mul(2))
 
       expect(await arth.balanceOf(boostedStaking.address))
         .to
         .eq(
-          contractARTHBalanceBefore.add((ETH).mul(3))
+          contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH)
         );
       expect(await arth.balanceOf(whale.address))
         .to
@@ -461,13 +503,25 @@ describe('Staking Reward', () => {
       await arth.connect(whale2).approve(boostedStaking.address, ETH.mul(2));
     });
 
+    it(' - Should fail for grey listed addresses', async () => {
+      await boostedStaking.greylistAddress(owner.address);
+      await expect(boostedStaking.stakeLocked(ETH, 41472000))
+        .to
+        .revertedWith('address has been greylisted');
+
+      await boostedStaking.greylistAddress(whale.address);
+      await expect(boostedStaking.connect(whale).stakeLocked(ETH, 41472000))
+        .to
+        .revertedWith('address has been greylisted');
+    });
+
     it(' - Should not work lockTime = 0', async () => {
       await expect(boostedStaking.stakeLocked(ETH, 0))
         .to
         .revertedWith('Cannot wait for a negative number');
     });
 
-    it(' -  Should not work for lockTime < 7 days', async () => {
+    it(' - Should not work for lockTime < 7 days', async () => {
       await arth.connect(owner).approve(boostedStaking.address, ETH);
       await expect(boostedStaking.stakeLocked(ETH, 604700))
         .to
@@ -480,6 +534,193 @@ describe('Staking Reward', () => {
         .to
         .revertedWith('You are trying to stake for too long');
     });
+
+    it(' - Should work for 1 account', async () => {
+      const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+      const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+
+      expect(await boostedStaking.stakeLocked(ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(owner.address, ETH, 41472000);
+
+      expect(arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add(ETH)
+        );
+
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          ownerARTHBalanceBefore.sub(ETH)
+        );
+
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH);
+
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(ETH);
+
+      // Stake once again.
+      expect(boostedStaking.stakeLocked(ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(owner.address, ETH, 41472000);
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add(ETH).add(ETH)
+        );
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          ownerARTHBalanceBefore.sub(ETH).sub(ETH)
+        );
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH.add(ETH));
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(ETH.add(ETH));
+    });
+
+    it(' - Should work for 2 accounts with same amount', async () => {
+      const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+      const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+      const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+
+      expect(boostedStaking.stakeLocked(ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(owner.address, ETH, 41472000);
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add(ETH)
+        );
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          ownerARTHBalanceBefore.sub(ETH)
+        );
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(whaleARTHBalanceBefore);
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(whale.address))
+        .to
+        .eq(0);
+
+      expect(await boostedStaking.connect(whale).stakeLocked(ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(whale.address, ETH, 41472000);
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add(ETH).add(ETH)
+        )
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          ownerARTHBalanceBefore.sub(ETH)
+        );
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(
+          whaleARTHBalanceBefore.sub(ETH)
+        );
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(
+          ETH.add(ETH)
+        );
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(whale.address))
+        .to
+        .eq(ETH);
+    });
+
+    it(' - Should work for 2 accounts with different amounts', async () => {
+      const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+      const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+      const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+
+      expect(await boostedStaking.stakeLocked(ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(owner.address, ETH, 41472000);
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add(ETH)
+        );
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          ownerARTHBalanceBefore.sub(ETH)
+        );
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(whaleARTHBalanceBefore);
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(whale.address))
+        .to
+        .eq(0);
+
+      expect(await boostedStaking.connect(whale).stakeLocked(ETH.mul(2), 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(whale.address, ETH.mul(2), 41472000);
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH)
+        );
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          ownerARTHBalanceBefore.sub(ETH)
+        );
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(
+          whaleARTHBalanceBefore.sub(ETH).sub(ETH)
+        );
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(
+          ETH.add(ETH).add(ETH)
+        );
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(whale.address))
+        .to
+        .eq(
+          ETH.add(ETH)
+        );
+    });
   });
 
   describe('- Stake locked for', async () => {
@@ -487,6 +728,32 @@ describe('Staking Reward', () => {
       await arth.approve(boostedStaking.address, ETH.mul(2));
       await arth.connect(whale).approve(boostedStaking.address, ETH.mul(2));
       await arth.connect(whale2).approve(boostedStaking.address, ETH.mul(2));
+    });
+
+    it(' - Should fail if called by non pool address', async () => {
+      await expect(boostedStaking.connect(whale).stakeLockedFor(whale.address, ETH, 41472000))
+        .to
+        .revertedWith('Staking: FORBIDDEN');
+
+      await expect(boostedStaking.connect(timelock).stakeLockedFor(whale.address, ETH, 41472000))
+        .to
+        .revertedWith('Staking: FORBIDDEN');
+
+      await expect(boostedStaking.connect(whale2).stakeLockedFor(whale2.address, ETH, 41472000))
+        .to
+        .revertedWith('Staking: FORBIDDEN');
+    });
+
+    it(' - Should fail for grey listed addresses', async () => {
+      await boostedStaking.greylistAddress(whale.address);
+      await expect(boostedStaking.stakeLockedFor(whale.address, ETH, 41472000))
+        .to
+        .revertedWith('address has been greylisted');
+
+      await boostedStaking.greylistAddress(whale2.address);
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH, 41472000))
+        .to
+        .revertedWith('address has been greylisted');
     });
 
     it(' - Should not work lockTime = 0', async () => {
@@ -507,6 +774,140 @@ describe('Staking Reward', () => {
       await expect(boostedStaking.stakeLockedFor(whale.address, ETH, 94608001))
         .to
         .revertedWith('You are trying to stake for too long');
+    });
+
+    it(' - Should work for 1 account', async () => {
+      const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+      const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+      const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+
+      expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(whale.address, ETH, 41472000);
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add(ETH)
+        );
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(
+          whaleARTHBalanceBefore.sub(ETH)
+        );
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBefore);
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(whale.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(0);
+    });
+
+    it(' - Should work for 2 accounts with same amount', async () => {
+      const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+      const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+      const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+      const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+
+      expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(whale.address, ETH, 41472000);
+
+      expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(whale2.address, ETH, 41472000);
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add(ETH).add(ETH)
+        );
+
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(
+          whaleARTHBalanceBefore.sub(ETH)
+        );
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBefore);
+      expect(await arth.balanceOf(whale2.address))
+        .to
+        .eq(
+          whale2ARTHBalanceBefore.sub(ETH)
+        );
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(
+          ETH.mul(2)
+        );
+      expect(await boostedStaking.lockedBalanceOf(whale.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(whale2.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(0);
+    });
+
+    it(' - Shoudl work for 2 accounts with different amounts', async () => {
+      const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+      const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+      const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+      const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+
+      expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(whale.address, ETH, 41472000);
+      expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH.mul(2), 41472000))
+        .to
+        .emit(boostedStaking, 'StakeLocked')
+        .withArgs(whale2.address, ETH.mul(2), 41472000);
+
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(
+          contractARTHBalanceBefore.add((ETH).mul(3))
+        );
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(
+          whaleARTHBalanceBefore.sub(ETH)
+        );
+      expect(await arth.balanceOf(whale2.address))
+        .to
+        .eq(
+          whale2ARTHBalanceBefore.sub(ETH.mul(2))
+        );
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(
+          ownerARTHBalanceBefore
+        );
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH.mul(3));
+      expect(await boostedStaking.lockedBalanceOf(whale.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.lockedBalanceOf(whale2.address))
+        .to
+        .eq(ETH.mul(2));
+      expect(await boostedStaking.lockedBalanceOf(owner.address))
+        .to
+        .eq(0);
     });
   });
 
@@ -567,7 +968,41 @@ describe('Staking Reward', () => {
         .eq(contractARTHBalanceBeforeStaking);
     });
 
-    it(' - Should work for 2 accounts', async () => {
+    it(' - Should work properly for 1 account if withdrawing < staked', async () => {
+      const ownerARTHBalanceBeforeStaking = await arth.balanceOf(owner.address);
+      const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
+
+      await boostedStaking.stake(ETH);
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBeforeStaking.sub(ETH));
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking.add(ETH));
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(ETH);
+
+      await boostedStaking.connect(owner).withdraw(HALF_ETH);
+
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(HALF_ETH);
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(HALF_ETH);
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBeforeStaking.add(HALF_ETH));
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking.add(HALF_ETH));
+    });
+
+    it(' - Should work for 2 accounts with same amount', async () => {
       const ownerARTHBalanceBeforeStaking = await arth.balanceOf(owner.address);
       const whaleARTHBalanceBeforeStaking = await arth.balanceOf(whale.address);
       const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
@@ -605,6 +1040,64 @@ describe('Staking Reward', () => {
         .eq(contractARTHBalanceBeforeStaking.add(ETH));
 
       await boostedStaking.connect(whale).withdraw(ETH);
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(0);
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(0);
+      expect(await boostedStaking.balanceOf(whale.address))
+        .to
+        .eq(0);
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBeforeStaking);
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(whaleARTHBalanceBeforeStaking);
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking);
+    });
+
+    it(' - Should work for 2 accounts with different amount', async () => {
+      const ownerARTHBalanceBeforeStaking = await arth.balanceOf(owner.address);
+      const whaleARTHBalanceBeforeStaking = await arth.balanceOf(whale.address);
+      const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
+
+      await boostedStaking.connect(owner).stake(ETH);
+      await boostedStaking.connect(whale).stake(ETH.mul(2));
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH.mul(3));
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.balanceOf(whale.address))
+        .to
+        .eq(ETH.mul(2));
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking.add(ETH.mul(3)));
+
+      await boostedStaking.connect(owner).withdraw(ETH)
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH.mul(2));
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(0);
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBeforeStaking);
+      expect(await boostedStaking.balanceOf(whale.address))
+        .to
+        .eq(ETH.mul(2));
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking.add(ETH).add(ETH));
+
+      await boostedStaking.connect(whale).withdraw(ETH.mul(2));
       expect(await boostedStaking.totalSupply())
         .to
         .eq(0);
