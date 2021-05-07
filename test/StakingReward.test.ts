@@ -329,27 +329,27 @@ describe('Staking Reward', () => {
     });
 
      it(' - Should fail if called by non pool address', async () => {
-      await expect(boostedStaking.connect(whale).stakeFor(whale2.address, ETH))
+      await expect(boostedStaking.connect(whale).stakeFor(whale2.address, whale2.address, ETH))
         .to
         .revertedWith('Staking: FORBIDDEN');
 
-      await expect(boostedStaking.connect(timelock).stakeFor(whale2.address, ETH))
+      await expect(boostedStaking.connect(timelock).stakeFor(whale2.address, whale2.address, ETH))
         .to
         .revertedWith('Staking: FORBIDDEN');
 
-      await expect(boostedStaking.connect(whale2).stakeFor(whale2.address, ETH))
+      await expect(boostedStaking.connect(whale2).stakeFor(whale2.address, whale2.address, ETH))
         .to
         .revertedWith('Staking: FORBIDDEN');
     });
 
     it(' - Should fail for grey listed addresses', async () => {
       await boostedStaking.greylistAddress(whale.address);
-      await expect(boostedStaking.stakeFor(whale.address, ETH))
+      await expect(boostedStaking.stakeFor(whale.address, whale.address, ETH))
         .to
         .revertedWith('address has been greylisted');
 
       await boostedStaking.greylistAddress(whale2.address);
-      await expect(boostedStaking.stakeFor(whale2.address, ETH))
+      await expect(boostedStaking.stakeFor(whale2.address, whale.address, ETH))
         .to
         .revertedWith('address has been greylisted');
     });
@@ -359,7 +359,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+      await expect(boostedStaking.connect(owner).stakeFor(whale.address, whale.address, ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale.address, ETH)
@@ -402,11 +402,11 @@ describe('Staking Reward', () => {
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+      await expect(boostedStaking.connect(owner).stakeFor(whale.address, whale.address, ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale.address, ETH)
-      await expect(boostedStaking.connect(owner).stakeFor(whale2.address, ETH))
+      await expect(boostedStaking.connect(owner).stakeFor(whale2.address, whale2.address, ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale2.address, ETH)
@@ -452,11 +452,11 @@ describe('Staking Reward', () => {
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await expect(boostedStaking.connect(owner).stakeFor(whale.address, ETH))
+      await expect(boostedStaking.connect(owner).stakeFor(whale.address, whale.address, ETH))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale.address, ETH)
-      await expect(boostedStaking.connect(owner).stakeFor(whale2.address, ETH.mul(2)))
+      await expect(boostedStaking.connect(owner).stakeFor(whale2.address, whale2.address, ETH.mul(2)))
         .to
         .emit(boostedStaking, 'Staked')
         .withArgs(whale2.address, ETH.mul(2))
@@ -731,47 +731,47 @@ describe('Staking Reward', () => {
     });
 
     it(' - Should fail if called by non pool address', async () => {
-      await expect(boostedStaking.connect(whale).stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.connect(whale).stakeLockedFor(whale.address, whale.address, ETH, 41472000))
         .to
         .revertedWith('Staking: FORBIDDEN');
 
-      await expect(boostedStaking.connect(timelock).stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.connect(timelock).stakeLockedFor(whale.address, whale.address, ETH, 41472000))
         .to
         .revertedWith('Staking: FORBIDDEN');
 
-      await expect(boostedStaking.connect(whale2).stakeLockedFor(whale2.address, ETH, 41472000))
+      await expect(boostedStaking.connect(whale2).stakeLockedFor(whale2.address, whale.address, ETH, 41472000))
         .to
         .revertedWith('Staking: FORBIDDEN');
     });
 
     it(' - Should fail for grey listed addresses', async () => {
       await boostedStaking.greylistAddress(whale.address);
-      await expect(boostedStaking.stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.stakeLockedFor(whale.address, whale.address, ETH, 41472000))
         .to
         .revertedWith('address has been greylisted');
 
       await boostedStaking.greylistAddress(whale2.address);
-      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, whale2.address, ETH, 41472000))
         .to
         .revertedWith('address has been greylisted');
     });
 
     it(' - Should not work lockTime = 0', async () => {
-      await expect(boostedStaking.stakeLockedFor(whale.address, ETH, 0))
+      await expect(boostedStaking.stakeLockedFor(whale.address, whale.address, ETH, 0))
         .to
         .revertedWith('Cannot wait for a negative number');
     });
 
     it(' - Should not work for lockTime < 7 days.', async () => {
       await arth.connect(owner).approve(boostedStaking.address, ETH);
-      await expect(boostedStaking.stakeLockedFor(whale.address, ETH, 604700))
+      await expect(boostedStaking.stakeLockedFor(whale.address, whale.address, ETH, 604700))
         .to
         .revertedWith('Minimum stake time not met (' + 604800 + ')');
     });
 
     it(' - Should not work for lockTime > 3Y', async () => {
       await arth.connect(owner).approve(boostedStaking.address, ETH);
-      await expect(boostedStaking.stakeLockedFor(whale.address, ETH, 94608001))
+      await expect(boostedStaking.stakeLockedFor(whale.address, whale.address, ETH, 94608001))
         .to
         .revertedWith('You are trying to stake for too long');
     });
@@ -781,7 +781,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, whale.address, ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale.address, ETH, 41472000);
@@ -816,12 +816,12 @@ describe('Staking Reward', () => {
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, whale.address, ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale.address, ETH, 41472000);
 
-      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, whale2.address, ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale2.address, ETH, 41472000);
@@ -867,11 +867,11 @@ describe('Staking Reward', () => {
       const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
       const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
 
-      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, ETH, 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale.address, whale.address, ETH, 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale.address, ETH, 41472000);
-      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, ETH.mul(2), 41472000))
+      await expect(boostedStaking.connect(owner).stakeLockedFor(whale2.address, whale2.address, ETH.mul(2), 41472000))
         .to
         .emit(boostedStaking, 'StakeLocked')
         .withArgs(whale2.address, ETH.mul(2), 41472000);
