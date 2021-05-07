@@ -1,5 +1,6 @@
 import 'solidity-coverage';
 import 'hardhat-gas-reporter';
+import "@nomiclabs/hardhat-web3";
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-etherscan';
 
