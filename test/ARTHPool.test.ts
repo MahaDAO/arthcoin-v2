@@ -522,7 +522,7 @@ describe('ARTHPool', () => {
         .to
         .eq(
           BigNumber.from('2340425531').mul(ETH).div(1e6)
-        ) // Since we divide by weth price in this ecosystem.
+        ); // Since we divide by weth price in this ecosystem.
 
       await gmuOracle.setPrice(1e3);
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
