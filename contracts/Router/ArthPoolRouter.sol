@@ -171,6 +171,7 @@ contract ArthPoolRouter {
         IBoostedStaking stakingPool
     ) internal {
         collateral.transferFrom(msg.sender, address(this), amount);
+        collateral.approve(address(pool), amount);
 
         // mint arth with 100% colalteral
         uint256 arthOut = pool.mint1t1ARTH(amount, arthOutMin);
@@ -178,8 +179,8 @@ contract ArthPoolRouter {
 
         if (address(stakingPool) != address(0)) {
             if (secs != 0)
-                stakingPool.stakeLockedFor(msg.sender, arthOut, secs);
-            else stakingPool.stakeFor(msg.sender, arthOut);
+                stakingPool.stakeLockedFor(msg.sender, address(this), arthOut, secs);
+            else stakingPool.stakeFor(msg.sender, address(this), arthOut);
         }
     }
 
@@ -191,6 +192,7 @@ contract ArthPoolRouter {
         IBoostedStaking stakingPool
     ) internal {
         arthx.transferFrom(msg.sender, address(this), arthxAmountD18);
+        arthx.approve(address(pool), arthxAmountD18);
 
         // mint arth with 100% ARTHX
         uint256 arthOut = pool.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
@@ -198,8 +200,8 @@ contract ArthPoolRouter {
 
         if (address(stakingPool) != address(0)) {
             if (secs != 0)
-                stakingPool.stakeLockedFor(msg.sender, arthOut, secs);
-            else stakingPool.stakeFor(msg.sender, arthOut);
+                stakingPool.stakeLockedFor(msg.sender, address(this), arthOut, secs);
+            else stakingPool.stakeFor(msg.sender, address(this), arthOut);
         }
     }
 
@@ -215,12 +217,14 @@ contract ArthPoolRouter {
         uint256 amountToSell
     ) internal {
         collateral.transferFrom(msg.sender, address(this), amount);
+        collateral.approve(address(pool), amount);
 
         // if we should buyback from Uniswap or use the arthx from the user's wallet
         if (swapWithUniswap) {
             _swapForARTHX(collateral, amountToSell, arthxAmount);
         } else {
             arthx.transferFrom(msg.sender, address(this), arthxAmount);
+            arthx.approve(address(pool), arthxAmount);
         }
 
         // mint the ARTH with ARTHX + Collateral
@@ -231,8 +235,8 @@ contract ArthPoolRouter {
         // stake if necessary
         if (address(stakingPool) != address(0)) {
             if (secs != 0)
-                stakingPool.stakeLockedFor(msg.sender, arthOut, secs);
-            else stakingPool.stakeFor(msg.sender, arthOut);
+                stakingPool.stakeLockedFor(msg.sender, address(this), arthOut, secs);
+            else stakingPool.stakeFor(msg.sender, address(this), arthOut);
         }
     }
 
@@ -245,14 +249,15 @@ contract ArthPoolRouter {
         IBoostedStaking stakingPool
     ) internal {
         collateral.transferFrom(msg.sender, address(this), amount);
+        collateral.approve(address(pool), amount);
 
         uint256 arthxOut = pool.recollateralizeARTH(amount, arthxOutMin);
         arthx.approve(address(stakingPool), uint256(arthxOut));
 
         if (address(stakingPool) != address(0)) {
             if (secs != 0)
-                stakingPool.stakeLockedFor(msg.sender, arthxOut, secs);
-            else stakingPool.stakeFor(msg.sender, arthxOut);
+                stakingPool.stakeLockedFor(msg.sender, address(this), arthxOut, secs);
+            else stakingPool.stakeFor(msg.sender, address(this), arthxOut);
         }
     }
 
