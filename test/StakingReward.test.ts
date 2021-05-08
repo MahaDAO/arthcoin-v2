@@ -165,14 +165,15 @@ describe('Staking Reward', () => {
       await expect(boostedStaking.connect(timelock).setArthController(owner.address))
         .to.not.reverted;
 
-      // boostedStaking.connect(owner).setRewardsDuration(10);
-      // expect(await boostedStaking.rewardsDuration())
-      //   .to
-      //   .eq(10);
-      // boostedStaking.connect(timelock).setRewardsDuration(7);
-      // expect(await boostedStaking.rewardsDuration())
-      //   .to
-      //   .eq(7);
+      await advanceTimeAndBlock(provider, 7 * 24 * 60 * 61);
+      boostedStaking.connect(owner).setRewardsDuration(10);
+      expect(await boostedStaking.rewardsDuration())
+        .to
+        .eq(10);
+      boostedStaking.connect(timelock).setRewardsDuration(7);
+      expect(await boostedStaking.rewardsDuration())
+        .to
+        .eq(7);
 
       await boostedStaking.connect(owner).setMultipliers(ETH, ETH);
       expect(await boostedStaking.lockedStakeMaxMultiplier())
@@ -204,31 +205,12 @@ describe('Staking Reward', () => {
       //   .to
       //   .eq(2);
 
-      // let latestBlockTime = await latestBlocktime(provider);
-      // await boostedStaking.connect(owner).initializeDefault();
-      // expect(await boostedStaking.lastUpdateTime())
-      //   .to
-      //   .eq(latestBlockTime);
-      // expect(await boostedStaking.periodFinish())
-      //   .to
-      //   .eq(
-      //     BigNumber
-      //       .from(latestBlockTime)
-      //       .add(7)
-      //   );
-
-      // latestBlockTime = await latestBlocktime(provider);
-      // await boostedStaking.connect(timelock).initializeDefault();
-      // expect(await boostedStaking.lastUpdateTime())
-      //   .to
-      //   .eq(latestBlockTime);
-      // expect(await boostedStaking.periodFinish())
-      //   .to
-      //   .eq(
-      //     BigNumber
-      //       .from(latestBlockTime)
-      //       .add(7)
-      //   );
+      await expect(boostedStaking.connect(owner).initializeDefault())
+        .to
+        .emit(boostedStaking, 'DefaultInitialization');
+      await expect(boostedStaking.connect(timelock).initializeDefault())
+        .to
+        .emit(boostedStaking,  'DefaultInitialization');
 
       await boostedStaking.connect(owner).greylistAddress(owner.address)
       expect(await boostedStaking.greylist(owner.address))
@@ -1791,8 +1773,6 @@ describe('Staking Reward', () => {
       const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
 
       await boostedStaking.stakeLocked(ETH, 41472000);
-      const latestBlockTime = await latestBlocktime(provider);
-
       expect(await arth.balanceOf(owner.address))
         .to
         .eq(ownerARTHBalanceBeforeStaking.sub(ETH));
@@ -1806,15 +1786,9 @@ describe('Staking Reward', () => {
         .to
         .eq(ETH);
 
+      const lockedStake = await boostedStaking._lockedStakesOf(owner.address);
       await advanceTimeAndBlock(provider, 41472000);
-
-      const kekId = encodeParameters(
-        ['address', 'uint256', 'uint256'],
-        [owner.address, latestBlockTime, ETH]
-      );
-      const kedIDSha3 = Web3.utils.sha3(kekId);
-
-      await boostedStaking.connect(owner).withdrawLocked(kedIDSha3);
+      await boostedStaking.connect(owner).withdrawLocked(lockedStake[0].kekId);
 
       expect(await boostedStaking.balanceOf(owner.address))
         .to
@@ -1892,6 +1866,1202 @@ describe('Staking Reward', () => {
       expect(await maha.balanceOf(boostedStaking.address))
         .to
         .eq(contractMAHABalanceBefore.sub(ETH.div(2)));
+    });
+  });
+
+  describe('- Get rewards', async() => {
+    beforeEach(' - Approve staking token', async () => {
+      await arth.approve(boostedStaking.address, ETH.mul(4));
+      await arth.connect(whale).approve(boostedStaking.address, ETH.mul(4));
+      await arth.connect(whale2).approve(boostedStaking.address, ETH.mul(4));
+    });
+
+    describe(' - Without proper amount for people using Stake', async() => {
+      it('  - Should not work if not staked', async () => {
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+
+        await boostedStaking.connect(owner).getReward();
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+      });
+
+      it('  - Should work for 1 account', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+
+        await boostedStaking.stake(ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+      });
+
+      it('  - Should work for 2 account, that stake with same amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+
+        await boostedStaking.stake(ETH);
+        await boostedStaking.connect(whale).stake(ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .eq(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with same amount and claim at different time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+
+        await boostedStaking.stake(ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+        await boostedStaking.connect(whale).stake(ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .eq(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with different amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+
+        await boostedStaking.stake(ETH);
+        await boostedStaking.connect(whale).stake(ETH.mul(2));
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .eq(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with different amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+
+        await boostedStaking.stake(ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+        await boostedStaking.connect(whale).stake(ETH.mul(2));
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .eq(whaleMAHABalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+    });
+
+    describe(' - Without proper amount for people using Stake For', async () => {
+      it('  - Should not work if not staked', async () => {
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+
+        await boostedStaking.connect(owner).getReward();
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+      });
+
+      it('  - Should work for 1 account', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+
+        await boostedStaking.connect(owner).stakeFor(whale.address, owner.address, ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH));
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+      });
+
+      it('  - Should work for 2 account, that stake with same amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+        const whale2MAHABalanceBefore = await maha.balanceOf(whale2.address);
+
+        await boostedStaking.connect(owner).stakeFor(whale.address, owner.address, ETH);
+        await boostedStaking.connect(owner).stakeFor(whale2.address, owner.address, ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .eq(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await boostedStaking.connect(whale2).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .gt(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with same amount and claim at different time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+        const whale2MAHABalanceBefore = await maha.balanceOf(whale2.address);
+
+        await boostedStaking.connect(owner).stakeFor(whale.address, owner.address, ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+        await boostedStaking.connect(owner).stakeFor(whale2.address, owner.address, ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .eq(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale2).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .gt(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with different amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+        const whale2MAHABalanceBefore = await maha.balanceOf(whale2.address);
+
+        await boostedStaking.connect(owner).stakeFor(whale.address, owner.address, ETH);
+        await boostedStaking.connect(owner).stakeFor(whale2.address, owner.address, ETH.mul(2));
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .eq(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await boostedStaking.connect(whale2).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .gt(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with different amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+        const whale2MAHABalanceBefore = await maha.balanceOf(whale2.address);
+
+        await boostedStaking.connect(owner).stakeFor(whale.address, owner.address, ETH);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+        await boostedStaking.connect(owner).stakeFor(whale2.address, owner.address, ETH.mul(2));
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .eq(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale2).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .gt(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+    });
+
+    describe(' - Without proper amount for people using Stake locked', async () => {
+      it('  - Should not work if not staked', async () => {
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+
+        await boostedStaking.connect(owner).getReward();
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+      });
+
+      it('  - Should work for 1 account', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+
+        await boostedStaking.stakeLocked(ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+      });
+
+      it('  - Should work for 2 account, that stake with same amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+
+        await boostedStaking.stakeLocked(ETH, 604801);
+        await boostedStaking.connect(whale).stakeLocked(ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .eq(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with same amount and claim at different time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+
+        await boostedStaking.stakeLocked(ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+        await boostedStaking.connect(whale).stakeLocked(ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .eq(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with different amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+
+        await boostedStaking.stakeLocked(ETH, 604801);
+        await boostedStaking.connect(whale).stakeLocked(ETH.mul(2), 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .eq(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with different amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+
+        await boostedStaking.stakeLocked(ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+        await boostedStaking.connect(whale).stakeLocked(ETH.mul(2), 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .eq(whaleMAHABalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .gt(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+    });
+
+    describe(' - Without proper amount for people using Stake Locked For', async () => {
+      it('  - Should not work if not staked', async () => {
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+
+        await boostedStaking.connect(owner).getReward();
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+      });
+
+      it('  - Should work for 1 account', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+
+        await boostedStaking.connect(owner).stakeLockedFor(whale.address, owner.address, ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH));
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH));
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+      });
+
+      it('  - Should work for 2 account, that stake with same amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+        const whale2MAHABalanceBefore = await maha.balanceOf(whale2.address);
+
+        await boostedStaking.connect(owner).stakeLockedFor(whale.address, owner.address, ETH, 604801);
+        await boostedStaking.connect(owner).stakeLockedFor(whale2.address, owner.address, ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .eq(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await boostedStaking.connect(whale2).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .gt(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with same amount and claim at different time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+        const whale2MAHABalanceBefore = await maha.balanceOf(whale2.address);
+
+        await boostedStaking.connect(owner).stakeLockedFor(whale.address, owner.address, ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+        await boostedStaking.connect(owner).stakeLockedFor(whale2.address, owner.address, ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .eq(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale2).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .gt(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with different amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+        const whale2MAHABalanceBefore = await maha.balanceOf(whale2.address);
+
+        await boostedStaking.connect(owner).stakeLockedFor(whale.address, owner.address, ETH, 604801);
+        await boostedStaking.connect(owner).stakeLockedFor(whale2.address, owner.address, ETH.mul(2), 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .eq(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await boostedStaking.connect(whale2).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .gt(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
+
+      it('  - Should work for 2 account, that stake with different amount and claim at same time', async () => {
+        const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
+        const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
+        const contractARTHBalanceBefore = await arth.balanceOf(boostedStaking.address);
+        const contractMAHABalanceBefore = await maha.balanceOf(boostedStaking.address);
+        const whaleARTHBalanceBefore = await arth.balanceOf(whale.address);
+        const whaleMAHABalanceBefore = await maha.balanceOf(whale.address);
+        const whale2ARTHBalanceBefore = await arth.balanceOf(whale2.address);
+        const whale2MAHABalanceBefore = await maha.balanceOf(whale2.address);
+
+        await boostedStaking.connect(owner).stakeLockedFor(whale.address, owner.address, ETH, 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+        await boostedStaking.connect(owner).stakeLockedFor(whale2.address, owner.address, ETH.mul(2), 604801);
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale).getReward();
+        let newMahaBalanceOfContract = await maha.balanceOf(boostedStaking.address);
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .eq(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+
+        await advanceTimeAndBlock(provider, 2 * 24 * 60 * 60);
+
+        await boostedStaking.connect(whale2).getReward();
+        expect(await arth.balanceOf(owner.address))
+          .to
+          .eq(ownerARTHBalanceBefore.sub(ETH).sub(ETH).sub(ETH));
+        expect(await arth.balanceOf(whale.address))
+          .to
+          .eq(whaleARTHBalanceBefore);
+        expect(await arth.balanceOf(whale2.address))
+          .to
+          .eq(whale2ARTHBalanceBefore);
+        expect(await arth.balanceOf(boostedStaking.address))
+          .to
+          .eq(contractARTHBalanceBefore.add(ETH).add(ETH).add(ETH));
+        expect(await maha.balanceOf(owner.address))
+          .to
+          .eq(ownerMAHABalanceBefore);
+        expect(await maha.balanceOf(whale.address))
+          .to
+          .gt(whaleMAHABalanceBefore);
+        expect(await maha.balanceOf(whale2.address))
+          .to
+          .gt(whale2MAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(contractMAHABalanceBefore);
+        expect(await maha.balanceOf(boostedStaking.address))
+          .to
+          .lt(newMahaBalanceOfContract);
+      });
     });
   });
 });
