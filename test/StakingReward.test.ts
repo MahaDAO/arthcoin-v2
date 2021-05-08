@@ -1744,15 +1744,35 @@ describe('Staking Reward', () => {
     });
   });
 
-  describe('- Withdraw locked(TODO: fix and add cases)', async() => {
+  describe('- Withdraw locked', async() => {
     beforeEach(' - Approve staking token', async () => {
       await arth.approve(boostedStaking.address, ETH.mul(2));
       await arth.connect(whale).approve(boostedStaking.address, ETH.mul(2));
       await arth.connect(whale2).approve(boostedStaking.address, ETH.mul(2));
     });
 
-    it(' - Should not withdraw for invalid kekId', async () => {
+    it(' - Should not withdraw if non staker', async () => {
       const latestBlockTime = await latestBlocktime(provider);
+      const kekId = encodeParameters(
+        ['address', 'uint256', 'uint256'],
+        [owner.address, latestBlockTime, ETH]
+      );
+      const kedIDSha3 = Web3.utils.sha3(kekId);
+
+      await expect(boostedStaking.connect(owner).withdrawLocked(kedIDSha3))
+        .to
+        .revertedWith('Stake not found');
+
+      await expect(boostedStaking.connect(whale).withdrawLocked(kedIDSha3))
+        .to
+        .revertedWith('Stake not found');
+    });
+
+    it(' - Should not withdraw if staker but invalid kekId', async () => {
+      let latestBlockTime = await latestBlocktime(provider);
+      await boostedStaking.stake(ETH);
+      await boostedStaking.connect(whale).stake(ETH);
+
       const kekId = encodeParameters(
         ['address', 'uint256', 'uint256'],
         [owner.address, latestBlockTime, ETH]
@@ -1799,6 +1819,52 @@ describe('Staking Reward', () => {
       expect(await arth.balanceOf(owner.address))
         .to
         .eq(ownerARTHBalanceBeforeStaking);
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking);
+    });
+
+    it(' - Should work for some who locks stake on my behalf', async () => {
+      const ownerARTHBalanceBeforeStaking = await arth.balanceOf(owner.address);
+      const whaleARTHBalanceBeforeStaking = await arth.balanceOf(whale.address);
+      const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
+
+      await boostedStaking.stakeLockedFor(whale.address, owner.address, ETH, 41472000);
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBeforeStaking.sub(ETH));
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(whaleARTHBalanceBeforeStaking);
+      expect(await arth.balanceOf(boostedStaking.address))
+        .to
+        .eq(contractARTHBalanceBeforeStaking.add(ETH));
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(ETH);
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(0);
+      expect(await boostedStaking.balanceOf(whale.address))
+        .to
+        .eq(ETH);
+
+      const lockedStake = await boostedStaking._lockedStakesOf(whale.address);
+      await advanceTimeAndBlock(provider, 41472000);
+      await boostedStaking.connect(whale).withdrawLocked(lockedStake[0].kekId);
+
+      expect(await boostedStaking.balanceOf(owner.address))
+        .to
+        .eq(0);
+      expect(await boostedStaking.totalSupply())
+        .to
+        .eq(0);
+      expect(await arth.balanceOf(owner.address))
+        .to
+        .eq(ownerARTHBalanceBeforeStaking.sub(ETH));
+      expect(await arth.balanceOf(whale.address))
+        .to
+        .eq(whaleARTHBalanceBeforeStaking.add(ETH));
       expect(await arth.balanceOf(boostedStaking.address))
         .to
         .eq(contractARTHBalanceBeforeStaking);
