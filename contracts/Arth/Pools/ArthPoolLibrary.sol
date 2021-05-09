@@ -138,7 +138,15 @@ library ArthPoolLibrary {
         uint256 globalCollatValue,
         uint256 arthTotalSupply,
         uint256 globalCollateralRatio
-    ) public pure returns (uint256, uint256) {
+    )
+        public
+        pure
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
         uint256 collateralValueAttempted =
             collateralAmount.mul(collateralPrice).div(1e6);
         uint256 effectiveCollateralRatio =
@@ -161,7 +169,8 @@ library ArthPoolLibrary {
 
         return (
             amountToRecollateralize.mul(1e6).div(collateralPrice),
-            amountToRecollateralize
+            amountToRecollateralize,
+            recollateralizePossible
         );
     }
 }

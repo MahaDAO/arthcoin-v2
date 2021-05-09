@@ -31,15 +31,15 @@ contract ArthPool is AccessControl, IARTHPool {
      * @dev Contract instances.
      */
 
-    IARTH private _ARTH;
-    IARTHX private _ARTHX;
-    IERC20 private _COLLATERAL;
-    IERC20Burnable private _MAHA;
-    ISimpleOracle private _ARTHMAHAOracle;
-    IARTHController private _arthController;
-    IOracle private _collateralGMUOracle;
-    ICurve private _recollateralizeDiscountCruve;
-    IUniswapPairOracle private _collateralETHOracle;
+    IARTH public _ARTH;
+    IARTHX public _ARTHX;
+    IERC20 public _COLLATERAL;
+    IERC20Burnable public _MAHA;
+    ISimpleOracle public _ARTHMAHAOracle;
+    IARTHController public _arthController;
+    IOracle public _collateralGMUOracle;
+    ICurve public _recollateralizeDiscountCruve;
+    IUniswapPairOracle public _collateralETHOracle;
 
     /// @dev Necessary for fetching prices.
     bool public override isWETHPool = false;
@@ -48,7 +48,6 @@ contract ArthPool is AccessControl, IARTHPool {
     bool public redeemPaused = false;
     bool public buyBackPaused = false;
     bool public recollateralizePaused = false;
-    bool public override collateralPricePaused = false;
 
     uint256 public override buybackFee;
     uint256 public override mintingFee;
@@ -257,16 +256,6 @@ contract ArthPool is AccessControl, IARTHPool {
     function toggleBuyBack() external override {
         require(hasRole(_BUYBACK_PAUSER, msg.sender));
         buyBackPaused = !buyBackPaused;
-    }
-
-    function toggleCollateralPrice(uint256 newPrice) external override {
-        require(hasRole(_COLLATERAL_PRICE_PAUSER, msg.sender));
-
-        // If pausing, set paused price; else if unpausing, clear pausedPrice.
-        if (collateralPricePaused == false) pausedPrice = newPrice;
-        else pausedPrice = 0;
-
-        collateralPricePaused = !collateralPricePaused;
     }
 
     // Combined into one function due to 24KiB contract memory limit
@@ -666,21 +655,13 @@ contract ArthPool is AccessControl, IARTHPool {
     {
         require(recollateralizePaused == false, 'Recollateralize is paused');
 
-        uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
         uint256 arthxPrice = _arthController.getARTHXPrice();
-        uint256 arthTotalSupply = _arthController.getARTHSupply();
-        uint256 collateralRatioForRecollateralize =
-            _arthController.getCRForRecollateralize();
-        uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
-        (uint256 collateralUnits, uint256 amountToRecollateralize) =
-            ArthPoolLibrary.calcRecollateralizeARTHInner(
-                collateralAmountD18,
-                getCollateralPrice(),
-                globalCollatValue,
-                arthTotalSupply,
-                collateralRatioForRecollateralize
-            );
+        (
+            uint256 collateralUnits,
+            uint256 amountToRecollateralize,
+            uint256 recollateralizePossible
+        ) = estimateAmountToRecollateralize(collateralAmount);
 
         uint256 collateralUnitsPrecision =
             collateralUnits.div(10**_missingDeciamls);
@@ -709,6 +690,54 @@ contract ArthPool is AccessControl, IARTHPool {
         _ARTHX.poolMint(msg.sender, arthxPaidBack);
 
         return arthxPaidBack;
+    }
+
+    function estimateAmountToRecollateralize(uint256 collateralAmount)
+        public
+        view
+        returns (
+            uint256 collateralUnits,
+            uint256 amountToRecollateralize,
+            uint256 recollateralizePossible
+        )
+    {
+        uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
+        uint256 arthxPrice = _arthController.getARTHXPrice();
+        uint256 arthTotalSupply = _arthController.getARTHSupply();
+        uint256 collateralRatioForRecollateralize =
+            _arthController.getCRForRecollateralize();
+        uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
+
+        return
+            ArthPoolLibrary.calcRecollateralizeARTHInner(
+                collateralAmountD18,
+                getCollateralPrice(),
+                globalCollatValue,
+                arthTotalSupply,
+                collateralRatioForRecollateralize
+            );
+    }
+
+    function estimateRecollateralizeRewards() public view returns (uint256) {
+        uint256 arthxPrice = _arthController.getARTHXPrice();
+
+        (
+            uint256 collateralUnits,
+            uint256 amountToRecollateralize,
+            uint256 recollateralizePossible
+        ) = estimateAmountToRecollateralize(0);
+
+        uint256 collateralUnitsPrecision =
+            collateralUnits.div(10**_missingDeciamls);
+
+        return
+            recollateralizePossible
+                .mul(
+                uint256(1e6).add(getRecollateralizationDiscount()).sub(
+                    recollatFee
+                )
+            )
+                .div(arthxPrice);
     }
 
     // Function can be called by an ARTHX holder to have the protocol buy back ARTHX with excess collateral value from a desired collateral pool
@@ -829,8 +858,6 @@ contract ArthPool is AccessControl, IARTHPool {
     }
 
     function getCollateralPrice() public view override returns (uint256) {
-        if (collateralPricePaused) return pausedPrice;
-        if (isWETHPool) return _arthController.getETHGMUPrice();
         return _collateralGMUOracle.getPrice();
     }
 

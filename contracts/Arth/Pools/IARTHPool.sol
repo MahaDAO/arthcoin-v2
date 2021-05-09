@@ -11,9 +11,7 @@ interface IARTHPool {
 
     function setBuyBackCollateralBuffer(uint256 percent) external;
 
-    function setCollatGMUOracle(
-        address _collateralGMUOracleAddress
-    ) external;
+    function setCollatGMUOracle(address _collateralGMUOracleAddress) external;
 
     function toggleMinting() external;
 
