@@ -7,21 +7,9 @@ interface IARTHPool {
 
     function borrow(uint256 amount) external;
 
-    function setStabilityFee(uint256 percent) external;
-
     function setBuyBackCollateralBuffer(uint256 percent) external;
 
     function setCollatGMUOracle(address _collateralGMUOracleAddress) external;
-
-    function toggleMinting() external;
-
-    function toggleRedeeming() external;
-
-    function toggleRecollateralize() external;
-
-    function toggleBuyBack() external;
-
-    function toggleCollateralPrice(uint256 newPrice) external;
 
     function setPoolParameters(
         uint256 newCeiling,
@@ -75,8 +63,6 @@ interface IARTHPool {
 
     function mintingFee() external returns (uint256);
 
-    function isWETHPool() external returns (bool);
-
     function redemptionFee() external returns (uint256);
 
     function buybackFee() external returns (uint256);
@@ -92,10 +78,6 @@ interface IARTHPool {
     function getCollateralPrice() external view returns (uint256);
 
     function getARTHMAHAPrice() external view returns (uint256);
-
-    function collateralPricePaused() external view returns (bool);
-
-    function pausedPrice() external view returns (uint256);
 
     function collateralGMUOracleAddress() external view returns (address);
 }

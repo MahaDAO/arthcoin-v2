@@ -41,22 +41,12 @@ contract ArthPool is AccessControl, IARTHPool {
     ICurve public _recollateralizeDiscountCruve;
     IUniswapPairOracle public _collateralETHOracle;
 
-    /// @dev Necessary for fetching prices.
-    bool public override isWETHPool = false;
-
-    bool public mintPaused = false;
-    bool public redeemPaused = false;
-    bool public buyBackPaused = false;
-    bool public recollateralizePaused = false;
-
     uint256 public override buybackFee;
     uint256 public override mintingFee;
     uint256 public override recollatFee;
     uint256 public override redemptionFee;
-    uint256 public stabilityFee = 1; // In %.
     uint256 public buybackCollateralBuffer = 20; // In %.
 
-    uint256 public override pausedPrice = 0; // Stores price of the collateral, if price is paused
     uint256 public poolCeiling = 0; // Total units of collateral that a pool contract can hold
     uint256 public redemptionDelay = 1; // Number of blocks to wait before being able to collect redemption.
 
@@ -70,14 +60,7 @@ contract ArthPool is AccessControl, IARTHPool {
     mapping(address => uint256) public redeemARTHXBalances;
     mapping(address => uint256) public redeemCollateralBalances;
 
-    bytes32 private constant _RECOLLATERALIZE_PAUSER =
-        keccak256('RECOLLATERALIZE_PAUSER');
-    bytes32 private constant _COLLATERAL_PRICE_PAUSER =
-        keccak256('COLLATERAL_PRICE_PAUSER');
     bytes32 private constant _AMO_ROLE = keccak256('AMO_ROLE');
-    bytes32 private constant _MINT_PAUSER = keccak256('MINT_PAUSER');
-    bytes32 private constant _REDEEM_PAUSER = keccak256('REDEEM_PAUSER');
-    bytes32 private constant _BUYBACK_PAUSER = keccak256('BUYBACK_PAUSER');
 
     uint256 private immutable _missingDeciamls;
     uint256 private constant _PRICE_PRECISION = 1e6;
@@ -133,12 +116,15 @@ contract ArthPool is AccessControl, IARTHPool {
     }
 
     modifier notRedeemPaused() {
-        require(redeemPaused == false, 'ArthPool: Redeeming is paused');
+        require(
+            !_arthController.isRedeemPaused(),
+            'ArthPool: Redeeming is paused'
+        );
         _;
     }
 
     modifier notMintPaused() {
-        require(mintPaused == false, 'ArthPool: Minting is paused');
+        require(!_arthController.isMintPaused(), 'ArthPool: Minting is paused');
         _;
     }
 
@@ -156,9 +142,7 @@ contract ArthPool is AccessControl, IARTHPool {
         address __ARTHMAHAOracle,
         address __arthController,
         uint256 _poolCeiling
-    )
-    // bool isWETHPool_  // Commented because need to add in migrations as well.
-    {
+    ) {
         _MAHA = IERC20Burnable(__MAHA);
         _ARTH = IARTH(__arthContractAddress);
         _COLLATERAL = IERC20(__collateralAddress);
@@ -175,15 +159,7 @@ contract ArthPool is AccessControl, IARTHPool {
         poolCeiling = _poolCeiling;
         _missingDeciamls = uint256(18).sub(_COLLATERAL.decimals());
 
-        // isWETHPool = isWETHPool_;
-
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
-        grantRole(_MINT_PAUSER, _timelockAddress);
-        grantRole(_REDEEM_PAUSER, _timelockAddress);
-        grantRole(_BUYBACK_PAUSER, _timelockAddress);
-        grantRole(_RECOLLATERALIZE_PAUSER, _timelockAddress);
-        grantRole(_COLLATERAL_PRICE_PAUSER, _timelockAddress);
     }
 
     /**
@@ -219,16 +195,6 @@ contract ArthPool is AccessControl, IARTHPool {
         _ARTHMAHAOracle = oracle;
     }
 
-    function setStabilityFee(uint256 percent)
-        external
-        override
-        onlyAdminOrOwnerOrGovernance
-    {
-        require(percent <= 100, 'ArthPool: percent > 100');
-
-        stabilityFee = percent;
-    }
-
     function setCollatGMUOracle(address _collateralGMUOracleAddress)
         external
         override
@@ -236,26 +202,6 @@ contract ArthPool is AccessControl, IARTHPool {
     {
         collateralGMUOracleAddress = _collateralGMUOracleAddress;
         _collateralGMUOracle = IOracle(_collateralGMUOracleAddress);
-    }
-
-    function toggleMinting() external override {
-        require(hasRole(_MINT_PAUSER, msg.sender));
-        mintPaused = !mintPaused;
-    }
-
-    function toggleRedeeming() external override {
-        require(hasRole(_REDEEM_PAUSER, msg.sender));
-        redeemPaused = !redeemPaused;
-    }
-
-    function toggleRecollateralize() external override {
-        require(hasRole(_RECOLLATERALIZE_PAUSER, msg.sender));
-        recollateralizePaused = !recollateralizePaused;
-    }
-
-    function toggleBuyBack() external override {
-        require(hasRole(_BUYBACK_PAUSER, msg.sender));
-        buyBackPaused = !buyBackPaused;
     }
 
     // Combined into one function due to 24KiB contract memory limit
@@ -653,15 +599,15 @@ contract ArthPool is AccessControl, IARTHPool {
         override
         returns (uint256)
     {
-        require(recollateralizePaused == false, 'Recollateralize is paused');
+        require(
+            !_arthController.isRecollaterlizePaused(),
+            'Recollateralize is paused'
+        );
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
-        (
-            uint256 collateralUnits,
-            uint256 amountToRecollateralize,
-            uint256 recollateralizePossible
-        ) = estimateAmountToRecollateralize(collateralAmount);
+        (uint256 collateralUnits, uint256 amountToRecollateralize, ) =
+            estimateAmountToRecollateralize(collateralAmount);
 
         uint256 collateralUnitsPrecision =
             collateralUnits.div(10**_missingDeciamls);
@@ -702,7 +648,6 @@ contract ArthPool is AccessControl, IARTHPool {
         )
     {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
-        uint256 arthxPrice = _arthController.getARTHXPrice();
         uint256 arthTotalSupply = _arthController.getARTHSupply();
         uint256 collateralRatioForRecollateralize =
             _arthController.getCRForRecollateralize();
@@ -721,14 +666,8 @@ contract ArthPool is AccessControl, IARTHPool {
     function estimateRecollateralizeRewards() public view returns (uint256) {
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
-        (
-            uint256 collateralUnits,
-            uint256 amountToRecollateralize,
-            uint256 recollateralizePossible
-        ) = estimateAmountToRecollateralize(0);
-
-        uint256 collateralUnitsPrecision =
-            collateralUnits.div(10**_missingDeciamls);
+        (, , uint256 recollateralizePossible) =
+            estimateAmountToRecollateralize(0);
 
         return
             recollateralizePossible
@@ -746,7 +685,7 @@ contract ArthPool is AccessControl, IARTHPool {
         external
         override
     {
-        require(buyBackPaused == false, 'Buyback is paused');
+        require(_arthController.isBuybackPaused(), 'Buyback is paused');
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
@@ -866,23 +805,18 @@ contract ArthPool is AccessControl, IARTHPool {
         view
         returns (uint256)
     {
-        uint256 stabilityFeeInARTH = amount.mul(stabilityFee).div(100);
+        uint256 stabilityFeeInARTH =
+            amount.mul(_arthController.getStabilityFee()).div(100);
         // Considering Simple oracle precision is set to 1e6 and ARTH is in 18 decimals.
         return getARTHMAHAPrice().mul(stabilityFeeInARTH).div(1e6);
     }
 
-    /**
-     * Internal.
-     */
-
     function _chargeStabilityFee(uint256 amount) internal {
         require(amount > 0, 'ArthPool: amount = 0');
 
-        if (stabilityFee > 0) {
-            uint256 stabilityFeeInMAHA = estimateStabilityFeeInMAHA(amount);
-            _MAHA.burnFrom(msg.sender, stabilityFeeInMAHA);
-            emit StabilityFeesCharged(msg.sender, stabilityFeeInMAHA);
-        }
+        uint256 stabilityFeeInMAHA = estimateStabilityFeeInMAHA(amount);
+        _MAHA.burnFrom(msg.sender, stabilityFeeInMAHA);
+        emit StabilityFeesCharged(msg.sender, stabilityFeeInMAHA);
 
         return;
     }

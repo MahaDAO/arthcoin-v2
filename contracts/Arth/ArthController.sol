@@ -18,21 +18,13 @@ import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 contract ArthController is AccessControl, IARTHController {
     using SafeMath for uint256;
 
-    /**
-     * Data structures.
-     */
-
     enum PriceChoice {ARTH, ARTHX}
-
-    /**
-     * State variables.
-     */
 
     IERC20 public ARTH;
 
-    IChainlinkOracle private _ETHGMUPricer;
-    IUniswapPairOracle private _ARTHETHOracle;
-    IUniswapPairOracle private _ARTHXETHOracle;
+    IChainlinkOracle public _ETHGMUPricer;
+    IUniswapPairOracle public _ARTHETHOracle;
+    IUniswapPairOracle public _ARTHXETHOracle;
 
     address public wethAddress;
     address public arthxAddress;
@@ -80,13 +72,23 @@ contract ArthController is AccessControl, IARTHController {
 
     bytes32 public constant COLLATERAL_RATIO_PAUSER =
         keccak256('COLLATERAL_RATIO_PAUSER');
-
+    bytes32 public constant _RECOLLATERALIZE_PAUSER =
+        keccak256('RECOLLATERALIZE_PAUSER');
+    bytes32 public constant _MINT_PAUSER = keccak256('MINT_PAUSER');
+    bytes32 public constant _REDEEM_PAUSER = keccak256('REDEEM_PAUSER');
+    bytes32 public constant _BUYBACK_PAUSER = keccak256('BUYBACK_PAUSER');
     address[] public arthPoolsArray; // These contracts are able to mint ARTH.
 
     mapping(address => bool) public override arthPools;
 
+    bool public mintPaused = false;
+    bool public redeemPaused = false;
+    bool public buyBackPaused = false;
+    bool public recollateralizePaused = false;
+
     uint8 private _ethGMUPricerDecimals;
     uint256 private constant _PRICE_PRECISION = 1e6;
+    uint256 public stabilityFee = 1; // In %.
 
     event ToggleGlobalCRForMint(bool old, bool flag);
     event ToggleGlobalCRForRedeem(bool old, bool flag);
@@ -163,6 +165,11 @@ contract ArthController is AccessControl, IARTHController {
         priceTarget = 1000000; // Collateral ratio will adjust according to the $1 price target at genesis.
         refreshCooldown = 3600; // Refresh cooldown period is set to 1 hour (3600 seconds) at genesis.
         globalCollateralRatio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision).
+
+        grantRole(_MINT_PAUSER, _timelockAddress);
+        grantRole(_REDEEM_PAUSER, _timelockAddress);
+        grantRole(_BUYBACK_PAUSER, _timelockAddress);
+        grantRole(_RECOLLATERALIZE_PAUSER, _timelockAddress);
     }
 
     /**
@@ -333,6 +340,15 @@ contract ArthController is AccessControl, IARTHController {
         onlyByOwnerOrGovernance
     {
         refreshCooldown = newCooldown;
+    }
+
+    function setStabilityFee(uint256 percent)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        require(percent <= 100, 'ArthPool: percent > 100');
+        stabilityFee = percent;
     }
 
     function setETHGMUOracle(address _ethGMUConsumerAddress)
@@ -541,4 +557,49 @@ contract ArthController is AccessControl, IARTHController {
 
         return eth2GMUPrice.mul(_PRICE_PRECISION).div(priceVsETH);
     }
+
+    function toggleMinting() external override {
+        require(hasRole(_MINT_PAUSER, msg.sender));
+        mintPaused = !mintPaused;
+    }
+
+    function toggleRedeeming() external override {
+        require(hasRole(_REDEEM_PAUSER, msg.sender));
+        redeemPaused = !redeemPaused;
+    }
+
+    function toggleRecollateralize() external override {
+        require(hasRole(_RECOLLATERALIZE_PAUSER, msg.sender));
+        recollateralizePaused = !recollateralizePaused;
+    }
+
+    function toggleBuyBack() external override {
+        require(hasRole(_BUYBACK_PAUSER, msg.sender));
+        buyBackPaused = !buyBackPaused;
+    }
+
+    function isRedeemPaused() external view override returns (bool) {
+        return redeemPaused;
+    }
+
+    function isMintPaused() external view override returns (bool) {
+        return mintPaused;
+    }
+
+    function isBuybackPaused() external view override returns (bool) {
+        return buyBackPaused;
+    }
+
+    function isRecollaterlizePaused() external view override returns (bool) {
+        return recollateralizePaused;
+    }
+
+    function getStabilityFee() external view override returns (uint256) {
+        return stabilityFee;
+    }
+
+    // todo add this here
+    // function mintingFee() external returns (uint256);
+    // function redemptionFee() external returns (uint256);
+    // function buybackFee() external returns (uint256);
 }

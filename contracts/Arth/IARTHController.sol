@@ -84,9 +84,34 @@ interface IARTHController {
 
     function setRecollateralizeCollateralRatio(uint256 val) external;
 
+    function setStabilityFee(uint256 val) external;
+
     function getCRForMint() external view returns (uint256);
 
     function getCRForRedeem() external view returns (uint256);
 
+    function isRedeemPaused() external view returns (bool);
+
+    function isMintPaused() external view returns (bool);
+
+    function isBuybackPaused() external view returns (bool);
+
+    function isRecollaterlizePaused() external view returns (bool);
+
     function getCRForRecollateralize() external view returns (uint256);
+
+    function toggleMinting() external;
+
+    function toggleRedeeming() external;
+
+    function toggleRecollateralize() external;
+
+    function toggleBuyBack() external;
+
+    function getStabilityFee() external view returns (uint256);
+
+    // todo add this here
+    // function mintingFee() external returns (uint256);
+    // function redemptionFee() external returns (uint256);
+    // function buybackFee() external returns (uint256);
 }
