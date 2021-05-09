@@ -21,6 +21,7 @@ module.exports = {
           'https://bitter-twilight-moon.quiknode.io/a7bc771b-a15c-49a6-9e23-a1106f86b2db/g9PahkWuM3pjJMRqNA39cUyZpov8PMSH5MbcKSJs4zrqyGwEsuUajCGSpWmFbvVU7HboSbF6lauR38Y0Zyr8NQ==/'
         )
       },
+      networkCheckTimeout: 100000,
       network_id: 4,
       skipDryRun: true
     }
