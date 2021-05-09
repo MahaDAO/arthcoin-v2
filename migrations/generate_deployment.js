@@ -40,6 +40,11 @@ module.exports = async (callback) => {
     { abi: 'GMUOracle', contract: 'GMUOracle' },
     { abi: 'SimpleOracle', contract: 'ARTHMAHAOracle' },
 
+    { abi: 'Oracle', contract: 'Oracle_USDC' },
+    { abi: 'Oracle', contract: 'Oracle_USDT' },
+
+    { abi: 'ArthPoolLibrary', contract: 'ArthPoolLibrary' },
+
     { abi: 'ArthPool', contract: 'Pool_USDC' },
     { abi: 'ArthPool', contract: 'Pool_USDT' },
     { abi: 'ArthPoolRouter', contract: 'ArthPoolRouter' },

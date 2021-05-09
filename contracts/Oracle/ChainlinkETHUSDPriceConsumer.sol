@@ -16,7 +16,7 @@ contract ChainlinkETHUSDPriceConsumer is IChainlinkOracle {
      */
 
     ISimpleOracle public gmuOracle;
-    AggregatorV3Interface internal priceFeed;
+    AggregatorV3Interface public priceFeed;
 
     uint256 public priceFeedDecimals = 8;
 

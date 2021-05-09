@@ -21,7 +21,7 @@
     "migrate:ropsten": "rm -rf build/ && truffle migrate --network ropsten --reset",
     "migrate:kovan": "rm -rf build/ && truffle migrate --network kovan --reset",
     "migrate:rinkeby": "rm -rf build/ && truffle migrate --network rinkeby --reset",
-    "verify-deployment": "truffle run verify ArthController ARTHShares ARTHStablecoin StakeARTHMAHA StakeARTH StakeARTHWETH StakeARTHX StakeARTHXWETH UniswapPairOracle_ARTH_WETH UniswapPairOracle_ARTHX_WETH GMUOracle ARTHMAHAOracle Pool_USDC Pool_USDT ArthPoolRouter UniswapV2Factory UniswapV2Router02 DAI USDT USDC WETH WBTC MahaToken Multicall --network",
+    "verify-deployment": "truffle run verify PoolToken Migrations ArthController ARTHShares ARTHStablecoin StakeARTHMAHA StakeARTH StakeARTHWETH StakeARTHX StakeARTHXWETH UniswapPairOracle_ARTH_WETH UniswapPairOracle_ARTHX_WETH GMUOracle ARTHMAHAOracle Pool_USDC Pool_USDT ArthPoolRouter UniswapV2Factory UniswapV2Router02 DAI USDT USDC WETH WBTC MahaToken Multicall Oracle_USDC Oracle_USDT MockChainlinkUSDCGMUOracle MockChainlinkUSDTGMUOracle MockUSDCChainlinkAggregator MockUSDTChainlinkAggregator --network",
     "generate-deployment": "truffle exec migrations/generate_deployment.js --network"
   },
   "devDependencies": {
