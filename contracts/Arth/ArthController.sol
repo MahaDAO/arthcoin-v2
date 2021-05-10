@@ -385,6 +385,18 @@ contract ArthController is AccessControl, IARTHController {
         wethAddress = _wethAddress;
     }
 
+    function setFeesParameters(
+        uint256 _mintingFee,
+        uint256 _recollatFee,
+        uint256 _buybackFee,
+        uint256 _redemptionFee
+    ) external override onlyByOwnerOrGovernance {
+        mintingFee = _mintingFee;
+        recollatFee = _recollatFee;
+        buybackFee = _buybackFee;
+        redemptionFee = _redemptionFee;
+    }
+
     function toggleCollateralRatio()
         external
         override

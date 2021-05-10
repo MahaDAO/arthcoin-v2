@@ -37,6 +37,13 @@ interface IARTHController {
         address _wethAddress
     ) external;
 
+    function setFeesParameters(
+        uint256 _mintingFee,
+        uint256 _recollatFee,
+        uint256 _buybackFee,
+        uint256 _redemptionFee
+    ) external;
+
     function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
         external;
 
