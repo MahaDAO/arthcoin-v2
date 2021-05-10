@@ -9,6 +9,7 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+const MockArth = artifacts.require("MockArth");
 
 
 module.exports = async function (deployer, network, accounts) {
@@ -22,8 +23,16 @@ module.exports = async function (deployer, network, accounts) {
   const timelockInstance = await Timelock.deployed();
 
   console.log(chalk.yellow('\nDeploying tokens...'));
-  await deployer.deploy(ARTHStablecoin);
-  const arth = await ARTHStablecoin.deployed();
+  let arth;
+
+  if (network != 'mainnet') {
+    await deployer.deploy(MockArth);
+    arth = await MockArth.deployed();
+  } else {
+    await deployer.deploy(ARTHStablecoin);
+    arth = await ARTHStablecoin.deployed();
+  }
+
   let arth_name = await arth.name.call();
   console.log(` - NOTE: ARTH name: ${arth_name}`);
 

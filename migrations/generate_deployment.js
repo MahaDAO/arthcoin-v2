@@ -10,7 +10,7 @@ const mkdir = util.promisify(fs.mkdir);
 const Multicall = artifacts.require('Multicall');
 const ARTHStablecoin = artifacts.require('ARTHStablecoin');
 const ARTHShares = artifacts.require('ARTHShares');
-
+const MockArth = artifacts.require('MockArth');
 
 /**
  * Main migrations
@@ -26,7 +26,7 @@ module.exports = async (callback) => {
   const contracts = [
     { abi: 'ArthController', contract: 'ArthController' },
     { abi: 'ARTHShares', contract: 'ARTHShares' },
-    { abi: 'ARTHStablecoin', contract: 'ARTHStablecoin' },
+
 
     { abi: 'BoostedStaking', contract: 'StakeARTHMAHA' },
     { abi: 'BoostedStaking', contract: 'StakeARTH' },
@@ -64,9 +64,16 @@ module.exports = async (callback) => {
     const usdt = (await getUSDT(network, null, artifacts)).address;
     // const wbtc = (await getWB(network, null, artifacts)).address;
 
-    const arth = (await ARTHStablecoin.deployed()).address;
-    const arthx = (await ARTHShares.deployed()).address;
+    let arth
+    if (!isMainnet) {
+      arth = (await MockArth.deployed()).address;
+      contracts.push({ abi: 'ArthStableCoin', contract: 'MockArth' })
+    } else {
+      arth = (await ARTHStablecoin.deployed()).address;
+      contracts.push({ abi: 'ArthStableCoin', contract: 'ARTHStablecoin' })
+    }
 
+    const arthx = (await ARTHShares.deployed()).address;
 
     const multicall = knownContracts.Multicall[network] ?
       knownContracts.Multicall[network] :

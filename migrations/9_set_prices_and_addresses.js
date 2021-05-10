@@ -11,14 +11,21 @@ const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
-
+const MockArth = artifacts.require("MockArth")
 
 module.exports = async function (deployer, network, accounts) {
   const BIG6 = new BigNumber("1e6");
   const DEPLOYER_ADDRESS = accounts[0];
 
   const arthx = await ARTHShares.deployed();
-  const arth = await ARTHStablecoin.deployed();
+
+  let arth
+  if (network != 'mainnet') {
+    arth = await MockArth.deployed();
+  } else {
+    arth = await ARTHStablecoin.deployed();
+  }
+
   const pool_instance_USDC = await Pool_USDC.deployed();
   const pool_instance_USDT = await Pool_USDT.deployed();
   const arthControllerInstance = await ARTHController.deployed();
