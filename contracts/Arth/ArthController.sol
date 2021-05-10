@@ -38,10 +38,15 @@ contract ArthController is AccessControl, IARTHController {
     address public DEFAULT_ADMIN_ADDRESS;
 
     uint256 public arthStep; // Amount to change the collateralization ratio by upon refresing CR.
-    uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
-    uint256 public redemptionFee;
+    // uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
+    // uint256 public redemptionFee;
     uint256 public refreshCooldown; // Seconds to wait before being refresh CR again.
     uint256 public globalCollateralRatio;
+
+    uint256 public override buybackFee;
+    uint256 public override mintingFee;
+    uint256 public override recollatFee;
+    uint256 public override redemptionFee;
 
     // The bound above and below the price target at which the refershing CR
     // will not change the collateral ratio.
@@ -412,6 +417,22 @@ contract ArthController is AccessControl, IARTHController {
         redemptionFee = fee;
     }
 
+    function setBuybackFee(uint256 fee)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        buybackFee = fee;
+    }
+
+    function setRecollatFee(uint256 fee)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        recollatFee = fee;
+    }
+
     function setOwner(address _ownerAddress)
         external
         override
@@ -483,6 +504,22 @@ contract ArthController is AccessControl, IARTHController {
         return ARTH.totalSupply();
     }
 
+    function getMintingFee() external view override returns (uint256) {
+        return mintingFee;
+    }
+
+    function getRecollatFee() external view override returns (uint256) {
+        return recollatFee;
+    }
+
+    function getBuybackFee() external view override returns (uint256) {
+        return buybackFee;
+    }
+
+    function getRedemptionFee() external view override returns (uint256) {
+        return redemptionFee;
+    }
+
     function getCRForRedeem() external view override returns (uint256) {
         if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
         return redeemCollateralRatio;
@@ -511,6 +548,8 @@ contract ArthController is AccessControl, IARTHController {
             uint256,
             uint256,
             uint256,
+            uint256,
+            uint256,
             uint256
         )
     {
@@ -522,7 +561,9 @@ contract ArthController is AccessControl, IARTHController {
             getGlobalCollateralValue(), // Global collateral value.
             mintingFee, // Minting fee.
             redemptionFee, // Redemtion fee.
-            getETHGMUPrice() // ETH/GMU price.
+            getETHGMUPrice(), // ETH/GMU price.
+            recollatFee,
+            buybackFee
         );
     }
 

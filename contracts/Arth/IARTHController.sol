@@ -25,6 +25,8 @@ interface IARTHController {
             uint256,
             uint256,
             uint256,
+            uint256,
+            uint256,
             uint256
         );
 
@@ -41,6 +43,10 @@ interface IARTHController {
     function setArthStep(uint256 newStep) external;
 
     function setRedemptionFee(uint256 fee) external;
+
+    function setBuybackFee(uint256 fee) external;
+
+    function setRecollatFee(uint256 fee) external;
 
     function setOwner(address _ownerAddress) external;
 
@@ -63,6 +69,14 @@ interface IARTHController {
     function getARTHPrice() external view returns (uint256);
 
     function getARTHXPrice() external view returns (uint256);
+
+    function getMintingFee() external view returns (uint256);
+
+    function getRecollatFee() external view returns (uint256);
+
+    function getBuybackFee() external view returns (uint256);
+
+    function getRedemptionFee() external view returns (uint256);
 
     function getETHGMUPrice() external view returns (uint256);
 
@@ -111,7 +125,11 @@ interface IARTHController {
     function getStabilityFee() external view returns (uint256);
 
     // todo add this here
-    // function mintingFee() external returns (uint256);
-    // function redemptionFee() external returns (uint256);
-    // function buybackFee() external returns (uint256);
+    function mintingFee() external returns (uint256);
+
+    function redemptionFee() external returns (uint256);
+
+    function buybackFee() external returns (uint256);
+
+    function recollatFee() external returns (uint256);
 }

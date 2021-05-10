@@ -41,10 +41,10 @@ contract ArthPool is AccessControl, IARTHPool {
     ICurve public _recollateralizeDiscountCruve;
     IUniswapPairOracle public _collateralETHOracle;
 
-    uint256 public override buybackFee;
-    uint256 public override mintingFee;
-    uint256 public override recollatFee;
-    uint256 public override redemptionFee;
+    // uint256 public override buybackFee;
+    // uint256 public override mintingFee;
+    // uint256 public override recollatFee;
+    // uint256 public override redemptionFee;
     uint256 public buybackCollateralBuffer = 20; // In %.
 
     uint256 public poolCeiling = 0; // Total units of collateral that a pool contract can hold
@@ -205,20 +205,13 @@ contract ArthPool is AccessControl, IARTHPool {
     }
 
     // Combined into one function due to 24KiB contract memory limit
-    function setPoolParameters(
-        uint256 newCeiling,
-        uint256 newRedemptionDelay,
-        uint256 newMintFee,
-        uint256 newRedeemFee,
-        uint256 newBuybackFee,
-        uint256 newRecollateralizeFee
-    ) external override onlyByOwnerOrGovernance {
+    function setPoolParameters(uint256 newCeiling, uint256 newRedemptionDelay)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
         poolCeiling = newCeiling;
         redemptionDelay = newRedemptionDelay;
-        mintingFee = newMintFee;
-        redemptionFee = newRedeemFee;
-        buybackFee = newBuybackFee;
-        recollatFee = newRecollateralizeFee;
     }
 
     function setTimelock(address new_timelock)
@@ -293,9 +286,10 @@ contract ArthPool is AccessControl, IARTHPool {
             );
 
         // Remove precision at the end.
-        arthAmountD18 = (arthAmountD18.mul(uint256(1e6).sub(mintingFee))).div(
-            1e6
-        );
+        arthAmountD18 = (
+            arthAmountD18.mul(uint256(1e6).sub(_arthController.getMintingFee()))
+        )
+            .div(1e6);
 
         require(
             arthOutMin <= arthAmountD18,
@@ -331,9 +325,10 @@ contract ArthPool is AccessControl, IARTHPool {
                 arthxPrice, // X ARTHX / 1 USD
                 arthxAmountD18
             );
-        arthAmountD18 = (arthAmountD18.mul(uint256(1e6).sub(mintingFee))).div(
-            1e6
-        );
+        arthAmountD18 = (
+            arthAmountD18.mul(uint256(1e6).sub(_arthController.getMintingFee()))
+        )
+            .div(1e6);
 
         require(arthOutMin <= arthAmountD18, 'Slippage limit reached');
 
@@ -380,7 +375,10 @@ contract ArthPool is AccessControl, IARTHPool {
         (uint256 mintAmount, uint256 arthxNeeded) =
             ArthPoolLibrary.calcMintFractionalARTH(inputParams);
 
-        mintAmount = (mintAmount.mul(uint256(1e6).sub(mintingFee))).div(1e6);
+        mintAmount = (
+            mintAmount.mul(uint256(1e6).sub(_arthController.getMintingFee()))
+        )
+            .div(1e6);
 
         require(arthOutMin <= mintAmount, 'ARTHPool: Slippage limit reached');
         require(arthxNeeded <= arthxAmount, 'ARTHPool: ARTHX < required');
@@ -418,7 +416,9 @@ contract ArthPool is AccessControl, IARTHPool {
             );
 
         collateralNeeded = (
-            collateralNeeded.mul(uint256(1e6).sub(redemptionFee))
+            collateralNeeded.mul(
+                uint256(1e6).sub(_arthController.getRedemptionFee())
+            )
         )
             .div(1e6);
 
@@ -465,9 +465,12 @@ contract ArthPool is AccessControl, IARTHPool {
 
         uint256 collateralPriceGMU = getCollateralPrice();
         uint256 arthAmountPostFee =
-            (arthAmount.mul(uint256(1e6).sub(redemptionFee))).div(
-                _PRICE_PRECISION
-            );
+            (
+                arthAmount.mul(
+                    uint256(1e6).sub(_arthController.getRedemptionFee())
+                )
+            )
+                .div(_PRICE_PRECISION);
 
         uint256 arthxGMUValueD18 =
             arthAmountPostFee.sub(
@@ -529,7 +532,9 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 arthxGMUValueD18 = arthAmount;
 
         arthxGMUValueD18 = (
-            arthxGMUValueD18.mul(uint256(1e6).sub(redemptionFee))
+            arthxGMUValueD18.mul(
+                uint256(1e6).sub(_arthController.getRedemptionFee())
+            )
         )
             .div(_PRICE_PRECISION); // apply fees
 
@@ -617,7 +622,7 @@ contract ArthPool is AccessControl, IARTHPool {
             amountToRecollateralize
                 .mul(
                 uint256(1e6).add(getRecollateralizationDiscount()).sub(
-                    recollatFee
+                    _arthController.getRedemptionFee()
                 )
             )
                 .div(arthxPrice);
@@ -673,7 +678,7 @@ contract ArthPool is AccessControl, IARTHPool {
             recollateralizePossible
                 .mul(
                 uint256(1e6).add(getRecollateralizationDiscount()).sub(
-                    recollatFee
+                    _arthController.getRecollatFee()
                 )
             )
                 .div(arthxPrice);
@@ -699,7 +704,7 @@ contract ArthPool is AccessControl, IARTHPool {
 
         uint256 collateralEquivalentD18 =
             (ArthPoolLibrary.calcBuyBackARTHX(inputParams))
-                .mul(uint256(1e6).sub(buybackFee))
+                .mul(uint256(1e6).sub(_arthController.getBuybackFee()))
                 .div(1e6);
         uint256 collateralPrecision =
             collateralEquivalentD18.div(10**_missingDeciamls);
