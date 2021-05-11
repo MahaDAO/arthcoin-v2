@@ -80,6 +80,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         timelockAddress = _timelockAddress;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+
         _mint(ownerAddress, genesisSupply);
     }
 
