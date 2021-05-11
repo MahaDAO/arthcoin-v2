@@ -11,6 +11,8 @@ const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const MockArth = artifacts.require("MockArth");
+const MockArthx = artifacts.require("MockArth");
+
 
 module.exports = async function (deployer, network, accounts) {
   const redemptionFee = 400; // 0.04%
@@ -21,15 +23,19 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
   const TEN_MILLION = new BigNumber("1000000e6");
 
-  const arthxInstance = await ARTHShares.deployed();
+  //const arthxInstance = await ARTHShares.deployed();
   const timelockInstance = await Timelock.deployed();
 
   let arthInstance
+  let arthxInstance
   if (network != 'mainnet') {
     arthInstance = await MockArth.deployed();
+    arthxInstance = await MockArthx.deployed();
   } else {
     arthInstance = await ARTHStablecoin.deployed();
+    arthxInstance = await ARTHShares.deployed();
   }
+
   const arthControllerInstance = await ARTHController.deployed();
   const mahaTokenInstance = await helpers.getMahaToken(network, deployer, artifacts);
   const arthMahaOracle = await helpers.getARTHMAHAOracle(network, deployer, artifacts);

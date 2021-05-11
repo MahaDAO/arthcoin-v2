@@ -9,17 +9,20 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const SwapToPrice = artifacts.require("Uniswap/SwapToPrice");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const MockArth = artifacts.require("MockArth");
+const MockArthx = artifacts.require("MockArthx");
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const arthx = await ARTHShares.deployed();
-
+  let arthx 
   let arth
+
   if (network != 'mainnet') {
     arth = await MockArth.deployed();
+    arthx = await MockArthx.deployed();
   } else {
     arth = await ARTHStablecoin.deployed();
+    arthx = await ARTHShares.deployed();
   }
 
   const maha = await helpers.getMahaToken(network, deployer, artifacts);

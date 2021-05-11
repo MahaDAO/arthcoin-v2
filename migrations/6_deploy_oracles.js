@@ -8,18 +8,22 @@ const ARTHController = artifacts.require("ArthController");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
 const MockArth = artifacts.require("MockArth");
+const MockArthx = artifacts.require("MockArthx");
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const arthx = await ARTHShares.deployed();
   const timelockInstance = await Timelock.deployed();
+  //const arthx = await ARTHShares.deployed();
 
   let arth
+  let arthx
   if (network != 'mainnet') {
     arth = await MockArth.deployed();
+    arthx = await MockArthx.deployed();
   } else {
     arth = await ARTHStablecoin.deployed();
+    arthx = await ARTHShares.deployed();
   }
 
   const arthController = await ARTHController.deployed();
