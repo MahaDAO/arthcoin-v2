@@ -2,11 +2,11 @@
 
 <p align="center">
 
-🖥 **Website** – https://arth.finance
+🖥 **Website** – https://arthcoin.com
 
-📖 **Documentation** – https://docs.arth.finance
+📖 **Documentation** – https://docs.arthcoin.com
 
-📲 **Telegram** – https://t.me/arthfinance
+📲 **Telegram** – https://t.me/mahadao
 </p>
 
 ## What is Arth?
