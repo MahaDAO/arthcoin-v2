@@ -178,21 +178,21 @@ describe('ARTHController', () => {
     await arthController.setARTHETHOracle(arthETHUniswapOracle.address, owner.address);
     await arthController.setARTHXETHOracle(arthxETHUniswapOracle.address, owner.address);
 
-    await daiARTHPool.setPoolParameters(
-      ETH.mul(2),
-      1,
+    await arthController.setFeesParameters(
       1000,
       1000,
       1000,
       1000
     );
+
+    await daiARTHPool.setPoolParameters(
+      ETH.mul(2),
+      1
+    );
+
     await usdcARTHPool.setPoolParameters(
       ETH.mul(2),
-      1,
-      1000,
-      1000,
-      1000,
-      1000
+      1
     );
 
     await daiARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);

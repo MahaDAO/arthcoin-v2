@@ -169,7 +169,14 @@ describe('ARTHPool', () => {
       owner.address
     );
 
-    await arthPool.setPoolParameters(ETH.mul(2), 1, 1000, 1000, 1000, 1000);
+    await arthController.setFeesParameters(
+      1000,
+      1000,
+      1000,
+      1000
+    );
+
+    await arthPool.setPoolParameters(ETH.mul(2), 1);
 
     await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10)); // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
 
