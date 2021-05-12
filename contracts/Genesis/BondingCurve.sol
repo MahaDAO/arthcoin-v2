@@ -2,9 +2,19 @@
 
 pragma solidity ^0.8.0;
 
-import {ICurve} from '../Curves/ICurve.sol';
+import {IBondingCurve} from '../Curves/IBondingCurve.sol';
 
-contract BondingCurve is ICurve {
+contract BondingCurve is IBondingCurve {
+    uint256 public fixedPrice = 1300e6;
+
+    constructor(uint256 price) {
+        fixedPrice = price;
+    }
+
+    function getFixedPrice() external view override returns(uint256) {
+        return fixedPrice;
+    }
+
     function getY(uint256 percent) external pure override returns (uint256) {
         if (percent <= 0) return 1000e6; // 1k
         else if (percent > 0 && percent <= 10e16) return 2000e6; // 2k
