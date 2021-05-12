@@ -11,10 +11,8 @@ chai.use(solidity);
 
 
 /**
- *
  * TODO: add test cases for.
- *  - Access level check.
- *  - Manually set prices and check for getters(espcially price and value getters).
+ *  - Manually set prices for different oracles and test it.
  */
 describe('ARTHController', () => {
   const { provider } = ethers;
@@ -315,6 +313,70 @@ describe('ARTHController', () => {
       await expect(arthController.connect(alternate).toggleUseGlobalCRForMint(true))
         .to
         .revertedWith('ARTHController: FORBIDDEN');
+    });
+
+    it(' - Should not work if not appropriate role', async() => {
+      await expect(arthController.toggleMinting())
+        .to
+        .revertedWith('');
+      await expect(arthController.connect(attacker).toggleMinting())
+        .to
+        .revertedWith('');
+
+      await expect(arthController.toggleRedeeming())
+        .to
+        .revertedWith('');
+      await expect(arthController.connect(attacker).toggleRedeeming())
+        .to
+        .revertedWith('');
+
+      await expect(arthController.toggleRecollateralize())
+        .to
+        .revertedWith('');
+      await expect(arthController.connect(attacker).toggleRecollateralize())
+        .to
+        .revertedWith('');
+
+      await expect(arthController.toggleBuyBack())
+        .to
+        .revertedWith('');
+      await expect(arthController.connect(attacker).toggleBuyBack())
+        .to
+        .revertedWith('');
+    });
+
+    it(' - Should work if not appropriate role', async () => {
+      await expect(arthController.connect(timelock).toggleMinting())
+        .to
+        .not
+        .reverted;
+      expect(await arthController.isMintPaused())
+        .to
+        .eq(true);
+
+      await expect(arthController.connect(timelock).toggleRedeeming())
+        .to
+        .not
+        .reverted;
+      expect(await arthController.isRedeemPaused())
+        .to
+        .eq(true);
+
+      await expect(arthController.connect(timelock).toggleRecollateralize())
+        .to
+        .not
+        .reverted;
+      expect(await arthController.isRecollaterlizePaused())
+        .to
+        .eq(true);
+
+      await expect(arthController.connect(timelock).toggleBuyBack())
+        .to
+        .not
+        .reverted;
+      expect(await arthController.isBuybackPaused())
+        .to
+        .eq(true);
     });
   });
 
