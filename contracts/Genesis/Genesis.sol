@@ -331,7 +331,7 @@ contract Genesis is ERC20, Ownable {
         require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
 
         _burn(msg.sender, amount);
-        _ARTH.poolMint(msg.sender, amount);
+        _ARTHX.poolMint(msg.sender, amount);
 
         emit RedeemARTHX(msg.sender, amount);
     }
@@ -340,7 +340,7 @@ contract Genesis is ERC20, Ownable {
         require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
 
         _burn(msg.sender, amount);
-        _ARTH.poolMint(msg.sender, amount);
+        _ARTHX.poolMint(msg.sender, amount);
 
         // TODO: distribute MAHA.
         // HOW?
