@@ -72,11 +72,6 @@ contract Genesis is ERC20, Ownable {
      * Modifiers.
      */
 
-    modifier hasStarted() {
-        require(block.timestamp >= startTime, 'Genesis: not started');
-        _;
-    }
-
     modifier isActive() {
         require(
             block.timestamp >= startTime &&
@@ -211,7 +206,7 @@ contract Genesis is ERC20, Ownable {
         require(msg.value == amount, 'Genesis: INVALID INPUT');
 
         // 1. Get the value of ETH put as collateral.
-        uint256 ethValue = msg.value.mul(getETHGMUPrice());
+        uint256 ethValue = msg.value.mul(getETHGMUPrice()).div(_PRICE_PRECISION);
         // 2. Calculate the equivalent amount of tokens to mint based on curve/oracle.
         // Curve price is in e6 precision.
         uint256 mintAmount = ethValue.mul(1e6).div(getCurvePrice());
@@ -255,13 +250,13 @@ contract Genesis is ERC20, Ownable {
         return address(this).balance < softCap;
     }
 
-    function getIsRaisedBetweenCaps() public view returns (bool) {
+    function getIsRaisedBetweenCaps() external view returns (bool) {
         return
             address(this).balance >= softCap && address(this).balance <= hardCap;
     }
 
     function getPercentRaised() public view returns (uint256) {
-        return address(this).balance.mul(100).div(hardCap);
+        return address(this).balance.mul(1e18).div(hardCap);
     }
 
     function getCurvePrice() public view returns (uint256) {
