@@ -57,6 +57,11 @@ describe('ARTHController', () => {
   let chainlinkETHGMUOracle: Contract;
   let arthxETHUniswapOracle: Contract;
   let recollaterizationCurve: Contract;
+
+  let mockDaiGMUAggregatorV3: Contract;
+  let daiGMUChainlinkOracle: Contract;
+  let usdcGMUChainlinkOracle: Contract;
+  let mockUSDCGMUAggregatorV3: Contract;
   let mockChainlinkAggregatorV3: Contract;
 
   before(' - Setup accounts & deploy libraries', async () => {
@@ -99,10 +104,23 @@ describe('ARTHController', () => {
     arthETHUniswapOracle = await MockUniswapOracle.deploy();
     arthxETHUniswapOracle = await MockUniswapOracle.deploy();
     arthMahaOracle = await SimpleOracle.deploy('ARTH/MAHA', ETH.div(1e12));  // Keep the price of simple oracle in 1e6 precision.
+
     mockChainlinkAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
+    mockDaiGMUAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
+    mockUSDCGMUAggregatorV3 = await MockChainlinkAggregatorV3.deploy();
 
     chainlinkETHGMUOracle = await ChainlinkETHGMUOracle.deploy(
       mockChainlinkAggregatorV3.address,
+      gmuOracle.address
+    );
+
+    daiGMUChainlinkOracle = await ChainlinkETHGMUOracle.deploy(
+      mockDaiGMUAggregatorV3.address,
+      gmuOracle.address
+    );
+
+    usdcGMUChainlinkOracle = await ChainlinkETHGMUOracle.deploy(
+      mockUSDCGMUAggregatorV3.address,
       gmuOracle.address
     );
 
@@ -197,6 +215,8 @@ describe('ARTHController', () => {
     await usdcARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
 
     await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
+    await mockDaiGMUAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
+    await mockUSDCGMUAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
   });
 
   describe('- Access restricted functions', async () => {
@@ -315,7 +335,7 @@ describe('ARTHController', () => {
         .revertedWith('ARTHController: FORBIDDEN');
     });
 
-    it(' - Should not work if not appropriate role', async() => {
+    it(' - Should not work if not appropriate role', async () => {
       await expect(arthController.toggleMinting())
         .to
         .revertedWith('');
@@ -438,7 +458,7 @@ describe('ARTHController', () => {
         .eq(3600);
     });
 
-    it(' - Should get fees correctly', async() => {
+    it(' - Should get fees correctly', async () => {
       await arthController.setStabilityFee(9);
       expect(await arthController.stabilityFee())
         .to
@@ -521,7 +541,7 @@ describe('ARTHController', () => {
         .eq(1e6);
     });
 
-    it('- Should get paused or not correctly', async() => {
+    it('- Should get paused or not correctly', async () => {
       expect(await arthController.isMintPaused())
         .to
         .eq(false);
@@ -726,7 +746,7 @@ describe('ARTHController', () => {
       await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
     });
 
-    describe(' - Uniswap based collateral oracles', async() => {
+    describe(' - Uniswap based collateral oracles', async () => {
       it('  - Should work correctly when DAI/ETH = 1) && (USDC/ETH = 1) && (DAI Pool Bal. != USDC Pool Bal.)', async () => {
         expect(await arthController.getGlobalCollateralValue())
           .to
@@ -914,6 +934,547 @@ describe('ARTHController', () => {
             );
         }
       );
+    });
+
+    describe(' - Chainlink based collateral oracles', async () => {
+      beforeEach('  - Set chainlink oracles', async () => {
+        await daiPoolOracle.setOracle(daiGMUChainlinkOracle.address);
+        await usdcPoolOracle.setOracle(usdcGMUChainlinkOracle.address);
+      });
+
+      it('  - Should work correctly when (DAI/USD = 1) && (USDC/USD = 1) && (USD/GMU = 1)', async () => {
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(ETH.mul(4));
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(ETH.mul(5));
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(ETH.mul(7));
+      });
+
+      it('  - Should work correctly when (DAI/USD = 1) && (USDC/USD = 1) && (USD/GMU > 1)', async () => {
+        await gmuOracle.setPrice(1063829);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(4).mul(1063829).div(1e6)
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(5).mul(1063829).div(1e6)
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(7).mul(1063829).div(1e6)
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD = 1) && (USDC/USD = 1) && (USD/GMU < 1)', async () => {
+        await gmuOracle.setPrice(943396);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(4).mul(943396).div(1e6)
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(5).mul(943396).div(1e6)
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(7).mul(943396).div(1e6)
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU = 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(106382900);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(106382900);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(4).mul(1063829).div(1e6)
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(5).mul(1063829).div(1e6)
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(7).mul(1063829).div(1e6)
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU > 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(106382900);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(106382900);
+        await gmuOracle.setPrice(1063829);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(4).mul(1131732).div(1e6)
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(5).mul(1131732).div(1e6)
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(7).mul(1131732).div(1e6)
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU < 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(106382900);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(106382900);
+        await gmuOracle.setPrice(943396);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(4).mul(1003612).div(1e6)
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(5).mul(1003612).div(1e6)
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(7).mul(1003612).div(1e6)
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU = 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(94339600);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(94339600);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(4).mul(943396).div(1e6)
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(5).mul(943396).div(1e6)
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(7).mul(943396).div(1e6)
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU > 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(94339600);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(94339600);
+        await gmuOracle.setPrice(1063829);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(4).mul(1003612).div(1e6)
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(5).mul(1003612).div(1e6)
+          ); 1003612
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(7).mul(1003612).div(1e6)
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU < 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(94339600);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(94339600);
+        await gmuOracle.setPrice(943396);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(4).mul(889996).div(1e6)
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(5).mul(889996).div(1e6)
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH.mul(7).mul(889996).div(1e6)
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU = 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(106382900);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(94339600);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(943396)
+                  .div(1e6)
+              )
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(943396)
+                  .div(1e6)
+              )
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(4)
+                  .mul(943396)
+                  .div(1e6)
+              )
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU < 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(106382900);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(94339600);
+        await gmuOracle.setPrice(943396);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1003612)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(889996)
+                  .div(1e6)
+              )
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1003612)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(889996)
+                  .div(1e6)
+              )
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1003612)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(4)
+                  .mul(889996)
+                  .div(1e6)
+              )
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU > 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(106382900);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(94339600);
+        await gmuOracle.setPrice(1063829);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1131732)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(1003612)
+                  .div(1e6)
+              )
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1131732)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(1003612)
+                  .div(1e6)
+              )
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(3)
+              .mul(1131732)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(4)
+                  .mul(1003612)
+                  .div(1e6)
+              )
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD > 1) && (USD/GMU = 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(94339600);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(106382900);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(943396)
+                  .div(1e6)
+              )
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(3)
+                  .mul(943396)
+                  .div(1e6)
+              )
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(4)
+              .mul(1063829)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(3)
+                  .mul(943396)
+                  .div(1e6)
+              )
+          );
+      })
+
+      it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD > 1) && (USD/GMU < 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(94339600);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(106382900);
+        await gmuOracle.setPrice(943396);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1003612)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(889996)
+                  .div(1e6)
+              )
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1003612)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(3)
+                  .mul(889996)
+                  .div(1e6)
+              )
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(4)
+              .mul(1003612)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(3)
+                  .mul(889996)
+                  .div(1e6)
+              )
+          );
+      });
+
+      it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD > 1) && (USD/GMU > 1)', async () => {
+        await mockDaiGMUAggregatorV3.setLatestPrice(94339600);
+        await mockUSDCGMUAggregatorV3.setLatestPrice(106382900);
+        await gmuOracle.setPrice(1063829);
+
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1131732)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(2)
+                  .mul(1003612)
+                  .div(1e6)
+              )
+          );
+
+        await dai.transfer(daiARTHPool.address, ETH);
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(2)
+              .mul(1131732)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(3)
+                  .mul(1003612)
+                  .div(1e6)
+              )
+          );
+
+        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
+        expect(await arthController.getGlobalCollateralValue())
+          .to
+          .eq(
+            ETH
+              .mul(4)
+              .mul(1131732)
+              .div(1e6)
+              .add(
+                ETH
+                  .mul(3)
+                  .mul(1003612)
+                  .div(1e6)
+              )
+          );
+      });
     });
   });
 
