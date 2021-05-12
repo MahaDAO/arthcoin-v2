@@ -438,6 +438,27 @@ describe('ARTHController', () => {
         .eq(3600);
     });
 
+    it(' - Should get fees correctly', async() => {
+      await arthController.setStabilityFee(9);
+      expect(await arthController.stabilityFee())
+        .to
+        .eq(9);
+
+      await arthController.setFeesParameters(1e6, 1e6, 1e6, 1e6);
+      expect(await arthController.mintingFee())
+        .to
+        .eq(1e6);
+      expect(await arthController.redemptionFee())
+        .to
+        .eq(1e6);
+      expect(await arthController.recollatFee())
+        .to
+        .eq(1e6);
+      expect(await arthController.buybackFee())
+        .to
+        .eq(1e6);
+    });
+
     it(' - Should get CR for redeem correctly', async () => {
       expect(await arthController.getCRForRedeem())
         .to
@@ -500,16 +521,27 @@ describe('ARTHController', () => {
         .eq(1e6);
     });
 
+    it('- Should get paused or not correctly', async() => {
+      expect(await arthController.isMintPaused())
+        .to
+        .eq(false);
+      expect(await arthController.isRedeemPaused())
+        .to
+        .eq(false);
+      expect(await arthController.isRecollaterlizePaused())
+        .to
+        .eq(false);
+      expect(await arthController.isBuybackPaused())
+        .to
+        .eq(false);
+    });
+
     it(' - Should get ARTH info correctly', async () => {
       let totalSupply = await arthController.getARTHSupply()
       let globalCollateralRatio = await arthController.getGlobalCollateralRatio()
       let globalCollateralValue = await arthController.getGlobalCollateralValue()
 
-      let mintingFee = 1e6
-      await arthController.setMintingFee(mintingFee)
-
-      let redemtionFee = 1e6
-      await arthController.setRedemptionFee(redemtionFee)
+      await arthController.setFeesParameters(1e6, 1e6, 1e6, 1e6)
 
       let gmuPrice = await arthController.getETHGMUPrice()
 
@@ -536,15 +568,23 @@ describe('ARTHController', () => {
 
       expect(arthInfo[5])
         .to
-        .eq(mintingFee);
+        .eq(1e6);
 
       expect(arthInfo[6])
         .to
-        .eq(redemtionFee);
+        .eq(1e6);
 
       expect(arthInfo[7])
         .to
         .eq(gmuPrice);
+
+      expect(arthInfo[8])
+        .to
+        .eq(1e6);
+
+      expect(arthInfo[9])
+        .to
+        .eq(1e6);
     });
   });
 
