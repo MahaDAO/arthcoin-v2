@@ -139,4 +139,6 @@ interface IARTHController {
     function buybackFee() external returns (uint256);
 
     function recollatFee() external returns (uint256);
+
+    function getRecollateralizationDiscount() external returns (uint256);
 }

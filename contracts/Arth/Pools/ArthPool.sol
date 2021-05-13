@@ -8,7 +8,7 @@ import {IARTHPool} from './IARTHPool.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {IARTHX} from '../../ARTHX/IARTHX.sol';
 import {IOracle} from '../../Oracle/IOracle.sol';
-import {ICurve} from '../../Curves/ICurve.sol';
+//import {ICurve} from '../../Curves/ICurve.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
@@ -38,15 +38,10 @@ contract ArthPool is AccessControl, IARTHPool {
     ISimpleOracle public _ARTHMAHAOracle;
     IARTHController public _arthController;
     IOracle public _collateralGMUOracle;
-    ICurve public _recollateralizeDiscountCruve;
+    //ICurve public _recollateralizeDiscountCruve;
     IUniswapPairOracle public _collateralETHOracle;
 
-    // uint256 public override buybackFee;
-    // uint256 public override mintingFee;
-    // uint256 public override recollatFee;
-    // uint256 public override redemptionFee;
     uint256 public buybackCollateralBuffer = 20; // In %.
-
     uint256 public poolCeiling = 0; // Total units of collateral that a pool contract can hold
     uint256 public redemptionDelay = 1; // Number of blocks to wait before being able to collect redemption.
 
@@ -174,12 +169,12 @@ contract ArthPool is AccessControl, IARTHPool {
         buybackCollateralBuffer = percent;
     }
 
-    function setRecollateralizationCurve(ICurve curve)
-        external
-        onlyAdminOrOwnerOrGovernance
-    {
-        _recollateralizeDiscountCruve = curve;
-    }
+    // function setRecollateralizationCurve(ICurve curve)
+    //     external
+    //     onlyAdminOrOwnerOrGovernance
+    // {
+    //     _recollateralizeDiscountCruve = curve;
+    // }
 
     function setARTHController(IARTHController controller)
         external
@@ -621,7 +616,7 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 arthxPaidBack =
             amountToRecollateralize
                 .mul(
-                uint256(1e6).add(getRecollateralizationDiscount()).sub(
+                uint256(1e6).add(_arthController.getRecollateralizationDiscount()).sub(
                     _arthController.getRedemptionFee()
                 )
             )
@@ -668,7 +663,7 @@ contract ArthPool is AccessControl, IARTHPool {
             );
     }
 
-    function estimateRecollateralizeRewards() public view returns (uint256) {
+    function estimateRecollateralizeRewards() public returns (uint256) {
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
         (, , uint256 recollateralizePossible) =
@@ -677,7 +672,7 @@ contract ArthPool is AccessControl, IARTHPool {
         return
             recollateralizePossible
                 .mul(
-                uint256(1e6).add(getRecollateralizationDiscount()).sub(
+                uint256(1e6).add(_arthController.getRecollateralizationDiscount()).sub(
                     _arthController.getRecollatFee()
                 )
             )
@@ -782,24 +777,24 @@ contract ArthPool is AccessControl, IARTHPool {
                 .div(1e6);
     }
 
-    function getRecollateralizationDiscount()
-        public
-        view
-        override
-        returns (uint256)
-    {
-        uint256 targetCollatValue = getTargetCollateralValue();
-        uint256 currentCollatValue = _arthController.getGlobalCollateralValue();
+    // function getRecollateralizationDiscount()
+    //     public
+    //     view
+    //     override
+    //     returns (uint256)
+    // {
+    //     uint256 targetCollatValue = getTargetCollateralValue();
+    //     uint256 currentCollatValue = _arthController.getGlobalCollateralValue();
 
-        uint256 percentCollateral =
-            currentCollatValue.mul(100).div(targetCollatValue);
+    //     uint256 percentCollateral =
+    //         currentCollatValue.mul(100).div(targetCollatValue);
 
-        return
-            _recollateralizeDiscountCruve
-                .getY(percentCollateral)
-                .mul(_PRICE_PRECISION)
-                .div(1e18);
-    }
+    //     return
+    //         _recollateralizeDiscountCruve
+    //             .getY(percentCollateral)
+    //             .mul(_PRICE_PRECISION)
+    //             .div(1e18);
+    // }
 
     function getCollateralPrice() public view override returns (uint256) {
         return _collateralGMUOracle.getPrice();

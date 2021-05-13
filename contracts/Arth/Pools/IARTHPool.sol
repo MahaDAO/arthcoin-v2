@@ -61,7 +61,7 @@ interface IARTHPool {
 
     // function buybackFee() external returns (uint256);
 
-    function getRecollateralizationDiscount() external view returns (uint256);
+    // function getRecollateralizationDiscount() external view returns (uint256);
 
     //function recollatFee() external returns (uint256);
 

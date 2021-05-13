@@ -10,6 +10,7 @@ import {IARTHController} from './IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
 import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
+import {ICurve} from '../Curves/ICurve.sol';
 
 /**
  * @title  ARTHStablecoin.
@@ -25,6 +26,7 @@ contract ArthController is AccessControl, IARTHController {
     IChainlinkOracle public _ETHGMUPricer;
     IUniswapPairOracle public _ARTHETHOracle;
     IUniswapPairOracle public _ARTHXETHOracle;
+    ICurve public _recollateralizeDiscountCruve;
 
     address public wethAddress;
     address public arthxAddress;
@@ -239,6 +241,13 @@ contract ArthController is AccessControl, IARTHController {
         uint256 old = recollateralizeCollateralRatio;
         recollateralizeCollateralRatio = val;
         emit UpdateRecollateralizeCR(old, val);
+    }
+
+    function setRecollateralizationCurve(ICurve curve)
+        external
+        onlyByOwnerGovernanceOrPool
+    {
+        _recollateralizeDiscountCruve = curve;
     }
 
     function refreshCollateralRatio() external override {
@@ -512,7 +521,7 @@ contract ArthController is AccessControl, IARTHController {
         return mintCollateralRatio;
     }
 
-    function getARTHSupply() external view override returns (uint256) {
+    function getARTHSupply() public view override returns (uint256) {
         return ARTH.totalSupply();
     }
 
@@ -546,6 +555,32 @@ contract ArthController is AccessControl, IARTHController {
         if (useGlobalCRForRecollateralize) return getGlobalCollateralRatio();
 
         return recollateralizeCollateralRatio;
+    }
+
+    function getTargetCollateralValue() public view returns (uint256) {
+        return
+            getARTHSupply()
+            .mul(getGlobalCollateralRatio())
+            .div(1e6);
+    }
+
+    function getRecollateralizationDiscount()
+        public
+        view
+        override
+        returns (uint256)
+    {
+        uint256 targetCollatValue = getTargetCollateralValue();
+        uint256 currentCollatValue = getGlobalCollateralValue();
+
+        uint256 percentCollateral =
+            currentCollatValue.mul(100).div(targetCollatValue);
+
+        return
+            _recollateralizeDiscountCruve
+                .getY(percentCollateral)
+                .mul(_PRICE_PRECISION)
+                .div(1e18);
     }
 
     function getARTHInfo()
