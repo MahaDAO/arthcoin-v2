@@ -12,7 +12,7 @@ import {SafeMath} from '../utils/math/SafeMath.sol';
 import {Ownable} from '../access/Ownable.sol';
 import {IERC20Mintable} from '../ERC20/IERC20Mintable.sol';
 import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
-import {IBondingCurveOracle} from './IBondingCurveOracle.sol';
+import {IBondingCurve} from '../Curves/IBondingCurve.sol';
 import {IUniswapV2Factory} from '../Uniswap/Interfaces/IUniswapV2Factory.sol';
 import {IUniswapV2Router02} from '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
@@ -29,7 +29,7 @@ contract Genesis is ERC20, Ownable {
     IERC20Mintable private immutable _MAHA;
     IUniswapV2Router02 private immutable _ROUTER;
     IChainlinkOracle public ethGMUOracle;
-    IBondingCurveOracle public curveOracle;
+    IBondingCurve public curve;
 
     /**
      * State variables.
@@ -38,6 +38,7 @@ contract Genesis is ERC20, Ownable {
     uint256 public duration;
     uint256 public startTime;
 
+    uint256 public softCap = 100e18;
     uint256 public hardCap = 100e18;
 
     uint256 public arthETHPairPercent = 5; // In %.
@@ -71,11 +72,6 @@ contract Genesis is ERC20, Ownable {
      * Modifiers.
      */
 
-    modifier hasStarted() {
-        require(block.timestamp >= startTime, 'Genesis: not started');
-        _;
-    }
-
     modifier isActive() {
         require(
             block.timestamp >= startTime &&
@@ -103,11 +99,13 @@ contract Genesis is ERC20, Ownable {
         IERC20Mintable __MAHA,
         IUniswapV2Router02 __ROUTER,
         IChainlinkOracle _ethGmuOracle,
-        IBondingCurveOracle _curveOracle,
+        IBondingCurve _curve,
+        uint256 _softCap,
         uint256 _hardCap,
         uint256 _startTime,
         uint256 _duration
     ) ERC20('ARTH Genesis', 'ARTH-GEN') {
+        softCap = _softCap;
         hardCap = _hardCap;
         duration = _duration;
         startTime = _startTime;
@@ -118,7 +116,7 @@ contract Genesis is ERC20, Ownable {
         _ARTHX = __ARTHX;
         _ROUTER = __ROUTER;
 
-        curveOracle = _curveOracle;
+        curve = _curve;
         ethGMUOracle = _ethGmuOracle;
     }
 
@@ -135,6 +133,10 @@ contract Genesis is ERC20, Ownable {
         address payable _arthETHPair,
         address payable _arthxETHPair
     ) external onlyOwner {
+        require(_arthETHPool != address(0), 'Genesis: address = 0');
+        require(_arthETHPair != address(0), 'Genesis: address = 0');
+        require(_arthxETHPair != address(0), 'Genesis: address = 0');
+
         arthWETHPoolAddres = _arthETHPool;
         arthETHPairAddress = _arthETHPair;
         arthxETHPairAddress = _arthxETHPair;
@@ -144,10 +146,20 @@ contract Genesis is ERC20, Ownable {
         hardCap = _hardCap;
     }
 
+    function setSoftCap(uint256 cap) external onlyOwner {
+        softCap = cap;
+    }
+
+    function setCaps(uint256 _hardCap, uint256 _softCap) external onlyOwner {
+        hardCap = _hardCap;
+        softCap = _softCap;
+    }
+
     function setARTHWETHPoolAddress(address payable poolAddress)
         external
         onlyOwner
     {
+        require(address(poolAddress) != address(0), "Genesis: address = 0");
         arthWETHPoolAddres = poolAddress;
     }
 
@@ -155,6 +167,7 @@ contract Genesis is ERC20, Ownable {
         external
         onlyOwner
     {
+        require(address(pairAddress) != address(0), "Genesis: address = 0");
         arthETHPairAddress = pairAddress;
     }
 
@@ -162,6 +175,7 @@ contract Genesis is ERC20, Ownable {
         external
         onlyOwner
     {
+        require(address(pairAddress) != address(0), "Genesis: address = 0");
         arthxETHPairAddress = pairAddress;
     }
 
@@ -175,8 +189,8 @@ contract Genesis is ERC20, Ownable {
         arthxETHPairPercent = arthxPairPercent;
     }
 
-    function setCurve(IBondingCurveOracle curve) external onlyOwner {
-        curveOracle = curve;
+    function setCurve(IBondingCurve _curve) external onlyOwner {
+        curve = _curve;
     }
 
     function setETHGMUOracle(IChainlinkOracle oracle) external onlyOwner {
@@ -191,17 +205,11 @@ contract Genesis is ERC20, Ownable {
         require(amount > 0, 'Genesis: amount = 0');
         require(msg.value == amount, 'Genesis: INVALID INPUT');
 
-        // // Example:
-        // // Curve price is 0.37(37e16 in 1e18 precision).
-        // // Hence the amount to be minted becomes 1.37 i.e 137e16(1e18 + 37e16).
-        // uint256 mintRateWithDiscount = uint256(1e18).add(getCurvePrice());
-        // // Restore the precision to 1e18.
-        // uint256 mintAmount = amount.mul(mintRateWithDiscount).div(1e18);
-
         // 1. Get the value of ETH put as collateral.
-        uint256 ethValue = msg.value.mul(getETHGMUPrice());
+        uint256 ethValue = msg.value.mul(getETHGMUPrice()).div(_PRICE_PRECISION);
         // 2. Calculate the equivalent amount of tokens to mint based on curve/oracle.
-        uint256 mintAmount = ethValue.mul(1e18).div(getCurvePrice());
+        // Curve price is in e6 precision.
+        uint256 mintAmount = ethValue.mul(1e6).div(getCurvePrice());
 
         _mint(msg.sender, mintAmount);
 
@@ -230,20 +238,31 @@ contract Genesis is ERC20, Ownable {
     }
 
     function getETHGMUPrice() public view returns (uint256) {
-        return ethGMUOracle.getLatestPrice().mul(_PRICE_PRECISION).div(
-                ethGMUOracle.getDecimals()
-            );
+        return (
+            ethGMUOracle
+            .getLatestPrice()
+            .mul(_PRICE_PRECISION)
+            .div(ethGMUOracle.getDecimals())
+        );
+    }
+
+    function getIsRaisedBelowSoftCap() public view returns (bool) {
+        return address(this).balance < softCap;
+    }
+
+    function getIsRaisedBetweenCaps() external view returns (bool) {
+        return
+            address(this).balance >= softCap && address(this).balance <= hardCap;
     }
 
     function getPercentRaised() public view returns (uint256) {
-        return address(this).balance.mul(100).div(hardCap);
+        return address(this).balance.mul(1e18).div(hardCap);
     }
 
     function getCurvePrice() public view returns (uint256) {
-        return
-            curveOracle.getPrice(getPercentRaised()).mul(_PRICE_PRECISION).div(
-                1e18
-            );
+        if (getIsRaisedBelowSoftCap()) return curve.getY(getPercentRaised());
+
+        return curve.getFixedPrice();
     }
 
     /**
@@ -312,7 +331,7 @@ contract Genesis is ERC20, Ownable {
         require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
 
         _burn(msg.sender, amount);
-        _ARTH.poolMint(msg.sender, amount);
+        _ARTHX.poolMint(msg.sender, amount);
 
         emit RedeemARTHX(msg.sender, amount);
     }
@@ -321,7 +340,7 @@ contract Genesis is ERC20, Ownable {
         require(balanceOf(msg.sender) >= amount, 'Genesis: balance < amount');
 
         _burn(msg.sender, amount);
-        _ARTH.poolMint(msg.sender, amount);
+        _ARTHX.poolMint(msg.sender, amount);
 
         // TODO: distribute MAHA.
         // HOW?

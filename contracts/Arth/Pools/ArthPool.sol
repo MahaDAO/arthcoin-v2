@@ -787,13 +787,13 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 currentCollatValue = _arthController.getGlobalCollateralValue();
 
         uint256 percentCollateral =
-            currentCollatValue.mul(100).div(targetCollatValue);
+            currentCollatValue.mul(1e18).div(targetCollatValue);
 
         return
             _recollateralizeDiscountCruve
                 .getY(percentCollateral)
                 .mul(_PRICE_PRECISION)
-                .div(1e18);
+                .div(100);
     }
 
     function getCollateralPrice() public view override returns (uint256) {
