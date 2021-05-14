@@ -14,8 +14,7 @@ const StakeARTHWETH = artifacts.require("Staking/Variants/StakeARTHWETH.sol");
 const StakeARTHX = artifacts.require("Staking/Variants/StakeARTHX.sol");
 const StakeARTHXWETH = artifacts.require("Staking/Variants/StakeARTHXWETH.sol");
 const PoolToken = artifacts.require("PoolToken");
-const MockArth = artifacts.require("MockArth");
-const MockArthx = artifacts.require("MockArthx");
+
 
 
 module.exports = async function (deployer, network, accounts) {
@@ -24,15 +23,8 @@ module.exports = async function (deployer, network, accounts) {
   const poolToken = await PoolToken.deployed();
   const timelockInstance = await Timelock.deployed();
 
-  let arth
-  let arthx
-  if (network != 'mainnet') {
-    arth = await MockArth.deployed();
-    arthx = await MockArthx.deployed();
-  } else {
-    arth = await ARTHStablecoin.deployed();
-    arthx = await ARTHShares.deployed();
-  }
+  let arth = await ARTHStablecoin.deployed();
+  let arthx = await ARTHShares.deployed();
 
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const arthController = await ARTHController.deployed();
@@ -40,6 +32,12 @@ module.exports = async function (deployer, network, accounts) {
   const weth = await helpers.getWETH(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nGetting created uniswap pair addresses...'));
+  console.log(arth.address, weth.address, uniswapFactory.address)
+
+  console.log(await uniswapFactory.getPair(arth.address, weth.address))
+  console.log(await uniswapFactory.getPair(arth.address, maha.address))
+  console.log(await uniswapFactory.getPair(arthx.address, weth.address))
+
   const pairARTHWETH = await uniswapFactory.getPair(arth.address, weth.address);
   const pairARTHMAHA = await uniswapFactory.getPair(arth.address, maha.address);
   const pairARTHXWETH = await uniswapFactory.getPair(arthx.address, weth.address);

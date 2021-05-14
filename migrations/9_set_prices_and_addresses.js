@@ -10,8 +10,6 @@ const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
-const MockArth = artifacts.require("MockArth");
-const MockArthx = artifacts.require("MockArthx");
 
 
 module.exports = async function (deployer, network, accounts) {
@@ -20,15 +18,8 @@ module.exports = async function (deployer, network, accounts) {
 
   //const arthx = await ARTHShares.deployed();
 
-  let arth
-  let arthx
-  if (network != 'mainnet') {
-    arth = await MockArth.deployed();
-    arthx = await MockArthx.deployed();
-  } else {
-    arth = await ARTHStablecoin.deployed();
-    arthx = await ARTHShares.deployed();
-  }
+  let arth = await ARTHStablecoin.deployed();
+  let arthx = await ARTHShares.deployed();
 
   const pool_instance_USDC = await Pool_USDC.deployed();
   const pool_instance_USDT = await Pool_USDT.deployed();

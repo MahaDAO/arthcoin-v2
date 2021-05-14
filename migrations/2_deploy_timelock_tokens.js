@@ -9,8 +9,7 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const MockArth = artifacts.require("MockArth");
-const MockArthx = artifacts.require("MockArthx");
+
 
 module.exports = async function (deployer, network, accounts) {
 
@@ -26,31 +25,17 @@ module.exports = async function (deployer, network, accounts) {
   let arth;
   let arthxInstance //= await ARTHShares.deployed();
 
-  if (network != 'mainnet') {
-    await deployer.deploy(MockArth);
-    arth = await MockArth.deployed();
 
-    await deployer.deploy(
-      MockArthx,
-      DEPLOYER_ADDRESS, // Temporary address until oracle is deployed.
-      DEPLOYER_ADDRESS,
-      timelockInstance.address
-    );
-    arthxInstance = await MockArthx.deployed()
-    
-    
-  } else {
-    await deployer.deploy(ARTHStablecoin);
-    arth = await ARTHStablecoin.deployed();
+  await deployer.deploy(ARTHStablecoin);
+  arth = await ARTHStablecoin.deployed();
 
-    await deployer.deploy(
-      ARTHShares,
-      DEPLOYER_ADDRESS, // Temporary address until oracle is deployed.
-      DEPLOYER_ADDRESS,
-      timelockInstance.address
-    );
-    arthxInstance = await ARTHShares.deployed()
-  }
+  await deployer.deploy(
+    ARTHShares,
+    DEPLOYER_ADDRESS, // Temporary address until oracle is deployed.
+    DEPLOYER_ADDRESS,
+    timelockInstance.address
+  );
+  arthxInstance = await ARTHShares.deployed()
 
   let arthx_name = await arthxInstance.name.call();
   console.log(` - NOTE: ARTHX name: ${arthx_name}`);

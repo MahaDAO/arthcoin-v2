@@ -10,8 +10,7 @@ const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const MockArth = artifacts.require("MockArth");
-const MockArthx = artifacts.require("MockArth");
+
 
 
 module.exports = async function (deployer, network, accounts) {
@@ -23,18 +22,11 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
   const TEN_MILLION = new BigNumber("1000000e6");
 
-  //const arthxInstance = await ARTHShares.deployed();
+  //const arthx = await ARTHShares.deployed();
   const timelockInstance = await Timelock.deployed();
 
-  let arthInstance
-  let arthxInstance
-  if (network != 'mainnet') {
-    arthInstance = await MockArth.deployed();
-    arthxInstance = await MockArthx.deployed();
-  } else {
-    arthInstance = await ARTHStablecoin.deployed();
-    arthxInstance = await ARTHShares.deployed();
-  }
+  let arth = await ARTHStablecoin.deployed();
+  let arthx = await ARTHShares.deployed();
 
   const arthControllerInstance = await ARTHController.deployed();
   const mahaTokenInstance = await helpers.getMahaToken(network, deployer, artifacts);
@@ -48,11 +40,24 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.link(ArthPoolLibrary, [Pool_USDC, Pool_USDT]);
 
   console.log(chalk.yellow('\nDeploying Pools...'));
+
+  console.log(
+    arth.address,
+    arthx.address,
+    col_instance_USDC.address,
+    DEPLOYER_ADDRESS,
+    timelockInstance.address,
+    mahaTokenInstance.address,
+    arthMahaOracle.address,
+    arthControllerInstance.address,
+    TEN_MILLION
+  )
+
   await Promise.all([
     deployer.deploy(
       Pool_USDC,
-      arthInstance.address,
-      arthxInstance.address,
+      arth.address,
+      arthx.address,
       col_instance_USDC.address,
       DEPLOYER_ADDRESS,
       timelockInstance.address,
@@ -63,8 +68,8 @@ module.exports = async function (deployer, network, accounts) {
     ),
     deployer.deploy(
       Pool_USDT,
-      arthInstance.address,
-      arthxInstance.address,
+      arth.address,
+      arthx.address,
       col_instance_USDT.address,
       DEPLOYER_ADDRESS,
       timelockInstance.address,
