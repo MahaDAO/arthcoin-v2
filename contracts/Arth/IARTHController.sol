@@ -40,6 +40,8 @@ interface IARTHController {
 
     function setArthStep(uint256 newStep) external;
 
+    function setControllerAddress(address controller) external;
+
     function setRedemptionFee(uint256 fee) external;
 
     function setOwner(address _ownerAddress) external;

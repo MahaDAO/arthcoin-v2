@@ -58,7 +58,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     );
 
     modifier onlyPools() {
-        require(pools[msg.sender] == true, 'ARTH: not pool');
+        require(pools[msg.sender], 'ARTH: not pool');
         _;
     }
 
@@ -331,7 +331,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     /// @dev    Collateral Must be ERC20.
     /// @notice Adds collateral addresses supported.
     function addPool(address pool) external override onlyByOwnerOrGovernance {
-        require(pools[pool] == false, 'pool exists');
+        require(!pools[pool], 'pool exists');
         pools[pool] = true;
     }
 
@@ -341,11 +341,13 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         override
         onlyByOwnerOrGovernance
     {
-        require(pools[pool] == true, "pool doesn't exist");
+        require(pools[pool], "pool doesn't exist");
         delete pools[pool];
     }
 
     function setGovernance(address _governance) external override onlyOwner {
+        require(_governance != address(0), 'ARTH: address = 0');
+
         governance = _governance;
     }
 
