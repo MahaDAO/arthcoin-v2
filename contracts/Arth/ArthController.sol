@@ -101,6 +101,12 @@ contract ArthController is AccessControl, IARTHController {
     event ToggleGlobalCRForRedeem(bool old, bool flag);
     event ToggleGlobalCRForRecollateralize(bool old, bool flag);
 
+    event TargetPriceChanged(uint256 old, uint256 current);
+    event PriceBandChanged(uint256 old, uint256 current);
+    event RedemptionFeeChanged(uint256 old, uint256 current);
+    event MintingFeeChanged(uint256 old, uint256 current);
+    event ARTHStepChanged(uint256 old, uint256 current);
+
     event UpdateMintCR(uint256 oldCR, uint256 cr);
     event UpdateRedeemCR(uint256 oldCR, uint256 cr);
     event UpdateRecollateralizeCR(uint256 oldCR, uint256 cr);
@@ -110,12 +116,10 @@ contract ArthController is AccessControl, IARTHController {
      */
 
     modifier onlyCollateralRatioPauser() {
-        require(hasRole(COLLATERAL_RATIO_PAUSER, msg.sender));
-        _;
-    }
-
-    modifier onlyPools() {
-        require(arthPools[msg.sender] == true, 'ARTHController: FORBIDDEN');
+        require(
+            hasRole(COLLATERAL_RATIO_PAUSER, msg.sender),
+            'ARTHController: FORBIDDEN'
+        );
         _;
     }
 
@@ -141,7 +145,7 @@ contract ArthController is AccessControl, IARTHController {
         require(
             msg.sender == ownerAddress ||
                 msg.sender == timelockAddress ||
-                arthPools[msg.sender] == true,
+                arthPools[msg.sender],
             'ARTHController: FORBIDDEN'
         );
         _;
@@ -252,7 +256,7 @@ contract ArthController is AccessControl, IARTHController {
 
     function refreshCollateralRatio() external override {
         require(
-            isColalteralRatioPaused == false,
+            !isColalteralRatioPaused,
             'ARTHController: Collateral Ratio has been paused'
         );
         require(
@@ -290,7 +294,7 @@ contract ArthController is AccessControl, IARTHController {
         onlyByOwnerOrGovernance
     {
         require(
-            arthPools[poolAddress] == false,
+            !arthPools[poolAddress],
             'ARTHController: address present'
         );
 
@@ -304,15 +308,16 @@ contract ArthController is AccessControl, IARTHController {
         onlyByOwnerOrGovernance
     {
         require(
-            arthPools[poolAddress] == true,
+            arthPools[poolAddress],
             'ARTHController: address absent'
         );
 
         // Delete from the mapping.
         delete arthPools[poolAddress];
 
+        uint256 noOfPools = arthPoolsArray.length;
         // 'Delete' from the array by setting the address to 0x0
-        for (uint256 i = 0; i < arthPoolsArray.length; i++) {
+        for (uint256 i = 0; i < noOfPools; i++) {
             if (arthPoolsArray[i] == poolAddress) {
                 arthPoolsArray[i] = address(0); // This will leave a null in the array and keep the indices the same.
                 break;
@@ -320,9 +325,9 @@ contract ArthController is AccessControl, IARTHController {
         }
     }
 
-    /**
-     * Public.
-     */
+    function setControllerAddress(address controller) external override onlyAdmin {
+        controllerAddress = controller;
+    }
 
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio)
         external
@@ -345,7 +350,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
+        uint256 old = priceTarget;
         priceTarget = newPriceTarget;
+        emit TargetPriceChanged(old, priceTarget);
     }
 
     function setRefreshCooldown(uint256 newCooldown)
@@ -419,7 +426,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
+        uint256 old = mintingFee;
         mintingFee = fee;
+        emit MintingFeeChanged(old, mintingFee);
     }
 
     function setArthStep(uint256 newStep)
@@ -427,7 +436,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
+        uint256 old = arthStep;
         arthStep = newStep;
+        emit ARTHStepChanged(old, arthStep);
     }
 
     function setRedemptionFee(uint256 fee)
@@ -435,7 +446,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
+        uint256 old = redemptionFee;
         redemptionFee = fee;
+        emit RedemptionFeeChanged(old, redemptionFee);
     }
 
     function setBuybackFee(uint256 fee)
@@ -467,7 +480,9 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
+        uint256 old = priceBand;
         priceBand = _priceBand;
+        emit PriceBandChanged(old, priceBand);
     }
 
     function setTimelock(address newTimelock)
@@ -504,7 +519,8 @@ contract ArthController is AccessControl, IARTHController {
     function getGlobalCollateralValue() public view override returns (uint256) {
         uint256 totalCollateralValueD18 = 0;
 
-        for (uint256 i = 0; i < arthPoolsArray.length; i++) {
+        uint256 noOfPools = arthPoolsArray.length;
+        for (uint256 i = 0; i < noOfPools; i++) {
             // Exclude null addresses.
             if (arthPoolsArray[i] != address(0)) {
                 totalCollateralValueD18 = totalCollateralValueD18.add(

@@ -87,6 +87,13 @@ contract BoostedStaking is
     mapping(address => uint256) private _unlockedBalances;
     mapping(address => LockedStake[]) private _lockedStakes;
 
+    event UpdateRewardRate(uint256 old, uint256 current);
+    event UpdateOwnerAndTimelock(
+        address oldOwner,
+        address newOwner,
+        address oldTimelock,
+        address newTimelock
+    );
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
     event StakeLocked(address indexed user, uint256 amount, uint256 secs);
@@ -200,9 +207,9 @@ contract BoostedStaking is
         _stakingTokenSupply = _stakingTokenSupply.sub(amount);
         _stakingTokenBoostedSupply = _stakingTokenBoostedSupply.sub(amount);
 
+        emit Withdrawn(msg.sender, amount);
         // Give the tokens to the withdrawer
         stakingToken.safeTransfer(msg.sender, amount);
-        emit Withdrawn(msg.sender, amount);
     }
 
     function renewIfApplicable() external {
@@ -220,17 +227,20 @@ contract BoostedStaking is
         LockedStake memory thisStake;
         thisStake.amount = 0;
         uint256 theIndex;
-        for (uint256 i = 0; i < _lockedStakes[msg.sender].length; i++) {
+
+        uint256 stakesLength = _lockedStakes[msg.sender].length;
+        for (uint256 i = 0; i < stakesLength; i++) {
             if (kekId == _lockedStakes[msg.sender][i].kekId) {
                 thisStake = _lockedStakes[msg.sender][i];
                 theIndex = i;
                 break;
             }
         }
+
         require(thisStake.kekId == kekId, 'Stake not found');
         require(
             block.timestamp >= thisStake.endingTimestamp ||
-                isLockedStakes == true,
+                isLockedStakes,
             'Stake is still locked!'
         );
 
@@ -255,10 +265,9 @@ contract BoostedStaking is
             // Remove the stake from the array
             delete _lockedStakes[msg.sender][theIndex];
 
+            emit WithdrawnLocked(msg.sender, theAmount, kekId);
             // Give the tokens to the withdrawer
             stakingToken.safeTransfer(msg.sender, theAmount);
-
-            emit WithdrawnLocked(msg.sender, theAmount, kekId);
         }
     }
 
@@ -268,11 +277,14 @@ contract BoostedStaking is
         onlyByOwnerOrGovernance
     {
         // Admin cannot withdraw the staking token from the contract
-        require(tokenAddress != address(stakingToken));
-
-        IERC20(tokenAddress).transfer(ownerAddress, tokenAmount);
+        require(tokenAddress != address(stakingToken), 'BoostedStaking: invalid token');
 
         emit Recovered(tokenAddress, tokenAmount);
+
+        require(
+            IERC20(tokenAddress).transfer(ownerAddress, tokenAmount),
+            'BoostedStaking: transfer failed'
+        );
     }
 
     function setRewardsDuration(uint256 _rewardsDuration)
@@ -350,15 +362,22 @@ contract BoostedStaking is
     }
 
     function setRewardRate(uint256 _newRate) external onlyByOwnerOrGovernance {
+        uint256 old = rewardRate;
         rewardRate = _newRate;
+        emit UpdateRewardRate(old, rewardRate);
     }
 
     function setOwnerAndTimelock(address _newOwner, address _newTimelock)
         external
         onlyByOwnerOrGovernance
     {
+        address oldOwner = ownerAddress;
+        address oldTimelock = timelockAddress;
+
         ownerAddress = _newOwner;
         timelockAddress = _newTimelock;
+
+        emit UpdateOwnerAndTimelock(oldOwner, ownerAddress, oldTimelock, timelockAddress);
     }
 
     function stakeFor(address who, address from, uint256 amount) external override onlyPool {
@@ -493,11 +512,15 @@ contract BoostedStaking is
         updateReward(msg.sender)
     {
         uint256 reward = rewards[msg.sender];
-        if (reward > 0) {
-            rewards[msg.sender] = 0;
-            rewardsToken.transfer(msg.sender, reward);
-            emit RewardPaid(msg.sender, reward);
-        }
+        require(reward > 0, 'BoostedStaking: rewards = 0');
+
+        rewards[msg.sender] = 0;
+        emit RewardPaid(msg.sender, reward);
+
+        require(
+            rewardsToken.transfer(msg.sender, reward),
+            'BoostedStaking: transfer failed'
+        );
     }
 
     function earned(address account) public view override returns (uint256) {
@@ -519,15 +542,7 @@ contract BoostedStaking is
         updateReward(who)
     {
         require(amount > 0, 'Cannot stake 0');
-        require(greylist[who] == false, 'address has been greylisted');
-
-        // Pull the tokens from the staker
-        TransferHelper.safeTransferFrom(
-            address(stakingToken),
-            from,
-            address(this),
-            amount
-        );
+        require(!greylist[who], 'address has been greylisted');
 
         // Staking token supply and boosted supply
         _stakingTokenSupply = _stakingTokenSupply.add(amount);
@@ -538,6 +553,15 @@ contract BoostedStaking is
         _boostedBalances[who] = _boostedBalances[who].add(amount);
 
         emit Staked(who, amount);
+
+
+        // Pull the tokens from the staker
+        TransferHelper.safeTransferFrom(
+            address(stakingToken),
+            from,
+            address(this),
+            amount
+        );
     }
 
     function _stakeLocked(
@@ -548,7 +572,7 @@ contract BoostedStaking is
     ) internal nonReentrant whenNotPaused updateReward(who) {
         require(amount > 0, 'Cannot stake 0');
         require(secs > 0, 'Cannot wait for a negative number');
-        require(greylist[who] == false, 'address has been greylisted');
+        require(!greylist[who], 'address has been greylisted');
         require(
             secs >= lockedStakeMinTime,
             StringHelpers.strConcat(
@@ -574,14 +598,6 @@ contract BoostedStaking is
             )
         );
 
-        // Pull the tokens from the staker or the operator
-        TransferHelper.safeTransferFrom(
-            address(stakingToken),
-            from,
-            address(this),
-            amount
-        );
-
         // Staking token supply and boosted supply
         _stakingTokenSupply = _stakingTokenSupply.add(amount);
         _stakingTokenBoostedSupply = _stakingTokenBoostedSupply.add(
@@ -593,6 +609,14 @@ contract BoostedStaking is
         _boostedBalances[who] = _boostedBalances[who].add(boostedAmount);
 
         emit StakeLocked(who, amount, secs);
+
+        // Pull the tokens from the staker or the operator
+        TransferHelper.safeTransferFrom(
+            address(stakingToken),
+            from,
+            address(this),
+            amount
+        );
     }
 
     // If the period expired, renew it

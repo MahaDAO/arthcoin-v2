@@ -87,14 +87,6 @@ contract ArthPool is AccessControl, IARTHPool {
         _;
     }
 
-    modifier onlyAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'ArthPool: You are not the admin'
-        );
-        _;
-    }
-
     modifier onlyAdminOrOwnerOrGovernance() {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, _msgSender()) ||
@@ -231,8 +223,11 @@ contract ArthPool is AccessControl, IARTHPool {
             'ArthPool: Insufficent funds in the pool'
         );
 
-        _COLLATERAL.transfer(msg.sender, _amount);
         borrowedCollateral[msg.sender] += _amount;
+        require(
+            _COLLATERAL.transfer(msg.sender, _amount),
+            'ArthPool: transfer failed'
+        );
 
         emit Borrow(msg.sender, _amount);
     }
@@ -247,9 +242,12 @@ contract ArthPool is AccessControl, IARTHPool {
             _COLLATERAL.balanceOf(msg.sender) >= amount,
             'ArthPool: balance < required'
         );
-        _COLLATERAL.transferFrom(msg.sender, address(this), amount);
 
         borrowedCollateral[msg.sender] -= amount;
+        require(
+            _COLLATERAL.transferFrom(msg.sender, address(this), amount),
+            'ARTHPool: transfer from failed'
+        );
 
         emit Repay(msg.sender, amount);
     }
@@ -295,7 +293,10 @@ contract ArthPool is AccessControl, IARTHPool {
             _COLLATERAL.balanceOf(msg.sender) >= collateralAmount,
             'ArthPool: balance < required'
         );
-        _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount);
+        require(
+            _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount),
+            'ARTHPool: transfer from failed'
+        );
 
         _ARTH.poolMint(msg.sender, arthAmountD18);
 
@@ -384,7 +385,10 @@ contract ArthPool is AccessControl, IARTHPool {
             _COLLATERAL.balanceOf(msg.sender) >= collateralAmount,
             'ArthPool: balance < require'
         );
-        _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount);
+        require(
+            _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount),
+            'ARTHPool: transfer from failed'
+        );
 
         _ARTH.poolMint(msg.sender, mintAmount);
 
@@ -585,9 +589,17 @@ contract ArthPool is AccessControl, IARTHPool {
             sendCollateral = true;
         }
 
-        if (sendARTHX == true) _ARTHX.transfer(msg.sender, ARTHXAmount);
-        if (sendCollateral == true)
-            _COLLATERAL.transfer(msg.sender, CollateralAmount);
+        if (sendARTHX)
+            require(
+                _ARTHX.transfer(msg.sender, ARTHXAmount),
+                'ARTHPool: transfer failed'
+            );
+
+        if (sendCollateral)
+            require(
+                _COLLATERAL.transfer(msg.sender, CollateralAmount),
+                'ARTHPool: transfer failed'
+            );
     }
 
     // When the protocol is recollateralizing, we need to give a discount of ARTHX to hit the new CR target
@@ -627,10 +639,13 @@ contract ArthPool is AccessControl, IARTHPool {
             _COLLATERAL.balanceOf(msg.sender) >= collateralUnitsPrecision,
             'ArthPool: balance < required'
         );
-        _COLLATERAL.transferFrom(
-            msg.sender,
-            address(this),
-            collateralUnitsPrecision
+        require(
+            _COLLATERAL.transferFrom(
+                msg.sender,
+                address(this),
+                collateralUnitsPrecision
+            ),
+            'ARTHPool: transfer from failed'
         );
 
         _ARTHX.poolMint(msg.sender, arthxPaidBack);
@@ -685,7 +700,10 @@ contract ArthPool is AccessControl, IARTHPool {
         external
         override
     {
-        require(_arthController.isBuybackPaused(), 'Buyback is paused');
+        require(
+            !_arthController.isBuybackPaused(),
+            'Buyback is paused'
+        );
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
@@ -711,7 +729,10 @@ contract ArthPool is AccessControl, IARTHPool {
 
         // Give the sender their desired collateral and burn the ARTHX
         _ARTHX.poolBurnFrom(msg.sender, arthxAmount);
-        _COLLATERAL.transfer(msg.sender, collateralPrecision);
+        require(
+            _COLLATERAL.transfer(msg.sender, collateralPrecision),
+            'ARTHPool: transfer failed'
+        );
     }
 
     function getARTHMAHAPrice() public view override returns (uint256) {
@@ -722,7 +743,7 @@ contract ArthPool is AccessControl, IARTHPool {
         return _arthController.getGlobalCollateralRatio();
     }
 
-    function getCollateralGMUBalance() public view override returns (uint256) {
+    function getCollateralGMUBalance() external view override returns (uint256) {
         uint256 collateralPrice = getCollateralPrice();
 
         return (
@@ -777,24 +798,6 @@ contract ArthPool is AccessControl, IARTHPool {
                 .div(1e6);
     }
 
-    // function getRecollateralizationDiscount()
-    //     public
-    //     view
-    //     override
-    //     returns (uint256)
-    // {
-    //     uint256 targetCollatValue = getTargetCollateralValue();
-    //     uint256 currentCollatValue = _arthController.getGlobalCollateralValue();
-
-    //     uint256 percentCollateral =
-    //         currentCollatValue.mul(100).div(targetCollatValue);
-
-    //     return
-    //         _recollateralizeDiscountCruve
-    //             .getY(percentCollateral)
-    //             .mul(_PRICE_PRECISION)
-    //             .div(1e18);
-    // }
 
     function getCollateralPrice() public view override returns (uint256) {
         return _collateralGMUOracle.getPrice();
