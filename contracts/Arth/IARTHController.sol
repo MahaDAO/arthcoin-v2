@@ -25,6 +25,8 @@ interface IARTHController {
             uint256,
             uint256,
             uint256,
+            uint256,
+            uint256,
             uint256
         );
 
@@ -35,6 +37,13 @@ interface IARTHController {
         address _wethAddress
     ) external;
 
+    function setFeesParameters(
+        uint256 _mintingFee,
+        uint256 _recollatFee,
+        uint256 _buybackFee,
+        uint256 _redemptionFee
+    ) external;
+
     function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
         external;
 
@@ -43,6 +52,10 @@ interface IARTHController {
     function setControllerAddress(address controller) external;
 
     function setRedemptionFee(uint256 fee) external;
+
+    function setBuybackFee(uint256 fee) external;
+
+    function setRecollatFee(uint256 fee) external;
 
     function setOwner(address _ownerAddress) external;
 
@@ -65,6 +78,14 @@ interface IARTHController {
     function getARTHPrice() external view returns (uint256);
 
     function getARTHXPrice() external view returns (uint256);
+
+    function getMintingFee() external view returns (uint256);
+
+    function getRecollatFee() external view returns (uint256);
+
+    function getBuybackFee() external view returns (uint256);
+
+    function getRedemptionFee() external view returns (uint256);
 
     function getETHGMUPrice() external view returns (uint256);
 
@@ -113,7 +134,13 @@ interface IARTHController {
     function getStabilityFee() external view returns (uint256);
 
     // todo add this here
-    // function mintingFee() external returns (uint256);
-    // function redemptionFee() external returns (uint256);
-    // function buybackFee() external returns (uint256);
+    function mintingFee() external returns (uint256);
+
+    function redemptionFee() external returns (uint256);
+
+    function buybackFee() external returns (uint256);
+
+    function recollatFee() external returns (uint256);
+
+    function getRecollateralizationDiscount() external returns (uint256);
 }

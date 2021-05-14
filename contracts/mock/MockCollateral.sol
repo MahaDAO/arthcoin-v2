@@ -60,10 +60,11 @@ contract MockCollateral is Context, IERC20 {
     }
 
     function faucet() public {
-        if (used[msg.sender] == false) {
-            used[msg.sender] = true;
-            _mint(msg.sender, 10000000e18);
-        }
+        // if (used[msg.sender] == false) {
+        //     used[msg.sender] = true;
+        //     _mint(msg.sender, 10000000e18);
+        // }
+        _mint(msg.sender, 10000000e18);
     }
 
     /**

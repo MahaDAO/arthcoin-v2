@@ -11,14 +11,8 @@ interface IARTHPool {
 
     function setCollatGMUOracle(address _collateralGMUOracleAddress) external;
 
-    function setPoolParameters(
-        uint256 newCeiling,
-        uint256 newRedemptionDelay,
-        uint256 newMintFee,
-        uint256 newRedeemFee,
-        uint256 newBuybackFee,
-        uint256 newRecollateralizeFee
-    ) external;
+    function setPoolParameters(uint256 newCeiling, uint256 newRedemptionDelay)
+        external;
 
     function setTimelock(address newTimelock) external;
 
@@ -61,15 +55,15 @@ interface IARTHPool {
 
     function getGlobalCR() external view returns (uint256);
 
-    function mintingFee() external returns (uint256);
+    // function mintingFee() external returns (uint256);
 
-    function redemptionFee() external returns (uint256);
+    // function redemptionFee() external returns (uint256);
 
-    function buybackFee() external returns (uint256);
+    // function buybackFee() external returns (uint256);
 
-    function getRecollateralizationDiscount() external view returns (uint256);
+    // function getRecollateralizationDiscount() external view returns (uint256);
 
-    function recollatFee() external returns (uint256);
+    //function recollatFee() external returns (uint256);
 
     function getCollateralGMUBalance() external view returns (uint256);
 

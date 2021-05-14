@@ -10,17 +10,32 @@ const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+const MockArth = artifacts.require("MockArth");
+const MockArthx = artifacts.require("MockArth");
 
 
 module.exports = async function (deployer, network, accounts) {
   const redemptionFee = 400; // 0.04%
   const mintingFee = 300; // 0.03%
+  const recollateFee = 300; // 0.03%
+  const buybackFee = 300; // 0.03%
+
   const DEPLOYER_ADDRESS = accounts[0];
   const TEN_MILLION = new BigNumber("1000000e6");
 
-  const arthxInstance = await ARTHShares.deployed();
+  //const arthxInstance = await ARTHShares.deployed();
   const timelockInstance = await Timelock.deployed();
-  const arthInstance = await ARTHStablecoin.deployed();
+
+  let arthInstance
+  let arthxInstance
+  if (network != 'mainnet') {
+    arthInstance = await MockArth.deployed();
+    arthxInstance = await MockArthx.deployed();
+  } else {
+    arthInstance = await ARTHStablecoin.deployed();
+    arthxInstance = await ARTHShares.deployed();
+  }
+
   const arthControllerInstance = await ARTHController.deployed();
   const mahaTokenInstance = await helpers.getMahaToken(network, deployer, artifacts);
   const arthMahaOracle = await helpers.getARTHMAHAOracle(network, deployer, artifacts);
@@ -66,14 +81,15 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSetting minting and redemtion fee...'));
   await Promise.all([
-    arthControllerInstance.setMintingFee(mintingFee, { from: DEPLOYER_ADDRESS }),
-    arthControllerInstance.setRedemptionFee(redemptionFee, { from: DEPLOYER_ADDRESS })
+    // arthControllerInstance.setMintingFee(mintingFee, { from: DEPLOYER_ADDRESS }),
+    // arthControllerInstance.setRedemptionFee(redemptionFee, { from: DEPLOYER_ADDRESS })
+    arthControllerInstance.setFeesParameters(mintingFee, recollateFee, buybackFee, redemptionFee, { from: DEPLOYER_ADDRESS })
   ]);
 
   console.log(chalk.yellow('\nRefreshing pool params...'));
   await Promise.all([
-    await pool_instance_USDC.setPoolParameters(TEN_MILLION, 1, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
-    await pool_instance_USDT.setPoolParameters(TEN_MILLION, 1, 7500, 7500, 7500, 7500, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDC.setPoolParameters(TEN_MILLION, 1, { from: DEPLOYER_ADDRESS }),
+    await pool_instance_USDT.setPoolParameters(TEN_MILLION, 1, { from: DEPLOYER_ADDRESS }),
   ]);
 
   console.log(chalk.yellow('\nGetting ARTH and ARTHX oracles...'));

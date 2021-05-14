@@ -4,11 +4,21 @@ const helpers = require('./helpers')
 const ARTHShares = artifacts.require("ARTHShares");
 const ARTHPoolRouter = artifacts.require("ArthPoolRouter");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+const MockArth = artifacts.require("MockArth")
 
 
 module.exports = async function (deployer, network) {
-  const arthx = await ARTHShares.deployed();
-  const arth = await ARTHStablecoin.deployed();
+
+  let arth
+  let arthx
+  if (network != 'mainnet') {
+    arth = await MockArth.deployed();
+    arthx = await MockArth.deployed();
+  } else {
+    arth = await ARTHStablecoin.deployed();
+    arthx = await ARTHShares.deployed();
+  }
+
   const weth = await helpers.getWETH(network, deployer, artifacts);
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts);
 

@@ -160,6 +160,8 @@ describe('ARTHPool', () => {
     await arthx.setArthController(arthController.address);
     await arthPool.setCollatGMUOracle(oracle.address);
 
+    await arthController.setStabilityFee(1);
+
     await arthController.setARTHETHOracle(
       arthETHUniswapOracle.address,
       owner.address
@@ -169,7 +171,14 @@ describe('ARTHPool', () => {
       owner.address
     );
 
-    await arthPool.setPoolParameters(ETH.mul(2), 1, 1000, 1000, 1000, 1000);
+    await arthController.setFeesParameters(
+      1000,
+      1000,
+      1000,
+      1000
+    );
+
+    await arthPool.setPoolParameters(ETH.mul(2), 1);
 
     await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10)); // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
 
@@ -195,11 +204,7 @@ describe('ARTHPool', () => {
           .connect(attacker)
           .setPoolParameters(
             ETH.mul(2),
-            1,
-            1000,
-            1000,
-            1000,
-            1000
+            1
           )
       )
         .to
@@ -232,11 +237,7 @@ describe('ARTHPool', () => {
           .connect(owner)
           .setPoolParameters(
             ETH.mul(2),
-            1,
-            1000,
-            1000,
-            1000,
-            1000
+            1
           )
       )
         .to
@@ -258,11 +259,7 @@ describe('ARTHPool', () => {
           .connect(timelock)
           .setPoolParameters(
             ETH.mul(2),
-            1,
-            1000,
-            1000,
-            1000,
-            1000
+            1
           )
       )
         .to
@@ -288,10 +285,6 @@ describe('ARTHPool', () => {
         .revertedWith('ArthPool: forbidden');
 
       await expect(arthPool.connect(attacker).setARTHMAHAOracle(arthMahaOracle.address))
-        .to
-        .revertedWith('ArthPool: forbidden');
-
-      await expect(arthPool.connect(attacker).setStabilityFee(10))
         .to
         .revertedWith('ArthPool: forbidden');
     });
@@ -322,11 +315,6 @@ describe('ARTHPool', () => {
         .not
         .reverted
 
-      await expect(arthPool.connect(owner).setStabilityFee(10))
-        .to
-        .not
-        .reverted
-
       await expect(arthPool.connect(timelock).setBuyBackCollateralBuffer(10))
         .to
         .not
@@ -351,76 +339,6 @@ describe('ARTHPool', () => {
         .to
         .not
         .reverted
-
-      await expect(arthPool.connect(timelock).setStabilityFee(10))
-        .to
-        .not
-        .reverted
-    });
-
-    it(' - Should work only for various pauser if given appropriate role', async() => {
-      await expect(arthPool.connect(owner).toggleMinting())
-        .to
-        .revertedWith('');
-      await expect(arthPool.connect(attacker).toggleMinting())
-        .to
-        .revertedWith('');
-
-      await arthPool.connect(timelock).toggleMinting();
-      expect(await arthPool.mintPaused())
-        .to
-        .eq(true);
-
-      await expect(arthPool.connect(owner).toggleRedeeming())
-        .to
-        .revertedWith('');
-      await expect(arthPool.connect(attacker).toggleRedeeming())
-        .to
-        .revertedWith('');
-
-      await arthPool.connect(timelock).toggleRedeeming();
-      expect(await arthPool.redeemPaused())
-        .to
-        .eq(true);
-
-      await expect(arthPool.connect(owner).toggleRecollateralize())
-        .to
-        .revertedWith('');
-      await expect(arthPool.connect(attacker).toggleRecollateralize())
-        .to
-        .revertedWith('');
-
-      await arthPool.connect(timelock).toggleRecollateralize();
-      expect(await arthPool.recollateralizePaused())
-        .to
-        .eq(true);
-
-      await expect(arthPool.connect(owner).toggleBuyBack())
-        .to
-        .revertedWith('');
-      await expect(arthPool.connect(attacker).toggleBuyBack())
-        .to
-        .revertedWith('');
-
-      await arthPool.connect(timelock).toggleBuyBack();
-      expect(await arthPool.buyBackPaused())
-        .to
-        .eq(true);
-
-      await expect(arthPool.connect(owner).toggleCollateralPrice(1e6))
-        .to
-        .revertedWith('');
-      await expect(arthPool.connect(attacker).toggleCollateralPrice(1e6))
-        .to
-        .revertedWith('');
-
-      await arthPool.connect(timelock).toggleCollateralPrice(1e6);
-      expect(await arthPool.collateralPricePaused())
-        .to
-        .eq(true);
-      expect(await arthPool.pausedPrice())
-        .to
-        .eq(1e6);
     });
   });
 
@@ -1975,7 +1893,7 @@ describe('ARTHPool', () => {
     });
 
     it(' - Should not recollateralize when paused', async () => {
-      await arthPool.connect(timelock).toggleRecollateralize();
+      await arthController.connect(timelock).toggleRecollateralize();
 
       await expect(arthPool.recollateralizeARTH(ETH, 0)).to.revertedWith(
         'Recollateralize is paused'
@@ -2448,7 +2366,7 @@ describe('ARTHPool', () => {
     });
 
     it(' - Should not buyback when paused', async () => {
-      await arthPool.connect(timelock).toggleBuyBack();
+      await arthController.connect(timelock).toggleBuyBack();
 
       await expect(arthPool.buyBackARTHX(ETH, 0)).to.revertedWith(
         'Buyback is paused'

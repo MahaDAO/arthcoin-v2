@@ -10,6 +10,7 @@ import {IARTHController} from './IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
 import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
+import {ICurve} from '../Curves/ICurve.sol';
 
 /**
  * @title  ARTHStablecoin.
@@ -25,6 +26,7 @@ contract ArthController is AccessControl, IARTHController {
     IChainlinkOracle public _ETHGMUPricer;
     IUniswapPairOracle public _ARTHETHOracle;
     IUniswapPairOracle public _ARTHXETHOracle;
+    ICurve public _recollateralizeDiscountCruve;
 
     address public wethAddress;
     address public arthxAddress;
@@ -38,10 +40,15 @@ contract ArthController is AccessControl, IARTHController {
     address public DEFAULT_ADMIN_ADDRESS;
 
     uint256 public arthStep; // Amount to change the collateralization ratio by upon refresing CR.
-    uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
-    uint256 public redemptionFee;
+    // uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
+    // uint256 public redemptionFee;
     uint256 public refreshCooldown; // Seconds to wait before being refresh CR again.
     uint256 public globalCollateralRatio;
+
+    uint256 public override buybackFee;
+    uint256 public override mintingFee;
+    uint256 public override recollatFee;
+    uint256 public override redemptionFee;
 
     // The bound above and below the price target at which the refershing CR
     // will not change the collateral ratio.
@@ -240,6 +247,13 @@ contract ArthController is AccessControl, IARTHController {
         emit UpdateRecollateralizeCR(old, val);
     }
 
+    function setRecollateralizationCurve(ICurve curve)
+        external
+        onlyByOwnerGovernanceOrPool
+    {
+        _recollateralizeDiscountCruve = curve;
+    }
+
     function refreshCollateralRatio() external override {
         require(
             !isColalteralRatioPaused,
@@ -387,6 +401,18 @@ contract ArthController is AccessControl, IARTHController {
         wethAddress = _wethAddress;
     }
 
+    function setFeesParameters(
+        uint256 _mintingFee,
+        uint256 _recollatFee,
+        uint256 _buybackFee,
+        uint256 _redemptionFee
+    ) external override onlyByOwnerOrGovernance {
+        mintingFee = _mintingFee;
+        recollatFee = _recollatFee;
+        buybackFee = _buybackFee;
+        redemptionFee = _redemptionFee;
+    }
+
     function toggleCollateralRatio()
         external
         override
@@ -423,6 +449,22 @@ contract ArthController is AccessControl, IARTHController {
         uint256 old = redemptionFee;
         redemptionFee = fee;
         emit RedemptionFeeChanged(old, redemptionFee);
+    }
+
+    function setBuybackFee(uint256 fee)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        buybackFee = fee;
+    }
+
+    function setRecollatFee(uint256 fee)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        recollatFee = fee;
     }
 
     function setOwner(address _ownerAddress)
@@ -495,8 +537,24 @@ contract ArthController is AccessControl, IARTHController {
         return mintCollateralRatio;
     }
 
-    function getARTHSupply() external view override returns (uint256) {
+    function getARTHSupply() public view override returns (uint256) {
         return ARTH.totalSupply();
+    }
+
+    function getMintingFee() external view override returns (uint256) {
+        return mintingFee;
+    }
+
+    function getRecollatFee() external view override returns (uint256) {
+        return recollatFee;
+    }
+
+    function getBuybackFee() external view override returns (uint256) {
+        return buybackFee;
+    }
+
+    function getRedemptionFee() external view override returns (uint256) {
+        return redemptionFee;
     }
 
     function getCRForRedeem() external view override returns (uint256) {
@@ -515,11 +573,39 @@ contract ArthController is AccessControl, IARTHController {
         return recollateralizeCollateralRatio;
     }
 
+    function getTargetCollateralValue() public view returns (uint256) {
+        return
+            getARTHSupply()
+            .mul(getGlobalCollateralRatio())
+            .div(1e6);
+    }
+
+    function getRecollateralizationDiscount()
+        public
+        view
+        override
+        returns (uint256)
+    {
+        uint256 targetCollatValue = getTargetCollateralValue();
+        uint256 currentCollatValue = getGlobalCollateralValue();
+
+        uint256 percentCollateral =
+            currentCollatValue.mul(100).div(targetCollatValue);
+
+        return
+            _recollateralizeDiscountCruve
+                .getY(percentCollateral)
+                .mul(_PRICE_PRECISION)
+                .div(1e18);
+    }
+
     function getARTHInfo()
         external
         view
         override
         returns (
+            uint256,
+            uint256,
             uint256,
             uint256,
             uint256,
@@ -538,7 +624,9 @@ contract ArthController is AccessControl, IARTHController {
             getGlobalCollateralValue(), // Global collateral value.
             mintingFee, // Minting fee.
             redemptionFee, // Redemtion fee.
-            getETHGMUPrice() // ETH/GMU price.
+            getETHGMUPrice(), // ETH/GMU price.
+            recollatFee,
+            buybackFee
         );
     }
 

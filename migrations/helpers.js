@@ -71,16 +71,26 @@ const getUSDT = async (network, deployer, artifacts) => {
 const getMahaToken = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
   const MahaToken = artifacts.require('MahaToken');
+  const MockMaha = artifacts.require('MockMaha');
 
   const addr = knownContracts.MahaToken && knownContracts.MahaToken[network];
   if (addr) return IERC20.at(addr);
 
-  if (MahaToken.isDeployed()) return MahaToken.deployed();
+  if (network != 'mainnet') {
+    if (MockMaha.isDeployed()) return MockMaha.deployed();
 
-  console.log(chalk.yellow(`\nDeploying mahatoken on ${network} network...`));
-  await deployer.deploy(MahaToken);
+    console.log(chalk.yellow(`\nDeploying mahatoken on ${network} network...`));
+    await deployer.deploy(MockMaha);
 
-  return MahaToken.deployed();
+    return MockMaha.deployed();
+  } else {
+    if (MahaToken.isDeployed()) return MahaToken.deployed();
+
+    console.log(chalk.yellow(`\nDeploying mahatoken on ${network} network...`));
+    await deployer.deploy(MahaToken);
+
+    return MahaToken.deployed();
+  }
 };
 
 

@@ -10,7 +10,9 @@ const mkdir = util.promisify(fs.mkdir);
 const Multicall = artifacts.require('Multicall');
 const ARTHStablecoin = artifacts.require('ARTHStablecoin');
 const ARTHShares = artifacts.require('ARTHShares');
-
+const MockArth = artifacts.require('MockArth');
+const MockArthx = artifacts.require('MockArthx');
+const MockMaha = artifacts.require('MockMaha')
 
 /**
  * Main migrations
@@ -25,8 +27,8 @@ module.exports = async (callback) => {
 
   const contracts = [
     { abi: 'ArthController', contract: 'ArthController' },
-    { abi: 'ARTHShares', contract: 'ARTHShares' },
-    { abi: 'ARTHStablecoin', contract: 'ARTHStablecoin' },
+    //{ abi: 'ARTHShares', contract: 'ARTHShares' },
+
 
     { abi: 'BoostedStaking', contract: 'StakeARTHMAHA' },
     { abi: 'BoostedStaking', contract: 'StakeARTH' },
@@ -53,7 +55,7 @@ module.exports = async (callback) => {
   const deployments = {};
 
   try {
-    const mahaToken = (await getMahaToken(network, null, artifacts)).address;
+    //const mahaToken = (await getMahaToken(network, null, artifacts)).address;
     const dai = (await getDAI(network, null, artifacts)).address;
     const factoryInstance = (await getUniswapFactory(network, null, artifacts));
     const factory = factoryInstance.address;
@@ -64,9 +66,28 @@ module.exports = async (callback) => {
     const usdt = (await getUSDT(network, null, artifacts)).address;
     // const wbtc = (await getWB(network, null, artifacts)).address;
 
-    const arth = (await ARTHStablecoin.deployed()).address;
-    const arthx = (await ARTHShares.deployed()).address;
+    let arth
+    let arthx
+    let mahaToken
+    if (!isMainnet) {
+      arth = (await MockArth.deployed()).address;
+      contracts.push({ abi: 'MockArth', contract: 'MockArth' })
 
+      arthx = (await MockArthx.deployed()).address;
+      contracts.push({ abi: 'MockArthx', contract: 'MockArthx' })
+
+      mahaToken = (await getMahaToken(network, null, artifacts)).address;
+      contracts.push({ contract: 'MockMaha', address: mahaToken, abi: 'MockMaha' });
+    } else {
+      arth = (await ARTHStablecoin.deployed()).address;
+      contracts.push({ abi: 'ArthStableCoin', contract: 'ARTHStablecoin' })
+
+      arthx = (await ARTHShares.deployed()).address;
+      contracts.push({ abi: 'ARTHShares', contract: 'ARTHShares' })
+
+      mahaToken = (await getMahaToken(network, null, artifacts)).address;
+      contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
+    }
 
     const multicall = knownContracts.Multicall[network] ?
       knownContracts.Multicall[network] :
@@ -79,7 +100,7 @@ module.exports = async (callback) => {
     contracts.push({ contract: 'USDC', address: usdc, abi: 'IERC20' });
     contracts.push({ contract: 'WETH', address: weth, abi: 'IWETH' });
     contracts.push({ contract: 'WBTC', address: dai, abi: 'IERC20' });
-    contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
+    //contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
     contracts.push({ contract: 'Multicall', address: multicall, abi: 'Multicall' });
 
     const arthMahaLP = await factoryInstance.getPair(arth, mahaToken)
