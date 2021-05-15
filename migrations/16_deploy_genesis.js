@@ -34,6 +34,4 @@ module.exports = async function (deployer, network) {
     Math.floor(Date.now() / 1000), // Start time.
     24 * 60 * 60 // Duration.
   );
-
-  console.log('\nDeployments done\n');
 }

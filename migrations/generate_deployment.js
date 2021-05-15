@@ -34,6 +34,8 @@ module.exports = async (callback) => {
     { abi: 'BoostedStaking', contract: 'StakeARTHX' },
     { abi: 'BoostedStaking', contract: 'StakeARTHXWETH' },
 
+    { abi: 'Genesis', contract: 'Genesis' },
+
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_WETH' },
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTHX_WETH' },
 
@@ -53,6 +55,12 @@ module.exports = async (callback) => {
   const deployments = {};
 
   try {
+    if (network != 'mainnet')
+      contracts.push({
+        abi: 'Faucet',
+        contract: 'Faucet'
+      });
+
     //const mahaToken = (await getMahaToken(network, null, artifacts)).address;
     const dai = (await getDAI(network, null, artifacts)).address;
     const factoryInstance = (await getUniswapFactory(network, null, artifacts));
