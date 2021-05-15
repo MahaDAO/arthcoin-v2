@@ -7,7 +7,7 @@ module.exports = {
       host: "127.0.0.1",
       port: 8545, // 7545
       network_id: "*",
-      gas: 0xfa69bfc70,	// <-- Use this high gas value
+      gas: 0xfffffffffff,	// <-- Use this high gas value
       gasPrice: 0x01,	// <-- Use this low gas price
     },
     mainnet: {

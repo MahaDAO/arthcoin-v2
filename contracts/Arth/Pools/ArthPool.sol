@@ -628,11 +628,7 @@ contract ArthPool is AccessControl, IARTHPool {
         // NEED to make sure that recollatFee is less than 1e6.
         uint256 arthxPaidBack =
             amountToRecollateralize
-                .mul(
-                uint256(1e6)
-                    .add(_arthController.getRecollateralizationDiscount())
-                    .sub(_arthController.getRedemptionFee())
-            )
+                .mul(_arthController.getRecollateralizationDiscount().add(1e6))
                 .div(arthxPrice);
 
         require(arthxOutMin <= arthxPaidBack, 'Slippage limit reached');
@@ -677,22 +673,6 @@ contract ArthPool is AccessControl, IARTHPool {
                 arthTotalSupply,
                 collateralRatioForRecollateralize
             );
-    }
-
-    function estimateRecollateralizeRewards() public returns (uint256) {
-        uint256 arthxPrice = _arthController.getARTHXPrice();
-
-        (, , uint256 recollateralizePossible) =
-            estimateAmountToRecollateralize(0);
-
-        return
-            recollateralizePossible
-                .mul(
-                uint256(1e6)
-                    .add(_arthController.getRecollateralizationDiscount())
-                    .sub(_arthController.getRecollatFee())
-            )
-                .div(arthxPrice);
     }
 
     // Function can be called by an ARTHX holder to have the protocol buy back ARTHX with excess collateral value from a desired collateral pool
@@ -817,12 +797,8 @@ contract ArthPool is AccessControl, IARTHPool {
     }
 
     function _chargeStabilityFee(uint256 amount) internal {
-        require(amount > 0, 'ArthPool: amount = 0');
-
         uint256 stabilityFeeInMAHA = estimateStabilityFeeInMAHA(amount);
         _MAHA.burnFrom(msg.sender, stabilityFeeInMAHA);
         emit StabilityFeesCharged(msg.sender, stabilityFeeInMAHA);
-
-        return;
     }
 }
