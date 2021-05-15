@@ -16,7 +16,6 @@ const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 module.exports = async function (deployer, network, accounts) {
   const redemptionFee = 400; // 0.04%
   const mintingFee = 300; // 0.03%
-  const recollateFee = 300; // 0.03%
   const buybackFee = 300; // 0.03%
 
   const DEPLOYER_ADDRESS = accounts[0];
@@ -86,9 +85,7 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSetting minting and redemtion fee...'));
   await Promise.all([
-    // arthControllerInstance.setMintingFee(mintingFee, { from: DEPLOYER_ADDRESS }),
-    // arthControllerInstance.setRedemptionFee(redemptionFee, { from: DEPLOYER_ADDRESS })
-    arthControllerInstance.setFeesParameters(mintingFee, recollateFee, buybackFee, redemptionFee, { from: DEPLOYER_ADDRESS })
+    arthControllerInstance.setFeesParameters(mintingFee, buybackFee, redemptionFee, { from: DEPLOYER_ADDRESS })
   ]);
 
   console.log(chalk.yellow('\nRefreshing pool params...'));
