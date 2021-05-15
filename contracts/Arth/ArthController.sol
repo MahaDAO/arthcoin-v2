@@ -510,16 +510,12 @@ contract ArthController is AccessControl, IARTHController {
         return _getOraclePrice(PriceChoice.ARTH);
     }
 
-    function getMAHAPrice() public view override returns (uint256) {
-        return _getOraclePrice(PriceChoice.MAHA);
-    }
-
     function getARTHXPrice() public view override returns (uint256) {
         return 1e6; // _getOraclePrice(PriceChoice.ARTHX);
     }
 
     function getMAHAPrice() public view override returns (uint256) {
-        return 1e6 * 20;
+        return 1e6 * 20; // return _getOraclePrice(PriceChoice.MAHA);
     }
 
     function getETHGMUPrice() public view override returns (uint256) {

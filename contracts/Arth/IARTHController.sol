@@ -84,8 +84,6 @@ interface IARTHController {
 
     function getARTHXPrice() external view returns (uint256);
 
-    function getMAHAPrice() external view returns (uint256);
-
     function getMintingFee() external view returns (uint256);
 
     function getMAHAPrice() external view returns (uint256);
