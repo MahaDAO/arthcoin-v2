@@ -664,7 +664,7 @@ contract ArthController is AccessControl, IARTHController {
             priceVsETH = uint256(
                 _ARTHXETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTHX if you put in _PRICE_PRECISION WETH ?
             );
-        } else if(choice == PriceChoice.MAHA) {
+        } else if (choice == PriceChoice.MAHA) {
             priceVsETH = uint256(
                 MAHAETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much MAHA if you put in _PRICE_PRECISION WETH ?
             );
