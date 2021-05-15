@@ -161,13 +161,6 @@ contract ArthPool is AccessControl, IARTHPool {
         buybackCollateralBuffer = percent;
     }
 
-    // function setRecollateralizationCurve(ICurve curve)
-    //     external
-    //     onlyAdminOrOwnerOrGovernance
-    // {
-    //     _recollateralizeDiscountCruve = curve;
-    // }
-
     function setARTHController(IARTHController controller)
         external
         onlyAdminOrOwnerOrGovernance
@@ -294,7 +287,11 @@ contract ArthPool is AccessControl, IARTHPool {
             'ArthPool: balance < required'
         );
         require(
-            _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount),
+            _COLLATERAL.transferFrom(
+                msg.sender,
+                address(this),
+                collateralAmount
+            ),
             'ARTHPool: transfer from failed'
         );
 
@@ -386,7 +383,11 @@ contract ArthPool is AccessControl, IARTHPool {
             'ArthPool: balance < require'
         );
         require(
-            _COLLATERAL.transferFrom(msg.sender, address(this), collateralAmount),
+            _COLLATERAL.transferFrom(
+                msg.sender,
+                address(this),
+                collateralAmount
+            ),
             'ARTHPool: transfer from failed'
         );
 
@@ -627,11 +628,7 @@ contract ArthPool is AccessControl, IARTHPool {
         // NEED to make sure that recollatFee is less than 1e6.
         uint256 arthxPaidBack =
             amountToRecollateralize
-                .mul(
-                uint256(1e6).add(_arthController.getRecollateralizationDiscount()).sub(
-                    _arthController.getRedemptionFee()
-                )
-            )
+                .mul(_arthController.getRecollateralizationDiscount().add(1e6))
                 .div(arthxPrice);
 
         require(arthxOutMin <= arthxPaidBack, 'Slippage limit reached');
@@ -684,10 +681,7 @@ contract ArthPool is AccessControl, IARTHPool {
         external
         override
     {
-        require(
-            !_arthController.isBuybackPaused(),
-            'Buyback is paused'
-        );
+        require(!_arthController.isBuybackPaused(), 'Buyback is paused');
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
@@ -727,7 +721,12 @@ contract ArthPool is AccessControl, IARTHPool {
         return _arthController.getGlobalCollateralRatio();
     }
 
-    function getCollateralGMUBalance() external view override returns (uint256) {
+    function getCollateralGMUBalance()
+        external
+        view
+        override
+        returns (uint256)
+    {
         uint256 collateralPrice = getCollateralPrice();
 
         return (
@@ -782,7 +781,6 @@ contract ArthPool is AccessControl, IARTHPool {
                 .div(1e6);
     }
 
-
     function getCollateralPrice() public view override returns (uint256) {
         return _collateralGMUOracle.getPrice();
     }
@@ -799,12 +797,8 @@ contract ArthPool is AccessControl, IARTHPool {
     }
 
     function _chargeStabilityFee(uint256 amount) internal {
-        require(amount > 0, 'ArthPool: amount = 0');
-
         uint256 stabilityFeeInMAHA = estimateStabilityFeeInMAHA(amount);
         _MAHA.burnFrom(msg.sender, stabilityFeeInMAHA);
         emit StabilityFeesCharged(msg.sender, stabilityFeeInMAHA);
-
-        return;
     }
 }

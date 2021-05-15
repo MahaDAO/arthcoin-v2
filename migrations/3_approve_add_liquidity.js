@@ -8,22 +8,14 @@ const helpers = require('./helpers');
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const SwapToPrice = artifacts.require("Uniswap/SwapToPrice");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const MockArth = artifacts.require("MockArth");
-const MockArthx = artifacts.require("MockArthx");
+
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-  let arthx 
-  let arth
 
-  if (network != 'mainnet') {
-    arth = await MockArth.deployed();
-    arthx = await MockArthx.deployed();
-  } else {
-    arth = await ARTHStablecoin.deployed();
-    arthx = await ARTHShares.deployed();
-  }
+  let arth = await ARTHStablecoin.deployed();
+  let arthx = await ARTHShares.deployed();
 
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const weth = await helpers.getWETH(network, deployer, artifacts);
@@ -34,14 +26,15 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nDeploying SwapToPrice'));
   await deployer.deploy(SwapToPrice, uniswapFactory.address, uniswapRouter.address);
 
-  console.log(chalk.yellow('\nSetting uniswap pairs...'));
-  console.log(chalk.yellow(' - Setting Pair including ARTH...'));
+  console.log(chalk.yellow('\nCreating uniswap pairs...'));
 
   await Promise.all([
     uniswapFactory.createPair(arth.address, weth.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactory.createPair(arth.address, maha.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactory.createPair(arthx.address, weth.address, { from: DEPLOYER_ADDRESS }),
-  ]).catch(() => console.log('sdf'));
+  ])
+    .catch(e => console.log('error', e))
+    .then(() => console.log(chalk.green('\nDone')))
 
   console.log(chalk.yellow('\nApproving uniswap pairs....'));
   await Promise.all([
@@ -49,7 +42,9 @@ module.exports = async function (deployer, network, accounts) {
     maha.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     arth.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     arthx.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS })
-  ]);
+  ])
+    .catch(e => console.log('error', e))
+    .then(() => console.log(chalk.green('\nDone')))
 
   await weth.deposit({ value: new BigNumber(1e17) })
 
@@ -98,17 +93,23 @@ module.exports = async function (deployer, network, accounts) {
     const usdc = await helpers.getUSDC(network, deployer, artifacts);
     const usdt = await helpers.getUSDT(network, deployer, artifacts);
 
+    console.log(chalk.yellow('\nCreating USDC/USDT uniswap pairs....'));
+
     await Promise.all([
       uniswapFactory.createPair(usdc.address, weth.address, { from: DEPLOYER_ADDRESS }),
       uniswapFactory.createPair(usdt.address, weth.address, { from: DEPLOYER_ADDRESS }),
-    ]).catch(() => console.log('sdf'));
+    ])
+      .catch(e => console.log('error', e))
+      .then(() => console.log(chalk.green('\nDone')))
+    console.log(chalk.yellow('\nApproving USDC/USDT uniswap pairs....'));
 
-    console.log(chalk.yellow('\nApproving uniswap pairs....'));
     await Promise.all([
       weth.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
       usdc.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
       usdt.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
-    ]);
+    ])
+      .catch(e => console.log('error', e))
+      .then(() => console.log(chalk.green('\nDone')))
 
     await Promise.all([
       // USDC/WETH

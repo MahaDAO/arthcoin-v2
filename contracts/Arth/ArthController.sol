@@ -295,10 +295,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        require(
-            !arthPools[poolAddress],
-            'ARTHController: address present'
-        );
+        require(!arthPools[poolAddress], 'ARTHController: address present');
 
         arthPools[poolAddress] = true;
         arthPoolsArray.push(poolAddress);
@@ -309,10 +306,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        require(
-            arthPools[poolAddress],
-            'ARTHController: address absent'
-        );
+        require(arthPools[poolAddress], 'ARTHController: address absent');
 
         // Delete from the mapping.
         delete arthPools[poolAddress];
@@ -327,7 +321,11 @@ contract ArthController is AccessControl, IARTHController {
         }
     }
 
-    function setControllerAddress(address controller) external override onlyAdmin {
+    function setControllerAddress(address controller)
+        external
+        override
+        onlyAdmin
+    {
         controllerAddress = controller;
     }
 
@@ -517,7 +515,11 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getARTHXPrice() public view override returns (uint256) {
-        return _getOraclePrice(PriceChoice.ARTHX);
+        return 1e6; // _getOraclePrice(PriceChoice.ARTHX);
+    }
+
+    function getMAHAPrice() public view override returns (uint256) {
+        return 1e6 * 20;
     }
 
     function getETHGMUPrice() public view override returns (uint256) {
@@ -589,10 +591,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getTargetCollateralValue() public view returns (uint256) {
-        return
-            getARTHSupply()
-            .mul(getGlobalCollateralRatio())
-            .div(1e6);
+        return getARTHSupply().mul(getGlobalCollateralRatio()).div(1e6);
     }
 
     function getRecollateralizationDiscount()
@@ -607,11 +606,11 @@ contract ArthController is AccessControl, IARTHController {
         uint256 percentCollateral =
             currentCollatValue.mul(1e18).div(targetCollatValue);
 
-        return
-            _recollateralizeDiscountCruve
-                .getY(percentCollateral)
-                .mul(_PRICE_PRECISION)
-                .div(1e18);
+        return 1e5;
+        // _recollateralizeDiscountCruve
+        //     .getY(percentCollateral)
+        //     .mul(_PRICE_PRECISION)
+        //     .div(1e18);
     }
 
     function getARTHInfo()

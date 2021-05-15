@@ -154,15 +154,6 @@ contract UniswapPairOracle is IUniswapPairOracle {
         override
         returns (uint256 amountOut)
     {
-        uint32 blockTimestamp = UniswapV2OracleLibrary.currentBlockTimestamp();
-        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // Overflow is desired
-
-        // Ensure that the price is not stale
-        require(
-            (timeElapsed < (PERIOD + CONSULT_LENIENCY)) || ALLOW_STALE_CONSULTS,
-            'UniswapPairOracle: PRICE_IS_STALE_NEED_TO_CALL_UPDATE'
-        );
-
         if (token == token0) {
             amountOut = price0Average.mul(amountIn).decode144();
         } else {
