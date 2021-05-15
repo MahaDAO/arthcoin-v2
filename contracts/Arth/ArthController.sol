@@ -671,7 +671,7 @@ contract ArthController is AccessControl, IARTHController {
             );
         } else
             revert(
-                'INVALID PRICE CHOICE. Needs to be either ARTH or ARTHX or MAHA'
+                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHX)'
             );
 
         return eth2GMUPrice.mul(_PRICE_PRECISION).div(priceVsETH);
