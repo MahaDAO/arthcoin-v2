@@ -8,6 +8,7 @@ const ARTHController = artifacts.require("ArthController");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+const UniswapPairOracleMAHAARTH = artifacts.require("UniswapPairOracle_MAHA_ARTH");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
 
@@ -15,8 +16,6 @@ const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPai
 module.exports = async function (deployer, network, accounts) {
   const BIG6 = new BigNumber("1e6");
   const DEPLOYER_ADDRESS = accounts[0];
-
-  //const arthx = await ARTHShares.deployed();
 
   let arth = await ARTHStablecoin.deployed();
   let arthx = await ARTHShares.deployed();
@@ -26,6 +25,7 @@ module.exports = async function (deployer, network, accounts) {
   const arthControllerInstance = await ARTHController.deployed();
   const uniswapPairOracleARTHWETH = await UniswapPairOracleARTHWETH.deployed();
   const uniswapPairOracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
+  const uniswapPairOracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
 
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
 
@@ -43,11 +43,15 @@ module.exports = async function (deployer, network, accounts) {
   const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
   const arth_price_from_ARTH_WETH = (new BigNumber(await uniswapPairOracleARTHWETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
   const arthx_price_from_ARTHX_WETH = (new BigNumber(await uniswapPairOracleARTHXWETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
+  const maha_price_initial = new BigNumber(await arthControllerInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const maha_price_from_MAHA_ARTH = (new BigNumber(await uniswapPairOracleMAHAARTH.consult.call(arth.address, 1e6))).div(BIG6);
 
   console.log(" NOTE: - arth_price_initial: ", arth_price_initial.toString(), "GMU = 1 ARTH");
+  console.log(" NOTE: - maha_price_initial: ", maha_price_initial.toString(), "GMU = 1 MAHA");
   console.log(" NOTE: - arthx_price_initial: ", arthx_price_initial.toString(), "GMU = 1 ARTHX");
   console.log(" NOTE: - arth_price_from_ARTH_WETH: ", arth_price_from_ARTH_WETH.toString(), "ARTH = 1 WETH");
   console.log(" NOTE: - arthx_price_from_ARTHX_WETH: ", arthx_price_from_ARTHX_WETH.toString(), "ARTHX = 1 WETH");
+  console.log(" NOTE: - maha_price_from_MAHA_ARTH: ", maha_price_from_MAHA_ARTH.toString(), "MAHA = 1 ARTH");
 
   console.log(chalk.yellow('\nTransferring some tokens and eth to metamask...'));
   await Promise.all([
