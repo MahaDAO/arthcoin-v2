@@ -11,12 +11,9 @@ const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 
 module.exports = async function (deployer, network) {
-  const DEPLOYER_ADDRESS = accounts[0];
-
   const arthInstance = await ARTHStablecoin.deployed();
   const arthxInstance = await ARTHShares.deployed();
   const bondingCurveInstance = await BondingCurve.deployed();
-  const wethInstance = await helpers.getWETH(network, deployer, artifacts);
   const wethInstance = await helpers.getWETH(network, deployer, artifacts);
   const mahaInstance = await helpers.getMahaToken(network, deployer, artifacts);
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts);
