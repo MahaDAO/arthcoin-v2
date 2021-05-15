@@ -16,7 +16,8 @@ contract Faucet {
 
         for (uint256 i = 0; i < noOfTokens; i++) {
             IERC20 token = tokens[i];
-            token.transfer(msg.sender, 2e18);
+            uint256 tokenDecimals = token.decimals();
+            token.transfer(msg.sender, 2 * (10 ** tokenDecimals));
         }
     }
 }
