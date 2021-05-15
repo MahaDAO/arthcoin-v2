@@ -32,10 +32,7 @@ interface IARTHController {
 
     function setMintingFee(uint256 fee) external;
 
-    function setMAHAWETHOracle(
-        address oracle,
-        address weth
-    ) external;
+    function setMAHARTHOracle(address oracle) external;
 
     function setARTHXETHOracle(
         address _arthxOracleAddress,
