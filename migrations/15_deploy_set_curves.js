@@ -16,6 +16,4 @@ module.exports = async function (deployer, network) {
     recollateralizationDiscountCurveInstance.address,
     { from: DEPLOYER_ADDRESS }
   );
-
-  // TODO: deploy genesis and set bonding curve.
 }
