@@ -32,6 +32,11 @@ interface IARTHController {
 
     function setMintingFee(uint256 fee) external;
 
+    function setMAHAWETHOracle(
+        address oracle,
+        address weth
+    ) external;
+
     function setARTHXETHOracle(
         address _arthxOracleAddress,
         address _wethAddress
@@ -80,6 +85,8 @@ interface IARTHController {
     function getARTHXPrice() external view returns (uint256);
 
     function getMintingFee() external view returns (uint256);
+
+    function getMAHAPrice() external view returns (uint256);
 
     function getRecollatFee() external view returns (uint256);
 

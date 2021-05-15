@@ -19,12 +19,13 @@ import {ICurve} from '../Curves/ICurve.sol';
 contract ArthController is AccessControl, IARTHController {
     using SafeMath for uint256;
 
-    enum PriceChoice {ARTH, ARTHX}
+    enum PriceChoice {ARTH, ARTHX, MAHA}
 
     IERC20 public ARTH;
 
     IChainlinkOracle public _ETHGMUPricer;
     IUniswapPairOracle public _ARTHETHOracle;
+    IUniswapPairOracle public MAHAETHOracle;
     IUniswapPairOracle public _ARTHXETHOracle;
     ICurve public _recollateralizeDiscountCruve;
 
@@ -35,6 +36,7 @@ contract ArthController is AccessControl, IARTHController {
     address public timelockAddress;
     address public controllerAddress;
     address public arthETHOracleAddress;
+    address public mahaETHOracleAddress;
     address public arthxETHOracleAddress;
     address public ethGMUConsumerAddress;
     address public DEFAULT_ADMIN_ADDRESS;
@@ -391,6 +393,15 @@ contract ArthController is AccessControl, IARTHController {
         wethAddress = _wethAddress;
     }
 
+    function setMAHAWETHOracle(
+        address oracle,
+        address weth
+    ) external override onlyByOwnerOrGovernance {
+        mahaETHOracleAddress = oracle;
+        MAHAETHOracle = IUniswapPairOracle(oracle);
+        wethAddress = weth;
+    }
+
     function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
         external
         override
@@ -499,6 +510,10 @@ contract ArthController is AccessControl, IARTHController {
 
     function getARTHPrice() public view override returns (uint256) {
         return _getOraclePrice(PriceChoice.ARTH);
+    }
+
+    function getMAHAPrice() public view override returns (uint256) {
+        return _getOraclePrice(PriceChoice.MAHA);
     }
 
     function getARTHXPrice() public view override returns (uint256) {
@@ -654,9 +669,13 @@ contract ArthController is AccessControl, IARTHController {
             priceVsETH = uint256(
                 _ARTHXETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTHX if you put in _PRICE_PRECISION WETH ?
             );
+        } else if(choice == PriceChoice.MAHA) {
+            priceVsETH = uint256(
+                MAHAETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much MAHA if you put in _PRICE_PRECISION WETH ?
+            );
         } else
             revert(
-                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHX)'
+                'INVALID PRICE CHOICE. Needs to be either ARTH or ARTHX or MAHA'
             );
 
         return eth2GMUPrice.mul(_PRICE_PRECISION).div(priceVsETH);
