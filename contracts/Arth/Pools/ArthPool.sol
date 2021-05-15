@@ -678,22 +678,6 @@ contract ArthPool is AccessControl, IARTHPool {
             );
     }
 
-    function estimateRecollateralizeRewards() public returns (uint256) {
-        uint256 arthxPrice = _arthController.getARTHXPrice();
-
-        (, , uint256 recollateralizePossible) =
-            estimateAmountToRecollateralize(0);
-
-        return
-            recollateralizePossible
-                .mul(
-                uint256(1e6).add(_arthController.getRecollateralizationDiscount()).sub(
-                    _arthController.getRecollatFee()
-                )
-            )
-                .div(arthxPrice);
-    }
-
     // Function can be called by an ARTHX holder to have the protocol buy back ARTHX with excess collateral value from a desired collateral pool
     // This can also happen if the collateral ratio > 1
     function buyBackARTHX(uint256 arthxAmount, uint256 collateralOutMin)
