@@ -590,7 +590,7 @@ contract ArthController is AccessControl, IARTHController {
         uint256 currentCollatValue = getGlobalCollateralValue();
 
         uint256 percentCollateral =
-            currentCollatValue.mul(100).div(targetCollatValue);
+            currentCollatValue.mul(1e18).div(targetCollatValue);
 
         return
             _recollateralizeDiscountCruve
