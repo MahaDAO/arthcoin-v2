@@ -547,7 +547,7 @@ contract BoostedStaking is
         rewards[msg.sender] = 0;
         emit RewardPaid(msg.sender, reward);
 
-        rewardsToken.withdrawTo(msg.sender, reward);
+        rewardsToken.withdrawTo(reward, msg.sender);
     }
 
     function earned(address account) public view override returns (uint256) {
