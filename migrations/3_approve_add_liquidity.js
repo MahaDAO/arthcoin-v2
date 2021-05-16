@@ -76,7 +76,7 @@ module.exports = async function (deployer, network, accounts) {
     ),
     // ARTH / MAHA
     uniswapRouter.addLiquidity(
-      arthx.address,
+      arth.address,
       maha.address,
       new BigNumber(1000e18),
       new BigNumber(1000e18),

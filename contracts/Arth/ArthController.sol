@@ -25,6 +25,7 @@ contract ArthController is AccessControl, IARTHController {
 
     IChainlinkOracle public _ETHGMUPricer;
     IUniswapPairOracle public _ARTHETHOracle;
+    IUniswapPairOracle public MAHAARTHOracle;
     IUniswapPairOracle public _ARTHXETHOracle;
     ICurve public _recollateralizeDiscountCruve;
 
@@ -35,19 +36,17 @@ contract ArthController is AccessControl, IARTHController {
     address public timelockAddress;
     address public controllerAddress;
     address public arthETHOracleAddress;
+    address public mahaArthOracleAddress;
     address public arthxETHOracleAddress;
     address public ethGMUConsumerAddress;
     address public DEFAULT_ADMIN_ADDRESS;
 
     uint256 public arthStep; // Amount to change the collateralization ratio by upon refresing CR.
-    // uint256 public mintingFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
-    // uint256 public redemptionFee;
     uint256 public refreshCooldown; // Seconds to wait before being refresh CR again.
     uint256 public globalCollateralRatio;
 
-    uint256 public override buybackFee;
+    uint256 public override buybackFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
     uint256 public override mintingFee;
-    uint256 public override recollatFee;
     uint256 public override redemptionFee;
 
     // The bound above and below the price target at which the refershing CR
@@ -389,6 +388,15 @@ contract ArthController is AccessControl, IARTHController {
         wethAddress = _wethAddress;
     }
 
+    function setMAHARTHOracle(address oracle)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        mahaArthOracleAddress = oracle;
+        MAHAARTHOracle = IUniswapPairOracle(oracle);
+    }
+
     function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
         external
         override
@@ -401,12 +409,10 @@ contract ArthController is AccessControl, IARTHController {
 
     function setFeesParameters(
         uint256 _mintingFee,
-        uint256 _recollatFee,
         uint256 _buybackFee,
         uint256 _redemptionFee
     ) external override onlyByOwnerOrGovernance {
         mintingFee = _mintingFee;
-        recollatFee = _recollatFee;
         buybackFee = _buybackFee;
         redemptionFee = _redemptionFee;
     }
@@ -457,14 +463,6 @@ contract ArthController is AccessControl, IARTHController {
         buybackFee = fee;
     }
 
-    function setRecollatFee(uint256 fee)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        recollatFee = fee;
-    }
-
     function setOwner(address _ownerAddress)
         external
         override
@@ -500,11 +498,16 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getARTHXPrice() public view override returns (uint256) {
-        return 1e6; // _getOraclePrice(PriceChoice.ARTHX);
+        return _getOraclePrice(PriceChoice.ARTHX);
     }
 
     function getMAHAPrice() public view override returns (uint256) {
-        return 1e6 * 20;
+        uint256 arthGmuPrice = getARTHPrice();
+        uint256 priveVsArth = uint256(
+            MAHAARTHOracle.consult(address(ARTH), _PRICE_PRECISION) // How much MAHA if you put in _PRICE_PRECISION ARTH ?
+        );
+
+        return arthGmuPrice.mul(_PRICE_PRECISION).div(priveVsArth);
     }
 
     function getETHGMUPrice() public view override returns (uint256) {
@@ -547,10 +550,6 @@ contract ArthController is AccessControl, IARTHController {
         return mintingFee;
     }
 
-    function getRecollatFee() external view override returns (uint256) {
-        return recollatFee;
-    }
-
     function getBuybackFee() external view override returns (uint256) {
         return buybackFee;
     }
@@ -589,7 +588,7 @@ contract ArthController is AccessControl, IARTHController {
         uint256 currentCollatValue = getGlobalCollateralValue();
 
         uint256 percentCollateral =
-            currentCollatValue.mul(100).div(targetCollatValue);
+            currentCollatValue.mul(1e18).div(targetCollatValue);
 
         return 1e5;
         // _recollateralizeDiscountCruve
@@ -611,7 +610,6 @@ contract ArthController is AccessControl, IARTHController {
             uint256,
             uint256,
             uint256,
-            uint256,
             uint256
         )
     {
@@ -624,7 +622,6 @@ contract ArthController is AccessControl, IARTHController {
             mintingFee, // Minting fee.
             redemptionFee, // Redemtion fee.
             getETHGMUPrice(), // ETH/GMU price.
-            recollatFee,
             buybackFee
         );
     }
@@ -700,9 +697,4 @@ contract ArthController is AccessControl, IARTHController {
     function getStabilityFee() external view override returns (uint256) {
         return stabilityFee;
     }
-
-    // todo add this here
-    // function mintingFee() external returns (uint256);
-    // function redemptionFee() external returns (uint256);
-    // function buybackFee() external returns (uint256);
 }
