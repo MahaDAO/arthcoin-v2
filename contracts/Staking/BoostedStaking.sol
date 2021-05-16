@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
+import {IPoolToken} from '../ERC20/IPoolToken.sol';
 import {Math} from '../utils/math/Math.sol';
 import {Pausable} from '../security/Pausable.sol';
 import {IARTH} from '../Arth/IARTH.sol';
@@ -45,9 +46,9 @@ contract BoostedStaking is
         uint256 multiplier; // 6 decimals of precision. 1x = 1000000
     }
 
-    IERC20 public immutable rewardsToken;
+    IPoolToken public immutable rewardsToken;
     IERC20 public immutable stakingToken;
-    IARTHController private _arthController; // Not immutable because can be reset by the setter.
+    IARTHController public arthController; // Not immutable because can be reset by the setter.
 
     // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
     uint256 public immutable poolWeight;
@@ -146,15 +147,15 @@ contract BoostedStaking is
         address _rewardsDistribution,
         address _rewardsToken,
         address _stakingToken,
-        address _arthControllerAddress,
+        address arthControllerAddress,
         address _timelockAddress,
         uint256 _poolWeight
     ) {
         ownerAddress = _owner;
-        rewardsToken = IERC20(_rewardsToken);
+        rewardsToken = IPoolToken(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
 
-        _arthController = IARTHController(_arthControllerAddress);
+        arthController = IARTHController(arthControllerAddress);
 
         poolWeight = _poolWeight;
         lastUpdateTime = block.timestamp;
@@ -186,7 +187,7 @@ contract BoostedStaking is
         external
         onlyByOwnerOrGovernance
     {
-        _arthController = IARTHController(_controller);
+        arthController = IARTHController(_controller);
     }
 
     function withdraw(uint256 amount)
@@ -239,8 +240,7 @@ contract BoostedStaking is
 
         require(thisStake.kekId == kekId, 'Stake not found');
         require(
-            block.timestamp >= thisStake.endingTimestamp ||
-                isLockedStakes,
+            block.timestamp >= thisStake.endingTimestamp || isLockedStakes,
             'Stake is still locked!'
         );
 
@@ -277,7 +277,10 @@ contract BoostedStaking is
         onlyByOwnerOrGovernance
     {
         // Admin cannot withdraw the staking token from the contract
-        require(tokenAddress != address(stakingToken), 'BoostedStaking: invalid token');
+        require(
+            tokenAddress != address(stakingToken),
+            'BoostedStaking: invalid token'
+        );
 
         emit Recovered(tokenAddress, tokenAmount);
 
@@ -377,10 +380,19 @@ contract BoostedStaking is
         ownerAddress = _newOwner;
         timelockAddress = _newTimelock;
 
-        emit UpdateOwnerAndTimelock(oldOwner, ownerAddress, oldTimelock, timelockAddress);
+        emit UpdateOwnerAndTimelock(
+            oldOwner,
+            ownerAddress,
+            oldTimelock,
+            timelockAddress
+        );
     }
 
-    function stakeFor(address who, address from, uint256 amount) external override onlyPool {
+    function stakeFor(
+        address who,
+        address from,
+        uint256 amount
+    ) external override onlyPool {
         _stake(who, from, amount);
     }
 
@@ -470,7 +482,7 @@ contract BoostedStaking is
             uint256(_MULTIPLIER_BASE).add(
                 (
                     uint256(_MULTIPLIER_BASE).sub(
-                        _arthController.getGlobalCollateralRatio()
+                        arthController.getGlobalCollateralRatio()
                     )
                 )
                     .mul(crBoostMaxMultiplier.sub(_MULTIPLIER_BASE))
@@ -523,6 +535,21 @@ contract BoostedStaking is
         );
     }
 
+    function getRewardAndDistribute()
+        external
+        override
+        nonReentrant
+        updateReward(msg.sender)
+    {
+        uint256 reward = rewards[msg.sender];
+        require(reward > 0, 'BoostedStaking: rewards = 0');
+
+        rewards[msg.sender] = 0;
+        emit RewardPaid(msg.sender, reward);
+
+        rewardsToken.withdrawTo(msg.sender, reward);
+    }
+
     function earned(address account) public view override returns (uint256) {
         return
             _boostedBalances[account]
@@ -535,12 +562,11 @@ contract BoostedStaking is
      * Internal.
      */
 
-    function _stake(address who, address from, uint256 amount)
-        internal
-        nonReentrant
-        whenNotPaused
-        updateReward(who)
-    {
+    function _stake(
+        address who,
+        address from,
+        uint256 amount
+    ) internal nonReentrant whenNotPaused updateReward(who) {
         require(amount > 0, 'Cannot stake 0');
         require(!greylist[who], 'address has been greylisted');
 
@@ -553,7 +579,6 @@ contract BoostedStaking is
         _boostedBalances[who] = _boostedBalances[who].add(amount);
 
         emit Staked(who, amount);
-
 
         // Pull the tokens from the staker
         TransferHelper.safeTransferFrom(

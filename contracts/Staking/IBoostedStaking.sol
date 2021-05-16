@@ -10,13 +10,19 @@ interface IBoostedStaking {
         uint256 duration
     ) external;
 
-    function stakeFor(address who, address from, uint256 amount) external;
+    function stakeFor(
+        address who,
+        address from,
+        uint256 amount
+    ) external;
 
     function stakeLocked(uint256 amount, uint256 secs) external;
 
     function withdrawLocked(bytes32 kekId) external;
 
     function getReward() external;
+
+    function getRewardAndDistribute() external;
 
     function stake(uint256 amount) external;
 
