@@ -28,6 +28,10 @@ module.exports = {
   ETHUSDChainlinkOracleDefault: {
     kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331'
   },
+  WETH: {
+    mainnet: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    rinkeby: '0xc778417e063141139fce010982780140aa0cd5ab',
+  },
   DAI: {
     mainnet: '0x6b175474e89094c44da98b954eedeac495271d0f',
   },
