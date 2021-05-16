@@ -6,11 +6,9 @@ pragma experimental ABIEncoderV2;
 import {IARTHX} from './IARTHX.sol';
 import {IARTH} from '../Arth/IARTH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
-import {Context} from '../utils/Context.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
-import {AccessControl} from '../access/AccessControl.sol';
 
 /**
  * @title  ARTHShares.
@@ -23,18 +21,17 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     using SafeMath for uint256;
 
     /// @dev Controller for arth params.
-    IARTH private _ARTH;
-    IARTHController private _arthController;
+    IARTH public arth;
+    IARTHController public controller;
     address public taxDestination;
 
-    uint256 public taxPercent = 0; // In %.
+    uint256 public taxPercent = 5; // In %.
 
     string public name;
     string public symbol;
     uint8 public constant override decimals = 18;
     uint256 public constant genesisSupply = 1e4 ether; // 10k is printed upon genesis.
 
-    address public arthAddress;
     address public ownerAddress;
     address public oracleAddress;
     address public timelockAddress; // Governance timelock address.
@@ -49,7 +46,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     modifier onlyPools() {
         require(
-            _ARTH.pools(msg.sender) == true,
+            arth.pools(msg.sender) == true,
             'Only arth pools can mint new ARTH'
         );
         _;
@@ -117,7 +114,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         override
         onlyByOwnerOrGovernance
     {
-        _arthController = IARTHController(_controller);
+        controller = IARTHController(_controller);
     }
 
     function setTimelock(address newTimelock)
@@ -133,7 +130,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         override
         onlyByOwnerOrGovernance
     {
-        _ARTH = IARTH(arthContractAddress);
+        arth = IARTH(arthContractAddress);
     }
 
     function setOwner(address _ownerAddress)
