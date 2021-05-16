@@ -7,23 +7,18 @@ import {IERC20} from './IERC20.sol';
 import {Math} from '../utils/math/Math.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AccessControl} from '../access/AccessControl.sol';
+import {IPoolToken} from './IPoolToken.sol';
 
 /**
  * @title  PoolToken
  * @author MahaDAO.
  */
-contract PoolToken is AccessControl, ERC20 {
+contract PoolToken is AccessControl, ERC20, IPoolToken {
     using SafeMath for uint256;
 
     IERC20[] public poolTokens;
     bool public enableWithdrawals = false;
     bytes32 public constant GOVERNANCE_ROLE = keccak256('GOVERNANCE_ROLE');
-
-    event ToggleWithdrawals(bool state);
-    event TokenAdded(address indexed token);
-    event Withdraw(address indexed who, uint256 amount);
-    event TokenReplaced(address indexed token, uint256 index);
-    event TokensRetrieved(address indexed token, address who, uint256 amount);
 
     modifier onlyAdmin {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()));
@@ -62,10 +57,22 @@ contract PoolToken is AccessControl, ERC20 {
         _mint(to, amount);
     }
 
-    function withdraw(uint256 amount) external {
+    function withdraw(uint256 amount) external override {
+        _withdraw(amount, msg.sender, msg.sender);
+    }
+
+    function withdrawTo(uint256 amount, address to) external override {
+        _withdraw(amount, msg.sender, to);
+    }
+
+    function _withdraw(
+        uint256 amount,
+        address from,
+        address to
+    ) internal {
         require(enableWithdrawals, 'PoolToken: withdrawals disabled');
         require(amount > 0, 'PoolToken: amount = 0');
-        require(amount <= balanceOf(msg.sender), 'PoolToken: amount > balance');
+        require(amount <= balanceOf(from), 'PoolToken: amount > balance');
 
         // calculate how much share of the supply the user has
         uint256 percentage = amount.mul(1e8).div(totalSupply());
@@ -75,12 +82,11 @@ contract PoolToken is AccessControl, ERC20 {
             if (address(poolTokens[i]) == address(0)) continue;
             uint256 balance = poolTokens[i].balanceOf(address(this));
             uint256 shareAmount = balance.mul(percentage).div(1e8);
-            if (shareAmount > 0)
-                poolTokens[i].transfer(msg.sender, shareAmount);
+            if (shareAmount > 0) poolTokens[i].transfer(to, shareAmount);
         }
 
-        _burn(msg.sender, amount);
-        emit Withdraw(msg.sender, amount);
+        _burn(from, amount);
+        emit Withdraw(from, to, amount);
     }
 
     function toggleWithdrawals() external onlyAdmin {
