@@ -92,8 +92,8 @@ contract ArthController is AccessControl, IARTHController {
     bool public buyBackPaused = false;
     bool public recollateralizePaused = false;
 
-    uint8 private _ethGMUPricerDecimals;
-    uint256 private constant _PRICE_PRECISION = 1e6;
+    uint8 public _ethGMUPricerDecimals;
+    uint256 public constant _PRICE_PRECISION = 1e6;
     uint256 public stabilityFee = 1; // In %.
 
     event ToggleGlobalCRForMint(bool old, bool flag);
@@ -503,11 +503,12 @@ contract ArthController is AccessControl, IARTHController {
 
     function getMAHAPrice() public view override returns (uint256) {
         uint256 arthGmuPrice = getARTHPrice();
-        uint256 priveVsArth = uint256(
-            MAHAARTHOracle.consult(address(ARTH), _PRICE_PRECISION) // How much MAHA if you put in _PRICE_PRECISION ARTH ?
-        );
+        uint256 priceVsArth =
+            uint256(
+                MAHAARTHOracle.consult(address(ARTH), _PRICE_PRECISION) // How much MAHA if you put in _PRICE_PRECISION ARTH ?
+            );
 
-        return arthGmuPrice.mul(_PRICE_PRECISION).div(priveVsArth);
+        return arthGmuPrice.mul(_PRICE_PRECISION).div(priceVsArth);
     }
 
     function getETHGMUPrice() public view override returns (uint256) {
@@ -570,7 +571,6 @@ contract ArthController is AccessControl, IARTHController {
         returns (uint256)
     {
         if (useGlobalCRForRecollateralize) return getGlobalCollateralRatio();
-
         return recollateralizeCollateralRatio;
     }
 
@@ -590,11 +590,11 @@ contract ArthController is AccessControl, IARTHController {
         uint256 percentCollateral =
             currentCollatValue.mul(1e18).div(targetCollatValue);
 
-        return 1e5;
-        // _recollateralizeDiscountCruve
-        //     .getY(percentCollateral)
-        //     .mul(_PRICE_PRECISION)
-        //     .div(1e18);
+        return
+            _recollateralizeDiscountCruve
+                .getY(percentCollateral)
+                .mul(_PRICE_PRECISION)
+                .div(1e18);
     }
 
     function getARTHInfo()
