@@ -11,4 +11,7 @@ module.exports = async function (deployer) {
   await arthControllerInstance.setRecollateralizationCurve(
     recollateralizationDiscountCurveInstance.address,
   );
+
+  const initalRecollateralizeDiscount = new BigNumber(await arthControllerInstance.getRecollateralizationDiscount());
+  console.log(" NOTE: - initial_recollat_discount: ", initalRecollateralizeDiscount.toString());
 }
