@@ -529,7 +529,7 @@ contract ArthController is AccessControl, IARTHController {
     function getIsGenesisActive() public view returns (bool) {
         return (
             isARTHXGenesActive &&
-            block.timestamp.sub(genesisTimestamp) <= 7 days
+            block.timestamp.sub(genesisTimestamp) <= maxGenesisDuration
         );
     }
 
