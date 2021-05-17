@@ -34,8 +34,6 @@ module.exports = async (callback) => {
     { abi: 'BoostedStaking', contract: 'StakeARTHX' },
     { abi: 'BoostedStaking', contract: 'StakeARTHXWETH' },
 
-    { abi: 'Genesis', contract: 'Genesis' },
-
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_WETH' },
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTHX_WETH' },
 
@@ -56,7 +54,7 @@ module.exports = async (callback) => {
   const deployments = {};
 
   try {
-    if (network != 'mainnet')
+    if (!isMainnet)
       contracts.push({
         abi: 'Faucet',
         contract: 'Faucet'

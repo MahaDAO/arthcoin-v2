@@ -6,6 +6,7 @@ const knownContracts = require('./known-contracts');
 
 const ONE = new BigNumber('1e18');
 const ONEE6 = new BigNumber('1e6');
+const ONEE8 = new BigNumber('1e6');
 
 
 const getDAI = async (network, deployer, artifacts) => {
@@ -268,6 +269,8 @@ const getChainlinkUSDCGMUOracle = async (network, deployer, artifacts) => {
   let defaultChainlinkConsumerAddr = knownContracts.USDCUSDChainlinkOracleDefault && knownContracts.USDCUSDChainlinkOracleDefault[network]
   if (!defaultChainlinkConsumerAddr) {
     await deployer.deploy(MockChainlinkOracle)
+    const mockUSDCChainlinkAggregator = await MockChainlinkOracle.deployed();
+    await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = (await MockChainlinkOracle.deployed()).address
   }
 
@@ -288,6 +291,8 @@ const getChainlinkUSDTGMUOracle = async (network, deployer, artifacts) => {
   let defaultChainlinkConsumerAddr = knownContracts.USDTUSDChainlinkOracleDefault && knownContracts.USDTUSDChainlinkOracleDefault[network]
   if (!defaultChainlinkConsumerAddr) {
     await deployer.deploy(MockChainlinkOracle)
+    const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
+    await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = (await MockChainlinkOracle.deployed()).address
   }
 
