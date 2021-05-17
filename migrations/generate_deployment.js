@@ -44,8 +44,9 @@ module.exports = async (callback) => {
 
     { abi: 'Oracle', contract: 'Oracle_USDC' },
     { abi: 'Oracle', contract: 'Oracle_USDT' },
-
     { abi: 'ArthPoolLibrary', contract: 'ArthPoolLibrary' },
+
+    { abi: 'PoolToken', contract: 'PoolToken' },
 
     { abi: 'ArthPool', contract: 'Pool_USDC' },
     { abi: 'ArthPool', contract: 'Pool_USDT' },

@@ -52,7 +52,7 @@ module.exports = async function (deployer, network, accounts) {
       pairARTHWETH,
       arthController.address,
       timelockInstance.address,
-      500000
+      1e6
     ),
     deployer.deploy(
       StakeARTHMAHA,
@@ -62,7 +62,7 @@ module.exports = async function (deployer, network, accounts) {
       pairARTHMAHA,
       arthController.address,
       timelockInstance.address,
-      500000
+      1e6
     ),
     deployer.deploy(
       StakeARTHXWETH,
@@ -72,7 +72,7 @@ module.exports = async function (deployer, network, accounts) {
       pairARTHXWETH,
       arthController.address,
       timelockInstance.address,
-      0
+      1e6
     ),
     deployer.deploy(
       StakeARTH,
@@ -82,7 +82,7 @@ module.exports = async function (deployer, network, accounts) {
       arth.address,
       arthController.address,
       timelockInstance.address,
-      0
+      1e6
     ),
     deployer.deploy(
       StakeARTHX,
@@ -92,12 +92,12 @@ module.exports = async function (deployer, network, accounts) {
       arthx.address,
       arthController.address,
       timelockInstance.address,
-      0
+      1e6
     )
   ]);
 
-  const stakeARTHMAHA = await StakeARTHMAHA.deployed();
   const stakeARTH = await StakeARTH.deployed();
+  const stakeARTHMAHA = await StakeARTHMAHA.deployed();
   const stakeARTHWETH = await StakeARTHWETH.deployed();
   const stakeARTHX = await StakeARTHX.deployed();
   const stakeARTHXWETH = await StakeARTHXWETH.deployed();
@@ -106,10 +106,10 @@ module.exports = async function (deployer, network, accounts) {
 
   const decimals = BigNumber.from(10).pow(18)
   await Promise.all([
+    poolToken.transfer(stakeARTH.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHMAHA.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHWETH.address, decimals.mul(3000), { from: DEPLOYER_ADDRESS }),
-    poolToken.transfer(stakeARTHXWETH.address, decimals.mul(3000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHX.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
-    poolToken.transfer(stakeARTH.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
+    poolToken.transfer(stakeARTHXWETH.address, decimals.mul(3000), { from: DEPLOYER_ADDRESS }),
   ]);
 };

@@ -51,7 +51,6 @@ contract BoostedStaking is
     IARTHController public arthController; // Not immutable because can be reset by the setter.
 
     // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
-    uint256 public immutable poolWeight;
     // Max reward per second
     uint256 public rewardRate;
     uint256 public periodFinish;
@@ -157,14 +156,11 @@ contract BoostedStaking is
 
         arthController = IARTHController(arthControllerAddress);
 
-        poolWeight = _poolWeight;
         lastUpdateTime = block.timestamp;
         timelockAddress = _timelockAddress;
         rewardsDistribution = _rewardsDistribution;
 
         isLockedStakes = false;
-        rewardRate = 380517503805175038; // (uint256(12000000e18)).div(365 * 86400); // Base emission rate of 12M ARTHX over the first year
-        rewardRate = rewardRate.mul(_poolWeight).div(1e6);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(_POOL_ROLE, _msgSender());
@@ -349,6 +345,8 @@ contract BoostedStaking is
     function initializeDefault() external onlyByOwnerOrGovernance {
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(rewardsDuration);
+
+        rewardRate = rewardsToken.balanceOf(address(this)).div(365 * 86400);
 
         emit DefaultInitialization();
     }

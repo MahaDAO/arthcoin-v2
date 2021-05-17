@@ -17,7 +17,7 @@ contract PoolToken is AccessControl, ERC20, IPoolToken {
     using SafeMath for uint256;
 
     IERC20[] public poolTokens;
-    bool public enableWithdrawals = false;
+    bool public enableWithdrawals = true;
     bytes32 public constant GOVERNANCE_ROLE = keccak256('GOVERNANCE_ROLE');
 
     modifier onlyAdmin {
@@ -98,5 +98,20 @@ contract PoolToken is AccessControl, ERC20, IPoolToken {
         uint256 balance = token.balanceOf(address(this));
         token.transfer(msg.sender, balance);
         emit TokensRetrieved(address(token), msg.sender, balance);
+    }
+
+    function ratePerToken() external view returns (uint256[] memory rates) {
+        for (uint256 i = 0; i < poolTokens.length; i++) {
+            if (address(poolTokens[i]) == address(0)) {
+                rates[i] = 0;
+                continue;
+            }
+
+            rates[i] = poolTokens[i].balanceOf(address(this)).mul(1e18).div(
+                totalSupply()
+            );
+        }
+
+        return rates;
     }
 }
