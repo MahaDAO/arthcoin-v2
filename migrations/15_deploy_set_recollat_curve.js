@@ -15,5 +15,5 @@ module.exports = async function (deployer) {
 
   const initalRecollateralizeDiscount = new BigNumber(await arthControllerInstance.getRecollateralizationDiscount());
   console.log(" NOTE: - initial_recollat_discount: ", initalRecollateralizeDiscount.toString());
-  console.log(" NOTE: - initial_recollat_discount: ", initalRecollateralizeDiscount.div(100).toString());
+  console.log(" NOTE: - initial_recollat_discount: ", initalRecollateralizeDiscount.div(1e6).toString());
 }
