@@ -15,6 +15,8 @@ const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPai
 
 module.exports = async function (deployer, network, accounts) {
   const BIG6 = new BigNumber("1e6");
+  const BIG18 = new BigNumber("1e18");
+
   const DEPLOYER_ADDRESS = accounts[0];
 
   let arth = await ARTHStablecoin.deployed();
@@ -56,9 +58,10 @@ module.exports = async function (deployer, network, accounts) {
   const percentCollateralized = new BigNumber(await arthControllerInstance.getPercentCollateralized());
   const globalCollateralValue = new BigNumber(await arthControllerInstance.getGlobalCollateralValue());
   const targetCollateralValue = new BigNumber(await arthControllerInstance.getTargetCollateralValue());
-  console.log(" NOTE: - percent_collateralized: ", percentCollateralized.toString());
   console.log(" NOTE: - global_collateral_value: ", globalCollateralValue.toString());
   console.log(" NOTE: - target_collateral_value: ", targetCollateralValue.toString());
+  console.log(" NOTE: - percent_collateralized: ", percentCollateralized.toString());
+  console.log(" NOTE: - percent_collateralized_in_readable: ", percentCollateralized.div(BIG18).toString());
 
   console.log(chalk.yellow('\nTransferring some tokens and eth to metamask...'));
   await Promise.all([

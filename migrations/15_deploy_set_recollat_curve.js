@@ -1,3 +1,4 @@
+const BigNumber = require('bignumber.js');
 const ArthController = artifacts.require("ArthController");
 const RecollateralDiscountCurve = artifacts.require("RecollateralDiscountCurve");
 
@@ -14,4 +15,5 @@ module.exports = async function (deployer) {
 
   const initalRecollateralizeDiscount = new BigNumber(await arthControllerInstance.getRecollateralizationDiscount());
   console.log(" NOTE: - initial_recollat_discount: ", initalRecollateralizeDiscount.toString());
+  console.log(" NOTE: - initial_recollat_discount: ", initalRecollateralizeDiscount.div(100).toString());
 }
