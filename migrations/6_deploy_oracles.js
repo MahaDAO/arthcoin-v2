@@ -5,6 +5,7 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const ARTHController = artifacts.require("ArthController");
+const BondingCurve = artifacts.require("BondingCurve");
 const UniswapPairOracleMAHAARTH = artifacts.require("UniswapPairOracle_MAHA_ARTH");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
@@ -59,6 +60,9 @@ module.exports = async function (deployer, network, accounts) {
     )
   ]);
 
+  console.log(chalk.yellow('- Deploying bonding curve'));
+  await deployer.deploy(BondingCurve, new BigNumber('1300e6')); // Fixed price.
+
   await helpers.getGMUOracle(network, deployer, artifacts);
   await helpers.getARTHMAHAOracle(network, deployer, artifacts);
 
@@ -77,6 +81,10 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nLinking MAHA oracles...'));
   const oracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
   await arthController.setMAHARTHOracle(oracleMAHAARTH.address, { from: DEPLOYER_ADDRESS });
+
+  console.log(chalk.yellow('- Linking genesis curve'));
+  const bondingCurve = await BondingCurve.deployed();
+  await arthController.setBondingCurve(bondingCurve.address);
 
   console.log(chalk.yellowBright('\nDeploying collateral oracles'))
   await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
