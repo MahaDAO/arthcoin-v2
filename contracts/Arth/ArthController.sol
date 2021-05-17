@@ -11,6 +11,7 @@ import {AccessControl} from '../access/AccessControl.sol';
 import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
 import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 import {ICurve} from '../Curves/ICurve.sol';
+import {Math} from '../utils/math/Math.sol';
 
 /**
  * @title  ARTHStablecoin.
@@ -48,6 +49,8 @@ contract ArthController is AccessControl, IARTHController {
     uint256 public override buybackFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
     uint256 public override mintingFee;
     uint256 public override redemptionFee;
+
+    uint256 public maxRecollateralizeDiscount = 750000; // In 1e6 precision.
 
     // The bound above and below the price target at which the refershing CR
     // will not change the collateral ratio.
@@ -590,11 +593,13 @@ contract ArthController is AccessControl, IARTHController {
         uint256 percentCollateral =
             currentCollatValue.mul(1e18).div(targetCollatValue);
 
-        return
+        return Math.min(
             _recollateralizeDiscountCruve
                 .getY(percentCollateral)
                 .mul(_PRICE_PRECISION)
-                .div(100);
+                .div(100),
+            maxRecollateralizeDiscount
+        );
     }
 
     function getARTHInfo()
