@@ -77,9 +77,6 @@ contract ArthController is AccessControl, IARTHController {
     uint256 public constant maxGenesisDuration = 7 days;
     /// @notice Will force use of genesis oracle during genesis.
     bool public isARTHXGenesActive = true;
-    /// @notice Once genesis if over cannot be toggled again.
-    ///  prevents the use of genesis oracle even after genesis.
-    bool public isARTHXGenesActiveFlagToggled = false;
 
     bool public useGlobalCRForMint = true;
     bool public useGlobalCRForRedeem = true;
@@ -203,18 +200,12 @@ contract ArthController is AccessControl, IARTHController {
      * External.
      */
 
-    function toggleGenesis()
+    function deactivateGenesis()
         external
         override
         onlyByOwnerOrGovernance
     {
-        require(
-            !isARTHXGenesActiveFlagToggled,
-            'ArthController: genesis already toggled'
-        );
-
         isARTHXGenesActive = false;
-        isARTHXGenesActiveFlagToggled = true;
     }
 
     function toggleUseGlobalCRForMint(bool flag)
