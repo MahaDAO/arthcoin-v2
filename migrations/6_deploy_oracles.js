@@ -1,3 +1,4 @@
+const BigNumber = require('bignumber.js');
 const chalk = require('chalk');
 const helpers = require('./helpers');
 
