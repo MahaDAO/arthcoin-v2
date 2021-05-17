@@ -53,6 +53,16 @@ module.exports = async function (deployer, network, accounts) {
   console.log(" NOTE: - arthx_price_from_ARTHX_WETH: ", arthx_price_from_ARTHX_WETH.toString(), "ARTHX = 1 WETH");
   console.log(" NOTE: - maha_price_from_MAHA_ARTH: ", maha_price_from_MAHA_ARTH.toString(), "MAHA = 1 ARTH");
 
+  const percentCollateralized = new BigNumber(await arthControllerInstance.getPercentCollateralized());
+  const globalCollateralValue = new BigNumber(await arthControllerInstance.getGlobalCollateralValue());
+  const targetCollateralValue = new BigNumber(await arthControllerInstance.getTargetCollateralValue());
+  const initalRecollateralizeDiscount = new BigNumber(await arthControllerInstance.getRecollateralizationDiscount());
+
+  console.log(" NOTE: - percent_collateralized: ", percentCollateralized.toString());
+  console.log(" NOTE: - global_collateral_value: ", globalCollateralValue.toString());
+  console.log(" NOTE: - target_collateral_value: ", targetCollateralValue.toString());
+  console.log(" NOTE: - initial_recollat_discount: ", initalRecollateralizeDiscount.toString());
+
   console.log(chalk.yellow('\nTransferring some tokens and eth to metamask...'));
   await Promise.all([
     arthx.transfer(DEPLOYER_ADDRESS, new BigNumber("1000e18"), { from: DEPLOYER_ADDRESS }),
