@@ -202,7 +202,6 @@ contract ArthController is AccessControl, IARTHController {
 
     function deactivateGenesis()
         external
-        override
         onlyByOwnerOrGovernance
     {
         isARTHXGenesActive = false;
