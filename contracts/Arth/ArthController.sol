@@ -12,6 +12,7 @@ import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
 import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 import {ICurve} from '../Curves/ICurve.sol';
 import {Math} from '../utils/math/Math.sol';
+import {IBondingCurve} from '../Curves/IBondingCurve.sol';
 
 /**
  * @title  ARTHStablecoin.
@@ -29,6 +30,7 @@ contract ArthController is AccessControl, IARTHController {
     IUniswapPairOracle public MAHAARTHOracle;
     IUniswapPairOracle public _ARTHXETHOracle;
     ICurve public _recollateralizeDiscountCruve;
+    IBondingCurve public bondingCurve;
 
     address public wethAddress;
     address public arthxAddress;
@@ -68,6 +70,16 @@ contract ArthController is AccessControl, IARTHController {
 
     // This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant genesisSupply = 2_000_000 ether; // 2M ARTH (testnet) & 5k (Mainnet).
+
+    /// @notice Timestamp at which contract was deployed.
+    uint256 public immutable genesisTimestamp;
+    /// @notice Will use uniswap oracle after this duration.
+    uint256 public constant maxGenesisDuration = 7 days;
+    /// @notice Will force use of genesis oracle during genesis.
+    bool public isARTHXGenesActive = true;
+    /// @notice Once genesis if over cannot be toggled again.
+    ///  prevents the use of genesis oracle even after genesis.
+    bool public isARTHXGenesActiveFlagToggled = false;
 
     bool public useGlobalCRForMint = true;
     bool public useGlobalCRForRedeem = true;
@@ -183,11 +195,27 @@ contract ArthController is AccessControl, IARTHController {
         grantRole(_REDEEM_PAUSER, _timelockAddress);
         grantRole(_BUYBACK_PAUSER, _timelockAddress);
         grantRole(_RECOLLATERALIZE_PAUSER, _timelockAddress);
+
+        genesisTimestamp = block.timestamp;
     }
 
     /**
      * External.
      */
+
+    function toggleGenesis()
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        require(
+            !isARTHXGenesActiveFlagToggled,
+            'ArthController: genesis already toggled'
+        );
+
+        isARTHXGenesActive = false;
+        isARTHXGenesActiveFlagToggled = true;
+    }
 
     function toggleUseGlobalCRForMint(bool flag)
         external
@@ -247,6 +275,13 @@ contract ArthController is AccessControl, IARTHController {
         uint256 old = recollateralizeCollateralRatio;
         recollateralizeCollateralRatio = val;
         emit UpdateRecollateralizeCR(old, val);
+    }
+
+    function setBondingCurve(IBondingCurve curve)
+        external
+        onlyByOwnerOrGovernance
+    {
+        bondingCurve = curve;
     }
 
     function setRecollateralizationCurve(ICurve curve)
@@ -500,7 +535,20 @@ contract ArthController is AccessControl, IARTHController {
         return _getOraclePrice(PriceChoice.ARTH);
     }
 
+    function getIsGenesisActive() public view returns (bool) {
+        return (
+            isARTHXGenesActive &&
+            block.timestamp.sub(genesisTimestamp) <= 7 days
+        );
+    }
+
+    function getARTHXGenesisPrice() public view returns(uint256) {
+        return bondingCurve.getY(getPercentCollateralized());
+    }
+
     function getARTHXPrice() public view override returns (uint256) {
+        if(getIsGenesisActive()) return getARTHXGenesisPrice();
+
         return _getOraclePrice(PriceChoice.ARTHX);
     }
 
@@ -581,21 +629,22 @@ contract ArthController is AccessControl, IARTHController {
         return getARTHSupply().mul(getGlobalCollateralRatio()).div(1e6);
     }
 
+    function getPercentCollateralized() public view returns(uint256) {
+        uint256 targetCollatValue = getTargetCollateralValue();
+        uint256 currentCollatValue = getGlobalCollateralValue();
+
+        return currentCollatValue.mul(1e18).div(targetCollatValue);
+    }
+
     function getRecollateralizationDiscount()
         public
         view
         override
         returns (uint256)
     {
-        uint256 targetCollatValue = getTargetCollateralValue();
-        uint256 currentCollatValue = getGlobalCollateralValue();
-
-        uint256 percentCollateral =
-            currentCollatValue.mul(1e18).div(targetCollatValue);
-
         return Math.min(
             _recollateralizeDiscountCruve
-                .getY(percentCollateral)
+                .getY(getPercentCollateralized())
                 .mul(_PRICE_PRECISION)
                 .div(100),
             maxRecollateralizeDiscount

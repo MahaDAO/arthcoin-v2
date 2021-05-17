@@ -6,6 +6,9 @@ pragma experimental ABIEncoderV2;
 interface IARTHController {
     function toggleCollateralRatio() external;
 
+    function toggleGenesis()
+        external;
+
     function refreshCollateralRatio() external;
 
     function addPool(address pool_address) external;
