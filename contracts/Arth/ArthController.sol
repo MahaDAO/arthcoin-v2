@@ -594,7 +594,7 @@ contract ArthController is AccessControl, IARTHController {
             _recollateralizeDiscountCruve
                 .getY(percentCollateral)
                 .mul(_PRICE_PRECISION)
-                .div(1e18);
+                .div(100);
     }
 
     function getARTHInfo()

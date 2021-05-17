@@ -6,7 +6,7 @@ import {ICurve} from '../../Curves/ICurve.sol';
 
 contract RecollateralDiscountCurve is ICurve {
     function getY(uint256 percent) external pure override returns (uint256) {
-        if (percent <= 0) return 33 ether;
+        if (percent <= 0) return 33; // In %.
         else if (percent > 0 && percent <= 10e16) return 30; // In %.
         else if (percent > 10e16 && percent <= 20e16) return 27; // In %.
         else if (percent > 20e16 && percent <= 30e16) return 24; // In %.
