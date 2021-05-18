@@ -602,6 +602,7 @@ contract ArthController is AccessControl, IARTHController {
 
     function getCRForRedeem() external view override returns (uint256) {
         if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
+        if (getIsGenesisActive()) return 0;
         return redeemCollateralRatio;
     }
 
@@ -731,6 +732,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function isBuybackPaused() external view override returns (bool) {
+        if (getIsGenesisActive()) return true;
         return buyBackPaused;
     }
 
@@ -739,6 +741,7 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getStabilityFee() external view override returns (uint256) {
+        if (getIsGenesisActive()) return 0;
         return stabilityFee;
     }
 }
