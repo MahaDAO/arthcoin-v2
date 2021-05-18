@@ -40,7 +40,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     uint256 private constant _REBASING_PRECISION = 1e6;
 
     /// @notice This is to help with establishing the Uniswap pools, as they need liquidity.
-    uint256 public constant override genesisSupply = 22_000_000 ether; // 22M ARTH (testnet) & 5k (Mainnet).
+    uint256 public constant override genesisSupply = 22_100_000 ether; // 22.1M ARTH (testnet) & 5k (Mainnet).
 
     address public troveManagerAddress;
     address public stabilityPoolAddress;

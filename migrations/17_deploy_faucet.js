@@ -39,11 +39,11 @@ module.exports = async function (deployer, network, accounts) {
   const faucet = await Faucet.deployed();
   console.log('\Transfering some tokens to faucet done\n');
   await Promise.all([
-    arthInstance.transfer(faucet.address, new BigNumber(1e18), { from: DEPLOYER_ADDRESS }),
-    mahaInstance.transfer(faucet.address, new BigNumber(1e18), { from: DEPLOYER_ADDRESS }),
-    arthxInstance.transfer(faucet.address, new BigNumber(1e18), { from: DEPLOYER_ADDRESS }),
-    usdcInstance.transfer(faucet.address, new BigNumber(1e6), { from: DEPLOYER_ADDRESS }),
-    usdtInstance.transfer(faucet.address, new BigNumber(1e6), { from: DEPLOYER_ADDRESS }),
+    arthInstance.transfer(faucet.address, new BigNumber(100000e18), { from: DEPLOYER_ADDRESS }),
+    mahaInstance.transfer(faucet.address, new BigNumber(100000e18), { from: DEPLOYER_ADDRESS }),
+    arthxInstance.transfer(faucet.address, new BigNumber(100000e18), { from: DEPLOYER_ADDRESS }),
+    usdcInstance.transfer(faucet.address, new BigNumber(100000e6), { from: DEPLOYER_ADDRESS }),
+    usdtInstance.transfer(faucet.address, new BigNumber(100000e6), { from: DEPLOYER_ADDRESS }),
   ]);
 
   console.log('\nDeployments done\n');
