@@ -43,6 +43,9 @@ module.exports = async (callback) => {
     { abi: 'Oracle', contract: 'Oracle_USDC' },
     { abi: 'Oracle', contract: 'Oracle_USDT' },
     { abi: 'ArthPoolLibrary', contract: 'ArthPoolLibrary' },
+    { abi: 'MockChainlinkAggregatorV3', contract: 'MockChainlinkAggregatorV3' },
+    { abi: 'MockChainlinkAggregatorV3', contract: 'MockUSDCChainlinkAggregator' },
+    { abi: 'MockChainlinkAggregatorV3', contract: 'MockUSDTChainlinkAggregator' },
 
     { abi: 'PoolToken', contract: 'PoolToken' },
 

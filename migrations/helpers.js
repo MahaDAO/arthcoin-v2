@@ -180,7 +180,7 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   const base = await getUSDT(network, deployer, artifacts);
   const quote = await getWETH(network, deployer, artifacts);
   const ethGMUCustomChainlinkOracle = await getChainlinkETHUSDOracle(network, deployer, artifacts);
-  const chainlinkUSDTGMUOracle = await getChainlinkUSDCGMUOracle(network, deployer, artifacts);
+  const chainlinkUSDTGMUOracle = await getChainlinkUSDTGMUOracle(network, deployer, artifacts);
 
   let usdtWETHAddr = knownContracts.UniswapUSDTWETHOracle && knownContracts.UniswapUSDTWETHOracle[network];
   if (!usdtWETHAddr) {
