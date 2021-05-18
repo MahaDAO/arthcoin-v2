@@ -6,7 +6,7 @@ const knownContracts = require('./known-contracts');
 
 const ONE = new BigNumber('1e18');
 const ONEE6 = new BigNumber('1e6');
-const ONEE8 = new BigNumber('1e6');
+const ONEE8 = new BigNumber('1e8');
 
 
 const getDAI = async (network, deployer, artifacts) => {
