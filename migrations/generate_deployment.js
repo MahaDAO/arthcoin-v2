@@ -54,11 +54,7 @@ module.exports = async (callback) => {
   const deployments = {};
 
   try {
-    if (!isMainnet)
-      contracts.push({
-        abi: 'Faucet',
-        contract: 'Faucet'
-      });
+    if (!isMainnet) contracts.push({ abi: 'Faucet', contract: 'Faucet' });
 
     //const mahaToken = (await getMahaToken(network, null, artifacts)).address;
     const dai = (await getDAI(network, null, artifacts)).address;

@@ -596,8 +596,8 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getCRForRedeem() external view override returns (uint256) {
-        if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
         if (getIsGenesisActive()) return 0;
+        if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
         return redeemCollateralRatio;
     }
 
