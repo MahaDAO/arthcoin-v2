@@ -200,10 +200,7 @@ contract ArthController is AccessControl, IARTHController {
      * External.
      */
 
-    function deactivateGenesis()
-        external
-        onlyByOwnerOrGovernance
-    {
+    function deactivateGenesis() external onlyByOwnerOrGovernance {
         isARTHXGenesActive = false;
     }
 
@@ -526,18 +523,16 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getIsGenesisActive() public view returns (bool) {
-        return (
-            isARTHXGenesActive &&
-            block.timestamp.sub(genesisTimestamp) <= maxGenesisDuration
-        );
+        return (isARTHXGenesActive &&
+            block.timestamp.sub(genesisTimestamp) <= maxGenesisDuration);
     }
 
-    function getARTHXGenesisPrice() public view returns(uint256) {
+    function getARTHXGenesisPrice() public view returns (uint256) {
         return bondingCurve.getY(getPercentCollateralized());
     }
 
     function getARTHXPrice() public view override returns (uint256) {
-        if(getIsGenesisActive()) return getARTHXGenesisPrice();
+        if (getIsGenesisActive()) return getARTHXGenesisPrice();
 
         return _getOraclePrice(PriceChoice.ARTHX);
     }
@@ -619,7 +614,7 @@ contract ArthController is AccessControl, IARTHController {
         return getARTHSupply().mul(getGlobalCollateralRatio()).div(1e6);
     }
 
-    function getPercentCollateralized() public view returns(uint256) {
+    function getPercentCollateralized() public view returns (uint256) {
         uint256 targetCollatValue = getTargetCollateralValue();
         uint256 currentCollatValue = getGlobalCollateralValue();
 
@@ -632,13 +627,14 @@ contract ArthController is AccessControl, IARTHController {
         override
         returns (uint256)
     {
-        return Math.min(
-            _recollateralizeDiscountCruve
-                .getY(getPercentCollateralized())
-                .mul(_PRICE_PRECISION)
-                .div(100),
-            maxRecollateralizeDiscount
-        );
+        return
+            Math.min(
+                _recollateralizeDiscountCruve
+                    .getY(getPercentCollateralized())
+                    .mul(_PRICE_PRECISION)
+                    .div(100),
+                maxRecollateralizeDiscount
+            );
     }
 
     function getARTHInfo()
