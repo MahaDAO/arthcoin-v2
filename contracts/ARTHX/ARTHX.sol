@@ -6,9 +6,11 @@ pragma experimental ABIEncoderV2;
 import {IARTHX} from './IARTHX.sol';
 import {IARTH} from '../Arth/IARTH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
+import {ITaxCurve} from '../Curves/ITaxCurve.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
+
 
 /**
  * @title  ARTHShares.
@@ -23,15 +25,15 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     /// @dev Controller for arth params.
     IARTH public arth;
     IARTHController public controller;
-    address public taxDestination;
 
-    uint256 public taxPercent = 5; // In %.
+    ITaxCurve public taxCurve;
 
     string public name;
     string public symbol;
     uint8 public constant override decimals = 18;
     uint256 public constant genesisSupply = 11e4 ether; // 110k is printed upon genesis.
 
+    address public taxDestination;
     address public ownerAddress;
     address public oracleAddress;
     address public timelockAddress; // Governance timelock address.
@@ -93,12 +95,12 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         oracleAddress = newOracle;
     }
 
-    function setTaxPercent(uint256 percent)
+    function setTaxCurve(ITaxCurve curve)
         external
         override
         onlyByOwnerOrGovernance
     {
-        taxPercent = percent;
+        taxCurve = curve;
     }
 
     function setTaxDestination(address _taxDestination)
@@ -166,13 +168,20 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         emit ARTHXBurned(account, address(this), amount);
     }
 
+    function getTaxPercent() public view override returns (uint256) {
+        if (address(taxCurve) == address(0)) return 0;
+
+        return taxCurve.getTaxPercent();
+    }
+
     function _transfer(
         address sender,
         address recipient,
         uint256 amount
     ) internal virtual override whenNotPaused onlyNonBlacklisted(sender) {
-        if (taxPercent > 0 && taxDestination != address(0)) {
-            uint256 taxAmount = amount.mul(taxPercent).div(100);
+        uint256 taxPercentToCharge = getTaxPercent();
+        if (taxPercentToCharge > 0 && taxDestination != address(0)) {
+            uint256 taxAmount = amount.mul(taxPercentToCharge).div(100);
             super._transfer(sender, taxDestination, taxAmount);
             amount = amount.sub(taxAmount);
         }

@@ -37,13 +37,13 @@ contract TaxCurve is ITaxCurve {
         return block.timestamp.sub(startTime);
     }
 
-    function getTaxForDuration() public view returns (uint256) {
+    function getTaxPercentForDuration() public view returns (uint256) {
         return taxPercentPerSecond.mul(getTimePassed()).div(1e18);
     }
 
-    function getTax() external view override returns (uint256) {
+    function getTaxPercent() external view override returns (uint256) {
         if (getIsDurationPassed()) return endTimeTaxPercent;
 
-        return endTimeTaxPercent.sub(getTaxForDuration());
+        return endTimeTaxPercent.sub(getTaxPercentForDuration());
     }
 }
