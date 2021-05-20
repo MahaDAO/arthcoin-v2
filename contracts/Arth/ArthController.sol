@@ -48,9 +48,9 @@ contract ArthController is AccessControl, IARTHController {
     uint256 public refreshCooldown; // Seconds to wait before being refresh CR again.
     uint256 public globalCollateralRatio;
 
-    uint256 public override buybackFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
-    uint256 public override mintingFee;
-    uint256 public override redemptionFee;
+    uint256 public buybackFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
+    uint256 public mintingFee;
+    uint256 public redemptionFee;
 
     uint256 public maxRecollateralizeDiscount = 750000; // In 1e6 precision.
 
@@ -611,11 +611,11 @@ contract ArthController is AccessControl, IARTHController {
         return recollateralizeCollateralRatio;
     }
 
-    function getTargetCollateralValue() public view returns (uint256) {
+    function getTargetCollateralValue() public view override returns (uint256) {
         return getARTHSupply().mul(getGlobalCollateralRatio()).div(1e6);
     }
 
-    function getPercentCollateralized() public view returns (uint256) {
+    function getPercentCollateralized() public view override returns (uint256) {
         uint256 targetCollatValue = getTargetCollateralValue();
         uint256 currentCollatValue = getGlobalCollateralValue();
 

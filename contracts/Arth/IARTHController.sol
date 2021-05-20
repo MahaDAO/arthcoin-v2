@@ -3,7 +3,10 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-interface IARTHController {
+import {IARTHControllerGetter} from "./IARTHControllerGetter.sol";
+
+
+interface IARTHController is IARTHControllerGetter{
     function toggleCollateralRatio() external;
 
     function refreshCollateralRatio() external;
@@ -11,23 +14,6 @@ interface IARTHController {
     function addPool(address pool_address) external;
 
     function removePool(address pool_address) external;
-
-    function getARTHSupply() external view returns (uint256);
-
-    function getARTHInfo()
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        );
 
     function setMintingFee(uint256 fee) external;
 
@@ -71,28 +57,6 @@ interface IARTHController {
 
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio) external;
 
-    function getRefreshCooldown() external view returns (uint256);
-
-    function getARTHPrice() external view returns (uint256);
-
-    function getARTHXPrice() external view returns (uint256);
-
-    function getMintingFee() external view returns (uint256);
-
-    function getMAHAPrice() external view returns (uint256);
-
-    function getBuybackFee() external view returns (uint256);
-
-    function getRedemptionFee() external view returns (uint256);
-
-    function getETHGMUPrice() external view returns (uint256);
-
-    function getGlobalCollateralRatio() external view returns (uint256);
-
-    function getGlobalCollateralValue() external view returns (uint256);
-
-    function arthPools(address pool) external view returns (bool);
-
     function toggleUseGlobalCRForMint(bool flag) external;
 
     function toggleUseGlobalCRForRecollateralize(bool flag) external;
@@ -107,20 +71,6 @@ interface IARTHController {
 
     function setStabilityFee(uint256 val) external;
 
-    function getCRForMint() external view returns (uint256);
-
-    function getCRForRedeem() external view returns (uint256);
-
-    function isRedeemPaused() external view returns (bool);
-
-    function isMintPaused() external view returns (bool);
-
-    function isBuybackPaused() external view returns (bool);
-
-    function isRecollaterlizePaused() external view returns (bool);
-
-    function getCRForRecollateralize() external view returns (uint256);
-
     function toggleMinting() external;
 
     function toggleRedeeming() external;
@@ -128,15 +78,4 @@ interface IARTHController {
     function toggleRecollateralize() external;
 
     function toggleBuyBack() external;
-
-    function getStabilityFee() external view returns (uint256);
-
-    // todo add this here
-    function mintingFee() external returns (uint256);
-
-    function redemptionFee() external returns (uint256);
-
-    function buybackFee() external returns (uint256);
-
-    function getRecollateralizationDiscount() external returns (uint256);
 }
