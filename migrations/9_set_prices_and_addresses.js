@@ -5,6 +5,7 @@ const helpers = require('./helpers');
 
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const ARTHController = artifacts.require("ArthController");
+const ARTHControllerProxy = artifacts.require("ArthControllerProxy");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
@@ -25,6 +26,7 @@ module.exports = async function (deployer, network, accounts) {
   const pool_instance_USDC = await Pool_USDC.deployed();
   const pool_instance_USDT = await Pool_USDT.deployed();
   const arthControllerInstance = await ARTHController.deployed();
+  const arthProxyInstance = await ARTHControllerProxy.deployed();
   const uniswapPairOracleARTHWETH = await UniswapPairOracleARTHWETH.deployed();
   const uniswapPairOracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
   const uniswapPairOracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
@@ -62,6 +64,28 @@ module.exports = async function (deployer, network, accounts) {
   console.log(" NOTE: - target_collateral_value: ", targetCollateralValue.toString());
   console.log(" NOTE: - percent_collateralized: ", percentCollateralized.toString());
   console.log(" NOTE: - percent_collateralized_in_readable: ", percentCollateralized.div(BIG18).toString());
+
+  console.log("\nProxy should return the same prices: ")
+  const arth_price_initial_proxy = new BigNumber(await arthProxyInstance.getARTHPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const arthx_price_initial_proxy = new BigNumber(await arthProxyInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const arth_price_from_ARTH_WETH_proxy = (new BigNumber(await uniswapPairOracleARTHWETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
+  const arthx_price_from_ARTHX_WETH_proxy = (new BigNumber(await uniswapPairOracleARTHXWETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
+  const maha_price_initial_proxy = new BigNumber(await arthProxyInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const maha_price_from_MAHA_ARTH_proxy = (new BigNumber(await uniswapPairOracleMAHAARTH.consult.call(arth.address, 1e6))).div(BIG6);
+  console.log(" NOTE: - arth_price_initial_proxy: ", arth_price_initial_proxy.toString(), "GMU = 1 ARTH");
+  console.log(" NOTE: - maha_price_initial_proxy: ", maha_price_initial_proxy.toString(), "GMU = 1 MAHA");
+  console.log(" NOTE: - arthx_price_initial_proxy: ", arthx_price_initial_proxy.toString(), "GMU = 1 ARTHX");
+  console.log(" NOTE: - arth_price_from_ARTH_WETH_proxy: ", arth_price_from_ARTH_WETH_proxy.toString(), "ARTH = 1 WETH");
+  console.log(" NOTE: - arthx_price_from_ARTHX_WETH_proxy: ", arthx_price_from_ARTHX_WETH_proxy.toString(), "ARTHX = 1 WETH");
+  console.log(" NOTE: - maha_price_from_MAHA_ARTH_proxy: ", maha_price_from_MAHA_ARTH_proxy.toString(), "MAHA = 1 ARTH");
+
+  const percentCollateralized_proxy = new BigNumber(await arthProxyInstance.getPercentCollateralized());
+  const globalCollateralValue_proxy = new BigNumber(await arthProxyInstance.getGlobalCollateralValue());
+  const targetCollateralValue_proxy = new BigNumber(await arthProxyInstance.getTargetCollateralValue());
+  console.log(" NOTE: - global_collateral_value_proxy: ", globalCollateralValue_proxy.toString());
+  console.log(" NOTE: - target_collateral_value_proxy: ", targetCollateralValue_proxy.toString());
+  console.log(" NOTE: - percent_collateralized_proxy: ", percentCollateralized_proxy.toString());
+  console.log(" NOTE: - percent_collateralized_in_readable_proxy: ", percentCollateralized_proxy.div(BIG18).toString());
 
   console.log(chalk.yellow('\nTransferring some tokens and eth to metamask...'));
   await Promise.all([
