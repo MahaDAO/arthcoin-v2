@@ -38,6 +38,9 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     address public oracleAddress;
     address public timelockAddress; // Governance timelock address.
 
+    /// @notice Address when on the sending/receiving end the tx is not taxed.
+    mapping(address => bool) public whiteListedForTax;
+
     /**
      * Events.
      */
@@ -119,6 +122,22 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         controller = IARTHController(_controller);
     }
 
+    function addToTaxWhiteList(address entity)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        whiteListedForTax[entity] = true;
+    }
+
+    function removeFromTaxWhitelist(address entity)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        whiteListedForTax[entity] = false;
+    }
+
     function setTimelock(address newTimelock)
         external
         override
@@ -169,9 +188,22 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     }
 
     function getTaxPercent() public view override returns (uint256) {
-        if (address(taxCurve) == address(0)) return 0;
+        if (address(taxCurve) == address(0) || taxDestination == address(0)) return 0;
 
         return taxCurve.getTaxPercent();
+    }
+
+    function getTaxAmount(uint256 amount) public view override returns (uint256) {
+        return amount.mul(getTaxPercent()).div(100);
+    }
+
+    function isTxWhiteListed(address sender, address receiver)
+        public
+        view
+        override
+        returns (bool)
+    {
+        return whiteListedForTax[sender] || whiteListedForTax[receiver];
     }
 
     function _transfer(
@@ -179,11 +211,12 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         address recipient,
         uint256 amount
     ) internal virtual override whenNotPaused onlyNonBlacklisted(sender) {
-        uint256 taxPercentToCharge = getTaxPercent();
-        if (taxPercentToCharge > 0 && taxDestination != address(0)) {
-            uint256 taxAmount = amount.mul(taxPercentToCharge).div(100);
-            super._transfer(sender, taxDestination, taxAmount);
-            amount = amount.sub(taxAmount);
+        if (!isTxWhiteListed(sender, recipient)) {
+            uint256 tax  = getTaxAmount(amount);
+            if (tax > 0) {
+                super._transfer(sender, taxDestination, tax);
+                amount = amount.sub(tax);
+            }
         }
 
         super._transfer(sender, recipient, amount);

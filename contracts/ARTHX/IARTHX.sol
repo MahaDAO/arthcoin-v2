@@ -13,8 +13,11 @@ import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
  * @author MahaDAO.
  */
 interface IARTHX is IERC20, IAnyswapV4Token {
-    function setTaxCurve(ITaxCurve curve)
-        external;
+    function addToTaxWhiteList(address entity) external;
+
+    function removeFromTaxWhitelist(address entity) external;
+
+    function setTaxCurve(ITaxCurve curve) external;
 
     function setOwner(address _ownerAddress) external;
 
@@ -33,4 +36,11 @@ interface IARTHX is IERC20, IAnyswapV4Token {
     function setTaxDestination(address _taxDestination) external;
 
     function getTaxPercent() external view returns (uint256);
+
+    function getTaxAmount(uint256 amount) external view returns (uint256);
+
+    function isTxWhiteListed(address sender, address receiver)
+        external
+        view
+        returns (bool);
 }
