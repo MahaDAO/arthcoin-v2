@@ -13,12 +13,13 @@ import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 import {ICurve} from '../Curves/ICurve.sol';
 import {Math} from '../utils/math/Math.sol';
 import {IBondingCurve} from '../Curves/IBondingCurve.sol';
+import {Initializable} from '../proxy/core/Initializable.sol';
 
 /**
  * @title  ARTHStablecoin.
  * @author MahaDAO.
  */
-contract ArthController is AccessControl, IARTHController {
+contract ArthController is AccessControl, IARTHController, Initializable {
     using SafeMath for uint256;
 
     enum PriceChoice {ARTH, ARTHX}
@@ -52,7 +53,7 @@ contract ArthController is AccessControl, IARTHController {
     uint256 public override mintingFee;
     uint256 public override redemptionFee;
 
-    uint256 public maxRecollateralizeDiscount = 750000; // In 1e6 precision.
+    uint256 public maxRecollateralizeDiscount; // In 1e6 precision.
 
     // The bound above and below the price target at which the refershing CR
     // will not change the collateral ratio.
@@ -69,44 +70,42 @@ contract ArthController is AccessControl, IARTHController {
     uint256 public lastCallTime;
 
     // This is to help with establishing the Uniswap pools, as they need liquidity.
-    uint256 public constant genesisSupply = 2_000_000 ether; // 2M ARTH (testnet) & 5k (Mainnet).
+    uint256 public genesisSupply;
 
     /// @notice Timestamp at which contract was deployed.
-    uint256 public immutable genesisTimestamp;
+    uint256 public genesisTimestamp;
     /// @notice Will use uniswap oracle after this duration.
-    uint256 public constant maxGenesisDuration = 7 days;
+    uint256 public maxGenesisDuration;
     /// @notice Will force use of genesis oracle during genesis.
-    bool public isARTHXGenesActive = true;
+    bool public isARTHXGenesActive;
 
-    bool public useGlobalCRForMint = true;
-    bool public useGlobalCRForRedeem = true;
-    bool public useGlobalCRForRecollateralize = true;
+    bool public useGlobalCRForMint;
+    bool public useGlobalCRForRedeem;
+    bool public useGlobalCRForRecollateralize;
 
     uint256 public mintCollateralRatio;
     uint256 public redeemCollateralRatio;
     uint256 public recollateralizeCollateralRatio;
 
-    bool public isColalteralRatioPaused = false;
+    bool public isColalteralRatioPaused;
 
-    bytes32 public constant COLLATERAL_RATIO_PAUSER =
-        keccak256('COLLATERAL_RATIO_PAUSER');
-    bytes32 public constant _RECOLLATERALIZE_PAUSER =
-        keccak256('RECOLLATERALIZE_PAUSER');
-    bytes32 public constant _MINT_PAUSER = keccak256('MINT_PAUSER');
-    bytes32 public constant _REDEEM_PAUSER = keccak256('REDEEM_PAUSER');
-    bytes32 public constant _BUYBACK_PAUSER = keccak256('BUYBACK_PAUSER');
+    bytes32 public COLLATERAL_RATIO_PAUSER;
+    bytes32 public _RECOLLATERALIZE_PAUSER;
+    bytes32 public _MINT_PAUSER;
+    bytes32 public _REDEEM_PAUSER;
+    bytes32 public _BUYBACK_PAUSER;
     address[] public arthPoolsArray; // These contracts are able to mint ARTH.
 
     mapping(address => bool) public override arthPools;
 
-    bool public mintPaused = false;
-    bool public redeemPaused = false;
-    bool public buyBackPaused = false;
-    bool public recollateralizePaused = false;
+    bool public mintPaused;
+    bool public redeemPaused;
+    bool public buyBackPaused;
+    bool public recollateralizePaused;
 
     uint8 public _ethGMUPricerDecimals;
-    uint256 public constant _PRICE_PRECISION = 1e6;
-    uint256 public stabilityFee = 1; // In %.
+    uint256 public _PRICE_PRECISION;
+    uint256 public stabilityFee; // In %.
 
     event ToggleGlobalCRForMint(bool old, bool flag);
     event ToggleGlobalCRForRedeem(bool old, bool flag);
@@ -163,14 +162,14 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     /**
-     * Constructor.
+     * External.
      */
 
-    constructor(
+    function initialize(
         IERC20 _arth,
         address _creatorAddress,
         address _timelockAddress
-    ) {
+    ) public payable initializer {
         ARTH = _arth;
         creatorAddress = _creatorAddress;
         timelockAddress = _timelockAddress;
@@ -194,11 +193,26 @@ contract ArthController is AccessControl, IARTHController {
         grantRole(_RECOLLATERALIZE_PAUSER, _timelockAddress);
 
         genesisTimestamp = block.timestamp;
+        maxRecollateralizeDiscount = 750000;
+        genesisSupply = 2_000_000 ether; // 2M ARTH (testnet) & 5k (Mainnet).
+        maxGenesisDuration = 7 days;
+        isARTHXGenesActive = true;
+        useGlobalCRForRedeem = true;
+        useGlobalCRForMint = true;
+        useGlobalCRForRecollateralize = true;
+        isColalteralRatioPaused = false;
+        COLLATERAL_RATIO_PAUSER = keccak256('COLLATERAL_RATIO_PAUSER');
+        _RECOLLATERALIZE_PAUSER = keccak256('RECOLLATERALIZE_PAUSER');
+        _MINT_PAUSER = keccak256('MINT_PAUSER');
+        _REDEEM_PAUSER = keccak256('REDEEM_PAUSER');
+        _BUYBACK_PAUSER = keccak256('BUYBACK_PAUSER');
+        mintPaused = false;
+        redeemPaused = false;
+        buyBackPaused = false;
+        recollateralizePaused = false;
+        _PRICE_PRECISION = 1e6;
+        stabilityFee = 1;
     }
-
-    /**
-     * External.
-     */
 
     function deactivateGenesis() external onlyByOwnerOrGovernance {
         isARTHXGenesActive = false;
