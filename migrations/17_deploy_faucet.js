@@ -46,5 +46,8 @@ module.exports = async function (deployer, network, accounts) {
     usdtInstance.transfer(faucet.address, new BigNumber(100000e6), { from: DEPLOYER_ADDRESS }),
   ]);
 
+  console.log('\nAdd the faucet to tax whitelist');
+  arthxInstance.addToTaxWhiteList(faucet.address);
+
   console.log('\nDeployments done\n');
 };
