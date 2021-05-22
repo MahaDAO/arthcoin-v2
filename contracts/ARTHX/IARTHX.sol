@@ -35,11 +35,13 @@ interface IARTHX is IERC20, IAnyswapV4Token {
 
     function setTaxDestination(address _taxDestination) external;
 
+    function setTaxBurnPercent(uint256 percent) external;
+
     function getTaxPercent() external view returns (uint256);
 
     function getTaxAmount(uint256 amount) external view returns (uint256);
 
-    function isTxWhiteListed(address sender, address receiver)
+    function isTxWhiteListedForTax(address sender, address receiver)
         external
         view
         returns (bool);

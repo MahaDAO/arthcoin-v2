@@ -33,6 +33,8 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     uint8 public constant override decimals = 18;
     uint256 public constant genesisSupply = 11e4 ether; // 110k is printed upon genesis.
 
+    uint256 public taxToBurnPercent = 50; // In 2 precision %.
+
     address public taxDestination;
     address public ownerAddress;
     address public oracleAddress;
@@ -46,7 +48,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
      */
 
     event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
-
+    event TaxCharged(address indexed from, address indexed to, uint256 total, uint256 burned);
     event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
 
     modifier onlyPools() {
@@ -112,6 +114,15 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         onlyByOwnerOrGovernance
     {
         taxDestination = _taxDestination;
+    }
+
+    function setTaxBurnPercent(uint256 percent)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        require(percent <= 100, 'ARTHX: invalid percent');
+        taxToBurnPercent = percent;
     }
 
     function setArthController(address _controller)
@@ -197,7 +208,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         return amount.mul(getTaxPercent()).div(100);
     }
 
-    function isTxWhiteListed(address sender, address receiver)
+    function isTxWhiteListedForTax(address sender, address receiver)
         public
         view
         override
@@ -206,15 +217,22 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         return whiteListedForTax[sender] || whiteListedForTax[receiver];
     }
 
+    function _distributeTax(address txSender, uint256 tax) internal {
+        uint256 amountToBurn = tax.mul(taxToBurnPercent).div(100);
+        super._burnFrom(txSender, amountToBurn);
+        super._transfer(txSender, taxDestination, tax.sub(amountToBurn));
+        emit TaxCharged(txSender, taxDestination, tax, amountToBurn);
+    }
+
     function _transfer(
         address sender,
         address recipient,
         uint256 amount
     ) internal virtual override whenNotPaused onlyNonBlacklisted(sender) {
-        if (!isTxWhiteListed(sender, recipient)) {
+        if (!isTxWhiteListedForTax(sender, recipient)) {
             uint256 tax  = getTaxAmount(amount);
             if (tax > 0) {
-                super._transfer(sender, taxDestination, tax);
+                _distributeTax(sender, tax);
                 amount = amount.sub(tax);
             }
         }
