@@ -1,3 +1,4 @@
+const Web3 = require('web3');
 const chalk = require('chalk');
 const BigNumber = require('bignumber.js');
 
@@ -5,6 +6,7 @@ require('dotenv').config();
 const helpers = require('./helpers');
 
 
+const web3 = new Web3(Web3.givenProvider || "http://localhost:8545");
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
@@ -56,17 +58,43 @@ module.exports = async function (deployer, network, accounts) {
     ARTHControllerProxy,
     arthControllerInstance.address,
     PROXY_ADMIN_ADDRESS,
-    [],
+    await web3.eth.abi.encodeFunctionCall({
+      "inputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "_arth",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_creatorAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_timelockAddress",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }, [
+      arth.address,
+      DEPLOYER_ADDRESS,
+      timelockInstance.address
+    ]),
     { from: PROXY_ADMIN_ADDRESS}
   );
   const arthControllerProxy = await ARTHControllerProxy.deployed();
 
-  await arthControllerProxy.initialize(
-    arth.address,
-    DEPLOYER_ADDRESS,
-    timelockInstance.address,
-    { from: DEPLOYER_ADDRESS }
-  );
+  // await arthControllerProxy.initialize(
+  //   arth.address,
+  //   DEPLOYER_ADDRESS,
+  //   timelockInstance.address,
+  //   { from: DEPLOYER_ADDRESS }
+  // );
 
   await helpers.getMahaToken(network, deployer, artifacts);
   await helpers.getDAI(network, deployer, artifacts);
