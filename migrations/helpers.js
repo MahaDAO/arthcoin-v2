@@ -6,7 +6,7 @@ const knownContracts = require('./known-contracts');
 
 const ONE = new BigNumber('1e18');
 const ONEE6 = new BigNumber('1e6');
-const ONEE8 = new BigNumber('1e6');
+const ONEE8 = new BigNumber('1e8');
 
 
 const getDAI = async (network, deployer, artifacts) => {
@@ -180,7 +180,7 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   const base = await getUSDT(network, deployer, artifacts);
   const quote = await getWETH(network, deployer, artifacts);
   const ethGMUCustomChainlinkOracle = await getChainlinkETHUSDOracle(network, deployer, artifacts);
-  const chainlinkUSDTGMUOracle = await getChainlinkUSDCGMUOracle(network, deployer, artifacts);
+  const chainlinkUSDTGMUOracle = await getChainlinkUSDTGMUOracle(network, deployer, artifacts);
 
   let usdtWETHAddr = knownContracts.UniswapUSDTWETHOracle && knownContracts.UniswapUSDTWETHOracle[network];
   if (!usdtWETHAddr) {
