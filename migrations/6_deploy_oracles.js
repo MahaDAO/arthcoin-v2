@@ -6,6 +6,7 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const ARTHController = artifacts.require("ArthController");
+const ARTHControllerProxy = artifacts.require("ArthControllerProxy");
 const BondingCurve = artifacts.require("BondingCurve");
 const UniswapPairOracleMAHAARTH = artifacts.require("UniswapPairOracle_MAHA_ARTH");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
@@ -20,6 +21,7 @@ module.exports = async function (deployer, network, accounts) {
   let arthx = await ARTHShares.deployed();
 
   const arthController = await ARTHController.deployed();
+  const arthControllerProxy = await ARTHControllerProxy.deployed();
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const weth = await helpers.getWETH(network, deployer, artifacts);
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts);
@@ -69,23 +71,23 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSetting chainlink oracle...'));
   const chainlinkETHUSDOracle = await helpers.getChainlinkETHUSDOracle(network, deployer, artifacts);
-  await arthController.setETHGMUOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerProxy.setETHGMUOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting ARTHWETH oracle...'));
   const arthWETHOracle = await UniswapPairOracleARTHWETH.deployed();
-  await arthController.setARTHETHOracle(arthWETHOracle.address, weth.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerProxy.setARTHETHOracle(arthWETHOracle.address, weth.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nLinking ARTHX oracles...'));
   const oracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
-  await arthController.setARTHXETHOracle(oracleARTHXWETH.address, weth.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerProxy.setARTHXETHOracle(oracleARTHXWETH.address, weth.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nLinking MAHA oracles...'));
   const oracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
-  await arthController.setMAHARTHOracle(oracleMAHAARTH.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerProxy.setMAHARTHOracle(oracleMAHAARTH.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('- Linking genesis curve'));
   const bondingCurve = await BondingCurve.deployed();
-  await arthController.setBondingCurve(bondingCurve.address);
+  await arthControllerProxy.setBondingCurve(bondingCurve.address);
 
   console.log(chalk.yellowBright('\nDeploying collateral oracles'))
   await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);

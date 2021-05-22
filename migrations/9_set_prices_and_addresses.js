@@ -5,6 +5,7 @@ const helpers = require('./helpers');
 
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const ARTHController = artifacts.require("ArthController");
+const ARTHControllerProxy = artifacts.require("ArthControllerProxy");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
@@ -25,6 +26,7 @@ module.exports = async function (deployer, network, accounts) {
   const pool_instance_USDC = await Pool_USDC.deployed();
   const pool_instance_USDT = await Pool_USDT.deployed();
   const arthControllerInstance = await ARTHController.deployed();
+  const arthControllerProxy = await ARTHControllerProxy.deployed();
   const uniswapPairOracleARTHWETH = await UniswapPairOracleARTHWETH.deployed();
   const uniswapPairOracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
   const uniswapPairOracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
@@ -34,18 +36,21 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nLinking collateral pools to arth contract...'));
   await arth.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
-  await arthControllerInstance.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
-  await arthControllerInstance.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerProxy.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerProxy.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting ARTH address within ARTHX...'));
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSome oracle prices are: '));
-  const arth_price_initial = new BigNumber(await arthControllerInstance.getARTHPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
-  const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const temp = await arthControllerProxy.genesisTimestamp();
+  console.log('Temp', temp.toString());
+
+  const arth_price_initial = new BigNumber(await arthControllerProxy.getARTHPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const arthx_price_initial = new BigNumber(await arthControllerProxy.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
   const arth_price_from_ARTH_WETH = (new BigNumber(await uniswapPairOracleARTHWETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
   const arthx_price_from_ARTHX_WETH = (new BigNumber(await uniswapPairOracleARTHXWETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
-  const maha_price_initial = new BigNumber(await arthControllerInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const maha_price_initial = new BigNumber(await arthControllerProxy.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
   const maha_price_from_MAHA_ARTH = (new BigNumber(await uniswapPairOracleMAHAARTH.consult.call(arth.address, 1e6))).div(BIG6);
 
   console.log(" NOTE: - arth_price_initial: ", arth_price_initial.toString(), "GMU = 1 ARTH");
@@ -55,9 +60,9 @@ module.exports = async function (deployer, network, accounts) {
   console.log(" NOTE: - arthx_price_from_ARTHX_WETH: ", arthx_price_from_ARTHX_WETH.toString(), "ARTHX = 1 WETH");
   console.log(" NOTE: - maha_price_from_MAHA_ARTH: ", maha_price_from_MAHA_ARTH.toString(), "MAHA = 1 ARTH");
 
-  const percentCollateralized = new BigNumber(await arthControllerInstance.getPercentCollateralized());
-  const globalCollateralValue = new BigNumber(await arthControllerInstance.getGlobalCollateralValue());
-  const targetCollateralValue = new BigNumber(await arthControllerInstance.getTargetCollateralValue());
+  const percentCollateralized = new BigNumber(await arthControllerProxy.getPercentCollateralized());
+  const globalCollateralValue = new BigNumber(await arthControllerProxy.getGlobalCollateralValue());
+  const targetCollateralValue = new BigNumber(await arthControllerProxy.getTargetCollateralValue());
   console.log(" NOTE: - global_collateral_value: ", globalCollateralValue.toString());
   console.log(" NOTE: - target_collateral_value: ", targetCollateralValue.toString());
   console.log(" NOTE: - percent_collateralized: ", percentCollateralized.toString());
@@ -70,5 +75,5 @@ module.exports = async function (deployer, network, accounts) {
   ]);
 
   console.log(chalk.blue('\nRefreshing collateral ratio...'));
-  await arthControllerInstance.refreshCollateralRatio();
+  await arthControllerProxy.refreshCollateralRatio();
 };

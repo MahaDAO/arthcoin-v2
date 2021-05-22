@@ -27,6 +27,7 @@ module.exports = async (callback) => {
     { abi: 'ArthController', contract: 'ArthController' },
     //{ abi: 'ARTHShares', contract: 'ARTHShares' },
 
+    { abi: 'ArthControllerProxy', contract: 'ArthControllerProxy' },
 
     { abi: 'BoostedStaking', contract: 'StakeARTHMAHA' },
     { abi: 'BoostedStaking', contract: 'StakeARTH' },

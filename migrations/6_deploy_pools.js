@@ -5,6 +5,7 @@ const helpers = require('./helpers');
 
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const ARTHController = artifacts.require("ArthController");
+const ARTHControllerProxy = artifacts.require("ArthControllerProxy");
 const Timelock = artifacts.require("Governance/Timelock");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
@@ -28,6 +29,7 @@ module.exports = async function (deployer, network, accounts) {
   let arthx = await ARTHShares.deployed();
 
   const arthControllerInstance = await ARTHController.deployed();
+  const arthControllerProxy = await ARTHControllerProxy.deployed();
   const mahaTokenInstance = await helpers.getMahaToken(network, deployer, artifacts);
   const arthMahaOracle = await helpers.getARTHMAHAOracle(network, deployer, artifacts);
 
@@ -48,7 +50,7 @@ module.exports = async function (deployer, network, accounts) {
     timelockInstance.address,
     mahaTokenInstance.address,
     arthMahaOracle.address,
-    arthControllerInstance.address,
+    arthControllerProxy.address,
     TEN_MILLION
   )
 
@@ -62,7 +64,7 @@ module.exports = async function (deployer, network, accounts) {
       timelockInstance.address,
       mahaTokenInstance.address,
       arthMahaOracle.address,
-      arthControllerInstance.address,
+      arthControllerProxy.address,
       TEN_MILLION
     ),
     deployer.deploy(
@@ -74,7 +76,7 @@ module.exports = async function (deployer, network, accounts) {
       timelockInstance.address,
       mahaTokenInstance.address,
       arthMahaOracle.address,
-      arthControllerInstance.address,
+      arthControllerProxy.address,
       TEN_MILLION
     )
   ]);
@@ -85,7 +87,7 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSetting minting and redemtion fee...'));
   await Promise.all([
-    arthControllerInstance.setFeesParameters(mintingFee, buybackFee, redemptionFee, { from: DEPLOYER_ADDRESS })
+    arthControllerProxy.setFeesParameters(mintingFee, buybackFee, redemptionFee, { from: DEPLOYER_ADDRESS })
   ]);
 
   console.log(chalk.yellow('\nRefreshing pool params...'));

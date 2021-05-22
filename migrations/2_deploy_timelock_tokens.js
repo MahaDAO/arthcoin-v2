@@ -9,12 +9,14 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+const ARTHControllerProxy = artifacts.require("ArthControllerProxy");
 
 
 module.exports = async function (deployer, network, accounts) {
-
   const TIMELOCK_DELAY = 2 * 86400;
   const DEPLOYER_ADDRESS = accounts[0];
+  const PROXY_ADMIN_ADDRESS = accounts[2];
+
   const MOCK_TOKEN_INITIAL_SUPPLY = new BigNumber(1000e18);
 
   console.log(chalk.yellow('\nDeploying timelock for tokens...'));
@@ -45,13 +47,26 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow(`\nDeploying ARTH controller...`));
   await deployer.deploy(
-    ARTHController,
+    ARTHController
+  );
+  const arthControllerInstance = await ARTHController.deployed();
+
+  console.log(chalk.yellow(`\nDeploying ARTH controller proxy`));
+  await deployer.deploy(
+    ARTHControllerProxy,
+    arthControllerInstance.address,
+    PROXY_ADMIN_ADDRESS,
+    [],
+    { from: PROXY_ADMIN_ADDRESS}
+  );
+  const arthControllerProxy = await ARTHControllerProxy.deployed();
+
+  await arthControllerProxy.initialize(
     arth.address,
     DEPLOYER_ADDRESS,
-    timelockInstance.address
+    timelockInstance.address,
+    { from: DEPLOYER_ADDRESS }
   );
-
-  const arthControllerInstance = await ARTHController.deployed();
 
   await helpers.getMahaToken(network, deployer, artifacts);
   await helpers.getDAI(network, deployer, artifacts);
@@ -60,5 +75,5 @@ module.exports = async function (deployer, network, accounts) {
   await helpers.getUSDT(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nSetting appropriate token addresses...'));
-  await arthControllerInstance.setARTHXAddress(arthxInstance.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerProxy.setARTHXAddress(arthxInstance.address, { from: DEPLOYER_ADDRESS });
 };
