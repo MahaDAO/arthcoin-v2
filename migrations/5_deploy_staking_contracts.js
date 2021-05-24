@@ -112,4 +112,13 @@ module.exports = async function (deployer, network, accounts) {
     poolToken.transfer(stakeARTHX.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHXWETH.address, decimals.mul(3000), { from: DEPLOYER_ADDRESS }),
   ]);
+
+  console.log(chalk.yellow('\nAdd the staking contracts to tax whitelist'));
+  await Promise.all([
+    await arthx.addToTaxWhiteList(stakeARTH.address),
+    await arthx.addToTaxWhiteList(stakeARTHMAHA.address),
+    await arthx.addToTaxWhiteList(stakeARTHWETH.address),
+    await arthx.addToTaxWhiteList(stakeARTHX.address),
+    await arthx.addToTaxWhiteList(stakeARTHXWETH.address),
+  ]);
 };
