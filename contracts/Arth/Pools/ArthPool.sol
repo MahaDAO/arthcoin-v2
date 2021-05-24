@@ -16,7 +16,7 @@ import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
 import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
-
+import {IProxyArthController} from '../IProxyArthController.sol';
 /**
  * @title  ARTHPool.
  * @author MahaDAO.
@@ -36,7 +36,7 @@ contract ArthPool is AccessControl, IARTHPool {
     IERC20 public _COLLATERAL;
     IERC20Burnable public _MAHA;
     ISimpleOracle public _ARTHMAHAOracle;
-    IARTHController public _arthController;
+    IProxyArthController public _arthController;
     IOracle public _collateralGMUOracle;
     //ICurve public _recollateralizeDiscountCruve;
     IUniswapPairOracle public _collateralETHOracle;
@@ -135,7 +135,7 @@ contract ArthPool is AccessControl, IARTHPool {
         _COLLATERAL = IERC20(__collateralAddress);
         _ARTHX = IARTHX(__arthxContractAddress);
         _ARTHMAHAOracle = ISimpleOracle(__ARTHMAHAOracle);
-        _arthController = IARTHController(__arthController);
+        _arthController = IProxyArthController(__arthController);
 
         _ownerAddress = _creatorAddress;
         _timelockAddress = __timelockAddress;
@@ -161,7 +161,7 @@ contract ArthPool is AccessControl, IARTHPool {
         buybackCollateralBuffer = percent;
     }
 
-    function setARTHController(IARTHController controller)
+    function setARTHController(IProxyArthController controller)
         external
         onlyAdminOrOwnerOrGovernance
     {

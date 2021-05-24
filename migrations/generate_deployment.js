@@ -25,7 +25,7 @@ module.exports = async (callback) => {
 
   const contracts = [
     { abi: 'ArthController', contract: 'ArthController' },
-    //{ abi: 'ARTHShares', contract: 'ARTHShares' },
+    { abi: 'ProxyArthController', contract: 'ProxyArthController' },
 
 
     { abi: 'BoostedStaking', contract: 'StakeARTHMAHA' },

@@ -522,12 +522,12 @@ contract ArthController is AccessControl, IARTHController {
         return _getOraclePrice(PriceChoice.ARTH);
     }
 
-    function getIsGenesisActive() public view returns (bool) {
+    function getIsGenesisActive() public view override returns (bool) {
         return (isARTHXGenesActive &&
             block.timestamp.sub(genesisTimestamp) <= maxGenesisDuration);
     }
 
-    function getARTHXGenesisPrice() public view returns (uint256) {
+    function getARTHXGenesisPrice() public view override returns (uint256) {
         return bondingCurve.getY(getPercentCollateralized());
     }
 
@@ -611,11 +611,11 @@ contract ArthController is AccessControl, IARTHController {
         return recollateralizeCollateralRatio;
     }
 
-    function getTargetCollateralValue() public view returns (uint256) {
+    function getTargetCollateralValue() public view override returns (uint256) {
         return getARTHSupply().mul(getGlobalCollateralRatio()).div(1e6);
     }
 
-    function getPercentCollateralized() public view returns (uint256) {
+    function getPercentCollateralized() public view override returns (uint256) {
         uint256 targetCollatValue = getTargetCollateralValue();
         uint256 currentCollatValue = getGlobalCollateralValue();
 

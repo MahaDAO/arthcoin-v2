@@ -9,7 +9,7 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-
+const ProxyArthController = artifacts.require("Arth/ProxyArthController");
 
 module.exports = async function (deployer, network, accounts) {
 
@@ -52,6 +52,12 @@ module.exports = async function (deployer, network, accounts) {
   );
 
   const arthControllerInstance = await ARTHController.deployed();
+
+  console.log(chalk.yellow(`\nDeploying ARTH controller proxy...`));
+  await deployer.deploy(
+    ProxyArthController,
+    arthControllerInstance.address
+  );
 
   await helpers.getMahaToken(network, deployer, artifacts);
   await helpers.getDAI(network, deployer, artifacts);
