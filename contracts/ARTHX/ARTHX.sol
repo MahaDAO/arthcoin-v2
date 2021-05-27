@@ -219,7 +219,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     function _distributeTax(address txSender, uint256 tax) internal {
         uint256 amountToBurn = tax.mul(taxToBurnPercent).div(100);
-        super._burnFrom(txSender, amountToBurn);
+        super._burn(txSender, amountToBurn);
         super._transfer(txSender, taxDestination, tax.sub(amountToBurn));
         emit TaxCharged(txSender, taxDestination, tax, amountToBurn);
     }

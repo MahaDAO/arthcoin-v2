@@ -5,6 +5,7 @@ require('dotenv').config();
 const helpers = require('./helpers');
 
 
+const TaxCurve = artifacts.require("TaxCurve");
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
@@ -50,6 +51,13 @@ module.exports = async function (deployer, network, accounts) {
     DEPLOYER_ADDRESS,
     timelockInstance.address
   );
+
+  console.log(chalk.yellow(`\nDeploying tax controller...`));
+  await deployer.deploy(
+    TaxCurve
+  );
+  const taxCurve = await TaxCurve.deployed();
+  await arthxInstance.setTaxCurve(taxCurve.address);
 
   const arthControllerInstance = await ARTHController.deployed();
 
