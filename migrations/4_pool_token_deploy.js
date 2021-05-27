@@ -9,7 +9,6 @@ const { BigNumber } = require('@ethersproject/bignumber');
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-
   let arthx = await ARTHShares.deployed();
 
   const timelockInstance = await Timelock.deployed();
@@ -24,11 +23,13 @@ module.exports = async function (deployer, network, accounts) {
     timelockInstance.address
   );
 
-  let pool = await PoolToken.deployed()
-  const decimals = BigNumber.from(10).pow(18)
+  let pool = await PoolToken.deployed();
+  const decimals = BigNumber.from(10).pow(18);
 
-  await arthx.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS })
-  await maha.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS })
+  await arthx.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
+  await maha.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
 
-  await arthx.setTaxDestination(PoolToken.address)
+  await arthx.setTaxDestination(pool.address);
+  console.log('\nAdd the pool token to tax whitelist');
+  await arthx.addToTaxWhiteList(pool.address);
 };

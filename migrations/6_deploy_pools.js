@@ -21,7 +21,6 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
   const TEN_MILLION = new BigNumber("1000000e6");
 
-  //const arthx = await ARTHShares.deployed();
   const timelockInstance = await Timelock.deployed();
 
   let arth = await ARTHStablecoin.deployed();
@@ -102,5 +101,11 @@ module.exports = async function (deployer, network, accounts) {
   await Promise.all([
     pool_instance_USDC.setCollatGMUOracle(usdc_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
     pool_instance_USDT.setCollatGMUOracle(usdt_oracle_instance.address, { from: DEPLOYER_ADDRESS })
+  ]);
+
+  console.log(chalk.yellow('\nAdd the pools to tax whitelist'));
+  await Promise.all([
+    await arthx.addToTaxWhiteList(pool_instance_USDC.address),
+    await arthx.addToTaxWhiteList(pool_instance_USDT.address)
   ]);
 };
