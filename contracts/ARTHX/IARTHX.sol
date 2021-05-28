@@ -5,6 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from '../ERC20/IERC20.sol';
 import {ITaxCurve} from '../Curves/ITaxCurve.sol';
+import {ITaxController} from './ITaxController.sol';
 import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
 
 
@@ -25,6 +26,8 @@ interface IARTHX is IERC20, IAnyswapV4Token {
 
     function setArthController(address _controller) external;
 
+    function setTaxController(ITaxController controller) external;
+
     function setTimelock(address newTimelock) external;
 
     function setARTHAddress(address arthContractAddress) external;
@@ -32,10 +35,6 @@ interface IARTHX is IERC20, IAnyswapV4Token {
     function poolMint(address account, uint256 amount) external;
 
     function poolBurnFrom(address account, uint256 amount) external;
-
-    function setTaxDestination(address _taxDestination) external;
-
-    function setTaxBurnPercent(uint256 percent) external;
 
     function getTaxPercent() external view returns (uint256);
 
