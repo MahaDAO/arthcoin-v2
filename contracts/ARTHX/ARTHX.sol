@@ -111,12 +111,14 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         controller = IARTHController(_controller);
     }
 
-     function setTaxController(ITaxController newController)
+    function setTaxController(ITaxController newController)
         external
         override
         onlyByOwnerOrGovernance
     {
+        whiteListedForTax[address(taxController)] = false;
         taxController = newController;
+        whiteListedForTax[address(taxController)] = true;
     }
 
     function addToTaxWhiteList(address entity)
@@ -175,7 +177,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         emit ARTHXMinted(address(this), account, amount);
     }
 
-    // This function is what other arth pools will call to burn ARTHX
+    // This function is what other arth pools will call to burn ARTHX.
     function poolBurnFrom(address account, uint256 amount)
         external
         override
@@ -214,7 +216,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         address recipient,
         uint256 amount
     ) internal virtual override whenNotPaused onlyNonBlacklisted(sender) {
-        if(
+        if (
             isTxWhiteListedForTax(sender, recipient) ||
             address(taxController) == address(0)
         ) {
