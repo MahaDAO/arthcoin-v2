@@ -96,7 +96,10 @@ contract ARTHXTaxController is Ownable, ITaxController {
         path[0] = address(arthx);
         path[1] = router.WETH();
 
-        arthx.approve(address(router), arthxAmount);
+        require(
+            arthx.approve(address(router), arthxAmount),
+            "ARTHTaxController: approve failed"
+        );
 
         router.swapExactTokensForETHSupportingFeeOnTransferTokens(
             arthxAmount,
@@ -108,10 +111,13 @@ contract ARTHXTaxController is Ownable, ITaxController {
     }
 
     function _addLiquidity(uint256 arthxAmount, uint256 ethAmount) internal {
-        arthx.approve(address(router), arthxAmount);
+        require(
+            arthx.approve(address(router), arthxAmount),
+            "ARTHTaxController: approve failed"
+        );
 
         router.addLiquidityETH{value: ethAmount}(
-            address(this),
+            address(arthx),
             arthxAmount,
             0, // slippage is unavoidable.
             0, // slippage is unavoidable.
