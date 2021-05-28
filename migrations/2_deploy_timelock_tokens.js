@@ -11,7 +11,6 @@ const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
-
 module.exports = async function (deployer, network, accounts) {
 
   const TIMELOCK_DELAY = 2 * 86400;
@@ -52,7 +51,7 @@ module.exports = async function (deployer, network, accounts) {
     timelockInstance.address
   );
 
-  console.log(chalk.yellow(`\nDeploying tax controller...`));
+  console.log(chalk.yellow(`\nDeploying arthx tax curve...`));
   await deployer.deploy(
     TaxCurve
   );
