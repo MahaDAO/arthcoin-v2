@@ -205,7 +205,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     }
 
     function getTaxAmount(uint256 amount) public view override returns (uint256) {
-        return amount.mul(getTaxPercent()).div(100);
+        return amount.mul(getTaxPercent()).div(1e6);
     }
 
     function isTxWhiteListedForTax(address sender, address receiver)

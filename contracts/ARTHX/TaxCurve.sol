@@ -12,10 +12,10 @@ contract TaxCurve is ITaxCurve {
     uint256 public constant duration = 30 days;
 
     uint256 public immutable startTime;
-    uint256 public immutable taxPercentPerSecond;
+    uint256 public immutable taxPercentPerSecond; // In 18 precision.
 
-    uint256 public constant endTimeTaxPercent = 15;  // In %.
-    uint256 public constant startTimeTaxPercent = 5;  // In %.
+    uint256 public constant endTimeTaxPercent = 15e4;  // In 6 precision.
+    uint256 public constant startTimeTaxPercent = 5e4;  // In 6 precision.
 
     constructor() {
         startTime = block.timestamp;
@@ -38,7 +38,13 @@ contract TaxCurve is ITaxCurve {
     }
 
     function getTaxPercentForDuration() public view returns (uint256) {
-        return taxPercentPerSecond.mul(getTimePassed()).div(1e18);
+        uint256 currentTaxPercent = taxPercentPerSecond.mul(getTimePassed()).div(1e18);
+        // Fail safe.
+        return (
+            currentTaxPercent > endTimeTaxPercent
+                ? endTimeTaxPercent
+                : currentTaxPercent
+        );
     }
 
     function getTaxPercent() external view override returns (uint256) {
