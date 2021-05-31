@@ -120,7 +120,8 @@ const getUniswapRouter = async (network, deployer, artifacts) => {
 
   console.log(chalk.yellow(`\nDeploying uniswap router on ${network} network...`));
   const factory = await getUniswapFactory(network, deployer, artifacts);
-  await deployer.deploy(UniswapV2Router02, factory.address, factory.address);
+  const weth = await getWETH(network, deployer, artifacts);
+  await deployer.deploy(UniswapV2Router02, factory.address, weth.address);
 
   return UniswapV2Router02.deployed();
 };

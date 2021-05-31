@@ -1,10 +1,10 @@
+const { BigNumber } = require('@ethersproject/bignumber');
+
 const helpers = require('./helpers');
 const PoolToken = artifacts.require("PoolToken");
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
-
 const Timelock = artifacts.require("Governance/Timelock");
-const { BigNumber } = require('@ethersproject/bignumber');
-
+const ARTHXTaxController = artifacts.require("ARTHXTaxController");
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
@@ -29,7 +29,16 @@ module.exports = async function (deployer, network, accounts) {
   await arthx.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
   await maha.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
 
-  await arthx.setTaxDestination(pool.address);
+  console.log(`\nDeploying arthx tax controller...`);
+  await deployer.deploy(
+    ARTHXTaxController,
+    arthx.address,
+    (await helpers.getUniswapRouter(network, deployer, artifacts)).address
+  );
+  const taxController = await ARTHXTaxController.deployed();
+  await taxController.setRewardsDestination(pool.address);
+  await arthx.setTaxController(taxController.address);
+
   console.log('\nAdd the pool token to tax whitelist');
   await arthx.addToTaxWhiteList(pool.address);
 };

@@ -8,6 +8,7 @@ import {IARTH} from '../Arth/IARTH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {ITaxCurve} from '../Curves/ITaxCurve.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
+import {ITaxController} from "./ITaxController.sol";
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
 
@@ -22,20 +23,19 @@ import {IARTHController} from '../Arth/IARTHController.sol';
 contract ARTHShares is AnyswapV4Token, IARTHX {
     using SafeMath for uint256;
 
-    /// @dev Controller for arth params.
     IARTH public arth;
-    IARTHController public controller;
-
     ITaxCurve public taxCurve;
+    IARTHController public controller;
+    ITaxController public taxController;
 
     string public name;
     string public symbol;
+
+    // solhint-disable-next-line
     uint8 public constant override decimals = 18;
+    // solhint-disable-next-line
     uint256 public constant genesisSupply = 11e4 ether; // 110k is printed upon genesis.
 
-    uint256 public taxToBurnPercent = 50; // In 2 precision %.
-
-    address public taxDestination;
     address public ownerAddress;
     address public oracleAddress;
     address public timelockAddress; // Governance timelock address.
@@ -43,13 +43,16 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     /// @notice Address when on the sending/receiving end the tx is not taxed.
     mapping(address => bool) public whiteListedForTax;
 
-    /**
-     * Events.
-     */
-
-    event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
-    event TaxCharged(address indexed from, address indexed to, uint256 total, uint256 burned);
-    event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
+    event ARTHXBurned(
+        address indexed from,
+        address indexed to,
+        uint256 amount
+    );
+    event ARTHXMinted(
+        address indexed from,
+        address indexed to,
+        uint256 amount
+    );
 
     modifier onlyPools() {
         require(
@@ -66,10 +69,6 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         );
         _;
     }
-
-    /**
-     * Constructor.
-     */
 
     constructor(
         address _oracleAddress,
@@ -88,10 +87,6 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         _mint(ownerAddress, genesisSupply);
     }
 
-    /**
-     * External.
-     */
-
     function setOracle(address newOracle)
         external
         override
@@ -108,29 +103,22 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         taxCurve = curve;
     }
 
-    function setTaxDestination(address _taxDestination)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        taxDestination = _taxDestination;
-    }
-
-    function setTaxBurnPercent(uint256 percent)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        require(percent <= 100, 'ARTHX: invalid percent');
-        taxToBurnPercent = percent;
-    }
-
     function setArthController(address _controller)
         external
         override
         onlyByOwnerOrGovernance
     {
         controller = IARTHController(_controller);
+    }
+
+    function setTaxController(ITaxController newController)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        whiteListedForTax[address(taxController)] = false;
+        taxController = newController;
+        whiteListedForTax[address(taxController)] = true;
     }
 
     function addToTaxWhiteList(address entity)
@@ -177,7 +165,8 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         _mint(to, amount);
     }
 
-    // This function is what other arth pools will call to mint new ARTHX (similar to the ARTH mint)
+    // This function is what other arth pools will call to
+    // mint new ARTHX (similar to the ARTH mint).
     function poolMint(address account, uint256 amount)
         external
         override
@@ -188,7 +177,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         emit ARTHXMinted(address(this), account, amount);
     }
 
-    // This function is what other arth pools will call to burn ARTHX
+    // This function is what other arth pools will call to burn ARTHX.
     function poolBurnFrom(address account, uint256 amount)
         external
         override
@@ -199,13 +188,18 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     }
 
     function getTaxPercent() public view override returns (uint256) {
-        if (address(taxCurve) == address(0) || taxDestination == address(0)) return 0;
+        if (address(taxCurve) == address(0)) return 0;
 
         return taxCurve.getTaxPercent();
     }
 
-    function getTaxAmount(uint256 amount) public view override returns (uint256) {
-        return amount.mul(getTaxPercent()).div(100);
+    function getTaxAmount(uint256 amount)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        return amount.mul(getTaxPercent()).div(1e6);
     }
 
     function isTxWhiteListedForTax(address sender, address receiver)
@@ -217,24 +211,24 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         return whiteListedForTax[sender] || whiteListedForTax[receiver];
     }
 
-    function _distributeTax(address txSender, uint256 tax) internal {
-        uint256 amountToBurn = tax.mul(taxToBurnPercent).div(100);
-        super._burnFrom(txSender, amountToBurn);
-        super._transfer(txSender, taxDestination, tax.sub(amountToBurn));
-        emit TaxCharged(txSender, taxDestination, tax, amountToBurn);
-    }
-
     function _transfer(
         address sender,
         address recipient,
         uint256 amount
     ) internal virtual override whenNotPaused onlyNonBlacklisted(sender) {
-        if (!isTxWhiteListedForTax(sender, recipient)) {
-            uint256 tax  = getTaxAmount(amount);
-            if (tax > 0) {
-                _distributeTax(sender, tax);
-                amount = amount.sub(tax);
-            }
+        if (
+            isTxWhiteListedForTax(sender, recipient) ||
+            address(taxController) == address(0)
+        ) {
+            super._transfer(sender, recipient, amount);
+            return;
+        }
+
+        uint256 tax = getTaxAmount(amount);
+        if (tax > 0) {
+            super._transfer(sender, address(taxController), tax);
+            amount = amount.sub(tax);
+            taxController.chargeTax();  // Should we do this?
         }
 
         super._transfer(sender, recipient, amount);

@@ -174,7 +174,6 @@ describe('ARTHPool', () => {
     await arthController.setFeesParameters(
       1000,
       1000,
-      1000,
       1000
     );
 
