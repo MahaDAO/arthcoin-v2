@@ -66,7 +66,10 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow(`\nDeploying ARTH controller proxy...`));
   await deployer.deploy(
     ProxyArthController,
-    arthControllerInstance.address
+    arth.address,
+    arthControllerInstance.address,
+    DEPLOYER_ADDRESS,
+    timelockInstance.address
   );
 
   await helpers.getMahaToken(network, deployer, artifacts);

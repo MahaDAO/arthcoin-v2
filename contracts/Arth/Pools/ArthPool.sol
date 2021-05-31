@@ -36,7 +36,7 @@ contract ArthPool is AccessControl, IARTHPool {
     IERC20 public _COLLATERAL;
     IERC20Burnable public _MAHA;
     ISimpleOracle public _ARTHMAHAOracle;
-    IProxyArthController public _arthController;
+    IARTHController public _arthController;
     IOracle public _collateralGMUOracle;
     //ICurve public _recollateralizeDiscountCruve;
     IUniswapPairOracle public _collateralETHOracle;
