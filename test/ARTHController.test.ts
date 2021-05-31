@@ -197,7 +197,6 @@ describe('ARTHController', () => {
     await arthController.setFeesParameters(
       1000,
       1000,
-      1000,
       1000
     );
 
@@ -211,8 +210,9 @@ describe('ARTHController', () => {
       1
     );
 
-    await daiARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
-    await usdcARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
+    await arthController.setRecollateralizationCurve(recollaterizationCurve.address);
+    // await daiARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
+    // await usdcARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
 
     await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
     await mockDaiGMUAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
@@ -464,16 +464,16 @@ describe('ARTHController', () => {
         .to
         .eq(9);
 
-      await arthController.setFeesParameters(1e6, 1e6, 1e6, 1e6);
+      await arthController.setFeesParameters(1e6, 1e6, 1e6);
       expect(await arthController.mintingFee())
         .to
         .eq(1e6);
       expect(await arthController.redemptionFee())
         .to
         .eq(1e6);
-      expect(await arthController.recollatFee())
-        .to
-        .eq(1e6);
+      // expect(await arthController.recollatFee())
+      //   .to
+      //   .eq(1e6);
       expect(await arthController.buybackFee())
         .to
         .eq(1e6);
@@ -484,15 +484,21 @@ describe('ARTHController', () => {
         .to
         .eq(0);
 
+      await arthController.connect(owner).deactivateGenesis();
+
       await arthController.setGlobalCollateralRatio(1e3);
       expect(await arthController.connect(owner).getCRForRedeem())
         .to
         .eq(1e3);
 
+      let genesisStatus = await arthController.getIsGenesisActive()
       await arthController.setGlobalCollateralRatio(1e6);
-      expect(await arthController.connect(owner).getCRForRedeem())
-        .to
-        .eq(1e6);
+      if (genesisStatus == true) {
+        expect(await arthController.connect(owner).getCRForRedeem())
+          .to
+          .eq(0);
+      }
+
 
       await arthController.connect(owner).toggleUseGlobalCRForRedeem(false);
       expect(await arthController.getCRForRedeem())
@@ -551,6 +557,9 @@ describe('ARTHController', () => {
       expect(await arthController.isRecollaterlizePaused())
         .to
         .eq(false);
+
+      await arthController.connect(owner).deactivateGenesis();
+
       expect(await arthController.isBuybackPaused())
         .to
         .eq(false);
@@ -561,7 +570,7 @@ describe('ARTHController', () => {
       let globalCollateralRatio = await arthController.getGlobalCollateralRatio()
       let globalCollateralValue = await arthController.getGlobalCollateralValue()
 
-      await arthController.setFeesParameters(1e6, 1e6, 1e6, 1e6)
+      await arthController.setFeesParameters(1e6, 1e6, 1e6)
 
       let gmuPrice = await arthController.getETHGMUPrice()
 
