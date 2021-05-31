@@ -47,46 +47,6 @@ contract ArthPoolRouter {
         );
     }
 
-    function mintAlgorithmicARTHAndStake(
-        IARTHPool pool,
-        uint256 arthxAmountD18,
-        uint256 arthOutMin,
-        uint256 secs,
-        IBoostedStaking stakingPool
-    ) external {
-        _mintAlgorithmicARTHAndStake(
-            pool,
-            arthxAmountD18,
-            arthOutMin,
-            secs,
-            stakingPool
-        );
-    }
-
-    function mintFractionalARTHAndStake(
-        IARTHPool pool,
-        IERC20 collateral,
-        uint256 amount,
-        uint256 arthxAmount,
-        uint256 arthOutMin,
-        uint256 secs,
-        IBoostedStaking stakingPool,
-        bool swapWithUniswap,
-        uint256 amountToSell
-    ) external {
-        _mintFractionalARTHAndStake(
-            pool,
-            collateral,
-            amount,
-            arthxAmount,
-            arthOutMin,
-            secs,
-            stakingPool,
-            swapWithUniswap,
-            amountToSell
-        );
-    }
-
     function recollateralizeARTHAndStake(
         IARTHPool pool,
         IERC20 collateral,
@@ -139,29 +99,6 @@ contract ArthPoolRouter {
         );
     }
 
-    function mintFractionalARTHAndStakeWithETH(
-        IARTHPool pool,
-        uint256 arthxAmount,
-        uint256 arthOutMin,
-        uint256 secs,
-        IBoostedStaking stakingPool,
-        bool swapWithUniswap,
-        uint256 amountToSell
-    ) external payable {
-        weth.deposit{value: msg.value}();
-        _mintFractionalARTHAndStake(
-            pool,
-            weth,
-            msg.value,
-            arthxAmount,
-            arthOutMin,
-            secs,
-            stakingPool,
-            swapWithUniswap,
-            amountToSell
-        );
-    }
-
     function _mint1t1ARTHAndStake(
         IARTHPool pool,
         IERC20 collateral,
@@ -184,61 +121,6 @@ contract ArthPoolRouter {
         }
     }
 
-    function _mintAlgorithmicARTHAndStake(
-        IARTHPool pool,
-        uint256 arthxAmountD18,
-        uint256 arthOutMin,
-        uint256 secs,
-        IBoostedStaking stakingPool
-    ) internal {
-        arthx.transferFrom(msg.sender, address(this), arthxAmountD18);
-        arthx.approve(address(pool), arthxAmountD18);
-
-        // mint arth with 100% ARTHX
-        uint256 arthOut = pool.mintAlgorithmicARTH(arthxAmountD18, arthOutMin);
-        arth.approve(address(stakingPool), uint256(arthOut));
-
-        if (address(stakingPool) != address(0)) {
-            if (secs != 0)
-                stakingPool.stakeLockedFor(msg.sender, address(this), arthOut, secs);
-            else stakingPool.stakeFor(msg.sender, address(this), arthOut);
-        }
-    }
-
-    function _mintFractionalARTHAndStake(
-        IARTHPool pool,
-        IERC20 collateral,
-        uint256 amount,
-        uint256 arthxAmount,
-        uint256 arthOutMin,
-        uint256 secs,
-        IBoostedStaking stakingPool,
-        bool swapWithUniswap,
-        uint256 amountToSell
-    ) internal {
-        collateral.transferFrom(msg.sender, address(this), amount);
-        collateral.approve(address(pool), amount);
-
-        // if we should buyback from Uniswap or use the arthx from the user's wallet
-        if (swapWithUniswap) {
-            _swapForARTHX(collateral, amountToSell, arthxAmount);
-        } else {
-            arthx.transferFrom(msg.sender, address(this), arthxAmount);
-            arthx.approve(address(pool), arthxAmount);
-        }
-
-        // mint the ARTH with ARTHX + Collateral
-        uint256 arthOut =
-            pool.mintFractionalARTH(amount, arthxAmount, arthOutMin);
-        arth.approve(address(stakingPool), uint256(arthOut));
-
-        // stake if necessary
-        if (address(stakingPool) != address(0)) {
-            if (secs != 0)
-                stakingPool.stakeLockedFor(msg.sender, address(this), arthOut, secs);
-            else stakingPool.stakeFor(msg.sender, address(this), arthOut);
-        }
-    }
 
     function _recollateralizeARTHAndStake(
         IARTHPool pool,
