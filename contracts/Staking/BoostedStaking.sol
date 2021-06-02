@@ -17,7 +17,7 @@ import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
 import {TransferHelper} from '../Uniswap/TransferHelper.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 import {RewardsDistributionRecipient} from './RewardsDistributionRecipient.sol';
-
+import {IProxyArthController} from '../Arth/IProxyArthController.sol';
 /**
  * @title  BoostedStaking.
  * @author MahaDAO.
@@ -48,7 +48,7 @@ contract BoostedStaking is
 
     IPoolToken public immutable rewardsToken;
     IERC20 public immutable stakingToken;
-    IARTHController public arthController; // Not immutable because can be reset by the setter.
+    IProxyArthController public arthController; // Not immutable because can be reset by the setter.
 
     // This staking pool's percentage of the total ARTHX being distributed by all pools, 6 decimals of precision
     // Max reward per second
@@ -154,7 +154,7 @@ contract BoostedStaking is
         rewardsToken = IPoolToken(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
 
-        arthController = IARTHController(arthControllerAddress);
+        arthController = IProxyArthController(arthControllerAddress);
 
         lastUpdateTime = block.timestamp;
         timelockAddress = _timelockAddress;
@@ -183,7 +183,7 @@ contract BoostedStaking is
         external
         onlyByOwnerOrGovernance
     {
-        arthController = IARTHController(_controller);
+        arthController = IProxyArthController(_controller);
     }
 
     function withdraw(uint256 amount)

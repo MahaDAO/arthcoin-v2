@@ -8,6 +8,7 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const ARTHController = artifacts.require("Arth/ArthController");
+const ProxyArthController = artifacts.require("Arth/ProxyArthController");
 const StakeARTHMAHA = artifacts.require("Staking/Variants/StakeARTHMAHA.sol");
 const StakeARTH = artifacts.require("Staking/Variants/StakeARTH.sol");
 const StakeARTHWETH = artifacts.require("Staking/Variants/StakeARTHWETH.sol");
@@ -28,6 +29,7 @@ module.exports = async function (deployer, network, accounts) {
 
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const arthController = await ARTHController.deployed();
+  const proxyController = await ProxyArthController.deployed();
   const uniswapFactory = await helpers.getUniswapFactory(network, deployer, artifacts);
   const weth = await helpers.getWETH(network, deployer, artifacts);
 
@@ -50,7 +52,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       poolToken.address,
       pairARTHWETH,
-      arthController.address,
+      proxyController.address,
       timelockInstance.address,
       1e6
     ),
@@ -60,7 +62,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       poolToken.address,
       pairARTHMAHA,
-      arthController.address,
+      proxyController.address,
       timelockInstance.address,
       1e6
     ),
@@ -70,7 +72,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       poolToken.address,
       pairARTHXWETH,
-      arthController.address,
+      proxyController.address,
       timelockInstance.address,
       1e6
     ),
@@ -80,7 +82,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       poolToken.address,
       arth.address,
-      arthController.address,
+      proxyController.address,
       timelockInstance.address,
       1e6
     ),
@@ -90,7 +92,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       poolToken.address,
       arthx.address,
-      arthController.address,
+      proxyController.address,
       timelockInstance.address,
       1e6
     )

@@ -11,6 +11,9 @@ const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
+const ProxyArthController = artifacts.require("Arth/ProxyArthController");
+
+
 module.exports = async function (deployer, network, accounts) {
 
   const TIMELOCK_DELAY = 2 * 86400;
@@ -59,6 +62,15 @@ module.exports = async function (deployer, network, accounts) {
   await arthxInstance.setTaxCurve(taxCurve.address);
 
   const arthControllerInstance = await ARTHController.deployed();
+
+  console.log(chalk.yellow(`\nDeploying ARTH controller proxy...`));
+  await deployer.deploy(
+    ProxyArthController,
+    arth.address,
+    arthControllerInstance.address,
+    DEPLOYER_ADDRESS,
+    timelockInstance.address
+  );
 
   await helpers.getMahaToken(network, deployer, artifacts);
   await helpers.getDAI(network, deployer, artifacts);

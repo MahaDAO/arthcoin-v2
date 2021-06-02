@@ -139,4 +139,12 @@ interface IARTHController {
     function buybackFee() external returns (uint256);
 
     function getRecollateralizationDiscount() external returns (uint256);
+
+    function getIsGenesisActive() external view returns (bool);
+
+    function getARTHXGenesisPrice() external view returns (uint256);
+
+    function getTargetCollateralValue() external view returns (uint256);
+
+    function getPercentCollateralized() external view returns (uint256);
 }

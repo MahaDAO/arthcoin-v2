@@ -6,20 +6,21 @@ pragma experimental ABIEncoderV2;
 import {IERC20} from '../ERC20/IERC20.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IARTHPool} from './Pools/IARTHPool.sol';
-import {IARTHController} from './IARTHController.sol';
+import {IProxyArthController} from './IProxyArthController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
 import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
 import {ICurve} from '../Curves/ICurve.sol';
 import {Math} from '../utils/math/Math.sol';
 import {IBondingCurve} from '../Curves/IBondingCurve.sol';
+import {IARTHController} from './IARTHController.sol';
 
 /**
  * @title  ARTHStablecoin.
  * @author MahaDAO.
  */
-contract ArthController is AccessControl, IARTHController {
-    using SafeMath for uint256;
+contract ProxyArthController is AccessControl, IProxyArthController {
+   using SafeMath for uint256;
 
     enum PriceChoice {ARTH, ARTHX}
 
@@ -31,6 +32,7 @@ contract ArthController is AccessControl, IARTHController {
     IUniswapPairOracle public _ARTHXETHOracle;
     ICurve public _recollateralizeDiscountCruve;
     IBondingCurve public bondingCurve;
+    IARTHController public arthcontroller;
 
     address public wethAddress;
     address public arthxAddress;
@@ -168,6 +170,7 @@ contract ArthController is AccessControl, IARTHController {
 
     constructor(
         IERC20 _arth,
+        IARTHController _arthcontroller,
         address _creatorAddress,
         address _timelockAddress
     ) {
@@ -175,6 +178,7 @@ contract ArthController is AccessControl, IARTHController {
         creatorAddress = _creatorAddress;
         timelockAddress = _timelockAddress;
 
+        arthcontroller = _arthcontroller;
         ownerAddress = _creatorAddress;
         DEFAULT_ADMIN_ADDRESS = _msgSender();
 
@@ -512,6 +516,14 @@ contract ArthController is AccessControl, IARTHController {
         onlyByOwnerOrGovernance
     {
         timelockAddress = newTimelock;
+    }
+
+    function setArthController(IARTHController _arthcontroller)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        arthcontroller = _arthcontroller;
     }
 
     function getRefreshCooldown() external view override returns (uint256) {
