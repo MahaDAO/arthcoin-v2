@@ -44,32 +44,12 @@ contract ArthController is AccessControl, IARTHController {
     address public ethGMUConsumerAddress;
     address public DEFAULT_ADMIN_ADDRESS;
 
-    uint256 public arthStep; // Amount to change the collateralization ratio by upon refresing CR.
-    uint256 public refreshCooldown; // Seconds to wait before being refresh CR again.
+    // 6 decimals of precision, divide by 1000000 in calculations for fee.
     uint256 public globalCollateralRatio;
-
-    uint256 public override buybackFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
-    uint256 public override mintingFee;
-    uint256 public override redemptionFee;
-
+    uint256 public buybackFee;
+    uint256 public mintingFee;
+    uint256 public redemptionFee;
     uint256 public maxRecollateralizeDiscount = 750000; // In 1e6 precision.
-
-    // The bound above and below the price target at which the refershing CR
-    // will not change the collateral ratio.
-    uint256 public priceBand;
-
-    // The price of ARTH at which the collateral ratio will respond to.
-    // This value is only used for the collateral ratio mechanism & not for
-    // minting and redeeming which are hardcoded at $1.
-    uint256 public priceTarget;
-
-    // There needs to be a time interval that this can be called.
-    // Otherwise it can be called multiple times per expansion.
-    // Last time the refreshCollateralRatio function was called.
-    uint256 public lastCallTime;
-
-    // This is to help with establishing the Uniswap pools, as they need liquidity.
-    uint256 public constant genesisSupply = 2_000_000 ether; // 2M ARTH (testnet) & 5k (Mainnet).
 
     /// @notice Timestamp at which contract was deployed.
     uint256 public immutable genesisTimestamp;
@@ -77,14 +57,6 @@ contract ArthController is AccessControl, IARTHController {
     uint256 public constant maxGenesisDuration = 7 days;
     /// @notice Will force use of genesis oracle during genesis.
     bool public isARTHXGenesActive = true;
-
-    bool public useGlobalCRForMint = true;
-    bool public useGlobalCRForRedeem = true;
-    bool public useGlobalCRForRecollateralize = true;
-
-    uint256 public mintCollateralRatio;
-    uint256 public redeemCollateralRatio;
-    uint256 public recollateralizeCollateralRatio;
 
     bool public isColalteralRatioPaused = false;
 
@@ -162,10 +134,6 @@ contract ArthController is AccessControl, IARTHController {
         _;
     }
 
-    /**
-     * Constructor.
-     */
-
     constructor(
         IERC20 _arth,
         address _creatorAddress,
@@ -182,11 +150,7 @@ contract ArthController is AccessControl, IARTHController {
         grantRole(COLLATERAL_RATIO_PAUSER, creatorAddress);
         grantRole(COLLATERAL_RATIO_PAUSER, timelockAddress);
 
-        arthStep = 2500; // 6 decimals of precision, equal to 0.25%.
-        priceBand = 5000; // Collateral ratio will not adjust if between $0.995 and $1.005 at genesis.
-        priceTarget = 1000000; // Collateral ratio will adjust according to the $1 price target at genesis.
-        refreshCooldown = 3600; // Refresh cooldown period is set to 1 hour (3600 seconds) at genesis.
-        globalCollateralRatio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision).
+        globalCollateralRatio = 1000000;
 
         grantRole(_MINT_PAUSER, _timelockAddress);
         grantRole(_REDEEM_PAUSER, _timelockAddress);
@@ -196,72 +160,8 @@ contract ArthController is AccessControl, IARTHController {
         genesisTimestamp = block.timestamp;
     }
 
-    /**
-     * External.
-     */
-
     function deactivateGenesis() external onlyByOwnerOrGovernance {
         isARTHXGenesActive = false;
-    }
-
-    function toggleUseGlobalCRForMint(bool flag)
-        external
-        override
-        onlyByOwnerGovernanceOrPool
-    {
-        bool old = useGlobalCRForMint;
-        useGlobalCRForMint = flag;
-        emit ToggleGlobalCRForMint(old, flag);
-    }
-
-    function toggleUseGlobalCRForRedeem(bool flag)
-        external
-        override
-        onlyByOwnerGovernanceOrPool
-    {
-        bool old = useGlobalCRForRedeem;
-        useGlobalCRForRedeem = flag;
-        emit ToggleGlobalCRForRedeem(old, flag);
-    }
-
-    function toggleUseGlobalCRForRecollateralize(bool flag)
-        external
-        override
-        onlyByOwnerGovernanceOrPool
-    {
-        bool old = useGlobalCRForRecollateralize;
-        useGlobalCRForRecollateralize = flag;
-        emit ToggleGlobalCRForRecollateralize(old, flag);
-    }
-
-    function setMintCollateralRatio(uint256 val)
-        external
-        override
-        onlyByOwnerGovernanceOrPool
-    {
-        uint256 old = mintCollateralRatio;
-        mintCollateralRatio = val;
-        emit UpdateMintCR(old, val);
-    }
-
-    function setRedeemCollateralRatio(uint256 val)
-        external
-        override
-        onlyByOwnerGovernanceOrPool
-    {
-        uint256 old = redeemCollateralRatio;
-        redeemCollateralRatio = val;
-        emit UpdateRedeemCR(old, val);
-    }
-
-    function setRecollateralizeCollateralRatio(uint256 val)
-        external
-        override
-        onlyByOwnerGovernanceOrPool
-    {
-        uint256 old = recollateralizeCollateralRatio;
-        recollateralizeCollateralRatio = val;
-        emit UpdateRecollateralizeCR(old, val);
     }
 
     function setBondingCurve(IBondingCurve curve)
@@ -276,38 +176,6 @@ contract ArthController is AccessControl, IARTHController {
         onlyByOwnerGovernanceOrPool
     {
         _recollateralizeDiscountCruve = curve;
-    }
-
-    function refreshCollateralRatio() external override {
-        require(
-            !isColalteralRatioPaused,
-            'ARTHController: Collateral Ratio has been paused'
-        );
-        require(
-            block.timestamp - lastCallTime >= refreshCooldown,
-            'ARTHController: must wait till callable again'
-        );
-
-        uint256 currentPrice = getARTHPrice();
-
-        // Check whether to increase or decrease the CR.
-        if (currentPrice > priceTarget.add(priceBand)) {
-            // Decrease the collateral ratio.
-            if (globalCollateralRatio <= arthStep) {
-                globalCollateralRatio = 0; // If within a step of 0, go to 0
-            } else {
-                globalCollateralRatio = globalCollateralRatio.sub(arthStep);
-            }
-        } else if (currentPrice < priceTarget.sub(priceBand)) {
-            // Increase collateral ratio.
-            if (globalCollateralRatio.add(arthStep) >= 1000000) {
-                globalCollateralRatio = 1000000; // Cap collateral ratio at 1.000000.
-            } else {
-                globalCollateralRatio = globalCollateralRatio.add(arthStep);
-            }
-        }
-
-        lastCallTime = block.timestamp; // Set the time of the last expansion
     }
 
     /// @notice Adds collateral addresses supported.
@@ -351,38 +219,12 @@ contract ArthController is AccessControl, IARTHController {
         controllerAddress = controller;
     }
 
-    function setGlobalCollateralRatio(uint256 _globalCollateralRatio)
-        external
-        override
-        onlyAdmin
-    {
-        globalCollateralRatio = _globalCollateralRatio;
-    }
-
     function setARTHXAddress(address _arthxAddress)
         external
         override
         onlyByOwnerOrGovernance
     {
         arthxAddress = _arthxAddress;
-    }
-
-    function setPriceTarget(uint256 newPriceTarget)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        uint256 old = priceTarget;
-        priceTarget = newPriceTarget;
-        emit TargetPriceChanged(old, priceTarget);
-    }
-
-    function setRefreshCooldown(uint256 newCooldown)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        refreshCooldown = newCooldown;
     }
 
     function setStabilityFee(uint256 percent)
@@ -460,16 +302,6 @@ contract ArthController is AccessControl, IARTHController {
         emit MintingFeeChanged(old, mintingFee);
     }
 
-    function setArthStep(uint256 newStep)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        uint256 old = arthStep;
-        arthStep = newStep;
-        emit ARTHStepChanged(old, arthStep);
-    }
-
     function setRedemptionFee(uint256 fee)
         external
         override
@@ -496,16 +328,6 @@ contract ArthController is AccessControl, IARTHController {
         ownerAddress = _ownerAddress;
     }
 
-    function setPriceBand(uint256 _priceBand)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        uint256 old = priceBand;
-        priceBand = _priceBand;
-        emit PriceBandChanged(old, priceBand);
-    }
-
     function setTimelock(address newTimelock)
         external
         override
@@ -514,17 +336,15 @@ contract ArthController is AccessControl, IARTHController {
         timelockAddress = newTimelock;
     }
 
-    function getRefreshCooldown() external view override returns (uint256) {
-        return refreshCooldown;
-    }
-
     function getARTHPrice() public view override returns (uint256) {
         return _getOraclePrice(PriceChoice.ARTH);
     }
 
     function getIsGenesisActive() public view override returns (bool) {
-        return (isARTHXGenesActive &&
-            block.timestamp.sub(genesisTimestamp) <= maxGenesisDuration);
+        return (
+            isARTHXGenesActive &&
+            block.timestamp.sub(genesisTimestamp) <= maxGenesisDuration
+        );
     }
 
     function getARTHXGenesisPrice() public view override returns (uint256) {
@@ -539,10 +359,10 @@ contract ArthController is AccessControl, IARTHController {
 
     function getMAHAPrice() public view override returns (uint256) {
         uint256 arthGmuPrice = getARTHPrice();
-        uint256 priceVsArth =
-            uint256(
-                MAHAARTHOracle.consult(address(ARTH), _PRICE_PRECISION) // How much MAHA if you put in _PRICE_PRECISION ARTH ?
-            );
+        uint256 priceVsArth = uint256(
+            MAHAARTHOracle
+                .consult(address(ARTH), _PRICE_PRECISION) // How much MAHA if you put in _PRICE_PRECISION ARTH ?
+        );
 
         return arthGmuPrice.mul(_PRICE_PRECISION).div(priceVsArth);
     }
@@ -574,11 +394,6 @@ contract ArthController is AccessControl, IARTHController {
         return totalCollateralValueD18;
     }
 
-    function getCRForMint() external view override returns (uint256) {
-        if (useGlobalCRForMint) return getGlobalCollateralRatio();
-        return mintCollateralRatio;
-    }
-
     function getARTHSupply() public view override returns (uint256) {
         return ARTH.totalSupply();
     }
@@ -593,22 +408,6 @@ contract ArthController is AccessControl, IARTHController {
 
     function getRedemptionFee() external view override returns (uint256) {
         return redemptionFee;
-    }
-
-    function getCRForRedeem() external view override returns (uint256) {
-        if (getIsGenesisActive()) return 0;
-        if (useGlobalCRForRedeem) return getGlobalCollateralRatio();
-        return redeemCollateralRatio;
-    }
-
-    function getCRForRecollateralize()
-        external
-        view
-        override
-        returns (uint256)
-    {
-        if (useGlobalCRForRecollateralize) return getGlobalCollateralRatio();
-        return recollateralizeCollateralRatio;
     }
 
     function getTargetCollateralValue() public view override returns (uint256) {

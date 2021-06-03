@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {IARTHController} from './IARTHController.sol';
+import {IARTHControllerGetters} from "./IARTHControllerGetters.sol";
 
-interface IProxyArthController is IARTHController {
-    function setArthController(IARTHController _arthcontroller) external;
+interface IProxyARTHController is IARTHControllerGetters {
+    function setArthController(IARTHControllerGetters controller) external;
 }

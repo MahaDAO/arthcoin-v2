@@ -8,7 +8,6 @@ import {IARTHPool} from './IARTHPool.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {IARTHX} from '../../ARTHX/IARTHX.sol';
 import {IOracle} from '../../Oracle/IOracle.sol';
-//import {ICurve} from '../../Curves/ICurve.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
@@ -16,7 +15,7 @@ import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
 import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
-import {IProxyArthController} from '../IProxyArthController.sol';
+
 /**
  * @title  ARTHPool.
  * @author MahaDAO.
@@ -27,10 +26,6 @@ import {IProxyArthController} from '../IProxyArthController.sol';
 contract ArthPool is AccessControl, IARTHPool {
     using SafeMath for uint256;
 
-    /**
-     * @dev Contract instances.
-     */
-
     IARTH public _ARTH;
     IARTHX public _ARTHX;
     IERC20 public _COLLATERAL;
@@ -38,7 +33,6 @@ contract ArthPool is AccessControl, IARTHPool {
     ISimpleOracle public _ARTHMAHAOracle;
     IARTHController public _arthController;
     IOracle public _collateralGMUOracle;
-    //ICurve public _recollateralizeDiscountCruve;
     IUniswapPairOracle public _collateralETHOracle;
 
     uint256 public buybackCollateralBuffer = 20; // In %.
@@ -135,7 +129,7 @@ contract ArthPool is AccessControl, IARTHPool {
         _COLLATERAL = IERC20(__collateralAddress);
         _ARTHX = IARTHX(__arthxContractAddress);
         _ARTHMAHAOracle = ISimpleOracle(__ARTHMAHAOracle);
-        _arthController = IProxyArthController(__arthController);
+        _arthController = IARTHController(__arthController);
 
         _ownerAddress = _creatorAddress;
         _timelockAddress = __timelockAddress;
@@ -161,7 +155,7 @@ contract ArthPool is AccessControl, IARTHPool {
         buybackCollateralBuffer = percent;
     }
 
-    function setARTHController(IProxyArthController controller)
+    function setARTHController(IARTHController controller)
         external
         onlyAdminOrOwnerOrGovernance
     {
