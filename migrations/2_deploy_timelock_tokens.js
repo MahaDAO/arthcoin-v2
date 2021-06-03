@@ -10,12 +10,10 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-
-const ProxyArthController = artifacts.require("Arth/ProxyArthController");
+const ProxyArthController = artifacts.require("ProxyArthController");
 
 
 module.exports = async function (deployer, network, accounts) {
-
   const TIMELOCK_DELAY = 2 * 86400;
   const DEPLOYER_ADDRESS = accounts[0];
   const MOCK_TOKEN_INITIAL_SUPPLY = new BigNumber(1000e18);
@@ -25,12 +23,10 @@ module.exports = async function (deployer, network, accounts) {
   const timelockInstance = await Timelock.deployed();
 
   console.log(chalk.yellow('\nDeploying tokens...'));
-  let arth;
-  let arthxInstance //= await ARTHShares.deployed();
-
-
   await deployer.deploy(ARTHStablecoin);
-  arth = await ARTHStablecoin.deployed();
+  const arth = await ARTHStablecoin.deployed();
+  const arth_name = await arth.name.call();
+  console.log(` - NOTE: ARTH name: ${arth_name}`);
 
   await deployer.deploy(
     ARTHShares,
@@ -38,13 +34,9 @@ module.exports = async function (deployer, network, accounts) {
     DEPLOYER_ADDRESS,
     timelockInstance.address
   );
-  arthxInstance = await ARTHShares.deployed()
-
-  let arthx_name = await arthxInstance.name.call();
+  const arthxInstance = await ARTHShares.deployed()
+  const arthx_name = await arthxInstance.name.call();
   console.log(` - NOTE: ARTHX name: ${arthx_name}`);
-
-  let arth_name = await arth.name.call();
-  console.log(` - NOTE: ARTH name: ${arth_name}`);
 
   console.log(chalk.yellow(`\nDeploying ARTH controller...`));
   await deployer.deploy(
@@ -53,23 +45,17 @@ module.exports = async function (deployer, network, accounts) {
     DEPLOYER_ADDRESS,
     timelockInstance.address
   );
+  const arthControllerInstance = await ARTHController.deployed();
 
   console.log(chalk.yellow(`\nDeploying arthx tax curve...`));
-  await deployer.deploy(
-    TaxCurve
-  );
+  await deployer.deploy(TaxCurve);
   const taxCurve = await TaxCurve.deployed();
   await arthxInstance.setTaxCurve(taxCurve.address);
-
-  const arthControllerInstance = await ARTHController.deployed();
 
   console.log(chalk.yellow(`\nDeploying ARTH controller proxy...`));
   await deployer.deploy(
     ProxyArthController,
-    arth.address,
     arthControllerInstance.address,
-    DEPLOYER_ADDRESS,
-    timelockInstance.address
   );
 
   await helpers.getMahaToken(network, deployer, artifacts);

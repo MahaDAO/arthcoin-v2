@@ -24,8 +24,8 @@ module.exports = async function (deployer, network, accounts) {
 
   const timelockInstance = await Timelock.deployed();
 
-  let arth = await ARTHStablecoin.deployed();
-  let arthx = await ARTHShares.deployed();
+  const arth = await ARTHStablecoin.deployed();
+  const arthx = await ARTHShares.deployed();
 
   const arthControllerInstance = await ARTHController.deployed();
   const proxyController = await ProxyArthController.deployed();
@@ -41,19 +41,6 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.link(ArthPoolLibrary, [Pool_USDC, Pool_USDT]);
 
   console.log(chalk.yellow('\nDeploying Pools...'));
-
-  console.log(
-    arth.address,
-    arthx.address,
-    col_instance_USDC.address,
-    DEPLOYER_ADDRESS,
-    timelockInstance.address,
-    mahaTokenInstance.address,
-    arthMahaOracle.address,
-    arthControllerInstance.address,
-    proxyController.address,
-    TEN_MILLION
-  )
 
   await Promise.all([
     deployer.deploy(

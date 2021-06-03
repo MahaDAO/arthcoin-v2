@@ -13,7 +13,6 @@ const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-
   let arth = await ARTHStablecoin.deployed();
   let arthx = await ARTHShares.deployed();
 
