@@ -235,7 +235,7 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
 
         require(
-            _arthController.getGlobalCollateralRatio() >= _COLLATERAL_RATIO_MAX,
+            _arthController.getGlobalCRForMintRedeem() >= _COLLATERAL_RATIO_MAX,
             'ARHTPool: Collateral ratio < 1'
         );
         require(
@@ -288,7 +288,7 @@ contract ArthPool is AccessControl, IARTHPool {
         notRedeemPaused
     {
         require(
-            _arthController.getGlobalCollateralRatio() == _COLLATERAL_RATIO_MAX,
+            _arthController.getGlobalCRForMintRedeem() == _COLLATERAL_RATIO_MAX,
             'Collateral ratio must be == 1'
         );
 
@@ -339,7 +339,7 @@ contract ArthPool is AccessControl, IARTHPool {
         notRedeemPaused
     {
         uint256 arthxPrice = _arthController.getARTHXPrice();
-        uint256 collateralRatioForRedeem = _arthController.getGlobalCollateralRatio();
+        uint256 collateralRatioForRedeem = _arthController.getGlobalCRForMintRedeem();
 
         require(collateralRatioForRedeem == 0, 'Collateral ratio must be 0');
         uint256 arthxGMUValueD18 = arthAmount;

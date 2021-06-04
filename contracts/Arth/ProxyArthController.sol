@@ -57,6 +57,10 @@ contract ProxyArthController is Ownable, IProxyARTHController {
         return controller.getGlobalCollateralRatio();
     }
 
+    function getGlobalCRForMintRedeem() public view override returns (uint256) {
+        return controller.getGlobalCRForMintRedeem();
+    }
+
     function getGlobalCollateralValue() public view override returns (uint256) {
         return controller.getGlobalCollateralValue();
     }

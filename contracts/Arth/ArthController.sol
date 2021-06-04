@@ -378,6 +378,11 @@ contract ArthController is AccessControl, IARTHController {
         return globalCollateralRatio;
     }
 
+    function getGlobalCRForMintRedeem() public view override returns (uint256) {
+        if (getIsGenesisActive()) return 0;
+        return globalCollateralRatio;
+    }
+
     function getGlobalCollateralValue() public view override returns (uint256) {
         uint256 totalCollateralValueD18 = 0;
 
