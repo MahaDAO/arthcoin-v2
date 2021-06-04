@@ -45,7 +45,9 @@ contract ArthController is AccessControl, IARTHController {
     address public DEFAULT_ADMIN_ADDRESS;
 
     // 6 decimals of precision, divide by 1000000 in calculations for fee.
-    uint256 public globalCollateralRatio;
+    uint256 internal immutable globalCollateralRatio;
+
+    // 6 decimals of precision, divide by 1000000 in calculations for fee.
     uint256 public buybackFee;
     uint256 public mintingFee;
     uint256 public redemptionFee;
