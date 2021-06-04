@@ -107,10 +107,11 @@ contract ArthPoolRouter {
         uint256 secs,
         IBoostedStaking stakingPool
     ) internal {
-        collateral.transferFrom(msg.sender, address(this), amount);
+        if (address(collateral) != address(weth)) {
+            collateral.transferFrom(msg.sender, address(this), amount);
+        }
         collateral.approve(address(pool), amount);
 
-        // mint arth with 100% colalteral
         uint256 arthOut = pool.mint1t1ARTH(amount, arthOutMin);
         arth.approve(address(stakingPool), uint256(arthOut));
 
@@ -130,7 +131,9 @@ contract ArthPoolRouter {
         uint256 secs,
         IBoostedStaking stakingPool
     ) internal {
-        collateral.transferFrom(msg.sender, address(this), amount);
+        if (address(collateral) != address(weth)) {
+            collateral.transferFrom(msg.sender, address(this), amount);
+        }
         collateral.approve(address(pool), amount);
 
         uint256 arthxOut = pool.recollateralizeARTH(amount, arthxOutMin);
@@ -153,12 +156,13 @@ contract ArthPoolRouter {
         path[1] = address(arthx);
 
         tokenToSell.transferFrom(msg.sender, address(this), amountToSell);
+        tokenToSell.approve(address(router), amountToSell);
 
         router.swapExactTokensForTokens(
             amountToSell,
             minAmountToRecieve,
             path,
-            address(this),
+            address(this),  // Shouldn't this be msg.sender ?
             block.timestamp
         );
     }
