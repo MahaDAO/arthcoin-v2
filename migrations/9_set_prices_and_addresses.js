@@ -68,7 +68,4 @@ module.exports = async function (deployer, network, accounts) {
     arthx.transfer(DEPLOYER_ADDRESS, new BigNumber("1000e18"), { from: DEPLOYER_ADDRESS }),
     arth.transfer(DEPLOYER_ADDRESS, new BigNumber("1000e18"), { from: DEPLOYER_ADDRESS })
   ]);
-
-  console.log(chalk.blue('\nRefreshing collateral ratio...'));
-  await arthControllerInstance.refreshCollateralRatio();
 };

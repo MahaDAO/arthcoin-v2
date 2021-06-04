@@ -60,7 +60,6 @@ module.exports = async function (deployer, network, accounts) {
   await arthxInstance.setTaxCurve(taxCurve.address);
 
   const arthControllerInstance = await ARTHController.deployed();
- 
 
   await helpers.getMahaToken(network, deployer, artifacts);
   await helpers.getDAI(network, deployer, artifacts);
