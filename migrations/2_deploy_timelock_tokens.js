@@ -10,7 +10,7 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-
+const Genesis = artifacts.require("Genesis")
 
 module.exports = async function (deployer, network, accounts) {
 
@@ -69,4 +69,12 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSetting appropriate token addresses...'));
   await arthControllerInstance.setARTHXAddress(arthxInstance.address, { from: DEPLOYER_ADDRESS });
+
+  console.log(chalk.yellow('\nDeploying RedeemAlgorithmic Genesis...'));
+  await deployer.deploy(
+    Genesis,
+    arth.address,
+    arthxInstance.address,
+    arthControllerInstance.address
+  )
 };

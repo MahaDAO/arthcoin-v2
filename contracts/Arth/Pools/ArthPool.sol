@@ -350,44 +350,6 @@ contract ArthPool is AccessControl, IARTHPool {
         _ARTH.poolBurnFrom(msg.sender, arthAmount);
     }
 
-    // Redeem ARTH for ARTHX. 0% collateral-backed
-    function redeemAlgorithmicARTH(uint256 arthAmount, uint256 arthxOutMin)
-        external
-        override
-        notRedeemPaused
-    {
-        uint256 arthxPrice = _arthController.getARTHXPrice();
-        uint256 collateralRatioForRedeem = _arthController.getGlobalCollateralRatio();
-
-        require(collateralRatioForRedeem == 0, 'Collateral ratio must be 0');
-        uint256 arthxGMUValueD18 = arthAmount;
-
-        arthxGMUValueD18 = (
-            arthxGMUValueD18.mul(
-                uint256(1e6).sub(_arthController.getRedemptionFee())
-            )
-        )
-            .div(_PRICE_PRECISION); // apply fees
-
-        uint256 arthxAmount =
-            arthxGMUValueD18.mul(_PRICE_PRECISION).div(arthxPrice);
-
-        redeemARTHXBalances[msg.sender] = redeemARTHXBalances[msg.sender].add(
-            arthxAmount
-        );
-        unclaimedPoolARTHX += arthxAmount;
-
-        lastRedeemed[msg.sender] = block.number;
-
-        require(arthxOutMin <= arthxAmount, 'Slippage limit reached');
-
-        _chargeStabilityFee(arthAmount);
-
-        // Move all external functions to the end
-        _ARTH.poolBurnFrom(msg.sender, arthAmount);
-        _ARTHX.poolMint(address(this), arthxAmount);
-    }
-
     // After a redemption happens, transfer the newly minted ARTHX and owed collateral from this pool
     // contract to the user. Redemption is split into two functions to prevent flash loans from being able
     // to take out ARTH/collateral from the system, use an AMM to trade the new price, and then mint back into the system.
