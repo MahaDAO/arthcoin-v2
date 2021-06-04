@@ -11,7 +11,6 @@ const Multicall = artifacts.require('Multicall');
 const ARTHStablecoin = artifacts.require('ARTHStablecoin');
 const ARTHShares = artifacts.require('ARTHShares');
 
-
 /**
  * Main migrations
  */
@@ -25,9 +24,7 @@ module.exports = async (callback) => {
 
   const contracts = [
     { abi: 'ArthController', contract: 'ArthController' },
-    { abi: 'ProxyArthController', contract: 'ProxyArthController' },
-
-
+  
     { abi: 'BoostedStaking', contract: 'StakeARTHMAHA' },
     { abi: 'BoostedStaking', contract: 'StakeARTH' },
     { abi: 'BoostedStaking', contract: 'StakeARTHWETH' },
