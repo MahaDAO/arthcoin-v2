@@ -6,7 +6,6 @@ pragma experimental ABIEncoderV2;
 import {IARTHX} from './IARTHX.sol';
 import {IARTH} from '../Arth/IARTH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
-import {ITaxCurve} from '../Curves/ITaxCurve.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {ITaxController} from "./ITaxController.sol";
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
@@ -24,7 +23,6 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     using SafeMath for uint256;
 
     IARTH public arth;
-    ITaxCurve public taxCurve;
     IARTHController public controller;
     ITaxController public taxController;
 
@@ -35,6 +33,8 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     uint8 public constant override decimals = 18;
     // solhint-disable-next-line
     uint256 public constant genesisSupply = 11e4 ether; // 110k is printed upon genesis.
+
+    uint256 public taxPercent = 10e4;  // 10% 6 decimal precision.
 
     address public ownerAddress;
     address public oracleAddress;
@@ -95,14 +95,6 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         oracleAddress = newOracle;
     }
 
-    function setTaxCurve(ITaxCurve curve)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        taxCurve = curve;
-    }
-
     function setArthController(address _controller)
         external
         override
@@ -119,6 +111,16 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         whiteListedForTax[address(taxController)] = false;
         taxController = newController;
         whiteListedForTax[address(taxController)] = true;
+    }
+
+    function setTaxPercent(uint256 percent)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        require(taxPercent <= 1e6, 'ARTHX: tax percent > 1e6');
+
+        taxPercent = percent;
     }
 
     function addToTaxWhiteList(address entity)
@@ -187,19 +189,13 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         emit ARTHXBurned(account, address(this), amount);
     }
 
-    function getTaxPercent() public view override returns (uint256) {
-        if (address(taxCurve) == address(0)) return 0;
-
-        return taxCurve.getTaxPercent();
-    }
-
     function getTaxAmount(uint256 amount)
         public
         view
         override
         returns (uint256)
     {
-        return amount.mul(getTaxPercent()).div(1e6);
+        return amount.mul(taxPercent).div(1e6);
     }
 
     function isTxWhiteListedForTax(address sender, address receiver)
@@ -228,7 +224,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         if (tax > 0) {
             super._transfer(sender, address(taxController), tax);
             amount = amount.sub(tax);
-            taxController.chargeTax();  // Should we do this?
+            taxController.chargeTax();
         }
 
         super._transfer(sender, recipient, amount);

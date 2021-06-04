@@ -40,14 +40,20 @@ contract ARTHXTaxController is Ownable, ITaxController {
     receive() external payable {}
 
     function setPercentToBurn(uint256 percent) external onlyOwner() {
+        require(percent <= 1e6, 'ARTHXController: tax percent > 1e6');
+
         taxPercentToBurn = percent;  // In 6 precision.
     }
 
     function setPercentToRewards(uint256 percent) external onlyOwner() {
+        require(percent <= 1e6, 'ARTHXController: tax percent > 1e6');
+
         taxPercentToRewards = percent;  // In 6 precision.
     }
 
     function setPercentToLiquidity(uint256 percent) external onlyOwner() {
+        require(percent <= 1e6, 'ARTHXController: tax percent > 1e6');
+
         taxPercentToLiquidity = percent;  // In 6 precision.
     }
 
