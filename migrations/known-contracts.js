@@ -25,9 +25,7 @@ module.exports = {
     kovan: '0x2cc8688c5f75e365aaeeb4ea8d6a480405a48d2a',
     goerli: '0x77dca2c955b15e9de4dbbcf1246b4b85b651e50e'
   },
-  ETHUSDChainlinkOracleDefault: {
-    kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331'
-  },
+
   WETH: {
     mainnet: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     rinkeby: '0xc778417e063141139fce010982780140aa0cd5ab',
@@ -35,7 +33,28 @@ module.exports = {
   DAI: {
     mainnet: '0x6b175474e89094c44da98b954eedeac495271d0f',
   },
+
   MahaToken: {
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
   },
+
+  ChainlinkETHUSDOracle: {
+    kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331',
+    mumbai: '0x0715A7794a1dc8e42615F059dD6e406A6594651A'
+  },
+  ETHGMUOracle: {},
+
+  ChainlinkUSDTUSDOracle: {
+    mumbai: '0x92C09849638959196E976289418e5973CC96d645'
+  },
+  USDTGMUOracle: {},
+  USDTOracle: {},
+  UniswapUSDTWETHOracle: {},
+
+  ChainlinkUSDCUSDOracle: {
+    mumbai: '0x572dDec9087154dC5dfBB1546Bb62713147e0Ab0'
+  },
+  USDCGMUOracle: {},
+  USDCOracle: {},
+  UniswapUSDCWETHOracle: {}
 }

@@ -5,6 +5,8 @@ const { time } = require('@openzeppelin/test-helpers');
 const UniswapPairOracleMAHAARTH = artifacts.require("UniswapPairOracle_MAHA_ARTH");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
+const UniswapPairOracleUSDTWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDT_WETH");
+const UniswapPairOracleUSDCWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_USDC_WETH");
 
 
 module.exports = async function (deployer, network, accounts) {
@@ -13,6 +15,8 @@ module.exports = async function (deployer, network, accounts) {
   const uniswapPairOracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
   const uniswapPairOracleARTHWETH = await UniswapPairOracleARTHWETH.deployed();
   const uniswapPairOracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
+  const uniswapPairOracleUSDTWETH = await UniswapPairOracleUSDTWETH.deployed();
+  const uniswapPairOracleUSDCWETH = await UniswapPairOracleUSDCWETH.deployed();
 
   console.log(chalk.red.bold("\nNormally you'd need to wait 24 hrs here, but temporarily we set smaller duration"));
   // // Advance 24 hrs so the period can be computed.
@@ -24,6 +28,8 @@ module.exports = async function (deployer, network, accounts) {
     uniswapPairOracleARTHXWETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
     uniswapPairOracleARTHWETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
     uniswapPairOracleMAHAARTH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    uniswapPairOracleUSDTWETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
+    uniswapPairOracleUSDCWETH.setPeriod(1, { from: DEPLOYER_ADDRESS }),
   ]);
 
   console.log(chalk.yellow('\nUpdating oracle prices...'));
@@ -39,7 +45,9 @@ module.exports = async function (deployer, network, accounts) {
   await Promise.all([
     uniswapPairOracleARTHXWETH.update({ from: DEPLOYER_ADDRESS }),
     uniswapPairOracleARTHWETH.update({ from: DEPLOYER_ADDRESS }),
-    uniswapPairOracleMAHAARTH.update({ from: DEPLOYER_ADDRESS })
+    uniswapPairOracleMAHAARTH.update({ from: DEPLOYER_ADDRESS }),
+    uniswapPairOracleUSDTWETH.update({ from: DEPLOYER_ADDRESS }),
+    uniswapPairOracleUSDCWETH.update({ from: DEPLOYER_ADDRESS })
   ]);
 
   console.log(chalk.yellow('\nSetting the oracle period back to 24 hrs...'));
@@ -55,6 +63,8 @@ module.exports = async function (deployer, network, accounts) {
   await Promise.all([
     uniswapPairOracleARTHXWETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
     uniswapPairOracleARTHWETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    uniswapPairOracleMAHAARTH.setPeriod(3600, { from: DEPLOYER_ADDRESS })
+    uniswapPairOracleMAHAARTH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    uniswapPairOracleUSDCWETH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
+    uniswapPairOracleUSDTWETH.setPeriod(3600, { from: DEPLOYER_ADDRESS })
   ]);
 };
