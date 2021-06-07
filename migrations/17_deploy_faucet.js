@@ -1,13 +1,9 @@
 const BigNumber = require('bignumber.js');
 
-
 const helpers = require('./helpers')
-
-
 const Faucet = artifacts.require('Faucet');
 const ARTHShares = artifacts.require("ARTHShares");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];

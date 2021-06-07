@@ -22,26 +22,7 @@ interface IARTHPool {
         external
         returns (uint256);
 
-    // function mintAlgorithmicARTH(uint256 arthxAmountD18, uint256 arthOutMin)
-    //     external
-    //     returns (uint256);
-
-    // function mintFractionalARTH(
-    //     uint256 collateralAmount,
-    //     uint256 arthxAmount,
-    //     uint256 ARTHOutMin
-    // ) external returns (uint256);
-
     function redeem1t1ARTH(uint256 arthAmount, uint256 collateralOutMin)
-        external;
-
-    // function redeemFractionalARTH(
-    //     uint256 arthAmount,
-    //     uint256 arthxOutMin,
-    //     uint256 collateralOutMin
-    // ) external;
-
-    function redeemAlgorithmicARTH(uint256 arthAmounnt, uint256 arthxOutMin)
         external;
 
     function collectRedemption() external;
@@ -54,16 +35,6 @@ interface IARTHPool {
         external;
 
     function getGlobalCR() external view returns (uint256);
-
-    // function mintingFee() external returns (uint256);
-
-    // function redemptionFee() external returns (uint256);
-
-    // function buybackFee() external returns (uint256);
-
-    // function getRecollateralizationDiscount() external view returns (uint256);
-
-    //function recollatFee() external returns (uint256);
 
     function getCollateralGMUBalance() external view returns (uint256);
 

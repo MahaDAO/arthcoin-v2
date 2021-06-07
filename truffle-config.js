@@ -20,7 +20,8 @@ module.exports = {
       provider: function () {
         return new HDWalletProvider(
           process.env.METAMASK_WALLET_SECRET,
-          'https://bitter-twilight-moon.quiknode.io/a7bc771b-a15c-49a6-9e23-a1106f86b2db/g9PahkWuM3pjJMRqNA39cUyZpov8PMSH5MbcKSJs4zrqyGwEsuUajCGSpWmFbvVU7HboSbF6lauR38Y0Zyr8NQ==/'
+          'https://rinkeby.infura.io/v3/7878a73efb1d48c294c33a0e5abd48d6',
+          //'https://bitter-twilight-moon.quiknode.io/a7bc771b-a15c-49a6-9e23-a1106f86b2db/g9PahkWuM3pjJMRqNA39cUyZpov8PMSH5MbcKSJs4zrqyGwEsuUajCGSpWmFbvVU7HboSbF6lauR38Y0Zyr8NQ==/'
         )
       },
       networkCheckTimeout: 100000,

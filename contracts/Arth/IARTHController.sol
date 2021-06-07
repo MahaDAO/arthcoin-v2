@@ -6,8 +6,6 @@ pragma experimental ABIEncoderV2;
 interface IARTHController {
     function toggleCollateralRatio() external;
 
-    function refreshCollateralRatio() external;
-
     function addPool(address pool_address) external;
 
     function removePool(address pool_address) external;
@@ -47,8 +45,6 @@ interface IARTHController {
     function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
         external;
 
-    function setArthStep(uint256 newStep) external;
-
     function setControllerAddress(address controller) external;
 
     function setRedemptionFee(uint256 fee) external;
@@ -57,21 +53,13 @@ interface IARTHController {
 
     function setOwner(address _ownerAddress) external;
 
-    function setPriceBand(uint256 _priceBand) external;
-
     function setTimelock(address newTimelock) external;
 
-    function setPriceTarget(uint256 newPriceTarget) external;
-
     function setARTHXAddress(address _arthxAddress) external;
-
-    function setRefreshCooldown(uint256 newCooldown) external;
 
     function setETHGMUOracle(address _ethGMUConsumerAddress) external;
 
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio) external;
-
-    function getRefreshCooldown() external view returns (uint256);
 
     function getARTHPrice() external view returns (uint256);
 
@@ -93,23 +81,7 @@ interface IARTHController {
 
     function arthPools(address pool) external view returns (bool);
 
-    function toggleUseGlobalCRForMint(bool flag) external;
-
-    function toggleUseGlobalCRForRecollateralize(bool flag) external;
-
-    function setMintCollateralRatio(uint256 val) external;
-
-    function setRedeemCollateralRatio(uint256 val) external;
-
-    function toggleUseGlobalCRForRedeem(bool flag) external;
-
-    function setRecollateralizeCollateralRatio(uint256 val) external;
-
     function setStabilityFee(uint256 val) external;
-
-    function getCRForMint() external view returns (uint256);
-
-    function getCRForRedeem() external view returns (uint256);
 
     function isRedeemPaused() external view returns (bool);
 
@@ -118,8 +90,6 @@ interface IARTHController {
     function isBuybackPaused() external view returns (bool);
 
     function isRecollaterlizePaused() external view returns (bool);
-
-    function getCRForRecollateralize() external view returns (uint256);
 
     function toggleMinting() external;
 

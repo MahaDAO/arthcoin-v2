@@ -8,7 +8,6 @@ import {IARTHPool} from './IARTHPool.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {IARTHX} from '../../ARTHX/IARTHX.sol';
 import {IOracle} from '../../Oracle/IOracle.sol';
-//import {ICurve} from '../../Curves/ICurve.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
@@ -16,7 +15,7 @@ import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
 import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
-import {IProxyArthController} from '../IProxyArthController.sol';
+
 /**
  * @title  ARTHPool.
  * @author MahaDAO.
@@ -135,7 +134,7 @@ contract ArthPool is AccessControl, IARTHPool {
         _COLLATERAL = IERC20(__collateralAddress);
         _ARTHX = IARTHX(__arthxContractAddress);
         _ARTHMAHAOracle = ISimpleOracle(__ARTHMAHAOracle);
-        _arthController = IProxyArthController(__arthController);
+        _arthController = IARTHController(__arthController);
 
         _ownerAddress = _creatorAddress;
         _timelockAddress = __timelockAddress;
@@ -161,7 +160,7 @@ contract ArthPool is AccessControl, IARTHPool {
         buybackCollateralBuffer = percent;
     }
 
-    function setARTHController(IProxyArthController controller)
+    function setARTHController(IARTHController controller)
         external
         onlyAdminOrOwnerOrGovernance
     {
@@ -254,7 +253,7 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
 
         require(
-            _arthController.getCRForMint() >= _COLLATERAL_RATIO_MAX,
+            _arthController.getGlobalCollateralRatio() >= _COLLATERAL_RATIO_MAX,
             'ARHTPool: Collateral ratio < 1'
         );
         require(
@@ -307,7 +306,7 @@ contract ArthPool is AccessControl, IARTHPool {
         notRedeemPaused
     {
         require(
-            _arthController.getCRForRedeem() == _COLLATERAL_RATIO_MAX,
+            _arthController.getGlobalCollateralRatio() == _COLLATERAL_RATIO_MAX,
             'Collateral ratio must be == 1'
         );
 
@@ -349,44 +348,6 @@ contract ArthPool is AccessControl, IARTHPool {
 
         // Move all external functions to the end
         _ARTH.poolBurnFrom(msg.sender, arthAmount);
-    }
-
-    // Redeem ARTH for ARTHX. 0% collateral-backed
-    function redeemAlgorithmicARTH(uint256 arthAmount, uint256 arthxOutMin)
-        external
-        override
-        notRedeemPaused
-    {
-        uint256 arthxPrice = _arthController.getARTHXPrice();
-        uint256 collateralRatioForRedeem = _arthController.getCRForRedeem();
-
-        require(collateralRatioForRedeem == 0, 'Collateral ratio must be 0');
-        uint256 arthxGMUValueD18 = arthAmount;
-
-        arthxGMUValueD18 = (
-            arthxGMUValueD18.mul(
-                uint256(1e6).sub(_arthController.getRedemptionFee())
-            )
-        )
-            .div(_PRICE_PRECISION); // apply fees
-
-        uint256 arthxAmount =
-            arthxGMUValueD18.mul(_PRICE_PRECISION).div(arthxPrice);
-
-        redeemARTHXBalances[msg.sender] = redeemARTHXBalances[msg.sender].add(
-            arthxAmount
-        );
-        unclaimedPoolARTHX += arthxAmount;
-
-        lastRedeemed[msg.sender] = block.number;
-
-        require(arthxOutMin <= arthxAmount, 'Slippage limit reached');
-
-        _chargeStabilityFee(arthAmount);
-
-        // Move all external functions to the end
-        _ARTH.poolBurnFrom(msg.sender, arthAmount);
-        _ARTHX.poolMint(address(this), arthxAmount);
     }
 
     // After a redemption happens, transfer the newly minted ARTHX and owed collateral from this pool
@@ -494,7 +455,7 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
         uint256 arthTotalSupply = _arthController.getARTHSupply();
         uint256 collateralRatioForRecollateralize =
-            _arthController.getCRForRecollateralize();
+            _arthController.getGlobalCollateralRatio();
         uint256 globalCollatValue = _arthController.getGlobalCollateralValue();
 
         return

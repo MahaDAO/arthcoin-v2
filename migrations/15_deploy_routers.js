@@ -1,10 +1,8 @@
 const helpers = require('./helpers')
 
-
 const ARTHShares = artifacts.require("ARTHShares");
 const ARTHPoolRouter = artifacts.require("ArthPoolRouter");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-
 
 module.exports = async function (deployer, network) {
   let arth = await ARTHStablecoin.deployed();
