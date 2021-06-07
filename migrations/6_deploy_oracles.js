@@ -65,7 +65,6 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(BondingCurve, new BigNumber('1300e6')); // Fixed price.
 
   await helpers.getGMUOracle(network, deployer, artifacts);
-  await helpers.getARTHMAHAOracle(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nSetting chainlink oracle...'));
   const chainlinkETHUSDOracle = await helpers.getChainlinkETHUSDOracle(network, deployer, artifacts);

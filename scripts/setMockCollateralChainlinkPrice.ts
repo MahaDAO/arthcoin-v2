@@ -8,7 +8,7 @@ require('dotenv').config();
 const oracles = [
   'MockChainlinkAggregatorV3',  // ETH/USD
   'MockUSDCChainlinkAggregator',  // USDC/USD
-  'MockUSDTChainlinkAggregator'  // USDT/USD 
+  'MockUSDTChainlinkAggregator'  // USDT/USD
 ];
 
 

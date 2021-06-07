@@ -24,7 +24,7 @@ module.exports = async (callback) => {
 
   const contracts = [
     { abi: 'ArthController', contract: 'ArthController' },
-  
+    { abi: 'Genesis', contract: 'Genesis' },
     { abi: 'BoostedStaking', contract: 'StakeARTHMAHA' },
     { abi: 'BoostedStaking', contract: 'StakeARTH' },
     { abi: 'BoostedStaking', contract: 'StakeARTHWETH' },
@@ -35,7 +35,6 @@ module.exports = async (callback) => {
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTHX_WETH' },
 
     { abi: 'GMUOracle', contract: 'GMUOracle' },
-    { abi: 'SimpleOracle', contract: 'ARTHMAHAOracle' },
 
     { abi: 'Oracle', contract: 'Oracle_USDC' },
     { abi: 'Oracle', contract: 'Oracle_USDT' },
