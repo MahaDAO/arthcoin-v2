@@ -27,6 +27,15 @@ module.exports = {
       networkCheckTimeout: 100000,
       network_id: 4,
       skipDryRun: true
+    },
+    maticMumbai: {
+      network_id: 80001,
+      provider: function() {
+        return new HDWalletProvider(
+          process.env.METAMASK_WALLET_SECRET,
+          `https://rpc-mumbai.matic.today`
+        )
+      }
     }
   },
   compilers: {
