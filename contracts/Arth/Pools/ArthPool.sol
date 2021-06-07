@@ -11,7 +11,6 @@ import {IOracle} from '../../Oracle/IOracle.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
-import {ISimpleOracle} from '../../Oracle/ISimpleOracle.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
 import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
@@ -34,7 +33,6 @@ contract ArthPool is AccessControl, IARTHPool {
     IARTHX public _ARTHX;
     IERC20 public _COLLATERAL;
     IERC20Burnable public _MAHA;
-    ISimpleOracle public _ARTHMAHAOracle;
     IARTHController public _arthController;
     IOracle public _collateralGMUOracle;
     //ICurve public _recollateralizeDiscountCruve;
@@ -125,7 +123,6 @@ contract ArthPool is AccessControl, IARTHPool {
         address _creatorAddress,
         address __timelockAddress,
         address __MAHA,
-        address __ARTHMAHAOracle,
         address __arthController,
         uint256 _poolCeiling
     ) {
@@ -133,7 +130,6 @@ contract ArthPool is AccessControl, IARTHPool {
         _ARTH = IARTH(__arthContractAddress);
         _COLLATERAL = IERC20(__collateralAddress);
         _ARTHX = IARTHX(__arthxContractAddress);
-        _ARTHMAHAOracle = ISimpleOracle(__ARTHMAHAOracle);
         _arthController = IARTHController(__arthController);
 
         _ownerAddress = _creatorAddress;
@@ -165,13 +161,6 @@ contract ArthPool is AccessControl, IARTHPool {
         onlyAdminOrOwnerOrGovernance
     {
         _arthController = controller;
-    }
-
-    function setARTHMAHAOracle(ISimpleOracle oracle)
-        external
-        onlyAdminOrOwnerOrGovernance
-    {
-        _ARTHMAHAOracle = oracle;
     }
 
     function setCollatGMUOracle(address _collateralGMUOracleAddress)
@@ -506,10 +495,6 @@ contract ArthPool is AccessControl, IARTHPool {
         );
     }
 
-    function getARTHMAHAPrice() public view override returns (uint256) {
-        return _ARTHMAHAOracle.getPrice();
-    }
-
     function getGlobalCR() public view override returns (uint256) {
         return _arthController.getGlobalCollateralRatio();
     }
@@ -584,14 +569,22 @@ contract ArthPool is AccessControl, IARTHPool {
         returns (uint256)
     {
         uint256 stabilityFeeInARTH =
-            amount.mul(_arthController.getStabilityFee()).div(100);
-        // Considering Simple oracle precision is set to 1e6 and ARTH is in 18 decimals.
-        return getARTHMAHAPrice().mul(stabilityFeeInARTH).div(1e6);
+            amount.mul(_arthController.getStabilityFee()).div(1e6);
+
+        // ARTH is redeemed at 1$.
+        return (
+            stabilityFeeInARTH
+                .mul(1e6)
+                .div(_arthController.getMAHAPrice())
+        );
     }
 
     function _chargeStabilityFee(uint256 amount) internal {
         uint256 stabilityFeeInMAHA = estimateStabilityFeeInMAHA(amount);
-        _MAHA.burnFrom(msg.sender, stabilityFeeInMAHA);
-        emit StabilityFeesCharged(msg.sender, stabilityFeeInMAHA);
+
+        if (stabilityFeeInMAHA > 0) {
+            _MAHA.burnFrom(msg.sender, stabilityFeeInMAHA);
+            emit StabilityFeesCharged(msg.sender, stabilityFeeInMAHA);
+        }
     }
 }
