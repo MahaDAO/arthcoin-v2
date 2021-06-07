@@ -222,19 +222,6 @@ const getGMUOracle = async (network, deployer, artifacts) => {
   return GMUOracle.deployed();
 }
 
-const getARTHMAHAOracle = async (network, deployer, artifacts) => {
-  const ARTHMAHAOracle = artifacts.require('ARTHMAHAOracle');
-
-  const addr = knownContracts.ARTHMAHAOracle && knownContracts.ARTHMAHAOracle[network];
-  if (addr) return ARTHMAHAOracle.at(addr);
-  if (ARTHMAHAOracle.isDeployed()) return ARTHMAHAOracle.deployed();
-
-  console.log(chalk.yellow(`\nDeploying ARTH/MAHA oracle...`));
-  await deployer.deploy(ARTHMAHAOracle, 'ARTH/MAHA', ONEE6);
-
-  return ARTHMAHAOracle.deployed();
-}
-
 const getUSDCGMUOracle = async (network, deployer, artifacts) => {
   const MockChainlinkOracle = artifacts.require('MockUSDCChainlinkAggregator');
   const ChainlinkETHUSDPriceConsumer = artifacts.require('MockChainlinkUSDCGMUOracle');
@@ -322,6 +309,5 @@ module.exports = {
   getUniswapFactory,
   getUniswapRouter,
   getGMUOracle,
-  getARTHMAHAOracle,
   getETHGMUOracle
 }

@@ -65,6 +65,9 @@ module.exports = async function (deployer, network, accounts) {
   console.log(" NOTE: - percent_collateralized: ", percentCollateralized.toString());
   console.log(" NOTE: - percent_collateralized_in_readable: ", percentCollateralized.div(BIG18).toString());
 
+  console.log('Collteral USDC price from pool ', new BigNumber(await pool_instance_USDC.getCollateralPrice()).div(1e6).toString());
+  console.log('Collateral USDT price from pool ', new BigNumber(await pool_instance_USDT.getCollateralPrice()).div(1e6).toString());
+
   console.log(chalk.yellow('\nTransferring some tokens and eth to metamask...'));
   await Promise.all([
     arthx.transfer(DEPLOYER_ADDRESS, new BigNumber("1000e18"), { from: DEPLOYER_ADDRESS }),
