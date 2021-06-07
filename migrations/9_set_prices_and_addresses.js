@@ -43,6 +43,7 @@ module.exports = async function (deployer, network, accounts) {
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSome oracle prices are: '));
+  const eth_price_initial = new BigNumber(await arthControllerInstance.getETHGMUPrice()).div(BIG6);
   const arth_price_initial = new BigNumber(await arthControllerInstance.getARTHPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
   const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
   const arth_price_from_ARTH_WETH = (new BigNumber(await uniswapPairOracleARTHWETH.consult.call(wethInstance.address, 1e6))).div(BIG6);
@@ -50,6 +51,7 @@ module.exports = async function (deployer, network, accounts) {
   const maha_price_initial = new BigNumber(await arthControllerInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
   const maha_price_from_MAHA_ARTH = (new BigNumber(await uniswapPairOracleMAHAARTH.consult.call(arth.address, 1e6))).div(BIG6);
 
+  console.log("NOTE: - eth_price_initial", eth_price_initial.toString());
   console.log(" NOTE: - arth_price_initial: ", arth_price_initial.toString(), "GMU = 1 ARTH");
   console.log(" NOTE: - maha_price_initial: ", maha_price_initial.toString(), "GMU = 1 MAHA");
   console.log(" NOTE: - arthx_price_initial: ", arthx_price_initial.toString(), "GMU = 1 ARTHX");

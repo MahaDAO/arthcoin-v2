@@ -231,7 +231,7 @@ const getUSDCGMUOracle = async (network, deployer, artifacts) => {
   if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed();
 
   let defaultChainlinkConsumerAddr = knownContracts.ChainlinkUSDCUSDOracle[network];
-  if (!defaultChainlinkConsumerAddr) {
+  if (!defaultChainlinkConsumerAddr && USE_MOCK_CHAINLINK_ORACLES) {
     await deployer.deploy(MockChainlinkOracle)
     const mockUSDCChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8);
