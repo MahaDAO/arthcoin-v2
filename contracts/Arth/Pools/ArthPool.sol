@@ -59,7 +59,7 @@ contract ArthPool is AccessControl, IARTHPool {
     uint256 private immutable _missingDeciamls;
     uint256 private constant _PRICE_PRECISION = 1e6;
     uint256 private constant _COLLATERAL_RATIO_MAX = 2e6;  // Placeholder, need to replace this with apt. val.
-    uint256 private constant _COLLATERAL_RATIO_MIN = 1e6;
+    uint256 private constant _COLLATERAL_RATIO_MIN = 1e6 + 1;  // 100.0001 in 1e6 precision.
     uint256 private constant _COLLATERAL_RATIO_PRECISION = 1e6;
 
     address private _wethAddress;
