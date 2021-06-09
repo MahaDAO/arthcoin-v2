@@ -39,6 +39,34 @@ library ArthPoolLibrary {
         return (collateralAmountD18.mul(collateralPrice)).div(1e6);
     }
 
+    function calcOverCollateralizedMintAmounts(
+        uint256 ratio,
+        uint256 collateralPrice,
+        uint256 arthxPrice,
+        uint256 collateralAmountD18
+    )
+        public
+        pure
+        returns (
+            uint256,  // ARTH Mint amount.
+            uint256  // ARTHX Mint amount.
+        )
+    {
+        uint256 collateralValue = (
+            collateralAmountD18
+            .mul(collateralPrice)
+            .div(1e6)
+        );
+
+        uint256 arthValueToMint = collateralValue.mul(1e6).div(ratio);
+        uint256 arthxValueToMint = collateralValue.sub(arthValueToMint);
+
+        return (
+            arthValueToMint,
+            arthxValueToMint.mul(1e6).div(arthxPrice)
+        );
+    }
+
     function calcMintAlgorithmicARTH(
         uint256 arthxPriceGMU,
         uint256 collateralAmountD18
@@ -79,6 +107,28 @@ library ArthPoolLibrary {
         return (
             collateralGMUValueD18.add(calcARTHXGMUValueD18),
             calcARTHXNeeded
+        );
+    }
+
+    function calcOverCollateralizedRedeemAmounts(
+        uint256 ratio,
+        uint256 arthxPrice,
+        uint256 collateralPriceGMU,
+        uint256 arthAmount
+    )
+        public
+        pure
+        returns (
+            uint256,  // Collateral amount to return.
+            uint256  // Needed arthx as input.
+        )
+    {
+        uint256 collateralValue = arthAmount.mul(ratio).div(1e6);
+        uint256 neededARTHXValue = collateralValue.sub(arthAmount);
+
+        return (
+            collateralValue.mul(1e6).div(collateralPriceGMU),
+            neededARTHXValue.mul(1e6).div(arthxPrice)
         );
     }
 

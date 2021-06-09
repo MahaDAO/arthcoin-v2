@@ -58,7 +58,8 @@ contract ArthPool is AccessControl, IARTHPool {
 
     uint256 private immutable _missingDeciamls;
     uint256 private constant _PRICE_PRECISION = 1e6;
-    uint256 private constant _COLLATERAL_RATIO_MAX = 1e6;
+    uint256 private constant _COLLATERAL_RATIO_MAX = 2e6;  // Placeholder, need to replace this with apt. val.
+    uint256 private constant _COLLATERAL_RATIO_MIN = 1e6;
     uint256 private constant _COLLATERAL_RATIO_PRECISION = 1e6;
 
     address private _wethAddress;
@@ -244,17 +245,29 @@ contract ArthPool is AccessControl, IARTHPool {
         emit Repay(msg.sender, amount);
     }
 
-    function mint1t1ARTH(uint256 collateralAmount, uint256 arthOutMin)
+    function mint(
+        uint256 collateralAmount,
+        uint256 arthOutMin,
+        uint256 arthxOutMin
+    )
         external
         override
         notMintPaused
-        returns (uint256)
+        returns (
+            uint256,
+            uint256
+        )
     {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
+        uint256 cr =  _arthController.getGlobalCollateralRatio();
 
         require(
-            _arthController.getGlobalCollateralRatio() >= _COLLATERAL_RATIO_MAX,
-            'ARHTPool: Collateral ratio < 1'
+            cr <= _COLLATERAL_RATIO_MAX,
+            'ARHTPool: Collateral ratio > MAX'
+        );
+        require(
+            cr >= _COLLATERAL_RATIO_MIN,
+            'ARHTPool: Collateral ratio < MIN'
         );
         require(
             (_COLLATERAL.balanceOf(address(this)))
@@ -264,9 +277,11 @@ contract ArthPool is AccessControl, IARTHPool {
         );
 
         // 1 ARTH for each $1 worth of collateral.
-        uint256 arthAmountD18 =
-            ArthPoolLibrary.calcMint1t1ARTH(
+        (uint256 arthAmountD18, uint256 arthxAmountD18) =
+            ArthPoolLibrary.calcOverCollateralizedMintAmounts(
+                cr,
                 getCollateralPrice(),
+                _arthController.getARTHXPrice(),
                 collateralAmountD18
             );
 
@@ -278,7 +293,11 @@ contract ArthPool is AccessControl, IARTHPool {
 
         require(
             arthOutMin <= arthAmountD18,
-            'ARTHPool: Slippage limit reached'
+            'ARTHPool: ARTH Slippage limit reached'
+        );
+        require(
+            arthxOutMin <= arthxAmountD18,
+            'ARTHPool: ARTHX Slippage limit reached'
         );
 
         require(
@@ -295,25 +314,39 @@ contract ArthPool is AccessControl, IARTHPool {
         );
 
         _ARTH.poolMint(msg.sender, arthAmountD18);
+        _ARTHX.poolMint(msg.sender, arthxAmountD18);
 
-        return arthAmountD18;
+        return (arthAmountD18, arthxAmountD18);
     }
 
     // Redeem collateral. 100% collateral-backed
-    function redeem1t1ARTH(uint256 arthAmount, uint256 collateralOutMin)
+    function redeem(
+        uint256 arthAmount,
+        uint256 arthxAmount,
+        uint256 collateralOutMin
+    )
         external
         override
         notRedeemPaused
     {
+        uint256 cr = _arthController.getGlobalCollateralRatio();
+
         require(
-            _arthController.getGlobalCollateralRatio() == _COLLATERAL_RATIO_MAX,
-            'Collateral ratio must be == 1'
+            cr <= _COLLATERAL_RATIO_MAX,
+            'Collateral ratio > MAX'
+        );
+        require(
+            cr >= _COLLATERAL_RATIO_MIN,
+            'Collateral ratio < MIN'
         );
 
         // Need to adjust for decimals of collateral
         uint256 arthAmountPrecision = arthAmount.div(10**_missingDeciamls);
-        uint256 collateralNeeded =
-            ArthPoolLibrary.calcRedeem1t1ARTH(
+
+        (uint256 collateralNeeded, uint256 arthxNeeded) =
+            ArthPoolLibrary.calcOverCollateralizedRedeemAmounts(
+                cr,
+                _arthController.getARTHXPrice(),
                 getCollateralPrice(),
                 arthAmountPrecision
             );
@@ -334,7 +367,11 @@ contract ArthPool is AccessControl, IARTHPool {
         );
         require(
             collateralOutMin <= collateralNeeded,
-            'ARTHPool: Slippage limit reached'
+            'ARTHPool: Collateral Slippage limit reached'
+        );
+        require(
+            arthxAmount == arthxNeeded,
+            'ARTHPool: ARTHX slippage'
         );
 
         redeemCollateralBalances[msg.sender] = redeemCollateralBalances[
@@ -346,8 +383,8 @@ contract ArthPool is AccessControl, IARTHPool {
 
         _chargeStabilityFee(arthAmount);
 
-        // Move all external functions to the end
         _ARTH.poolBurnFrom(msg.sender, arthAmount);
+        _ARTHX.poolBurnFrom(msg.sender, arthxAmount);
     }
 
     // After a redemption happens, transfer the newly minted ARTHX and owed collateral from this pool
