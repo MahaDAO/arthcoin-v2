@@ -359,6 +359,10 @@ contract ArthPool is AccessControl, IARTHPool {
             .div(1e6);
 
         require(
+            _ARTHX.balanceOf(msg.sender) >= arthxAmount,
+            'ARTHPool: balance not enough'
+        );
+        require(
             collateralNeeded <=
                 _COLLATERAL.balanceOf(address(this)).sub(
                     unclaimedPoolCollateral
@@ -369,8 +373,10 @@ contract ArthPool is AccessControl, IARTHPool {
             collateralOutMin <= collateralNeeded,
             'ARTHPool: Collateral Slippage limit reached'
         );
+
+        uint256 arthxNeededD18 = arthxNeeded.mul(10 ** _missingDeciamls);
         require(
-            arthxAmount == arthxNeeded,
+            arthxAmount == arthxNeededD18,
             'ARTHPool: ARTHX slippage'
         );
 
