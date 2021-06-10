@@ -113,34 +113,48 @@ library ArthPoolLibrary {
 
     function calcOverCollateralizedRedeemAmounts(
         uint256 collateralRatio,
-        uint256 algorithmicRatio,
+        // uint256 algorithmicRatio,
         uint256 arthxPrice,
         uint256 collateralPriceGMU,
-        uint256 arthAmount,
-        uint256 arthxAmount
+        uint256 arthAmount
+        //, uint256 arthxAmount
     )
         public
         pure
         returns (
-            uint256  // Collateral amount to return.
+            uint256,  // Collateral amount to return.
+            uint256   // ARTHX amount needed.
         )
     {
-        uint256 totalInputValue = arthAmount.add(
-            arthxAmount.mul(arthxPrice).div(1e6)
-        );
+        // uint256 totalInputValue = arthAmount.add(
+        //     arthxAmount.mul(arthxPrice).div(1e6)
+        // );
 
-        // Ensures inputs are in ratios mentioned.
-        require(
-            totalInputValue.mul(collateralRatio).div(1e6) == arthAmount,
-            'ArthPoolLibrary: invalid ratios'
+        // // Ensures inputs are in ratios mentioned.
+        // require(
+        //     totalInputValue.mul(collateralRatio).div(1e6) == arthAmount,
+        //     'ArthPoolLibrary: invalid ratios'
+        // );
+        // require(
+        //     totalInputValue.mul(algorithmicRatio).div(1e6) == arthxAmount.mul(arthxPrice).div(1e6),
+        //     'ArthPoolLibrary: invalid ratios'
+        // );
+
+        // return (
+        //     totalInputValue.mul(1e6).div(collateralPriceGMU)
+        // );
+
+        uint256 arthxValueNeeded = (
+            arthAmount
+                .mul(1e6)
+                .div(collateralRatio)
+                .sub(arthAmount)
         );
-        require(
-            totalInputValue.mul(algorithmicRatio).div(1e6) == arthxAmount.mul(arthxPrice).div(1e6),
-            'ArthPoolLibrary: invalid ratios'
-        );
+        uint256 arthxNeeded = arthxValueNeeded.mul(1e6).div(arthxPrice);
 
         return (
-            totalInputValue.mul(1e6).div(collateralPriceGMU)
+            arthAmount.add(arthxValueNeeded).mul(1e6).div(collateralPriceGMU),
+            arthxNeeded
         );
     }
 

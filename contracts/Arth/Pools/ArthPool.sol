@@ -346,19 +346,19 @@ contract ArthPool is AccessControl, IARTHPool {
 
         // Need to adjust for decimals of collateral
         uint256 arthAmountPrecision = arthAmount.div(10**_missingDeciamls);
-        uint256 arthxAmountPrecision = arthxAmount.div(10**_missingDeciamls);
+        // uint256 arthxAmountPrecision = arthxAmount.div(10**_missingDeciamls);
 
         uint256 algorithmicRatio = uint256(cr).sub(1e6);
         uint256 collateralRatio = uint256(1e6).sub(algorithmicRatio);
 
-        uint256 collateralNeeded  =
+        (uint256 collateralNeeded, uint256 arthxInputNeeded) =
             ArthPoolLibrary.calcOverCollateralizedRedeemAmounts(
                 collateralRatio,
-                algorithmicRatio,
+                // algorithmicRatio,
                 _arthController.getARTHXPrice(),
                 getCollateralPrice(),
-                arthAmountPrecision,
-                arthxAmountPrecision
+                arthAmountPrecision
+                //, arthxAmountPrecision
             );
 
         collateralNeeded = (
@@ -368,8 +368,9 @@ contract ArthPool is AccessControl, IARTHPool {
         )
             .div(1e6);
 
+        uint256 arthxInputNeededD18 = arthxInputNeeded.mul(10**_missingDeciamls);
         require(
-            _ARTHX.balanceOf(msg.sender) >= arthxAmount,
+            _ARTHX.balanceOf(msg.sender) >= arthxInputNeededD18,
             'ARTHPool: balance not enough'
         );
         require(
@@ -383,6 +384,10 @@ contract ArthPool is AccessControl, IARTHPool {
             collateralOutMin <= collateralNeeded,
             'ARTHPool: Collateral Slippage limit reached'
         );
+         require(
+            arthxAmount <= arthxInputNeededD18,
+            'ArthPool: Not enought arthx input provided'
+        );
 
         redeemCollateralBalances[msg.sender] = redeemCollateralBalances[
             msg.sender
@@ -394,7 +399,7 @@ contract ArthPool is AccessControl, IARTHPool {
         _chargeStabilityFee(arthAmount);
 
         _ARTH.poolBurnFrom(msg.sender, arthAmount);
-        _ARTHX.poolBurnFrom(msg.sender, arthxAmount);
+        _ARTHX.poolBurnFrom(msg.sender, arthxInputNeededD18);
     }
 
     // After a redemption happens, transfer the newly minted ARTHX and owed collateral from this pool
