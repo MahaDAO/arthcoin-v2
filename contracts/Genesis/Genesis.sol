@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IARTHController} from '../Arth/IARTHController.sol';
 import {IARTHX} from '../ARTHX/IARTHX.sol';
-import {IARTH} from '../ARTH/IARTH.sol';
+import {IARTH} from '../Arth/IARTH.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 

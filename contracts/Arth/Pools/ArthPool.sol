@@ -276,10 +276,14 @@ contract ArthPool is AccessControl, IARTHPool {
             'ARTHPool: ceiling reached'
         );
 
+        uint256 algorithmicRatio = uint256(cr).sub(1e6);
+        uint256 collateralRatio = uint256(1e6).sub(algorithmicRatio);
+
         // 1 ARTH for each $1 worth of collateral.
         (uint256 arthAmountD18, uint256 arthxAmountD18) =
             ArthPoolLibrary.calcOverCollateralizedMintAmounts(
-                cr,
+                collateralRatio,
+                algorithmicRatio,
                 getCollateralPrice(),
                 _arthController.getARTHXPrice(),
                 collateralAmountD18
@@ -342,13 +346,19 @@ contract ArthPool is AccessControl, IARTHPool {
 
         // Need to adjust for decimals of collateral
         uint256 arthAmountPrecision = arthAmount.div(10**_missingDeciamls);
+        uint256 arthxAmountPrecision = arthxAmount.div(10**_missingDeciamls);
 
-        (uint256 collateralNeeded, uint256 arthxNeeded) =
+        uint256 algorithmicRatio = uint256(cr).sub(1e6);
+        uint256 collateralRatio = uint256(1e6).sub(algorithmicRatio);
+
+        uint256 collateralNeeded  =
             ArthPoolLibrary.calcOverCollateralizedRedeemAmounts(
-                cr,
+                collateralRatio,
+                algorithmicRatio,
                 _arthController.getARTHXPrice(),
                 getCollateralPrice(),
-                arthAmountPrecision
+                arthAmountPrecision,
+                arthxAmountPrecision
             );
 
         collateralNeeded = (
@@ -372,12 +382,6 @@ contract ArthPool is AccessControl, IARTHPool {
         require(
             collateralOutMin <= collateralNeeded,
             'ARTHPool: Collateral Slippage limit reached'
-        );
-
-        uint256 arthxNeededD18 = arthxNeeded.mul(10 ** _missingDeciamls);
-        require(
-            arthxAmount == arthxNeededD18,
-            'ARTHPool: ARTHX slippage'
         );
 
         redeemCollateralBalances[msg.sender] = redeemCollateralBalances[
