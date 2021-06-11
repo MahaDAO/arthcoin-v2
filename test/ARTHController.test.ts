@@ -29,6 +29,7 @@ describe('ARTHController', () => {
   let ARTHX: ContractFactory;
   let Oracle: ContractFactory;
   let ARTHPool: ContractFactory;
+  let BondingCurve: ContractFactory;
   let SimpleOracle: ContractFactory;
   let MockCollateral: ContractFactory;
   let ARTHController: ContractFactory;
@@ -46,6 +47,7 @@ describe('ARTHController', () => {
   let gmuOracle: Contract;
   let daiARTHPool: Contract;
   let usdcARTHPool: Contract;
+  let bondingCurve: Contract;
   let daiPoolOracle: Contract;
   let usdcPoolOracle: Contract;
   let arthMahaOracle: Contract;
@@ -85,6 +87,7 @@ describe('ARTHController', () => {
 
     Oracle = await ethers.getContractFactory('Oracle');
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
+    BondingCurve = await ethers.getContractFactory('BondingCurve');
     ARTHController = await ethers.getContractFactory('ArthController');
     MockUniswapOracle = await ethers.getContractFactory('MockUniswapPairOracle');
     RecollateralizationCurve = await ethers.getContractFactory('MockRecollateralizeCurve');
@@ -124,6 +127,8 @@ describe('ARTHController', () => {
       gmuOracle.address
     );
 
+    bondingCurve = await BondingCurve.deploy(1300e6);
+
     arthx = await ARTHX.deploy(
       arthxETHUniswapOracle.address,
       owner.address,
@@ -140,7 +145,6 @@ describe('ARTHController', () => {
       owner.address,
       owner.address,
       maha.address,
-      arthMahaOracle.address,
       arthController.address,
       ETH.mul(90000)
     );
@@ -151,7 +155,6 @@ describe('ARTHController', () => {
       owner.address,
       owner.address,
       maha.address,
-      arthMahaOracle.address,
       arthController.address,
       ETH.mul(90000)
     );
@@ -185,7 +188,7 @@ describe('ARTHController', () => {
     await arthController.addPool(daiARTHPool.address);
     await arthController.addPool(usdcARTHPool.address);
 
-    await arthController.setGlobalCollateralRatio(0);
+    await arthController.setGlobalCollateralRatio(11e5);
     await arthx.setArthController(arthController.address);
 
     await daiARTHPool.setCollatGMUOracle(daiPoolOracle.address);
@@ -211,8 +214,7 @@ describe('ARTHController', () => {
     );
 
     await arthController.setRecollateralizationCurve(recollaterizationCurve.address);
-    // await daiARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
-    // await usdcARTHPool.setRecollateralizationCurve(recollaterizationCurve.address);
+    await arthController.setBondingCurve(bondingCurve.address);
 
     await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
     await mockDaiGMUAggregatorV3.setLatestPrice(ETH.div(1e10));  // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
@@ -223,7 +225,7 @@ describe('ARTHController', () => {
     it(' - Should not work if not COLLATERAL_RATIO_PAUSER', async () => {
       await expect(arthController.connect(attacker).toggleCollateralRatio())
         .to
-        .revertedWith('');
+        .revertedWith('ARTHController: FORBIDDEN');
     });
 
     it(' - Should work if COLLATERAL_RATIO_PAUSER', async () => {
@@ -293,48 +295,6 @@ describe('ARTHController', () => {
         .eq(owner.address);
     });
 
-    it(' - Should not work if not (governance || owner || pool)', async () => {
-      await expect(arthController.connect(attacker).toggleUseGlobalCRForMint(true))
-        .to
-        .revertedWith('ARTHController: FORBIDDEN');
-    });
-
-    it(' - Should work if (governance || owner || pool)', async () => {
-      await arthController.addPool(alternate.address);  // Acts as mock pool to test access level funcs.
-
-      await expect(arthController.connect(owner).toggleUseGlobalCRForMint(false))
-        .to
-        .emit(arthController, 'ToggleGlobalCRForMint')
-        .withArgs(true, false);
-
-      expect(await arthController.useGlobalCRForMint())
-        .to
-        .eq(false);
-
-      await expect(arthController.connect(timelock).toggleUseGlobalCRForMint(true))
-        .to
-        .emit(arthController, 'ToggleGlobalCRForMint')
-        .withArgs(false, true);
-
-      expect(await arthController.useGlobalCRForMint())
-        .to
-        .eq(true);
-
-      await expect(arthController.connect(alternate).toggleUseGlobalCRForMint(true))
-        .to
-        .emit(arthController, 'ToggleGlobalCRForMint')
-        .withArgs(true, true);
-
-      expect(await arthController.useGlobalCRForMint())
-        .to
-        .eq(true);
-
-      await arthController.removePool(alternate.address);  // Revoked the mock access.
-      await expect(arthController.connect(alternate).toggleUseGlobalCRForMint(true))
-        .to
-        .revertedWith('ARTHController: FORBIDDEN');
-    });
-
     it(' - Should not work if not appropriate role', async () => {
       await expect(arthController.toggleMinting())
         .to
@@ -365,11 +325,12 @@ describe('ARTHController', () => {
         .revertedWith('');
     });
 
-    it(' - Should work if not appropriate role', async () => {
+    it(' - Should work if appropriate role', async () => {
       await expect(arthController.connect(timelock).toggleMinting())
         .to
         .not
         .reverted;
+
       expect(await arthController.isMintPaused())
         .to
         .eq(true);
@@ -404,7 +365,7 @@ describe('ARTHController', () => {
     it(' - Should get global CR correctly', async () => {
       expect(await arthController.getGlobalCollateralRatio())
         .to
-        .eq(0);
+        .eq(11e5);
 
       await arthController.setGlobalCollateralRatio(1e3);
       expect(await arthController.connect(owner).getGlobalCollateralRatio())
@@ -413,37 +374,6 @@ describe('ARTHController', () => {
 
       await arthController.setGlobalCollateralRatio(1e6);
       expect(await arthController.connect(owner).getGlobalCollateralRatio())
-        .to
-        .eq(1e6);
-    });
-
-    it(' - Should get CR for mint correctly', async () => {
-      expect(await arthController.getCRForMint())
-        .to
-        .eq(0);
-
-      await arthController.setGlobalCollateralRatio(1e3);
-      expect(await arthController.connect(owner).getCRForMint())
-        .to
-        .eq(1e3);
-
-      await arthController.setGlobalCollateralRatio(1e6);
-      expect(await arthController.connect(owner).getCRForMint())
-        .to
-        .eq(1e6);
-
-      await arthController.connect(owner).toggleUseGlobalCRForMint(false);
-      expect(await arthController.getCRForMint())
-        .to
-        .eq(0);
-
-      await arthController.setMintCollateralRatio(1e3);
-      expect(await arthController.getCRForMint())
-        .to
-        .eq(1e3);
-
-      await arthController.setMintCollateralRatio(1e6);
-      expect(await arthController.getCRForMint())
         .to
         .eq(1e6);
     });
@@ -452,13 +382,13 @@ describe('ARTHController', () => {
       expect(await arthController.getARTHSupply())
         .to
         .eq(await arth.totalSupply());
-
-      expect(await arthController.getRefreshCooldown())
-        .to
-        .eq(3600);
     });
 
     it(' - Should get fees correctly', async () => {
+      expect(await arthController.stabilityFee())
+        .to
+        .eq(10000);
+
       await arthController.setStabilityFee(9);
       expect(await arthController.stabilityFee())
         .to
@@ -468,113 +398,108 @@ describe('ARTHController', () => {
       expect(await arthController.mintingFee())
         .to
         .eq(1e6);
+
       expect(await arthController.redemptionFee())
         .to
         .eq(1e6);
-      // expect(await arthController.recollatFee())
-      //   .to
-      //   .eq(1e6);
+
       expect(await arthController.buybackFee())
         .to
         .eq(1e6);
     });
 
-    it(' - Should get CR for redeem correctly', async () => {
-      expect(await arthController.getCRForRedeem())
-        .to
-        .eq(0);
-
-      await arthController.connect(owner).deactivateGenesis();
-
-      await arthController.setGlobalCollateralRatio(1e3);
-      expect(await arthController.connect(owner).getCRForRedeem())
-        .to
-        .eq(1e3);
-
-      let genesisStatus = await arthController.getIsGenesisActive()
-      await arthController.setGlobalCollateralRatio(1e6);
-      if (genesisStatus == true) {
-        expect(await arthController.connect(owner).getCRForRedeem())
-          .to
-          .eq(0);
-      }
-
-
-      await arthController.connect(owner).toggleUseGlobalCRForRedeem(false);
-      expect(await arthController.getCRForRedeem())
-        .to
-        .eq(0);
-
-      await arthController.setRedeemCollateralRatio(1e3);
-      expect(await arthController.getCRForRedeem())
-        .to
-        .eq(1e3);
-
-      await arthController.setRedeemCollateralRatio(1e6);
-      expect(await arthController.getCRForRedeem())
-        .to
-        .eq(1e6);
-    });
-
-    it(' - Should get CR for recollateralize correctly', async () => {
-      expect(await arthController.getCRForRecollateralize())
-        .to
-        .eq(0);
-
-      await arthController.setGlobalCollateralRatio(1e3);
-      expect(await arthController.connect(owner).getCRForRecollateralize())
-        .to
-        .eq(1e3);
-
-      await arthController.setGlobalCollateralRatio(1e6);
-      expect(await arthController.connect(owner).getCRForRecollateralize())
-        .to
-        .eq(1e6);
-
-      await arthController.connect(owner).toggleUseGlobalCRForRecollateralize(false);
-      expect(await arthController.getCRForRecollateralize())
-        .to
-        .eq(0);
-
-      await arthController.setRecollateralizeCollateralRatio(1e3);
-      expect(await arthController.getCRForRecollateralize())
-        .to
-        .eq(1e3);
-
-      await arthController.setRecollateralizeCollateralRatio(1e6);
-      expect(await arthController.getCRForRecollateralize())
-        .to
-        .eq(1e6);
-    });
-
-    it('- Should get paused or not correctly', async () => {
+    it(' - Should get paused or not correctly', async () => {
       expect(await arthController.isMintPaused())
         .to
-        .eq(false);
+        .eq(true);
+
       expect(await arthController.isRedeemPaused())
         .to
-        .eq(false);
+        .eq(true);
+
       expect(await arthController.isRecollaterlizePaused())
         .to
         .eq(false);
 
+      expect(await arthController.isBuybackPaused())
+        .to
+        .eq(true);
+
       await arthController.connect(owner).deactivateGenesis();
+
+      expect(await arthController.isMintPaused())
+        .to
+        .eq(false);
+
+      expect(await arthController.isRedeemPaused())
+        .to
+        .eq(false);
+
+      expect(await arthController.isRecollaterlizePaused())
+        .to
+        .eq(false);
 
       expect(await arthController.isBuybackPaused())
         .to
         .eq(false);
     });
 
-    it(' - Should get ARTH info correctly', async () => {
-      let totalSupply = await arthController.getARTHSupply()
-      let globalCollateralRatio = await arthController.getGlobalCollateralRatio()
-      let globalCollateralValue = await arthController.getGlobalCollateralValue()
-
+    it(' - Should get ARTH info correctly during genesis', async () => {
       await arthController.setFeesParameters(1e6, 1e6, 1e6)
 
-      let gmuPrice = await arthController.getETHGMUPrice()
+      const totalSupply = await arthController.getARTHSupply();
+      const globalCollateralRatio = await arthController.getGlobalCollateralRatio();
+      const globalCollateralValue = await arthController.getGlobalCollateralValue();
+      const gmuPrice = await arthController.getETHGMUPrice();
+      const arthInfo = await arthController.getARTHInfo();
 
-      let arthInfo = await arthController.getARTHInfo()
+      expect(arthInfo[0])
+        .to
+        .eq(1e6);
+
+      expect(arthInfo[1])
+        .to
+        .eq(7e3);
+
+      expect(arthInfo[2])
+        .to
+        .eq(totalSupply);
+
+      expect(arthInfo[3])
+        .to
+        .eq(globalCollateralRatio);
+
+      expect(arthInfo[4])
+        .to
+        .eq(globalCollateralValue);
+
+      expect(arthInfo[5])
+        .to
+        .eq(1e6);
+
+      expect(arthInfo[6])
+        .to
+        .eq(1e6);
+
+      expect(arthInfo[7])
+        .to
+        .eq(gmuPrice);
+
+      expect(arthInfo[8])
+        .to
+        .eq(1e6);
+    });
+
+    it(' - Should get ARTH info correctly after genesis', async () => {
+      await arthController.setFeesParameters(1e6, 1e6, 1e6);
+      await advanceTimeAndBlock(provider, 7 * 24 * 60 * 60);
+
+      const totalSupply = await arthController.getARTHSupply();
+      const globalCollateralRatio = await arthController.getGlobalCollateralRatio();
+      const globalCollateralValue = await arthController.getGlobalCollateralValue();
+      const gmuPrice = await arthController.getETHGMUPrice();
+      const arthInfo = await arthController.getARTHInfo();
+
       expect(arthInfo[0])
         .to
         .eq(1e6);
@@ -608,10 +533,6 @@ describe('ARTHController', () => {
         .eq(gmuPrice);
 
       expect(arthInfo[8])
-        .to
-        .eq(1e6);
-
-      expect(arthInfo[9])
         .to
         .eq(1e6);
     });
@@ -716,7 +637,9 @@ describe('ARTHController', () => {
     it(' - Should work correctly for ARTHX price', async () => {
       expect(await arthController.getARTHXPrice())
         .to
-        .eq(1e6);
+        .eq(7e3);
+
+      await advanceTimeAndBlock(provider, 7 * 24 * 60 * 60);
 
       await mockChainlinkAggregatorV3.setLatestPrice(2e7);
       expect(await arthController.getARTHXPrice())
@@ -1484,255 +1407,6 @@ describe('ARTHController', () => {
               )
           );
       });
-    });
-  });
-
-  describe('- Refresh collateral', async () => {
-    it(' - Should not work if CR paused', async () => {
-      await arthController.toggleCollateralRatio();
-
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(true);
-
-      await expect(arthController.refreshCollateralRatio())
-        .to
-        .revertedWith('ARTHController: Collateral Ratio has been paused');
-    });
-
-    it(' - Should not work if Refresh cooldown period not passed', async () => {
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-
-      await advanceTimeAndBlock(provider, 3598);
-
-      await expect(arthController.refreshCollateralRatio())
-        .to
-        .revertedWith('ARTHController: must wait till callable again');
-    });
-
-    it(' - Should work if Refresh cooldown period has passed', async () => {
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-
-      await advanceTimeAndBlock(provider, 3601);
-
-      await expect(arthController.refreshCollateralRatio())
-        .to
-        .not
-        .reverted;
-    });
-
-    it(' - Should reduce CR by a step if price > (1 + band)', async () => {
-      await arthController.setGlobalCollateralRatio(1e5)
-
-      // Reduce the WETH to increase ARTH price.
-      await arthETHUniswapOracle.setPrice(ETH.mul(50).div(100));
-
-      // Making sure that ARTH price > (target + band)
-      expect(await arthController.getARTHPrice())
-        .to
-        .gt(1e6 + 2500);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(97500);  // 1e5 - 2500(step).
-    });
-
-    it(' - Should reduce CR to 0 if already CR < step & price > (1 + band)', async () => {
-      await arthController.setGlobalCollateralRatio(2500)
-      await arthETHUniswapOracle.setPrice(ETH.mul(50).div(100));  // Reduce WETH price, to increase ARTH price.
-
-      // Making sure that ARTH price > (target + band).
-      expect(await arthController.getARTHPrice())
-        .to
-        .gt(1e6 + 2500);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(0);  // 2500 - 2500(step).
-
-      // Must wait till callable again.
-      await advanceTimeAndBlock(provider, 3601);
-
-      await arthController.setGlobalCollateralRatio(2499);
-
-      // Making sure that still, ARTH price > (target + band)
-      expect(await arthController.getARTHPrice())
-        .to
-        .gt(1e6 + 2500);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(0);  // 2500 - 2500(step).
-    });
-
-    it(' - Should not modify CR if price = 1', async () => {
-      await arthController.setGlobalCollateralRatio(1e5);
-
-      // Making sure that ARTH price = target.
-      expect(await arthController.getARTHPrice())
-        .to
-        .eq(1e6);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(1e5);
-    });
-
-    it(' - Should not modify CR if  (1 - band) > price > 1', async () => {
-      await arthController.setGlobalCollateralRatio(1e5);
-
-      await arthETHUniswapOracle.setPrice(
-        ETH.add(ETH.div(200))
-      );
-
-      // Making sure that ARTH price > (target - band).
-      expect(await arthController.getARTHPrice())
-        .to
-        .gte(1e6 - 5000);
-
-      // Making sure that ARTH price < (target)
-      expect(await arthController.getARTHPrice())
-        .to
-        .lt(1e6);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(1e5);
-    });
-
-    it(' - Should not modify CR if 1 < price < (1 + band)', async () => {
-      await arthController.setGlobalCollateralRatio(1e5);
-
-      await arthETHUniswapOracle.setPrice(
-        ETH.sub(ETH.div(225))
-      );
-
-      // Making sure that ARTH price < (target + band)
-      expect(await arthController.getARTHPrice())
-        .to
-        .lte(1e6 + 5000);
-
-      // Making sure that ARTH price > (target)
-      expect(await arthController.getARTHPrice())
-        .to
-        .gt(1e6);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(1e5);
-    });
-
-    it(' - Should cap CR to 1 if already CR + step >= 1 & price < (1 - band)', async () => {
-      await arthController.setGlobalCollateralRatio(1e6)
-      // Reduce WETH price, to increase ARTH price.
-      await arthETHUniswapOracle.setPrice(ETH.mul(150).div(100));
-
-      // Making sure that ARTH price < (target - band)
-      expect(await arthController.getARTHPrice())
-        .to
-        .lt(1e6 - 2500);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(1e6); // Checking capping of CR.
-
-      // Must wait till callable again.
-      await advanceTimeAndBlock(provider, 3601);
-
-      await arthController.setGlobalCollateralRatio(1e6 + 1);
-
-      // Making sure that still, ARTH price > (target - band)
-      expect(await arthController.getARTHPrice())
-        .to
-        .lt(1e6 - 2500);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(1e6); // Checking capping of CR.
-    });
-
-    it(' - Should increase CR by a step if price < (1 - band)', async () => {
-      await arthController.setGlobalCollateralRatio(1e5)
-
-      // Increase the WETH price to reduce ARTH price.
-      await arthETHUniswapOracle.setPrice(ETH.mul(150).div(100));
-
-      // Making sure that ARTH price > (target - band)
-      expect(await arthController.getARTHPrice())
-        .to
-        .lt(1e6 - 2500);
-
-      // Making sure that CR ain't paused.
-      expect(await arthController.isColalteralRatioPaused())
-        .to
-        .eq(false);
-
-      await arthController.refreshCollateralRatio();
-
-      expect(await arthController.getGlobalCollateralRatio())
-        .to
-        .eq(102500);  // 1e5 + 2500(step).
     });
   });
 });

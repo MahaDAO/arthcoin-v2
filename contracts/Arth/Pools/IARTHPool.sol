@@ -18,11 +18,11 @@ interface IARTHPool {
 
     function setOwner(address ownerAddress) external;
 
-    function mint1t1ARTH(uint256 collateralAmount, uint256 ARTHOutMin)
+    function mint(uint256 collateralAmount, uint256 arthOutMin, uint256 arthxOutMin)
         external
-        returns (uint256);
+        returns (uint256, uint256);
 
-    function redeem1t1ARTH(uint256 arthAmount, uint256 collateralOutMin)
+    function redeem(uint256 arthAmount, uint256 arthxAmount, uint256 collateralOutMin)
         external;
 
     function collectRedemption() external;
@@ -41,8 +41,6 @@ interface IARTHPool {
     function getAvailableExcessCollateralDV() external view returns (uint256);
 
     function getCollateralPrice() external view returns (uint256);
-
-    function getARTHMAHAPrice() external view returns (uint256);
 
     function collateralGMUOracleAddress() external view returns (address);
 }

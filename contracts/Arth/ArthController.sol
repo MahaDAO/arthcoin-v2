@@ -79,7 +79,7 @@ contract ArthController is AccessControl, IARTHController {
 
     uint8 public _ethGMUPricerDecimals;
     uint256 public constant _PRICE_PRECISION = 1e6;
-    uint256 public stabilityFee = 1; // In %.
+    uint256 public stabilityFee = 1e4; // 1% in e6 precision.
 
     event TargetPriceChanged(uint256 old, uint256 current);
     event RedemptionFeeChanged(uint256 old, uint256 current);
@@ -145,7 +145,7 @@ contract ArthController is AccessControl, IARTHController {
         grantRole(COLLATERAL_RATIO_PAUSER, creatorAddress);
         grantRole(COLLATERAL_RATIO_PAUSER, timelockAddress);
 
-        globalCollateralRatio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision).
+        globalCollateralRatio = 11e5;
 
         grantRole(_MINT_PAUSER, _timelockAddress);
         grantRole(_REDEEM_PAUSER, _timelockAddress);
@@ -239,7 +239,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        require(percent <= 100, 'ArthPool: percent > 100');
+        require(percent <= 1e6, 'ArthPool: percent > 1e6');
         stabilityFee = percent;
     }
 

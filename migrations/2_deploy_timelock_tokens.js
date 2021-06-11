@@ -63,10 +63,10 @@ module.exports = async function (deployer, network, accounts) {
   await arthControllerInstance.setARTHXAddress(arthxInstance.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nDeploying RedeemAlgorithmic Genesis...'));
-  await deployer.deploy(
-    Genesis,
-    arth.address,
-    arthxInstance.address,
-    arthControllerInstance.address
-  )
+  // await deployer.deploy(
+  //   Genesis,
+  //   arth.address,
+  //   arthxInstance.address,
+  //   arthControllerInstance.address
+  // )
 };

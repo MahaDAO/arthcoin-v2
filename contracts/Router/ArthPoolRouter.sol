@@ -29,19 +29,21 @@ contract ArthPoolRouter {
         router = _router;
     }
 
-    function mint1t1ARTHAndStake(
+    function mintAndStake(
         IARTHPool pool,
         IERC20 collateral,
         uint256 amount,
         uint256 arthOutMin,
+        uint256 arthxOutMin,
         uint256 secs,
         IBoostedStaking stakingPool
     ) external {
-        _mint1t1ARTHAndStake(
+        _mintAndStake(
             pool,
             collateral,
             amount,
             arthOutMin,
+            arthxOutMin,
             secs,
             stakingPool
         );
@@ -82,37 +84,42 @@ contract ArthPoolRouter {
         );
     }
 
-    function mint1t1ARTHAndStakeWithETH(
+    function mintAndStakeWithETH(
         IARTHPool pool,
         uint256 arthOutMin,
+        uint256 arthxOutMin,
         uint256 secs,
         IBoostedStaking stakingPool
     ) external payable {
         weth.deposit{value: msg.value}();
-        _mint1t1ARTHAndStake(
+        _mintAndStake(
             pool,
             weth,
             msg.value,
             arthOutMin,
+            arthxOutMin,
             secs,
             stakingPool
         );
     }
 
-    function _mint1t1ARTHAndStake(
+    function _mintAndStake(
         IARTHPool pool,
         IERC20 collateral,
         uint256 amount,
         uint256 arthOutMin,
+        uint256 arthxOutMin,
         uint256 secs,
         IBoostedStaking stakingPool
     ) internal {
-        collateral.transferFrom(msg.sender, address(this), amount);
+        if (address(collateral) != address(weth)) {
+            collateral.transferFrom(msg.sender, address(this), amount);
+        }
         collateral.approve(address(pool), amount);
 
-        // mint arth with 100% colalteral
-        uint256 arthOut = pool.mint1t1ARTH(amount, arthOutMin);
+        (uint256 arthOut, uint256 arthxOut) = pool.mint(amount, arthOutMin, arthxOutMin);
         arth.approve(address(stakingPool), uint256(arthOut));
+        arthx.transfer(msg.sender, arthxOut);
 
         if (address(stakingPool) != address(0)) {
             if (secs != 0)
@@ -130,7 +137,9 @@ contract ArthPoolRouter {
         uint256 secs,
         IBoostedStaking stakingPool
     ) internal {
-        collateral.transferFrom(msg.sender, address(this), amount);
+        if (address(collateral) != address(weth)) {
+            collateral.transferFrom(msg.sender, address(this), amount);
+        }
         collateral.approve(address(pool), amount);
 
         uint256 arthxOut = pool.recollateralizeARTH(amount, arthxOutMin);
@@ -146,6 +155,7 @@ contract ArthPoolRouter {
     function _swapForARTHX(
         IERC20 tokenToSell,
         uint256 amountToSell,
+        address to,
         uint256 minAmountToRecieve
     ) internal {
         address[] memory path = new address[](2);
@@ -153,12 +163,13 @@ contract ArthPoolRouter {
         path[1] = address(arthx);
 
         tokenToSell.transferFrom(msg.sender, address(this), amountToSell);
+        tokenToSell.approve(address(router), amountToSell);
 
         router.swapExactTokensForTokens(
             amountToSell,
             minAmountToRecieve,
             path,
-            address(this),
+            to,
             block.timestamp
         );
     }

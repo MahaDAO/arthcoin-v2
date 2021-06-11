@@ -12,7 +12,18 @@ contract Raffles is ERC721URIStorage, ILotteryRaffle, AccessControl {
     using SafeMath for uint256;
 
     uint256 public tokenCounter;
+    uint256 public prizeCounter;
+
+    struct NftPrizeDetails {
+        string description;
+        address nftAddress;
+        uint256 tokenId;
+        string image;
+        address winner;
+    }
+
     mapping(address => uint256) public usersLotteries;
+    mapping(string => NftPrizeDetails) public prizes;
 
     modifier onlyAdmin() {
         require(
@@ -27,15 +38,45 @@ contract Raffles is ERC721URIStorage, ILotteryRaffle, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
+    function setPrizes(
+        string memory _prize,
+        string memory _description,
+        address _nftAddress,
+        uint256 _nftId,
+        string memory image
+    ) public onlyAdmin {
+        prizeCounter = prizeCounter.add(1);
+        prizes[_prize] = NftPrizeDetails(_description, _nftAddress, _nftId, image, address(0));
+    }
+
+    function setWinner(string memory _prize, uint256 _tokenId) public onlyAdmin {
+        NftPrizeDetails memory _nftDetails = prizes[_prize];
+
+        address _tokenOwner = tokenIdOwner(_tokenId);
+        _nftDetails.winner = _tokenOwner;
+
+        prizes[_prize] = _nftDetails;
+    }
+
     function rewardLottery(address _to, uint256 _amount)
         public
         override
+        onlyAdmin
     {
-        for(uint256 i = 1; i <= _amount; i++) {
+        for (uint256 i = 1; i <= _amount; i++) {
             tokenCounter = tokenCounter.add(1);
             usersLotteries[_to] = usersLotteries[_to].add(1);
             _safeMint(_to, tokenCounter);
-            _setTokenURI(tokenCounter, "https://ipfs.io/ipfs/QmNdmSamXQ1LyyhEWAWk4ez1tRhBbyDKNbkdJUwV28nAZ9");
+        }
+    }
+
+    function checkResult(string memory _prize) public view returns (bool) {
+        NftPrizeDetails memory _nftDetails = prizes[_prize];
+
+        if (_nftDetails.winner == msg.sender) {
+            return true;
+        } else {
+            return false;
         }
     }
 
