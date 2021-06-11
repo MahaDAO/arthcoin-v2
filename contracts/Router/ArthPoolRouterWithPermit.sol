@@ -39,16 +39,18 @@ contract ArthPoolRouterWithPermit {
      * Public.
      */
 
-    function mint1t1ARTHAndStake(
+    function mintAndStake(
         uint256 collateralAmount,
         uint256 arthOutMin,
+        uint256 arthxOutMin,
         uint256 secs
     ) public {
         collateral.transferFrom(msg.sender, address(this), collateralAmount);
         collateral.approve(address(pool), collateralAmount);
 
-        uint256 arthOut = pool.mint1t1ARTH(collateralAmount, arthOutMin);
+        (uint256 arthOut, uint256 arthxOut) = pool.mint(collateralAmount, arthOutMin, arthxOutMin);
         arth.approve(address(arthStakingPool), uint256(arthOut));
+        arthx.transfer(msg.sender, arthxOut);
 
         if (secs != 0)
             arthStakingPool.stakeLockedFor(msg.sender, address(this), arthOut, secs);
@@ -58,6 +60,7 @@ contract ArthPoolRouterWithPermit {
     function mint1t1ARTHAndStakeWithPermit(
         uint256 collateralAmount,
         uint256 arthOutMin,
+        uint256 arthxOutMin,
         uint256 secs,
         uint8 v,
         bytes32 r,
@@ -73,7 +76,8 @@ contract ArthPoolRouterWithPermit {
             s
         );
 
-        uint256 arthOut = pool.mint1t1ARTH(collateralAmount, arthOutMin);
+        (uint256 arthOut, uint256 arthxOut) = pool.mint(collateralAmount, arthOutMin, arthxOutMin);
+        arthx.transfer(msg.sender, arthxOut);
 
         if (secs != 0)
             arthStakingPool.stakeLockedFor(msg.sender, msg.sender, arthOut, secs);
