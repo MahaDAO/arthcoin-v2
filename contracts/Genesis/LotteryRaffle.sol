@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {ILotteryRaffle} from './ILotteryRaffle.sol';
 
-contract Raffles is ERC721URIStorage, ILotteryRaffle, AccessControl {
+contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
     using SafeMath for uint256;
 
     uint256 public tokenCounter;
@@ -25,17 +25,22 @@ contract Raffles is ERC721URIStorage, ILotteryRaffle, AccessControl {
     mapping(address => uint256) public usersLotteries;
     mapping(string => NftPrizeDetails) public prizes;
 
-    modifier onlyAdmin() {
-        require(
-            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            'LotteryRaffle: You are not the admin'
-        );
+    address[] public owners;
+    mapping(address => bool) public ownerByAddress;
+
+    modifier onlyOwner() {
+        require(ownerByAddress[msg.sender] == true);
         _;
     }
 
-    constructor()  ERC721("Maha Raffle", "LOT") {
+    constructor(address[] memory genesis)  ERC721("Maha Raffle", "LOT") {
         tokenCounter = 0;
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        prizeCounter = 0;
+
+        ownerByAddress[msg.sender] = true;
+        for(uint256 i = 0; i < genesis.length; i++) {
+            ownerByAddress[genesis[i]] = true;
+        }
     }
 
     function setPrizes(
@@ -44,12 +49,12 @@ contract Raffles is ERC721URIStorage, ILotteryRaffle, AccessControl {
         address _nftAddress,
         uint256 _nftId,
         string memory image
-    ) public onlyAdmin {
+    ) public onlyOwner {
         prizeCounter = prizeCounter.add(1);
         prizes[_prize] = NftPrizeDetails(_description, _nftAddress, _nftId, image, address(0));
     }
 
-    function setWinner(string memory _prize, uint256 _tokenId) public onlyAdmin {
+    function setWinner(string memory _prize, uint256 _tokenId) public onlyOwner {
         NftPrizeDetails memory _nftDetails = prizes[_prize];
 
         address _tokenOwner = tokenIdOwner(_tokenId);
@@ -61,7 +66,7 @@ contract Raffles is ERC721URIStorage, ILotteryRaffle, AccessControl {
     function rewardLottery(address _to, uint256 _amount)
         public
         override
-        onlyAdmin
+        onlyOwner
     {
         for (uint256 i = 1; i <= _amount; i++) {
             tokenCounter = tokenCounter.add(1);

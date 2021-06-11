@@ -24,9 +24,9 @@ contract Genesis {
     IOracle public _collateralGMUOracle;
     ILotteryRaffle public lottery;
     uint256 private constant _PRICE_PRECISION = 1e6;
-    uint256 private immutable _missingDeciamls;
-    address private _ownerAddress;
-    address private _timelockAddress;
+    uint256 public immutable _missingDeciamls;
+    address public _ownerAddress;
+    address public _timelockAddress;
     address public collateralGMUOracleAddress;
 
     event RedeemAlgorithmicARTH(uint256 arthAmount, uint256 arthxOutMin);
@@ -46,14 +46,12 @@ contract Genesis {
         address __collateralAddress,
         address _creatorAddress,
         address __timelockAddress,
-        address _tokenAddress,
         address __arthPool
     ) {
         _arthController = IARTHController(__arthController);
         _ARTHX = IARTHX(__arthxContractAddress);
         _ARTH = IARTH(__arthContractAddress);
         _COLLATERAL = IERC20(__collateralAddress);
-        lottery = ILotteryRaffle(_tokenAddress);
         _arthpool = IARTHPool(__arthPool);
 
         _missingDeciamls = uint256(18).sub(_COLLATERAL.decimals());
@@ -72,6 +70,10 @@ contract Genesis {
     function lotteryOwner(uint256 _tokenID) public view returns (address) {
         address owner = lottery.tokenIdOwner(_tokenID);
         return owner;
+    }
+
+    function setLotteryContract(address _lotterContract) public onlyByOwnerOrGovernance{
+        lottery = ILotteryRaffle(_lotterContract);
     }
 
     function setCollatGMUOracle(address _collateralGMUOracleAddress)
