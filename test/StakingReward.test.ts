@@ -1792,7 +1792,7 @@ describe('Staking Reward', () => {
       const ownerARTHBalanceBeforeStaking = await arth.balanceOf(owner.address);
       const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
 
-      await boostedStaking.stakeLocked(ETH, 41472000);
+      await boostedStaking.stakeLocked(ETH, 604800);
       expect(await arth.balanceOf(owner.address))
         .to
         .eq(ownerARTHBalanceBeforeStaking.sub(ETH));
@@ -1807,7 +1807,7 @@ describe('Staking Reward', () => {
         .eq(ETH);
 
       const lockedStake = await boostedStaking._lockedStakesOf(owner.address);
-      await advanceTimeAndBlock(provider, 41472000);
+      await advanceTimeAndBlock(provider, 604800);
       await boostedStaking.connect(owner).withdrawLocked(lockedStake[0].kekId);
 
       expect(await boostedStaking.balanceOf(owner.address))
@@ -1829,7 +1829,7 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBeforeStaking = await arth.balanceOf(whale.address);
       const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
 
-      await boostedStaking.stakeLockedFor(whale.address, owner.address, ETH, 41472000);
+      await boostedStaking.stakeLockedFor(whale.address, owner.address, ETH, 604800);
       expect(await arth.balanceOf(owner.address))
         .to
         .eq(ownerARTHBalanceBeforeStaking.sub(ETH));
@@ -1850,7 +1850,7 @@ describe('Staking Reward', () => {
         .eq(ETH);
 
       const lockedStake = await boostedStaking._lockedStakesOf(whale.address);
-      await advanceTimeAndBlock(provider, 41472000);
+      await advanceTimeAndBlock(provider, 604800);
       await boostedStaking.connect(whale).withdrawLocked(lockedStake[0].kekId);
 
       expect(await boostedStaking.balanceOf(owner.address))
@@ -1875,8 +1875,8 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBeforeStaking = await arth.balanceOf(whale.address);
       const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
 
-      await boostedStaking.stakeLocked(ETH, 41472000);
-      await boostedStaking.connect(whale).stakeLocked(ETH, 41472000);
+      await boostedStaking.stakeLocked(ETH, 604800);
+      await boostedStaking.connect(whale).stakeLocked(ETH, 604800);
 
       expect(await arth.balanceOf(owner.address))
         .to
@@ -1899,7 +1899,7 @@ describe('Staking Reward', () => {
 
       const lockedStakeOwner = await boostedStaking._lockedStakesOf(owner.address);
       const lockedStakeWhale = await boostedStaking._lockedStakesOf(whale.address);
-      await advanceTimeAndBlock(provider, 41472000);
+      await advanceTimeAndBlock(provider, 604800);
       await boostedStaking.connect(owner).withdrawLocked(lockedStakeOwner[0].kekId);
       expect(await boostedStaking.balanceOf(owner.address))
         .to
@@ -1946,8 +1946,8 @@ describe('Staking Reward', () => {
       const whaleARTHBalanceBeforeStaking = await arth.balanceOf(whale.address);
       const contractARTHBalanceBeforeStaking = await arth.balanceOf(boostedStaking.address);
 
-      await boostedStaking.stakeLocked(ETH, 41472000);
-      await boostedStaking.connect(whale).stakeLocked(ETH.mul(2), 41472000);
+      await boostedStaking.stakeLocked(ETH, 604800);
+      await boostedStaking.connect(whale).stakeLocked(ETH.mul(2), 604800);
 
       expect(await arth.balanceOf(owner.address))
         .to
@@ -1970,7 +1970,7 @@ describe('Staking Reward', () => {
 
       const lockedStakeOwner = await boostedStaking._lockedStakesOf(owner.address);
       const lockedStakeWhale = await boostedStaking._lockedStakesOf(whale.address);
-      await advanceTimeAndBlock(provider, 41472000);
+      await advanceTimeAndBlock(provider, 604800);
       await boostedStaking.connect(owner).withdrawLocked(lockedStakeOwner[0].kekId);
       expect(await boostedStaking.balanceOf(owner.address))
         .to
@@ -2088,7 +2088,10 @@ describe('Staking Reward', () => {
       it('  - Should not work if not staked', async () => {
         const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
 
-        await boostedStaking.connect(owner).getReward();
+        await expect(boostedStaking.connect(owner).getReward())
+          .to
+          .revertedWith('BoostedStaking: rewards = 0');
+
         expect(await maha.balanceOf(owner.address))
           .to
           .eq(ownerMAHABalanceBefore);
@@ -2357,7 +2360,10 @@ describe('Staking Reward', () => {
       it('  - Should not work if not staked', async () => {
         const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
 
-        await boostedStaking.connect(owner).getReward();
+        await expect(boostedStaking.connect(owner).getReward())
+          .to
+          .revertedWith('BoostedStaking: rewards = 0');
+
         expect(await maha.balanceOf(owner.address))
           .to
           .eq(ownerMAHABalanceBefore);
@@ -2682,7 +2688,10 @@ describe('Staking Reward', () => {
       it('  - Should not work if not staked', async () => {
         const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
 
-        await boostedStaking.connect(owner).getReward();
+        await expect(boostedStaking.connect(owner).getReward())
+          .to
+          .revertedWith('BoostedStaking: rewards = 0');
+
         expect(await maha.balanceOf(owner.address))
           .to
           .eq(ownerMAHABalanceBefore);
@@ -2951,7 +2960,10 @@ describe('Staking Reward', () => {
       it('  - Should not work if not staked', async () => {
         const ownerMAHABalanceBefore = await maha.balanceOf(owner.address);
 
-        await boostedStaking.connect(owner).getReward();
+        await expect(boostedStaking.connect(owner).getReward())
+          .to
+          .revertedWith('BoostedStaking: rewards = 0');
+
         expect(await maha.balanceOf(owner.address))
           .to
           .eq(ownerMAHABalanceBefore);
