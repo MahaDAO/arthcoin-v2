@@ -39,6 +39,35 @@ library ArthPoolLibrary {
         return (collateralAmountD18.mul(collateralPrice)).div(1e6);
     }
 
+    function calcOverCollateralizedMintAmounts(
+        uint256 collateralRatio,
+        uint256 algorithmicRatio,
+        uint256 collateralPrice,
+        uint256 arthxPrice,
+        uint256 collateralAmountD18
+    )
+        public
+        pure
+        returns (
+            uint256,  // ARTH Mint amount.
+            uint256  // ARTHX Mint amount.
+        )
+    {
+        uint256 collateralValue = (
+            collateralAmountD18
+            .mul(collateralPrice)
+            .div(1e6)
+        );
+
+        uint256 arthValueToMint = collateralValue.mul(collateralRatio).div(1e6);
+        uint256 arthxValueToMint = collateralValue.mul(algorithmicRatio).div(1e6);
+
+        return (
+            arthValueToMint,
+            arthxValueToMint.mul(1e6).div(arthxPrice)
+        );
+    }
+
     function calcMintAlgorithmicARTH(
         uint256 arthxPriceGMU,
         uint256 collateralAmountD18
@@ -79,6 +108,53 @@ library ArthPoolLibrary {
         return (
             collateralGMUValueD18.add(calcARTHXGMUValueD18),
             calcARTHXNeeded
+        );
+    }
+
+    function calcOverCollateralizedRedeemAmounts(
+        uint256 collateralRatio,
+        // uint256 algorithmicRatio,
+        uint256 arthxPrice,
+        uint256 collateralPriceGMU,
+        uint256 arthAmount
+        //, uint256 arthxAmount
+    )
+        public
+        pure
+        returns (
+            uint256,  // Collateral amount to return.
+            uint256   // ARTHX amount needed.
+        )
+    {
+        // uint256 totalInputValue = arthAmount.add(
+        //     arthxAmount.mul(arthxPrice).div(1e6)
+        // );
+
+        // // Ensures inputs are in ratios mentioned.
+        // require(
+        //     totalInputValue.mul(collateralRatio).div(1e6) == arthAmount,
+        //     'ArthPoolLibrary: invalid ratios'
+        // );
+        // require(
+        //     totalInputValue.mul(algorithmicRatio).div(1e6) == arthxAmount.mul(arthxPrice).div(1e6),
+        //     'ArthPoolLibrary: invalid ratios'
+        // );
+
+        // return (
+        //     totalInputValue.mul(1e6).div(collateralPriceGMU)
+        // );
+
+        uint256 arthxValueNeeded = (
+            arthAmount
+                .mul(1e6)
+                .div(collateralRatio)
+                .sub(arthAmount)
+        );
+        uint256 arthxNeeded = arthxValueNeeded.mul(1e6).div(arthxPrice);
+
+        return (
+            arthAmount.add(arthxValueNeeded).mul(1e6).div(collateralPriceGMU),
+            arthxNeeded
         );
     }
 
