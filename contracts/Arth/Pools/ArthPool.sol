@@ -373,8 +373,8 @@ contract ArthPool is AccessControl, IARTHPool {
             collateralOutMin <= collateralNeeded,
             'ARTHPool: Collateral Slippage limit reached'
         );
-         require(
-            arthxAmount <= arthxInputNeededD18,
+        require(
+            arthxAmount >= arthxInputNeededD18,
             'ArthPool: Not enought arthx input provided'
         );
 
