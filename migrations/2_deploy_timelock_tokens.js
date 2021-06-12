@@ -9,7 +9,7 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
 const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const Genesis = artifacts.require("Genesis")
+//const Genesis = artifacts.require("Genesis")
 
 module.exports = async function (deployer, network, accounts) {
 
@@ -56,17 +56,9 @@ module.exports = async function (deployer, network, accounts) {
   await helpers.getMahaToken(network, deployer, artifacts);
   await helpers.getDAI(network, deployer, artifacts);
   await helpers.getWETH(network, deployer, artifacts);
-  await helpers.getUSDC(network, deployer, artifacts);
-  await helpers.getUSDT(network, deployer, artifacts);
+  const usdc = await helpers.getUSDC(network, deployer, artifacts);
+  const usdt = await helpers.getUSDT(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nSetting appropriate token addresses...'));
   await arthControllerInstance.setARTHXAddress(arthxInstance.address, { from: DEPLOYER_ADDRESS });
-
-  console.log(chalk.yellow('\nDeploying RedeemAlgorithmic Genesis...'));
-  await deployer.deploy(
-    Genesis,
-    arth.address,
-    arthxInstance.address,
-    arthControllerInstance.address
-  )
 };
