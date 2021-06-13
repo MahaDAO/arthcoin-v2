@@ -42,9 +42,9 @@ module.exports = async (callback) => {
     { abi: 'Oracle', contract: 'Oracle_USDC' },
     { abi: 'Oracle', contract: 'Oracle_USDT' },
     { abi: 'ArthPoolLibrary', contract: 'ArthPoolLibrary' },
-    { abi: 'MockChainlinkAggregatorV3', contract: 'MockChainlinkAggregatorV3' },
-    { abi: 'MockChainlinkAggregatorV3', contract: 'MockUSDCChainlinkAggregator' },
-    { abi: 'MockChainlinkAggregatorV3', contract: 'MockUSDTChainlinkAggregator' },
+    // { abi: 'MockChainlinkAggregatorV3', contract: 'MockChainlinkAggregatorV3' },
+    // { abi: 'MockChainlinkAggregatorV3', contract: 'MockUSDCChainlinkAggregator' },
+    // { abi: 'MockChainlinkAggregatorV3', contract: 'MockUSDTChainlinkAggregator' },
 
     { abi: 'PoolToken', contract: 'PoolToken' },
 
@@ -82,9 +82,9 @@ module.exports = async (callback) => {
     mahaToken = (await getMahaToken(network, null, artifacts)).address;
     contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
 
-    const multicall = knownContracts.Multicall[network] ?
-      knownContracts.Multicall[network] :
-      (await Multicall.deployed()).address;
+    // const multicall = knownContracts.Multicall[network] ?
+    //   knownContracts.Multicall[network] :
+    //   (await Multicall.deployed()).address;
 
     contracts.push({ contract: 'UniswapV2Factory', address: factory, abi: 'UniswapV2Factory' });
     contracts.push({ contract: 'UniswapV2Router02', address: router, abi: 'UniswapV2Router02' });
@@ -94,7 +94,7 @@ module.exports = async (callback) => {
     contracts.push({ contract: 'WETH', address: weth, abi: 'IWETH' });
     contracts.push({ contract: 'WBTC', address: dai, abi: 'IERC20' });
     //contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
-    contracts.push({ contract: 'Multicall', address: multicall, abi: 'Multicall' });
+    //contracts.push({ contract: 'Multicall', address: multicall, abi: 'Multicall' });
 
     const arthMahaLP = await factoryInstance.getPair(arth, mahaToken)
     const arthEthLP = await factoryInstance.getPair(arth, weth)

@@ -27,6 +27,18 @@ module.exports = {
       networkCheckTimeout: 100000,
       network_id: 4,
       skipDryRun: true
+    },
+    maticMumbai: {
+      network_id: 80001,
+      provider: function () {
+        return new HDWalletProvider(
+          process.env.METAMASK_WALLET_SECRET,
+          //'https://matic-testnet-archive-rpc.bwarelabs.com'
+          'https://matic-mumbai.chainstacklabs.com'
+          //'https://rpc-mumbai.maticvigil.com/v1/0509c2e8f6c4f7be3491c6e21dbf95df221dcae6'
+          //`https://rpc-mumbai.matic.today`
+        )
+      }
     }
   },
   compilers: {
