@@ -147,4 +147,10 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nSetting Lottery Contracts in genesis...'))
   await usdtGenesis.setLotteryContract(Lottery.address);
   await usdcGenesis.setLotteryContract(Lottery.address);
+
+  console.log(chalk.yellow('\nLinking Collateral oracles...'));
+  await Promise.all([
+    usdcGenesis.setCollatGMUOracle(usdc_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
+    usdtGenesis.setCollatGMUOracle(usdt_oracle_instance.address, { from: DEPLOYER_ADDRESS })
+  ]);
 };
