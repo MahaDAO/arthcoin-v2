@@ -16,6 +16,7 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
 
     struct NftPrizeDetails {
         string description;
+        string criteria;
         address nftAddress;
         uint256 tokenId;
         string image;
@@ -46,12 +47,13 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
     function setPrizes(
         string memory _prize,
         string memory _description,
+        string memory _criteria,
         address _nftAddress,
         uint256 _nftId,
         string memory image
     ) public onlyOwner {
         prizeCounter = prizeCounter.add(1);
-        prizes[_prize] = NftPrizeDetails(_description, _nftAddress, _nftId, image, address(0));
+        prizes[_prize] = NftPrizeDetails(_description, _criteria, _nftAddress, _nftId, image, address(0));
     }
 
     function setWinner(string memory _prize, uint256 _tokenId) public onlyOwner {
