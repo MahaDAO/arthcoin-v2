@@ -145,7 +145,7 @@ contract ArthController is AccessControl, IARTHController {
         grantRole(COLLATERAL_RATIO_PAUSER, creatorAddress);
         grantRole(COLLATERAL_RATIO_PAUSER, timelockAddress);
 
-        globalCollateralRatio = 1000000; // Arth system starts off fully collateralized (6 decimals of precision).
+        globalCollateralRatio = 11e5;
 
         grantRole(_MINT_PAUSER, _timelockAddress);
         grantRole(_REDEEM_PAUSER, _timelockAddress);

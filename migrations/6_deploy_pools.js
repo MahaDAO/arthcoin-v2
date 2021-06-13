@@ -10,6 +10,10 @@ const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+const GenesisUSDC = artifacts.require("GenesisUSDC")
+const GenesisUSDT = artifacts.require("GenesisUSDT")
+const LotteryRaffle = artifacts.require("LotteryRaffle")
+
 
 module.exports = async function (deployer, network, accounts) {
   const redemptionFee = 400; // 0.04%
@@ -33,7 +37,7 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nDeploying and linking Pools library...'));
   await deployer.deploy(ArthPoolLibrary);
-  await deployer.link(ArthPoolLibrary, [Pool_USDC, Pool_USDT]);
+  await deployer.link(ArthPoolLibrary, [Pool_USDC, Pool_USDT, GenesisUSDC, GenesisUSDT]);
 
   console.log(chalk.yellow('\nDeploying Pools...'));
   await Promise.all([
@@ -45,6 +49,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       timelockInstance.address,
       mahaTokenInstance.address,
+      //arthMahaOracle.address,
       arthControllerInstance.address,
       TEN_MILLION
     ),
@@ -56,6 +61,7 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       timelockInstance.address,
       mahaTokenInstance.address,
+      //arthMahaOracle.address,
       arthControllerInstance.address,
       TEN_MILLION
     )
@@ -90,5 +96,47 @@ module.exports = async function (deployer, network, accounts) {
   await Promise.all([
     await arthx.addToTaxWhiteList(pool_instance_USDC.address),
     await arthx.addToTaxWhiteList(pool_instance_USDT.address)
+  ]);
+
+  const usdc = await helpers.getUSDC(network, deployer, artifacts);
+  const usdt = await helpers.getUSDT(network, deployer, artifacts);
+
+  console.log(chalk.yellow('\nDeploying RedeemAlgorithmic Genesis...'));
+  const usdcGenesis = await deployer.deploy(
+    GenesisUSDC,
+    arth.address,
+    arthx.address,
+    arthControllerInstance.address,
+    usdc.address,
+    DEPLOYER_ADDRESS,
+    timelockInstance.address,
+    pool_instance_USDC.address
+  );
+
+  const usdtGenesis = await deployer.deploy(
+    GenesisUSDT,
+    arth.address,
+    arthx.address,
+    arthControllerInstance.address,
+    usdt.address,
+    DEPLOYER_ADDRESS,
+    timelockInstance.address,
+    pool_instance_USDT.address
+  );
+
+  console.log(chalk.yellow('\nDeploying Lottery Contracts...'));
+  const Lottery = await deployer.deploy(
+    LotteryRaffle,
+    [usdcGenesis.address, usdtGenesis.address]
+  )
+
+  console.log(chalk.yellow('\nSetting Lottery Contracts in genesis...'))
+  await usdtGenesis.setLotteryContract(Lottery.address);
+  await usdcGenesis.setLotteryContract(Lottery.address);
+
+  console.log(chalk.yellow('\nLinking Collateral oracles...'));
+  await Promise.all([
+    usdcGenesis.setCollatGMUOracle(usdc_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
+    usdtGenesis.setCollatGMUOracle(usdt_oracle_instance.address, { from: DEPLOYER_ADDRESS })
   ]);
 };

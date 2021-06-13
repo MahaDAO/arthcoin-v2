@@ -29,19 +29,21 @@ contract ArthPoolRouter {
         router = _router;
     }
 
-    function mint1t1ARTHAndStake(
+    function mintAndStake(
         IARTHPool pool,
         IERC20 collateral,
         uint256 amount,
         uint256 arthOutMin,
+        uint256 arthxOutMin,
         uint256 secs,
         IBoostedStaking stakingPool
     ) external {
-        _mint1t1ARTHAndStake(
+        _mintAndStake(
             pool,
             collateral,
             amount,
             arthOutMin,
+            arthxOutMin,
             secs,
             stakingPool
         );
@@ -82,28 +84,31 @@ contract ArthPoolRouter {
         );
     }
 
-    function mint1t1ARTHAndStakeWithETH(
+    function mintAndStakeWithETH(
         IARTHPool pool,
         uint256 arthOutMin,
+        uint256 arthxOutMin,
         uint256 secs,
         IBoostedStaking stakingPool
     ) external payable {
         weth.deposit{value: msg.value}();
-        _mint1t1ARTHAndStake(
+        _mintAndStake(
             pool,
             weth,
             msg.value,
             arthOutMin,
+            arthxOutMin,
             secs,
             stakingPool
         );
     }
 
-    function _mint1t1ARTHAndStake(
+    function _mintAndStake(
         IARTHPool pool,
         IERC20 collateral,
         uint256 amount,
         uint256 arthOutMin,
+        uint256 arthxOutMin,
         uint256 secs,
         IBoostedStaking stakingPool
     ) internal {
@@ -112,8 +117,9 @@ contract ArthPoolRouter {
         }
         collateral.approve(address(pool), amount);
 
-        uint256 arthOut = pool.mint1t1ARTH(amount, arthOutMin);
+        (uint256 arthOut, uint256 arthxOut) = pool.mint(amount, arthOutMin, arthxOutMin);
         arth.approve(address(stakingPool), uint256(arthOut));
+        arthx.transfer(msg.sender, arthxOut);
 
         if (address(stakingPool) != address(0)) {
             if (secs != 0)

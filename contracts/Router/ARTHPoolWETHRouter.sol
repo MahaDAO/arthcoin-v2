@@ -25,12 +25,13 @@ contract ARTHPoolWETHRouter {
         wethPool = wethPool_;
     }
 
-    function mint1t1ARTH(uint256 arthOutMin) external payable {
+    function mint(uint256 arthOutMin, uint256 arthxOutMin) external payable {
         weth.deposit{value: msg.value}();
         weth.approve(address(wethPool), msg.value);
 
-        uint256 arthOut = wethPool.mint1t1ARTH(msg.value, arthOutMin);
+        (uint256 arthOut, uint256 arthxOut) = wethPool.mint(msg.value, arthOutMin, arthxOutMin);
         arth.transfer(msg.sender, arthOut);
+        arthx.transfer(msg.sender, arthxOut);
     }
 
     function recollateralizeARTH(uint256 arthxOutMin) external payable {
