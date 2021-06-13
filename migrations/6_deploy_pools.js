@@ -147,5 +147,4 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nSetting Lottery Contracts in genesis...'))
   await usdtGenesis.setLotteryContract(Lottery.address);
   await usdcGenesis.setLotteryContract(Lottery.address);
-
 };
