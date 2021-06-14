@@ -3,26 +3,19 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import '../BoostedStaking.sol';
+import '../BasicStaking.sol';
 
-contract StakeARTHXWETH is BoostedStaking {
+contract StakeARTHXWETH is BasicStaking {
     constructor(
-        address _owner,
         address _rewardsDistribution,
         address _rewardsToken,
-        address _stakingToken,
-        address _arthAddress,
-        address _timelockaddress,
-        uint256 _poolWeight
+        address _stakingToken
     )
-        BoostedStaking(
-            _owner,
+        BasicStaking(
             _rewardsDistribution,
             _rewardsToken,
             _stakingToken,
-            _arthAddress,
-            _timelockaddress,
-            _poolWeight
+            7 days
         )
     {}
 }

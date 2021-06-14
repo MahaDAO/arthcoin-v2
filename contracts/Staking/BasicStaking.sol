@@ -13,7 +13,7 @@ import { BasicRewardsDistributionRecipient } from  "./BasicRewardsDistributionRe
 
 // forked from https://github.com/SetProtocol/index-coop-contracts/blob/master/contracts/staking/StakingRewardsV2.sol
 // NOTE: V2 allows setting of rewardsDuration in constructor
-contract StakingRewardsV2 is IBasicStaking, BasicRewardsDistributionRecipient, ReentrancyGuard {
+contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using SafeERC20 for IPoolToken;
