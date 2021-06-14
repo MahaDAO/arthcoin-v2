@@ -118,7 +118,7 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
     }
 
     function getRewardAndDistribute()
-        external
+        public
         override
         nonReentrant
         updateReward(msg.sender)
@@ -134,7 +134,7 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
 
     function exit() external {
         withdraw(_balances[msg.sender]);
-        getReward();
+        getRewardAndDistribute();
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
