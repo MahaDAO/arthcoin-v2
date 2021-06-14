@@ -15,7 +15,7 @@ contract StakeARTHWETH is BasicStaking {
             _rewardsDistribution,
             _rewardsToken,
             _stakingToken,
-            7 days
+            3 * 30 days
         )
     {}
 }

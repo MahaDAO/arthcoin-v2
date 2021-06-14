@@ -49,6 +49,15 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
         rewardsDuration = _rewardsDuration;
     }
 
+    function initializeDefault() external onlyRewardsDistribution {
+        lastUpdateTime = block.timestamp;
+        periodFinish = block.timestamp.add(rewardsDuration);
+
+        rewardRate = rewardsToken.balanceOf(address(this)).div(rewardsDuration);
+
+        emit DefaultInitialization();
+    }
+
     /* ========== VIEWS ========== */
 
     function totalSupply() external view override returns (uint256) {
@@ -173,7 +182,7 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
     }
 
     /* ========== EVENTS ========== */
-
+    event DefaultInitialization();
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
