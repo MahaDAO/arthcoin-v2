@@ -9,14 +9,16 @@ module.exports = {
     ropsten: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
     rinkeby: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
     kovan: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
-    goerli: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f'
+    goerli: '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f',
+    maticMumbai: '0xc35dadb65012ec5796536bd9864ed8773abc74c4'
   },
   UniswapV2Router02: {
     mainnet: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     ropsten: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     rinkeby: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
     kovan: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
-    goerli: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D'
+    goerli: '0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D',
+    maticMumbai: '0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506'
   },
   Multicall: {
     mainnet: '0xeefba1e63905ef1d7acba5a8513c70307c1ce441',
@@ -26,11 +28,13 @@ module.exports = {
     goerli: '0x77dca2c955b15e9de4dbbcf1246b4b85b651e50e'
   },
   ETHUSDChainlinkOracleDefault: {
-    kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331'
+    kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331',
+    maticMumbai: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada'
   },
   WETH: {
     mainnet: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     rinkeby: '0xc778417e063141139fce010982780140aa0cd5ab',
+    maticMumbai: '0x5b67676a984807a212b1c59ebfc9b3568a474f0a'
   },
   DAI: {
     mainnet: '0x6b175474e89094c44da98b954eedeac495271d0f',
@@ -38,4 +42,7 @@ module.exports = {
   MahaToken: {
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
   },
+  USDTUSDChainlinkOracleDefault: {
+    maticMumbai: '0x92C09849638959196E976289418e5973CC96d645'
+  }
 }
