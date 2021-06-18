@@ -91,10 +91,7 @@ contract Genesis {
         external
         returns (uint256)
     {
-        require(
-            !_arthController.isRecollaterlizePaused(),
-            'Recollateralize is paused'
-        );
+        require(_arthController.getIsGenesisActive(), 'Genesis: Genessis is inactive');
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 

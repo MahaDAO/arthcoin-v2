@@ -11,7 +11,8 @@ const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const UniswapPairOracleMAHAARTH = artifacts.require("UniswapPairOracle_MAHA_ARTH");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
 const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
-
+const GenesisUSDC = artifacts.require("GenesisUSDC");
+const GenesisUSDT = artifacts.require("GenesisUSDT");
 
 module.exports = async function (deployer, network, accounts) {
   const BIG6 = new BigNumber("1e6");
@@ -19,9 +20,10 @@ module.exports = async function (deployer, network, accounts) {
 
   const DEPLOYER_ADDRESS = accounts[0];
 
-  let arth = await ARTHStablecoin.deployed();
-  let arthx = await ARTHShares.deployed();
-
+  const arth = await ARTHStablecoin.deployed();
+  const arthx = await ARTHShares.deployed();
+  const genesis_usdt = await GenesisUSDT.deployed();
+  const genesis_usdc = await GenesisUSDC.deployed();
   const pool_instance_USDC = await Pool_USDC.deployed();
   const pool_instance_USDT = await Pool_USDT.deployed();
   const arthControllerInstance = await ARTHController.deployed();
@@ -34,8 +36,12 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nLinking collateral pools to arth contract...'));
   await arth.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting ARTH address within ARTHX...'));
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });

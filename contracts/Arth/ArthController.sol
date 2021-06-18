@@ -74,8 +74,8 @@ contract ArthController is AccessControl, IARTHController {
 
     bool public mintPaused = false;
     bool public redeemPaused = false;
-    bool public buyBackPaused = false;
-    bool public recollateralizePaused = false;
+    bool public buyBackPaused = true;
+    bool public recollateralizePaused = true;
 
     uint8 public _ethGMUPricerDecimals;
     uint256 public constant _PRICE_PRECISION = 1e6;
@@ -534,7 +534,6 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function isBuybackPaused() external view override returns (bool) {
-        if (getIsGenesisActive()) return true;
         return buyBackPaused;
     }
 

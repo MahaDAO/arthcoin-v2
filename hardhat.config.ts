@@ -24,6 +24,10 @@ export default {
       url: process.env.NETWORK_ENDPOINT,
       accounts: [process.env.METAMASK_WALLET_SECRET],
     },
+    maticMumbai: {
+      url: 'https://matic-mumbai.chainstacklabs.com',
+      accounts: [process.env.METAMASK_WALLET_SECRET],
+    },
     development: {
       url: 'http://localhost:8545',
       accounts: [process.env.METAMASK_WALLET_SECRET],
