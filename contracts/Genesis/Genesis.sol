@@ -153,17 +153,17 @@ contract Genesis {
         require(_ARTH.balanceOf(msg.sender) >= arthAmount, 'Genesis 37: Insufficient arth amount');
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
-        uint256 arthxGMUValueD18 = arthAmount;
+        // uint256 arthxGMUValueD18 = arthAmount;
 
-        arthxGMUValueD18 = (
-            arthxGMUValueD18.mul(
-                uint256(1e6).sub(_arthController.getRedemptionFee())
-            )
-        )
-            .div(_PRICE_PRECISION); // applied fees
+        // arthxGMUValueD18 = (
+        //     arthxGMUValueD18.mul(
+        //         uint256(1e6).sub(_arthController.getRedemptionFee())
+        //     )
+        // )
+        //     .div(_PRICE_PRECISION); // applied fees
 
         uint256 arthxAmount =
-            arthxGMUValueD18.mul(_PRICE_PRECISION).div(arthxPrice);
+            arthAmount.mul(_PRICE_PRECISION).div(arthxPrice);
 
         require(arthxOutMin <= arthxAmount, 'Slippage limit reached');
 
