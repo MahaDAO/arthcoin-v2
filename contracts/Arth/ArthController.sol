@@ -79,7 +79,7 @@ contract ArthController is AccessControl, IARTHController {
 
     uint8 public _ethGMUPricerDecimals;
     uint256 public constant _PRICE_PRECISION = 1e6;
-    uint256 public stabilityFee = 1e4; // 1% in e6 precision.
+    uint256 public stabilityFee = 0; // 1e4; // 1% in e6 precision.
 
     event TargetPriceChanged(uint256 old, uint256 current);
     event RedemptionFeeChanged(uint256 old, uint256 current);

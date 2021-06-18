@@ -46,52 +46,32 @@ module.exports = async function (deployer, network, accounts) {
     deployer.deploy(
       StakeARTHWETH,
       DEPLOYER_ADDRESS,
-      DEPLOYER_ADDRESS,
       poolToken.address,
-      pairARTHWETH,
-      arthController.address,
-      timelockInstance.address,
-      1e6
+      pairARTHWETH
     ),
     deployer.deploy(
       StakeARTHMAHA,
       DEPLOYER_ADDRESS,
-      DEPLOYER_ADDRESS,
       poolToken.address,
-      pairARTHMAHA,
-      arthController.address,
-      timelockInstance.address,
-      1e6
+      pairARTHMAHA
     ),
     deployer.deploy(
       StakeARTHXWETH,
       DEPLOYER_ADDRESS,
-      DEPLOYER_ADDRESS,
       poolToken.address,
-      pairARTHXWETH,
-      arthController.address,
-      timelockInstance.address,
-      1e6
+      pairARTHXWETH
     ),
     deployer.deploy(
       StakeARTH,
       DEPLOYER_ADDRESS,
-      DEPLOYER_ADDRESS,
       poolToken.address,
-      arth.address,
-      arthController.address,
-      timelockInstance.address,
-      1e6
+      arth.address
     ),
     deployer.deploy(
       StakeARTHX,
       DEPLOYER_ADDRESS,
-      DEPLOYER_ADDRESS,
       poolToken.address,
-      arthx.address,
-      arthController.address,
-      timelockInstance.address,
-      1e6
+      arthx.address
     )
   ]);
 

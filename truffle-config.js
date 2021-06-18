@@ -39,7 +39,6 @@ module.exports = {
           //`https://rpc-mumbai.matic.today`
         )
       }
-    }
   },
   compilers: {
     solc: {
