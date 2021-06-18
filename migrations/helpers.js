@@ -19,35 +19,35 @@ const getDAI = async (network, deployer, artifacts) => {
   await deployer.deploy(MockDai);
 
   return MockDai.deployed();
-};
+}
 
 const getWBTC = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
-  const MockDai = artifacts.require('MockDAI');
+  const MockWBTC = artifacts.require('MockWBTC');
 
-  const addr = knownContracts.DAI && knownContracts.DAI[network];
+  const addr = knownContracts.WBTC && knownContracts.WBTC[network];
   if (addr) return IERC20.at(addr);
-  if (MockDai.isDeployed()) return MockDai.deployed();
+  if (MockWBTC.isDeployed()) return MockWBTC.deployed();
 
-  console.log(chalk.yellow(`\nDeploying mock dai on ${network} network...`));
-  await deployer.deploy(MockDai);
+  console.log(chalk.yellow(`\nDeploying mock wbtc on ${network} network...`));
+  await deployer.deploy(MockWBTC);
 
-  return MockDai.deployed();
-};
+  return MockWBTC.deployed();
+}
 
 const getWMATIC = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
-  const MockDai = artifacts.require('MockDAI');
+  const MockWMATIC = artifacts.require('MockWMATIC');
 
-  const addr = knownContracts.DAI && knownContracts.DAI[network];
+  const addr = knownContracts.WMATIC && knownContracts.WMATIC[network];
   if (addr) return IERC20.at(addr);
-  if (MockDai.isDeployed()) return MockDai.deployed();
+  if (MockWMATIC.isDeployed()) return MockWMATIC.deployed();
 
-  console.log(chalk.yellow(`\nDeploying mock dai on ${network} network...`));
-  await deployer.deploy(MockDai);
+  console.log(chalk.yellow(`\nDeploying mock wmatic on ${network} network...`));
+  await deployer.deploy(MockWMATIC);
 
-  return MockDai.deployed();
-};
+  return MockWMATIC.deployed();
+}
 
 const getWETH = async (network, deployer, artifacts) => {
   const IWETH = artifacts.require('IWETH');
@@ -61,7 +61,7 @@ const getWETH = async (network, deployer, artifacts) => {
   await deployer.deploy(MockWETH);
 
   return MockWETH.deployed();
-};
+}
 
 const getUSDC = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
@@ -75,7 +75,7 @@ const getUSDC = async (network, deployer, artifacts) => {
   await deployer.deploy(MockUSDC);
 
   return MockUSDC.deployed();
-};
+}
 
 const getUSDT = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
@@ -89,7 +89,7 @@ const getUSDT = async (network, deployer, artifacts) => {
   await deployer.deploy(MockUSDT);
 
   return MockUSDT.deployed();
-};
+}
 
 const getMahaToken = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
@@ -114,7 +114,7 @@ const getMahaToken = async (network, deployer, artifacts) => {
 
     return MahaToken.deployed();
   }
-};
+}
 
 const getUniswapFactory = async (network, deployer, artifacts) => {
   const UniswapV2Factory = artifacts.require('UniswapV2Factory');
@@ -127,7 +127,7 @@ const getUniswapFactory = async (network, deployer, artifacts) => {
   await deployer.deploy(UniswapV2Factory, '0x0000000000000000000000000000000000000000');
 
   return UniswapV2Factory.deployed();
-};
+}
 
 const getUniswapRouter = async (network, deployer, artifacts) => {
   const UniswapV2Router02 = artifacts.require('UniswapV2Router02');
@@ -142,7 +142,7 @@ const getUniswapRouter = async (network, deployer, artifacts) => {
   await deployer.deploy(UniswapV2Router02, factory.address, weth.address);
 
   return UniswapV2Router02.deployed();
-};
+}
 
 const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   const Oracle = artifacts.require('Oracle_USDC');
@@ -154,8 +154,8 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
 
   const base = await getUSDC(network, deployer, artifacts);
   const quote = await getWETH(network, deployer, artifacts);
-  const ethGMUCustomChainlinkOracle = await getChainlinkETHUSDOracle(network, deployer, artifacts);
-  const chainlinkUSDCGMUOracle = await getChainlinkUSDCGMUOracle(network, deployer, artifacts);
+  const ethGMUOracle = await getETHGMUOracle(network, deployer, artifacts);
+  const usdcGMUOracle = await getUSDCGMUOracle(network, deployer, artifacts);
 
   let usdcWETHAddr = knownContracts.UniswapUSDCWETHOracle && knownContracts.UniswapUSDCWETHOracle[network];
   if (!usdcWETHAddr) {
@@ -170,8 +170,9 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
       quote.address,
       ownerAddress,
       timelock.address
-    )
-    usdcWETHAddr = (await USDC_WETH.deployed()).address
+    );
+
+    usdcWETHAddr = (await USDC_WETH.deployed()).address;
   }
 
   await deployer.deploy(
@@ -179,8 +180,8 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
     base.address,
     quote.address,
     usdcWETHAddr,
-    chainlinkUSDCGMUOracle.address,
-    ethGMUCustomChainlinkOracle.address
+    usdcGMUOracle.address,
+    ethGMUOracle.address
   );
 
   return Oracle.deployed();
@@ -196,8 +197,8 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
 
   const base = await getUSDT(network, deployer, artifacts);
   const quote = await getWETH(network, deployer, artifacts);
-  const ethGMUCustomChainlinkOracle = await getChainlinkETHUSDOracle(network, deployer, artifacts);
-  const chainlinkUSDTGMUOracle = await getChainlinkUSDTGMUOracle(network, deployer, artifacts);
+  const ethGMUOracle = await getETHGMUOracle(network, deployer, artifacts);
+  const usdtGMUOracle = await getUSDTGMUOracle(network, deployer, artifacts);
 
   let usdtWETHAddr = knownContracts.UniswapUSDTWETHOracle && knownContracts.UniswapUSDTWETHOracle[network];
   if (!usdtWETHAddr) {
@@ -212,8 +213,9 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
       quote.address,
       ownerAddress,
       timelock.address
-    )
-    usdtWETHAddr = (await USDT_WETH.deployed()).address
+    );
+
+    usdtWETHAddr = (await USDT_WETH.deployed()).address;
   }
 
   await deployer.deploy(
@@ -221,8 +223,8 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
     base.address,
     quote.address,
     usdtWETHAddr,
-    chainlinkUSDTGMUOracle.address,
-    ethGMUCustomChainlinkOracle.address
+    usdtGMUOracle.address,
+    ethGMUOracle.address
   );
 
   return Oracle.deployed();
@@ -246,75 +248,94 @@ const getGMUOracle = async (network, deployer, artifacts) => {
 
   const addr = knownContracts.GMUOracle && knownContracts.GMUOracle[network];
   if (addr) return GMUOracle.at(addr);
-
   if (GMUOracle.isDeployed()) return GMUOracle.deployed();
 
   console.log(chalk.yellow(`\nDeploying GMU/USD oracle...`));
   await deployer.deploy(GMUOracle, 'GMU/USD', ONEE6);
 
   return GMUOracle.deployed();
-};
+}
 
-const getChainlinkUSDCGMUOracle = async (network, deployer, artifacts) => {
-  const MockChainlinkOracle = artifacts.require('MockUSDCChainlinkAggregator')
-  const ChainlinkETHUSDPriceConsumer = artifacts.require('MockChainlinkUSDCGMUOracle')
+const getUSDCGMUOracle = async (network, deployer, artifacts) => {
+  const MockChainlinkOracle = artifacts.require('MockUSDCChainlinkAggregator');
+  const ChainlinkETHUSDPriceConsumer = artifacts.require('USDT_GMU_Chainlink_Oracle');
 
-  const addr = knownContracts['USDCUSDChainlinkOracle'] && knownContracts.USDCUSDChainlinkOracle[network]
-  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr)
-  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed()
+  const addr = knownContracts['USDCGMUOracle'] && knownContracts.USDCGMUOracle[network];
+  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr);
+  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed();
 
-  let defaultChainlinkConsumerAddr = knownContracts.USDCUSDChainlinkOracleDefault && knownContracts.USDCUSDChainlinkOracleDefault[network]
+  let defaultChainlinkConsumerAddr = (
+    knownContracts.USDCUSDChainlinkOracleDefault &&
+    knownContracts.USDCUSDChainlinkOracleDefault[network]
+  );
   if (!defaultChainlinkConsumerAddr) {
-    await deployer.deploy(MockChainlinkOracle)
+    await deployer.deploy(MockChainlinkOracle);
     const mockUSDCChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8);
-    defaultChainlinkConsumerAddr = (await MockChainlinkOracle.deployed()).address
+    defaultChainlinkConsumerAddr = mockUSDCChainlinkAggregator.address;
   }
 
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`))
-  await deployer.deploy(ChainlinkETHUSDPriceConsumer, defaultChainlinkConsumerAddr, (await getGMUOracle(network, deployer, artifacts)).address)
-  return ChainlinkETHUSDPriceConsumer.deployed()
+  await deployer.deploy(
+    ChainlinkETHUSDPriceConsumer,
+    defaultChainlinkConsumerAddr,
+    (await getGMUOracle(network, deployer, artifacts)).address
+  );
+
+  return ChainlinkETHUSDPriceConsumer.deployed();
 }
 
-const getChainlinkUSDTGMUOracle = async (network, deployer, artifacts) => {
-  const MockChainlinkOracle = artifacts.require('MockUSDTChainlinkAggregator')
-  const ChainlinkETHUSDPriceConsumer = artifacts.require('MockChainlinkUSDTGMUOracle')
+const getUSDTGMUOracle = async (network, deployer, artifacts) => {
+  const MockChainlinkOracle = artifacts.require('MockUSDTChainlinkAggregator');
+  const ChainlinkETHUSDPriceConsumer = artifacts.require('USDT_GMU_Chainlink_Oracle');
 
-  const addr = knownContracts['USDTUSDChainlinkOracle'] && knownContracts.USDTUSDChainlinkOracle[network]
-  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr)
-  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed()
+  const addr = knownContracts['USDTGMUOracle'] && knownContracts.USDTGMUOracle[network];
+  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr);
+  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed();
 
-  let defaultChainlinkConsumerAddr = knownContracts.USDTUSDChainlinkOracleDefault && knownContracts.USDTUSDChainlinkOracleDefault[network]
+  let defaultChainlinkConsumerAddr = (
+    knownContracts.USDTUSDChainlinkOracleDefault &&
+    knownContracts.USDTUSDChainlinkOracleDefault[network]
+  );
   if (!defaultChainlinkConsumerAddr) {
-    await deployer.deploy(MockChainlinkOracle)
+    await deployer.deploy(MockChainlinkOracle);
     const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
-    defaultChainlinkConsumerAddr = (await MockChainlinkOracle.deployed()).address
+    defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
   }
 
-  console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`))
-  await deployer.deploy(ChainlinkETHUSDPriceConsumer, defaultChainlinkConsumerAddr, (await getGMUOracle(network, deployer, artifacts)).address)
-  return ChainlinkETHUSDPriceConsumer.deployed()
+  console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`));
+  await deployer.deploy(
+    ChainlinkETHUSDPriceConsumer,
+    defaultChainlinkConsumerAddr,
+    (await getGMUOracle(network, deployer, artifacts)).address
+  );
+
+  return ChainlinkETHUSDPriceConsumer.deployed();
 }
 
-const getChainlinkETHUSDOracle = async (network, deployer, artifacts) => {
-  const MockChainlinkOracle = artifacts.require('MockChainlinkAggregatorV3')
-  const ChainlinkETHUSDPriceConsumer = artifacts.require('ChainlinkETHUSDPriceConsumer')
+const getETHGMUOracle = async (network, deployer, artifacts) => {
+  const MockChainlinkOracle = artifacts.require('MockChainlinkAggregatorV3');
+  const ChainlinkETHUSDPriceConsumer = artifacts.require('ChainlinkETHUSDPriceConsumer');
 
-  const addr = knownContracts['ETHUSDChainlinkOracle'] && knownContracts.ETHUSDChainlinkOracle[network]
-  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr)
+  const addr = knownContracts['ETHGMUOracle'] && knownContracts.ETHGMUOracle[network];
+  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr);
+  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed();
 
-  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed()
-
-  let defaultChainlinkConsumerAddr = knownContracts.ETHUSDChainlinkOracleDefault[network]
-  if (!defaultChainlinkConsumerAddr) {
-    await deployer.deploy(MockChainlinkOracle)
-    defaultChainlinkConsumerAddr = (await MockChainlinkOracle.deployed()).address
+  let defaultChainlinkConsumerAddr = knownContracts.ETHUSDChainlinkOracleDefault[network];
+  if (!defaultChainlinkConsumerAddr && !isMainnet()) {
+    await deployer.deploy(MockChainlinkOracle);
+    defaultChainlinkConsumerAddr = (await MockChainlinkOracle.deployed()).address;
   }
 
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`))
-  await deployer.deploy(ChainlinkETHUSDPriceConsumer, defaultChainlinkConsumerAddr, (await getGMUOracle(network, deployer, artifacts)).address)
-  return ChainlinkETHUSDPriceConsumer.deployed()
+  await deployer.deploy(
+    ChainlinkETHUSDPriceConsumer,
+    defaultChainlinkConsumerAddr,
+    (await getGMUOracle(network, deployer, artifacts)).address
+  );
+
+  return ChainlinkETHUSDPriceConsumer.deployed();
 }
 
 module.exports = {
@@ -322,6 +343,8 @@ module.exports = {
   getPairAddress,
   getDAI,
   getWETH,
+  getWBTC,
+  getWMATIC,
   getUSDCOracle,
   getUSDTOracle,
   getUSDC,
@@ -331,7 +354,7 @@ module.exports = {
   getUniswapFactory,
   getUniswapRouter,
   getGMUOracle,
-  getChainlinkETHUSDOracle,
-  getChainlinkUSDTGMUOracle,
-  getChainlinkUSDCGMUOracle
+  getETHGMUOracle,
+  getUSDTGMUOracle,
+  getUSDCGMUOracle
 }

@@ -65,7 +65,7 @@ module.exports = async function (deployer, network, accounts) {
   await helpers.getGMUOracle(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nSetting chainlink oracle...'));
-  const chainlinkETHUSDOracle = await helpers.getChainlinkETHUSDOracle(network, deployer, artifacts);
+  const chainlinkETHUSDOracle = await helpers.getETHGMUOracle(network, deployer, artifacts);
   await arthController.setETHGMUOracle(chainlinkETHUSDOracle.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting ARTHWETH oracle...'));
