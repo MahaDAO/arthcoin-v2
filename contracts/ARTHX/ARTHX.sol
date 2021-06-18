@@ -34,7 +34,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     // solhint-disable-next-line
     uint256 public constant genesisSupply = 11e4 ether; // 110k is printed upon genesis.
 
-    uint256 public taxPercent = 10e4;  // 10% 6 decimal precision.
+    uint256 public taxPercent = 0; // 10e4;  // 10% 6 decimal precision.
 
     address public ownerAddress;
     address public oracleAddress;

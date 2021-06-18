@@ -22,7 +22,6 @@
     "migrate:kovan": "rimraf build/ && truffle migrate --network kovan --reset",
     "migrate:rinkeby": "truffle migrate --network rinkeby",
     "migrate:maticmumbai": "truffle migrate --network maticMumbai",
-    "migrate:matic": "truffle migrate --network maticMumbai",
     "verify-deployment": "truffle run verify Faucet PoolToken Migrations ArthController ARTHShares ARTHStablecoin StakeARTHMAHA StakeARTH StakeARTHWETH StakeARTHX StakeARTHXWETH UniswapPairOracle_ARTH_WETH UniswapPairOracle_ARTHX_WETH GMUOracle ARTHMAHAOracle Pool_USDC Pool_USDT ArthPoolRouter UniswapV2Factory UniswapV2Router02 DAI USDT USDC WETH WBTC MahaToken Multicall Oracle_USDC Oracle_USDT MockChainlinkUSDCGMUOracle MockChainlinkUSDTGMUOracle MockUSDCChainlinkAggregator MockUSDTChainlinkAggregator MockMaha MockArth MockArthx --network",
     "generate-deployment": "rimraf output/ && truffle exec migrations/generate_deployment.js --network"
   },

@@ -1,18 +1,19 @@
 import { network, ethers } from 'hardhat';
-const prizes = require('./prizes')
-require('dotenv').config();
 
-//console.log(prizes);
+require('dotenv').config();
+const prizes = require('./prizes');
 
 async function main() {
-  // Fetch already deployed contracts.
   const deployements = require(`../output/${network.name}.json`);
   const instance = await ethers.getContractAt(
     'LotteryRaffle',
     deployements.LotteryRaffle.address
   );
 
-  prizes.forEach(async (data:any) => {
+  for (let i = 0; i < prizes.length; i++) {
+    console.log('Setting prize ', i);
+    const data = prizes[i];
+
     await instance.setPrizes(
       data.name,
       data.description,
@@ -21,7 +22,7 @@ async function main() {
       data.tokenId,
       data.image
     );
-  })
+  }
 }
 
 main()
