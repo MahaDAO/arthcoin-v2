@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 
 import './ArthPool.sol';
 
-contract Pool_6DEC is ArthPool {
+contract Pool_WMATIC is ArthPool {
     /**
      * State variable.
      */
-    address public _6DEC_address;
+    address public WMATIC_address;
 
     /**
      * Constructor.
@@ -35,6 +35,6 @@ contract Pool_6DEC is ArthPool {
         )
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _6DEC_address = _collateralAddress;
+        WMATIC_address = _collateralAddress;
     }
 }
