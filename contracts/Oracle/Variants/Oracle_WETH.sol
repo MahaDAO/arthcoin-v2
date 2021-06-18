@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import '../Oracle.sol';
 
-contract Oracle_WMATIC is Oracle {
+contract Oracle_WETH is Oracle {
     constructor(
         address base,
         address quote,

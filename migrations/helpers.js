@@ -187,6 +187,136 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   return Oracle.deployed();
 }
 
+const getWBTCOracle = async (network, deployer, artifacts, ownerAddress) => {
+  const Oracle = artifacts.require('Oracle_WBTC');
+  const WBTC_WETH = artifacts.require('UniswapPairOracle_WBTC_WETH');
+
+  const addr = knownContracts.OracleWBTC && knownContracts.OracleWBTC[network];
+  if (addr) return Oracle.at(addr);
+  if (Oracle.isDeployed()) return Oracle.deployed();
+
+  const base = await getWBTC(network, deployer, artifacts);
+  const quote = await getWETH(network, deployer, artifacts);
+  const ethGMUOracle = await getETHGMUOracle(network, deployer, artifacts);
+  const wbtcGMUOracle = await getWBTCGMUOracle(network, deployer, artifacts);
+
+  let wbtcWETHAddr = knownContracts.UniswapWBTCWETHOracle && knownContracts.UniswapWBTCWETHOracle[network];
+  if (!wbtcWETHAddr) {
+    const Timelock = artifacts.require("Timelock");
+    const timelock = await Timelock.deployed();
+    const factory = await getUniswapFactory(network, deployer, artifacts);
+
+    await deployer.deploy(
+      WBTC_WETH,
+      factory.address,
+      base.address,
+      quote.address,
+      ownerAddress,
+      timelock.address
+    );
+
+    wbtcWETHAddr = (await WBTC_WETH.deployed()).address;
+  }
+
+  await deployer.deploy(
+    Oracle,
+    base.address,
+    quote.address,
+    wbtcWETHAddr,
+    wbtcGMUOracle.address,
+    ethGMUOracle.address
+  );
+
+  return Oracle.deployed();
+}
+
+const getWMATICOracle = async (network, deployer, artifacts, ownerAddress) => {
+  const Oracle = artifacts.require('Oracle_WMATIC');
+  const WMATIC_WETH = artifacts.require('UniswapPairOracle_WMATIC_WETH');
+
+  const addr = knownContracts.OracleWMATIC && knownContracts.OracleWMATIC[network];
+  if (addr) return Oracle.at(addr);
+  if (Oracle.isDeployed()) return Oracle.deployed();
+
+  const base = await getWMATIC(network, deployer, artifacts);
+  const quote = await getWETH(network, deployer, artifacts);
+  const ethGMUOracle = await getETHGMUOracle(network, deployer, artifacts);
+  const maticGMUOracle = await getWMATICGMUOracle(network, deployer, artifacts);
+
+  let maticWETHAddr = knownContracts.UniswapWBTCWETHOracle && knownContracts.UniswapWBTCWETHOracle[network];
+  if (!maticWETHAddr) {
+    const Timelock = artifacts.require("Timelock");
+    const timelock = await Timelock.deployed();
+    const factory = await getUniswapFactory(network, deployer, artifacts);
+
+    await deployer.deploy(
+      WMATIC_WETH,
+      factory.address,
+      base.address,
+      quote.address,
+      ownerAddress,
+      timelock.address
+    );
+
+    maticWETHAddr = (await WMATIC_WETH.deployed()).address;
+  }
+
+  await deployer.deploy(
+    Oracle,
+    base.address,
+    quote.address,
+    maticWETHAddr,
+    maticGMUOracle.address,
+    ethGMUOracle.address
+  );
+
+  return Oracle.deployed();
+}
+
+const getWETHOracle = async (network, deployer, artifacts, ownerAddress) => {
+  const Oracle = artifacts.require('Oracle_WETH');
+  const WMATIC_WETH = artifacts.require('UniswapPairOracle_WMATIC_WETH');
+
+  const addr = knownContracts.OracleWETH && knownContracts.OracleWETH[network];
+  if (addr) return Oracle.at(addr);
+  if (Oracle.isDeployed()) return Oracle.deployed();
+
+  const base = await getWETH(network, deployer, artifacts);
+  const quote = await getWMATIC(network, deployer, artifacts);
+  const ethGMUOracle = await getETHGMUOracle(network, deployer, artifacts);
+
+  let maticWETHAddr = knownContracts.UniswapWBTCWETHOracle && knownContracts.UniswapWBTCWETHOracle[network];
+  if (!maticWETHAddr) {
+    const Timelock = artifacts.require("Timelock");
+    const timelock = await Timelock.deployed();
+    const factory = await getUniswapFactory(network, deployer, artifacts);
+
+    if (!WMATIC_WETH.isDeployed()) {
+      await deployer.deploy(
+        WMATIC_WETH,
+        factory.address,
+        base.address,
+        quote.address,
+        ownerAddress,
+        timelock.address
+      );
+    }
+
+    maticWETHAddr = (await WMATIC_WETH.deployed()).address;
+  }
+
+  await deployer.deploy(
+    Oracle,
+    base.address,
+    quote.address,
+    maticWETHAddr,
+    ethGMUOracle.address,
+    ethGMUOracle.address
+  );
+
+  return Oracle.deployed();
+}
+
 const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   const Oracle = artifacts.require('Oracle_USDT');
   const USDT_WETH = artifacts.require('UniswapPairOracle_USDT_WETH');
@@ -314,6 +444,64 @@ const getUSDTGMUOracle = async (network, deployer, artifacts) => {
   return ChainlinkETHUSDPriceConsumer.deployed();
 }
 
+const getWBTCGMUOracle = async (network, deployer, artifacts) => {
+  const MockChainlinkOracle = artifacts.require('MockWBTCChainlinkAggregator');
+  const ChainlinkETHUSDPriceConsumer = artifacts.require('WBTC_GMU_Chainlink_Oracle');
+
+  const addr = knownContracts['WBTCGMUOracle'] && knownContracts.WBTCGMUOracle[network];
+  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr);
+  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed();
+
+  let defaultChainlinkConsumerAddr = (
+    knownContracts.WBTCUSDChainlinkOracleDefault &&
+    knownContracts.WBTCUSDChainlinkOracleDefault[network]
+  );
+  if (!defaultChainlinkConsumerAddr && !isMainnet()) {
+    await deployer.deploy(MockChainlinkOracle);
+    const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
+    await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
+    defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
+  }
+
+  console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`));
+  await deployer.deploy(
+    ChainlinkETHUSDPriceConsumer,
+    defaultChainlinkConsumerAddr,
+    (await getGMUOracle(network, deployer, artifacts)).address
+  );
+
+  return ChainlinkETHUSDPriceConsumer.deployed();
+}
+
+const getWMATICGMUOracle = async (network, deployer, artifacts) => {
+  const MockChainlinkOracle = artifacts.require('MockWBTCChainlinkAggregator');
+  const ChainlinkETHUSDPriceConsumer = artifacts.require('WMATIC_GMU_Chainlink_Oracle');
+
+  const addr = knownContracts['WMATICGMUOracle'] && knownContracts.WMATICGMUOracle[network];
+  if (addr) return ChainlinkETHUSDPriceConsumer.at(addr);
+  if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed();
+
+  let defaultChainlinkConsumerAddr = (
+    knownContracts.WMATICUSDChainlinkOracleDefault &&
+    knownContracts.WMATICUSDChainlinkOracleDefault[network]
+  );
+  if (!defaultChainlinkConsumerAddr && !isMainnet()) {
+    await deployer.deploy(MockChainlinkOracle);
+    const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
+    await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
+    defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
+  }
+
+  console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`));
+  await deployer.deploy(
+    ChainlinkETHUSDPriceConsumer,
+    defaultChainlinkConsumerAddr,
+    (await getGMUOracle(network, deployer, artifacts)).address
+  );
+
+  return ChainlinkETHUSDPriceConsumer.deployed();
+}
+
 const getETHGMUOracle = async (network, deployer, artifacts) => {
   const MockChainlinkOracle = artifacts.require('MockChainlinkAggregatorV3');
   const ChainlinkETHUSDPriceConsumer = artifacts.require('ChainlinkETHUSDPriceConsumer');
@@ -356,5 +544,8 @@ module.exports = {
   getGMUOracle,
   getETHGMUOracle,
   getUSDTGMUOracle,
-  getUSDCGMUOracle
+  getUSDCGMUOracle,
+  getWBTCOracle,
+  getWMATICOracle,
+  getWETHOracle
 }

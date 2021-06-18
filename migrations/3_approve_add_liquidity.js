@@ -40,7 +40,7 @@ module.exports = async function (deployer, network, accounts) {
     .catch(e => console.log('error', e))
     .then(() => console.log(chalk.green('\nDone')))
 
-  await weth.deposit({ value: new BigNumber(1e17) })
+  await weth.deposit({ value: new BigNumber(2e18) })
 
   console.log(chalk.yellow('\nAdding liquidity to pairs...'));
   await Promise.all([
@@ -86,12 +86,16 @@ module.exports = async function (deployer, network, accounts) {
   if (network != 'mainnet') {
     const usdc = await helpers.getUSDC(network, deployer, artifacts);
     const usdt = await helpers.getUSDT(network, deployer, artifacts);
+    const wbtc = await helpers.getWBTC(network, deployer, artifacts);
+    const wmatic = await helpers.getWMATIC(network, deployer, artifacts);
 
     console.log(chalk.yellow('\nCreating USDC/USDT uniswap pairs....'));
 
     await Promise.all([
       uniswapFactory.createPair(usdc.address, weth.address, { from: DEPLOYER_ADDRESS }),
       uniswapFactory.createPair(usdt.address, weth.address, { from: DEPLOYER_ADDRESS }),
+      uniswapFactory.createPair(wbtc.address, weth.address, { from: DEPLOYER_ADDRESS }),
+      uniswapFactory.createPair(wmatic.address, weth.address, { from: DEPLOYER_ADDRESS }),
     ])
       .catch(e => console.log('error', e))
       .then(() => console.log(chalk.green('\nDone')))
@@ -101,6 +105,8 @@ module.exports = async function (deployer, network, accounts) {
       weth.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
       usdc.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
       usdt.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
+      wbtc.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
+      wmatic.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     ])
       .catch(e => console.log('error', e))
       .then(() => console.log(chalk.green('\nDone')))
@@ -126,6 +132,28 @@ module.exports = async function (deployer, network, accounts) {
         new BigNumber(1e4),
         new BigNumber(2200e4),
         new BigNumber(1e4),
+        DEPLOYER_ADDRESS,
+        new BigNumber(9999999999999),
+        { from: DEPLOYER_ADDRESS }
+      ),
+      uniswapRouter.addLiquidity(
+        wbtc.address,
+        weth.address,
+        new BigNumber(2200e6),
+        new BigNumber(1e16),
+        new BigNumber(2200e6),
+        new BigNumber(1e16),
+        DEPLOYER_ADDRESS,
+        new BigNumber(9999999999999),
+        { from: DEPLOYER_ADDRESS }
+      ),
+      uniswapRouter.addLiquidity(
+        wmatic.address,
+        weth.address,
+        new BigNumber(2200e16),
+        new BigNumber(1e16),
+        new BigNumber(2200e16),
+        new BigNumber(1e16),
         DEPLOYER_ADDRESS,
         new BigNumber(9999999999999),
         { from: DEPLOYER_ADDRESS }

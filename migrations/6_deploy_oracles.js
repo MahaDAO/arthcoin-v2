@@ -87,4 +87,7 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellowBright('\nDeploying collateral oracles'))
   await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
   await helpers.getUSDTOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWBTCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWMATICOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWETHOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
 };

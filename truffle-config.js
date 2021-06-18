@@ -7,8 +7,6 @@ module.exports = {
       host: "127.0.0.1",
       port: 8545, // 7545
       network_id: "*",
-      // gas: 0xfffffffffff,	// <-- Use this high gas value
-      // gasPrice: 0x01,	// <-- Use this low gas price
     },
     mainnet: {
       // provider: providerFactory(),
@@ -20,8 +18,7 @@ module.exports = {
       provider: function () {
         return new HDWalletProvider(
           process.env.METAMASK_WALLET_SECRET,
-          'https://rinkeby.infura.io/v3/7878a73efb1d48c294c33a0e5abd48d6',
-          //'https://bitter-twilight-moon.quiknode.io/a7bc771b-a15c-49a6-9e23-a1106f86b2db/g9PahkWuM3pjJMRqNA39cUyZpov8PMSH5MbcKSJs4zrqyGwEsuUajCGSpWmFbvVU7HboSbF6lauR38Y0Zyr8NQ==/'
+          'https://bitter-twilight-moon.quiknode.io/a7bc771b-a15c-49a6-9e23-a1106f86b2db/g9PahkWuM3pjJMRqNA39cUyZpov8PMSH5MbcKSJs4zrqyGwEsuUajCGSpWmFbvVU7HboSbF6lauR38Y0Zyr8NQ==/'
         )
       },
       networkCheckTimeout: 100000,
@@ -33,12 +30,10 @@ module.exports = {
       provider: function () {
         return new HDWalletProvider(
           process.env.METAMASK_WALLET_SECRET,
-          //'https://matic-testnet-archive-rpc.bwarelabs.com'
           'https://matic-mumbai.chainstacklabs.com'
-          //'https://rpc-mumbai.maticvigil.com/v1/0509c2e8f6c4f7be3491c6e21dbf95df221dcae6'
-          //`https://rpc-mumbai.matic.today`
         )
       }
+    }
   },
   compilers: {
     solc: {
