@@ -14,6 +14,12 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
     uint256 public tokenCounter;
     uint256 public prizeCounter;
 
+    struct Lottery {
+        uint256 tokenId;
+        uint256 weight;
+        address owner;
+    }
+
     struct NftPrizeDetails {
         string description;
         address nftAddress;
@@ -25,6 +31,7 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
 
     mapping(address => uint256) public usersLotteries;
     mapping(string => NftPrizeDetails) public prizes;
+    mapping(uint256 => Lottery) public lotteries;
 
     address[] public owners;
     mapping(address => bool) public ownerByAddress;
@@ -70,9 +77,18 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
         override
         onlyOwner
     {
-        for (uint256 i = 1; i <= _amount; i++) {
+        if (usersLotteries[_to] > 0) {
+            Lottery memory _lotteries = lotteries[usersLotteries[_to]];
+
+            _lotteries.weight = _lotteries.weight.add(_amount);
+            lotteries[usersLotteries[_to]] = _lotteries;
+
+        } else {
             tokenCounter = tokenCounter.add(1);
-            usersLotteries[_to] = usersLotteries[_to].add(1);
+
+            lotteries[tokenCounter] = Lottery(tokenCounter, _amount, _to);
+            usersLotteries[_to] = tokenCounter;
+
             _safeMint(_to, tokenCounter);
         }
     }
