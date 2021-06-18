@@ -33,6 +33,10 @@ module.exports = async function (deployer, network, accounts) {
   );
 
   const faucet = await Faucet.deployed();
+
+  console.log('\nAdd the faucet to tax whitelist');
+  arthxInstance.addToTaxWhiteList(faucet.address);
+
   console.log('\Transfering some tokens to faucet done\n');
   await Promise.all([
     arthInstance.transfer(faucet.address, new BigNumber(100000e18), { from: DEPLOYER_ADDRESS }),
@@ -41,9 +45,6 @@ module.exports = async function (deployer, network, accounts) {
     usdcInstance.transfer(faucet.address, new BigNumber(100000e6), { from: DEPLOYER_ADDRESS }),
     usdtInstance.transfer(faucet.address, new BigNumber(100000e6), { from: DEPLOYER_ADDRESS }),
   ]);
-
-  console.log('\nAdd the faucet to tax whitelist');
-  arthxInstance.addToTaxWhiteList(faucet.address);
 
   console.log('\nDeployments done\n');
 };

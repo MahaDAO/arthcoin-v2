@@ -135,8 +135,8 @@ contract Genesis {
     function getLotteryAmount(uint256 _collateralAmount) internal view returns (uint256) {
         uint256 collateralValue = _arthpool.getCollateralPrice().mul(_collateralAmount).div(10 ** 6);
         uint256 lotteryAmount = 0;
-        if(collateralValue >= 1000 * 10 ** _COLLATERAL.decimals() ) {
-            lotteryAmount = collateralValue.div(1000 * 10 ** _COLLATERAL.decimals() );
+        if(collateralValue >= 10 * 10 ** _COLLATERAL.decimals() ) {
+            lotteryAmount = collateralValue.div(10 * 10 ** _COLLATERAL.decimals() );
         }
 
         return lotteryAmount;
