@@ -33,6 +33,7 @@ module.exports = async function (deployer, network, accounts) {
   );
 
   const faucet = await Faucet.deployed();
+
   console.log('\nAdd the faucet to tax whitelist');
   arthxInstance.addToTaxWhiteList(faucet.address);
 

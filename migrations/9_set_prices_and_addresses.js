@@ -7,6 +7,9 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const ARTHController = artifacts.require("ArthController");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
+const Pool_WBTC = artifacts.require("Arth/Pools/Pool_WBTC");
+const Pool_WMATIC = artifacts.require("Arth/Pools/Pool_WMATIC");
+const Pool_WETH = artifacts.require("Arth/Pools/Pool_WETH");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const UniswapPairOracleMAHAARTH = artifacts.require("UniswapPairOracle_MAHA_ARTH");
 const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_WETH");
@@ -26,6 +29,9 @@ module.exports = async function (deployer, network, accounts) {
   const genesis_usdc = await GenesisUSDC.deployed();
   const pool_instance_USDC = await Pool_USDC.deployed();
   const pool_instance_USDT = await Pool_USDT.deployed();
+  const pool_instance_WBTC = await Pool_WBTC.deployed();
+  const pool_instance_WMATIC = await Pool_WMATIC.deployed();
+  const pool_instance_WETH = await Pool_WETH.deployed();
   const arthControllerInstance = await ARTHController.deployed();
   const uniswapPairOracleARTHWETH = await UniswapPairOracleARTHWETH.deployed();
   const uniswapPairOracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
@@ -37,10 +43,16 @@ module.exports = async function (deployer, network, accounts) {
   await arth.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(pool_instance_WBTC.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(pool_instance_WMATIC.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(pool_instance_WETH.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_WBTC.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_WMATIC.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_WETH.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting ARTH address within ARTHX...'));
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });
