@@ -9,8 +9,7 @@ const ARTHXTaxController = artifacts.require("ARTHXTaxController");
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-  let arthx = await ARTHShares.deployed();
-
+  const arthx = await ARTHShares.deployed();
   const timelockInstance = await Timelock.deployed();
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
 

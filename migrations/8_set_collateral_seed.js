@@ -1,11 +1,11 @@
 require('dotenv').config();
 const chalk = require('chalk');
 const BigNumber = require('bignumber.js');
+
 const helpers = require('./helpers');
 
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
-
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];

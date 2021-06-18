@@ -30,7 +30,6 @@ module.exports = async function (deployer, network, accounts) {
   const uniswapPairOracleARTHWETH = await UniswapPairOracleARTHWETH.deployed();
   const uniswapPairOracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
   const uniswapPairOracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
-
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
 
   console.log(chalk.yellow('\nLinking collateral pools to arth contract...'));
@@ -64,6 +63,7 @@ module.exports = async function (deployer, network, accounts) {
   const percentCollateralized = new BigNumber(await arthControllerInstance.getPercentCollateralized());
   const globalCollateralValue = new BigNumber(await arthControllerInstance.getGlobalCollateralValue());
   const targetCollateralValue = new BigNumber(await arthControllerInstance.getTargetCollateralValue());
+
   console.log(" NOTE: - global_collateral_value: ", globalCollateralValue.toString());
   console.log(" NOTE: - target_collateral_value: ", targetCollateralValue.toString());
   console.log(" NOTE: - percent_collateralized: ", percentCollateralized.toString());

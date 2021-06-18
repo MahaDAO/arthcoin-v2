@@ -3,11 +3,9 @@ const BigNumber = require('bignumber.js');
 
 const knownContracts = require('./known-contracts');
 
-
 const ONE = new BigNumber('1e18');
 const ONEE6 = new BigNumber('1e6');
 const ONEE8 = new BigNumber('1e8');
-
 
 const getDAI = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
@@ -23,6 +21,33 @@ const getDAI = async (network, deployer, artifacts) => {
   return MockDai.deployed();
 };
 
+const getWBTC = async (network, deployer, artifacts) => {
+  const IERC20 = artifacts.require('IERC20');
+  const MockDai = artifacts.require('MockDAI');
+
+  const addr = knownContracts.DAI && knownContracts.DAI[network];
+  if (addr) return IERC20.at(addr);
+  if (MockDai.isDeployed()) return MockDai.deployed();
+
+  console.log(chalk.yellow(`\nDeploying mock dai on ${network} network...`));
+  await deployer.deploy(MockDai);
+
+  return MockDai.deployed();
+};
+
+const getWMATIC = async (network, deployer, artifacts) => {
+  const IERC20 = artifacts.require('IERC20');
+  const MockDai = artifacts.require('MockDAI');
+
+  const addr = knownContracts.DAI && knownContracts.DAI[network];
+  if (addr) return IERC20.at(addr);
+  if (MockDai.isDeployed()) return MockDai.deployed();
+
+  console.log(chalk.yellow(`\nDeploying mock dai on ${network} network...`));
+  await deployer.deploy(MockDai);
+
+  return MockDai.deployed();
+};
 
 const getWETH = async (network, deployer, artifacts) => {
   const IWETH = artifacts.require('IWETH');
@@ -38,7 +63,6 @@ const getWETH = async (network, deployer, artifacts) => {
   return MockWETH.deployed();
 };
 
-
 const getUSDC = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
   const MockUSDC = artifacts.require('MockUSDC');
@@ -52,7 +76,6 @@ const getUSDC = async (network, deployer, artifacts) => {
 
   return MockUSDC.deployed();
 };
-
 
 const getUSDT = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
@@ -68,7 +91,6 @@ const getUSDT = async (network, deployer, artifacts) => {
   return MockUSDT.deployed();
 };
 
-
 const getMahaToken = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
   const MahaToken = artifacts.require('MahaToken');
@@ -77,7 +99,7 @@ const getMahaToken = async (network, deployer, artifacts) => {
   const addr = knownContracts.MahaToken && knownContracts.MahaToken[network];
   if (addr) return IERC20.at(addr);
 
-  if (network != 'mainnet') {
+  if (!isMainnet()) {
     if (MockMaha.isDeployed()) return MockMaha.deployed();
 
     console.log(chalk.yellow(`\nDeploying mahatoken on ${network} network...`));
@@ -94,13 +116,11 @@ const getMahaToken = async (network, deployer, artifacts) => {
   }
 };
 
-
 const getUniswapFactory = async (network, deployer, artifacts) => {
   const UniswapV2Factory = artifacts.require('UniswapV2Factory');
 
   const addr = knownContracts.UniswapV2Factory && knownContracts.UniswapV2Factory[network];
   if (addr) return UniswapV2Factory.at(addr);
-
   if (UniswapV2Factory.isDeployed()) return UniswapV2Factory.deployed();
 
   console.log(chalk.yellow(`\nDeploying uniswap factory on ${network} network...`));
@@ -109,13 +129,11 @@ const getUniswapFactory = async (network, deployer, artifacts) => {
   return UniswapV2Factory.deployed();
 };
 
-
 const getUniswapRouter = async (network, deployer, artifacts) => {
   const UniswapV2Router02 = artifacts.require('UniswapV2Router02');
 
   const addr = knownContracts.UniswapV2Router02 && knownContracts.UniswapV2Router02[network];
   if (addr) return UniswapV2Router02.at(addr);
-
   if (UniswapV2Router02.isDeployed()) return UniswapV2Router02.deployed();
 
   console.log(chalk.yellow(`\nDeploying uniswap router on ${network} network...`));
@@ -125,7 +143,6 @@ const getUniswapRouter = async (network, deployer, artifacts) => {
 
   return UniswapV2Router02.deployed();
 };
-
 
 const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   const Oracle = artifacts.require('Oracle_USDC');
@@ -169,7 +186,6 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   return Oracle.deployed();
 }
 
-
 const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   const Oracle = artifacts.require('Oracle_USDT');
   const USDT_WETH = artifacts.require('UniswapPairOracle_USDT_WETH');
@@ -212,22 +228,18 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   return Oracle.deployed();
 }
 
-
 const approveIfNot = async (token, spender, amount) => {
   console.log(` - Approving ${token.symbol ? (await token.symbol()) : token.address}`);
   await token.approve(spender, amount);
   console.log(` - Approved ${token.symbol ? (await token.symbol()) : token.address}`);
 };
 
-
 const getPairAddress = async (token1, token2, network, deployer, artifacts) => {
   const factory = await getUniswapFactory(network, deployer, artifacts);
   return await factory.getPair(token1, token2);
 };
 
-
 const isMainnet = (network) => network === 'mainnet' || network === 'bsc' || network === 'matic' || network === 'heco';
-
 
 const getGMUOracle = async (network, deployer, artifacts) => {
   const GMUOracle = artifacts.require('GMUOracle');
@@ -242,22 +254,6 @@ const getGMUOracle = async (network, deployer, artifacts) => {
 
   return GMUOracle.deployed();
 };
-
-
-const getARTHMAHAOracle = async (network, deployer, artifacts) => {
-  const ARTHMAHAOracle = artifacts.require('ARTHMAHAOracle')
-
-  const addr = knownContracts.ARTHMAHAOracle && knownContracts.ARTHMAHAOracle[network]
-  if (addr) return ARTHMAHAOracle.at(addr)
-
-  if (ARTHMAHAOracle.isDeployed()) return ARTHMAHAOracle.deployed()
-
-  console.log(chalk.yellow(`\nDeploying ARTH/MAHA oracle...`))
-  await deployer.deploy(ARTHMAHAOracle, 'ARTH/MAHA', ONEE6)
-
-  return ARTHMAHAOracle.deployed()
-}
-
 
 const getChainlinkUSDCGMUOracle = async (network, deployer, artifacts) => {
   const MockChainlinkOracle = artifacts.require('MockUSDCChainlinkAggregator')
@@ -280,7 +276,6 @@ const getChainlinkUSDCGMUOracle = async (network, deployer, artifacts) => {
   return ChainlinkETHUSDPriceConsumer.deployed()
 }
 
-
 const getChainlinkUSDTGMUOracle = async (network, deployer, artifacts) => {
   const MockChainlinkOracle = artifacts.require('MockUSDTChainlinkAggregator')
   const ChainlinkETHUSDPriceConsumer = artifacts.require('MockChainlinkUSDTGMUOracle')
@@ -302,7 +297,6 @@ const getChainlinkUSDTGMUOracle = async (network, deployer, artifacts) => {
   return ChainlinkETHUSDPriceConsumer.deployed()
 }
 
-
 const getChainlinkETHUSDOracle = async (network, deployer, artifacts) => {
   const MockChainlinkOracle = artifacts.require('MockChainlinkAggregatorV3')
   const ChainlinkETHUSDPriceConsumer = artifacts.require('ChainlinkETHUSDPriceConsumer')
@@ -323,7 +317,6 @@ const getChainlinkETHUSDOracle = async (network, deployer, artifacts) => {
   return ChainlinkETHUSDPriceConsumer.deployed()
 }
 
-
 module.exports = {
   isMainnet,
   getPairAddress,
@@ -338,7 +331,6 @@ module.exports = {
   getUniswapFactory,
   getUniswapRouter,
   getGMUOracle,
-  getARTHMAHAOracle,
   getChainlinkETHUSDOracle,
   getChainlinkUSDTGMUOracle,
   getChainlinkUSDCGMUOracle

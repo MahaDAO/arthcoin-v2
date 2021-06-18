@@ -18,10 +18,6 @@ module.exports = async (callback) => {
   const network = process.argv[5];
   const isMainnet = process.argv.includes('mainnet');
 
-  // Set the main account, you'll be using accross all the files for various
-  // important activities to your desired address in the .env file.
-  // accounts[0] = process.env.WALLET_KEY;
-
   const contracts = [
     { abi: 'ArthController', contract: 'ArthController' },
 
@@ -42,9 +38,6 @@ module.exports = async (callback) => {
     { abi: 'Oracle', contract: 'Oracle_USDC' },
     { abi: 'Oracle', contract: 'Oracle_USDT' },
     { abi: 'ArthPoolLibrary', contract: 'ArthPoolLibrary' },
-    // { abi: 'MockChainlinkAggregatorV3', contract: 'MockChainlinkAggregatorV3' },
-    // { abi: 'MockChainlinkAggregatorV3', contract: 'MockUSDCChainlinkAggregator' },
-    // { abi: 'MockChainlinkAggregatorV3', contract: 'MockUSDTChainlinkAggregator' },
 
     { abi: 'PoolToken', contract: 'PoolToken' },
 
@@ -58,7 +51,7 @@ module.exports = async (callback) => {
   try {
     if (!isMainnet) contracts.push({ abi: 'Faucet', contract: 'Faucet' });
 
-    //const mahaToken = (await getMahaToken(network, null, artifacts)).address;
+    const mahaToken = (await getMahaToken(network, null, artifacts)).address;
     const dai = (await getDAI(network, null, artifacts)).address;
     const factoryInstance = (await getUniswapFactory(network, null, artifacts));
     const factory = factoryInstance.address;
@@ -67,24 +60,16 @@ module.exports = async (callback) => {
     const weth = (await getWETH(network, null, artifacts)).address;
     const usdc = (await getUSDC(network, null, artifacts)).address;
     const usdt = (await getUSDT(network, null, artifacts)).address;
-    // const wbtc = (await getWB(network, null, artifacts)).address;
+    const wbtc = (await getWB(network, null, artifacts)).address;
 
-    let arth
-    let arthx
-    let mahaToken
-
-    arth = (await ARTHStablecoin.deployed()).address;
+    const arth = (await ARTHStablecoin.deployed()).address;
     contracts.push({ abi: 'ARTHStablecoin', contract: 'ARTHStablecoin' })
 
-    arthx = (await ARTHShares.deployed()).address;
+    const arthx = (await ARTHShares.deployed()).address;
     contracts.push({ abi: 'ARTHShares', contract: 'ARTHShares' })
 
-    mahaToken = (await getMahaToken(network, null, artifacts)).address;
+    const mahaToken = (await getMahaToken(network, null, artifacts)).address;
     contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
-
-    // const multicall = knownContracts.Multicall[network] ?
-    //   knownContracts.Multicall[network] :
-    //   (await Multicall.deployed()).address;
 
     contracts.push({ contract: 'UniswapV2Factory', address: factory, abi: 'UniswapV2Factory' });
     contracts.push({ contract: 'UniswapV2Router02', address: router, abi: 'UniswapV2Router02' });
@@ -93,8 +78,7 @@ module.exports = async (callback) => {
     contracts.push({ contract: 'USDC', address: usdc, abi: 'IERC20' });
     contracts.push({ contract: 'WETH', address: weth, abi: 'IWETH' });
     contracts.push({ contract: 'WBTC', address: dai, abi: 'IERC20' });
-    //contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
-    //contracts.push({ contract: 'Multicall', address: multicall, abi: 'Multicall' });
+    contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
 
     const arthMahaLP = await factoryInstance.getPair(arth, mahaToken)
     const arthEthLP = await factoryInstance.getPair(arth, weth)

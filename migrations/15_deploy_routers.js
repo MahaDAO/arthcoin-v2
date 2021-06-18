@@ -5,9 +5,8 @@ const ARTHPoolRouter = artifacts.require("ArthPoolRouter");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 module.exports = async function (deployer, network) {
-  let arth = await ARTHStablecoin.deployed();
-  let arthx = await ARTHShares.deployed();
-
+  const arth = await ARTHStablecoin.deployed();
+  const arthx = await ARTHShares.deployed();
   const weth = await helpers.getWETH(network, deployer, artifacts);
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts);
 
@@ -23,7 +22,6 @@ module.exports = async function (deployer, network) {
   // TODO: deploy other routers and add them to whitelists.
 
   const arthPoolRouter = await ARTHPoolRouter.deployed();
-
   console.log('\nAdd the routers to tax whitelist');
   await Promise.all([
     await arthx.addToTaxWhiteList(arthPoolRouter.address)

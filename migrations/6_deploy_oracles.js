@@ -15,10 +15,8 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
   const timelockInstance = await Timelock.deployed();
-
-  let arth = await ARTHStablecoin.deployed();
-  let arthx = await ARTHShares.deployed();
-
+  const arth = await ARTHStablecoin.deployed();
+  const arthx = await ARTHShares.deployed();
   const arthController = await ARTHController.deployed();
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const weth = await helpers.getWETH(network, deployer, artifacts);
@@ -65,7 +63,6 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(BondingCurve, new BigNumber('1300e6')); // Fixed price.
 
   await helpers.getGMUOracle(network, deployer, artifacts);
-  await helpers.getARTHMAHAOracle(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nSetting chainlink oracle...'));
   const chainlinkETHUSDOracle = await helpers.getChainlinkETHUSDOracle(network, deployer, artifacts);

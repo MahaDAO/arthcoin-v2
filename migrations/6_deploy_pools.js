@@ -1,6 +1,7 @@
 require('dotenv').config();
 const chalk = require('chalk');
 const BigNumber = require('bignumber.js');
+
 const helpers = require('./helpers');
 
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
@@ -10,29 +11,24 @@ const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
 const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
 const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-const GenesisUSDC = artifacts.require("GenesisUSDC")
-const GenesisUSDT = artifacts.require("GenesisUSDT")
-const LotteryRaffle = artifacts.require("LotteryRaffle")
-
+const GenesisUSDC = artifacts.require("GenesisUSDC");
+const GenesisUSDT = artifacts.require("GenesisUSDT");
+const LotteryRaffle = artifacts.require("LotteryRaffle");
 
 module.exports = async function (deployer, network, accounts) {
-  const redemptionFee = 400; // 0.04%
-  const mintingFee = 300; // 0.03%
-  const buybackFee = 300; // 0.03%
+  const redemptionFee = 400;  // 0.04%
+  const mintingFee = 300;  // 0.03%
+  const buybackFee = 300;  // 0.03%
 
   const DEPLOYER_ADDRESS = accounts[0];
   const TEN_MILLION = new BigNumber("1000000e6");
 
   const timelockInstance = await Timelock.deployed();
-
-  let arth = await ARTHStablecoin.deployed();
-  let arthx = await ARTHShares.deployed();
-
+  const arth = await ARTHStablecoin.deployed();
+  const arthx = await ARTHShares.deployed();
   const arthControllerInstance = await ARTHController.deployed();
-
   const mahaTokenInstance = await helpers.getMahaToken(network, deployer, artifacts);
   const arthMahaOracle = await helpers.getARTHMAHAOracle(network, deployer, artifacts);
-
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts);
   const col_instance_USDT = await helpers.getUSDT(network, deployer, artifacts);
 
@@ -41,7 +37,6 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.link(ArthPoolLibrary, [Pool_USDC, Pool_USDT, GenesisUSDC, GenesisUSDT]);
 
   console.log(chalk.yellow('\nDeploying Pools...'));
-
   console.log(
     arth.address,
     arthx.address,
@@ -63,7 +58,6 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       timelockInstance.address,
       mahaTokenInstance.address,
-      //arthMahaOracle.address,
       arthControllerInstance.address,
       TEN_MILLION
     ),
@@ -75,7 +69,6 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       timelockInstance.address,
       mahaTokenInstance.address,
-      //arthMahaOracle.address,
       arthControllerInstance.address,
       TEN_MILLION
     )

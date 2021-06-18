@@ -10,11 +10,11 @@ const StakeARTHXWETH = artifacts.require("Staking/Variants/StakeARTHXWETH.sol");
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-  stakeARTH = await StakeARTH.deployed();
-  stakeARTHMAHA = await StakeARTHMAHA.deployed();
-  stakeARTHWETH = await StakeARTHWETH.deployed();
-  stakeARTHX = await StakeARTHX.deployed();
-  stakeARTHXWETH = await StakeARTHXWETH.deployed();
+  const stakeARTH = await StakeARTH.deployed();
+  const stakeARTHMAHA = await StakeARTHMAHA.deployed();
+  const stakeARTHWETH = await StakeARTHWETH.deployed();
+  const stakeARTHX = await StakeARTHX.deployed();
+  const stakeARTHXWETH = await StakeARTHXWETH.deployed();
 
   console.log(chalk.yellow.bold('\nInitializing the staking rewards...'));
   await Promise.all([

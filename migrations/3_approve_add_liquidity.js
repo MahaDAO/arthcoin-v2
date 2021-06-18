@@ -4,22 +4,17 @@ const BigNumber = require('bignumber.js');
 require('dotenv').config();
 const helpers = require('./helpers');
 
-
 const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const SwapToPrice = artifacts.require("Uniswap/SwapToPrice");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
-
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-
-  let arth = await ARTHStablecoin.deployed();
-  let arthx = await ARTHShares.deployed();
-
+  const arth = await ARTHStablecoin.deployed();
+  const arthx = await ARTHShares.deployed();
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const weth = await helpers.getWETH(network, deployer, artifacts);
-
   const uniswapRouter = await helpers.getUniswapRouter(network, deployer, artifacts);
   const uniswapFactory = await helpers.getUniswapFactory(network, deployer, artifacts);
 
@@ -27,7 +22,6 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(SwapToPrice, uniswapFactory.address, uniswapRouter.address);
 
   console.log(chalk.yellow('\nCreating uniswap pairs...'));
-
   await Promise.all([
     uniswapFactory.createPair(arth.address, weth.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactory.createPair(arth.address, maha.address, { from: DEPLOYER_ADDRESS }),
