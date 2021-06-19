@@ -6,6 +6,7 @@ const knownContracts = require('./known-contracts');
 const ONE = new BigNumber('1e18');
 const ONEE6 = new BigNumber('1e6');
 const ONEE8 = new BigNumber('1e8');
+const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
 
 const getDAI = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
@@ -180,7 +181,7 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
     base.address,
     quote.address,
     usdcWETHAddr,
-    usdcGMUOracle.address,
+    usdcGMUOracle ? usdcGMUOracle.address : ZERO_ADDR,
     ethGMUOracle.address
   );
 
@@ -223,7 +224,7 @@ const getWBTCOracle = async (network, deployer, artifacts, ownerAddress) => {
     base.address,
     quote.address,
     wbtcWETHAddr,
-    wbtcGMUOracle.address,
+    wbtcGMUOracle ? wbtcGMUOracle.address : ZERO_ADDR,
     ethGMUOracle.address
   );
 
@@ -266,7 +267,7 @@ const getWMATICOracle = async (network, deployer, artifacts, ownerAddress) => {
     base.address,
     quote.address,
     maticWETHAddr,
-    maticGMUOracle.address,
+    maticGMUOracle ? maticGMUOracle.address : ZERO_ADDR,
     ethGMUOracle.address
   );
 
@@ -353,7 +354,7 @@ const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
     base.address,
     quote.address,
     usdtWETHAddr,
-    usdtGMUOracle.address,
+    usdtGMUOracle ? usdtGMUOracle.address : ZERO_ADDR,
     ethGMUOracle.address
   );
 
@@ -398,12 +399,18 @@ const getUSDCGMUOracle = async (network, deployer, artifacts) => {
     knownContracts.USDCUSDChainlinkOracleDefault &&
     knownContracts.USDCUSDChainlinkOracleDefault[network]
   );
-  if (!defaultChainlinkConsumerAddr) {
+
+  if (!defaultChainlinkConsumerAddr && !isMainnet()) {
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDCChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = mockUSDCChainlinkAggregator.address;
   }
+
+  if (!defaultChainlinkConsumerAddr && isMainnet()) {
+    return null;
+  }
+
 
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`))
   await deployer.deploy(
@@ -427,12 +434,18 @@ const getUSDTGMUOracle = async (network, deployer, artifacts) => {
     knownContracts.USDTUSDChainlinkOracleDefault &&
     knownContracts.USDTUSDChainlinkOracleDefault[network]
   );
-  if (!defaultChainlinkConsumerAddr) {
+
+  if (!defaultChainlinkConsumerAddr & !isMainnet()) {
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
   }
+
+  if (!defaultChainlinkConsumerAddr && isMainnet()) {
+    return null;
+  }
+
 
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`));
   await deployer.deploy(
@@ -456,12 +469,18 @@ const getWBTCGMUOracle = async (network, deployer, artifacts) => {
     knownContracts.WBTCUSDChainlinkOracleDefault &&
     knownContracts.WBTCUSDChainlinkOracleDefault[network]
   );
+
   if (!defaultChainlinkConsumerAddr && !isMainnet()) {
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
   }
+
+  if (!defaultChainlinkConsumerAddr && isMainnet()) {
+    return null;
+  }
+
 
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`));
   await deployer.deploy(
@@ -485,11 +504,16 @@ const getWMATICGMUOracle = async (network, deployer, artifacts) => {
     knownContracts.WMATICUSDChainlinkOracleDefault &&
     knownContracts.WMATICUSDChainlinkOracleDefault[network]
   );
+
   if (!defaultChainlinkConsumerAddr && !isMainnet()) {
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
+  }
+
+  if (!defaultChainlinkConsumerAddr && isMainnet()) {
+    return null;
   }
 
   console.log(chalk.yellow(`\nDeploying Chainlink ETH/USD oracle...`));
