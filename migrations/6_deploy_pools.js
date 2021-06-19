@@ -50,7 +50,10 @@ module.exports = async function (deployer, network, accounts) {
     GenesisUSDT,
     Pool_WBTC,
     Pool_WMATIC,
-    Pool_WETH
+    Pool_WETH,
+    GenesisWBTC,
+    GenesisWMATIC,
+    GenesisWETH,
   ]);
 
   console.log(chalk.yellow('\nDeploying Pools...'));
