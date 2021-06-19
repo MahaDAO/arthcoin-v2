@@ -56,7 +56,7 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(9999999999999),
       { from: DEPLOYER_ADDRESS }
     ),
-    // ARTHX / WETH
+    // ARTHX / ARTH
     uniswapRouter.addLiquidity(
       arthx.address,
       weth.address,

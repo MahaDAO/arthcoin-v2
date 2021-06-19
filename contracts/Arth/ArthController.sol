@@ -8,8 +8,10 @@ import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IARTHPool} from './Pools/IARTHPool.sol';
 import {IARTHController} from './IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
-import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
-import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
+import {
+    IChainlinkOracle
+} from '../Oracle/Variants/chainlink/IChainlinkOracle.sol';
+import {IOracle} from '../Oracle/IOracle.sol';
 import {ICurve} from '../Curves/ICurve.sol';
 import {Math} from '../utils/math/Math.sol';
 import {IBondingCurve} from '../Curves/IBondingCurve.sol';
@@ -25,10 +27,10 @@ contract ArthController is AccessControl, IARTHController {
 
     IERC20 public ARTH;
 
-    IChainlinkOracle public ETHGMUPricer;
-    IUniswapPairOracle public ARTHETHOracle;
-    IUniswapPairOracle public MAHAARTHOracle;
-    IUniswapPairOracle public ARTHXETHOracle;
+    IOracle public ARTHETHOracle;
+    IOracle public MAHAARTHOracle;
+    IOracle public ARTHXETHOracle;
+
     ICurve public _recollateralizeDiscountCruve;
     IBondingCurve public bondingCurve;
 
@@ -240,20 +242,11 @@ contract ArthController is AccessControl, IARTHController {
         stabilityFee = percent;
     }
 
-    function setETHGMUOracle(address _ethGMUConsumerAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        ETHGMUPricer = IChainlinkOracle(_ethGMUConsumerAddress);
-        ETHGMUPricerDecimals = ETHGMUPricer.getDecimals();
-    }
-
     function setARTHXETHOracle(
         address _arthxOracleAddress,
         address _wethAddress
     ) external override onlyByOwnerOrGovernance {
-        ARTHXETHOracle = IUniswapPairOracle(_arthxOracleAddress);
+        ARTHXETHOracle = IOracle(_arthxOracleAddress);
         wethAddress = _wethAddress;
     }
 
@@ -262,7 +255,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        MAHAARTHOracle = IUniswapPairOracle(oracle);
+        MAHAARTHOracle = IOracle(oracle);
     }
 
     function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
@@ -270,7 +263,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        ARTHETHOracle = IUniswapPairOracle(_arthOracleAddress);
+        ARTHETHOracle = IOracle(_arthOracleAddress);
         wethAddress = _wethAddress;
     }
 
@@ -365,13 +358,6 @@ contract ArthController is AccessControl, IARTHController {
         return arthGmuPrice.mul(_PRICE_PRECISION).div(priceVsArth);
     }
 
-    function getETHGMUPrice() public view override returns (uint256) {
-        return
-            uint256(ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
-                uint256(10)**ETHGMUPricerDecimals
-            );
-    }
-
     function getGlobalCollateralRatio() public view override returns (uint256) {
         return globalCollateralRatio;
     }
@@ -447,7 +433,8 @@ contract ArthController is AccessControl, IARTHController {
             uint256,
             uint256,
             uint256,
-            uint256,
+            // u
+            int256,
             uint256
         )
     {
@@ -459,7 +446,7 @@ contract ArthController is AccessControl, IARTHController {
             getGlobalCollateralValue(), // Global collateral value.
             mintingFee, // Minting fee.
             redemptionFee, // Redemtion fee.
-            getETHGMUPrice(), // ETH/GMU price.
+            // getETHGMUPrice(), // ETH/GMU price.
             buybackFee
         );
     }
