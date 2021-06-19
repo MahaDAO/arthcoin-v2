@@ -389,7 +389,7 @@ const getGMUOracle = async (network, deployer, artifacts) => {
 
 const getUSDCGMUOracle = async (network, deployer, artifacts) => {
   const MockChainlinkOracle = artifacts.require('MockUSDCChainlinkAggregator');
-  const ChainlinkETHUSDPriceConsumer = artifacts.require('USDT_GMU_Chainlink_Oracle');
+  const ChainlinkETHUSDPriceConsumer = artifacts.require('USDC_GMU_Chainlink_Oracle');
 
   const addr = knownContracts['USDCGMUOracle'] && knownContracts.USDCGMUOracle[network];
   if (addr) return ChainlinkETHUSDPriceConsumer.at(addr);
