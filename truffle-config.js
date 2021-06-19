@@ -36,10 +36,12 @@ module.exports = {
     },
     matic: {
       network_id: 137,
+      gasPrice: 1100000000,  // 1.1 gwei
       provider: function () {
         return new HDWalletProvider(
           process.env.METAMASK_WALLET_SECRET,
-          'https://polygon-mainnet.infura.io/v3/1f10246c2868483e9e73ddfabda3825f',
+          'https://solitary-crimson-wind.matic.quiknode.pro/d9d5c0846efe6098a99c0a8a2c7238692ca33ce0/',
+          // 'https://polygon-mainnet.infura.io/v3/1f10246c2868483e9e73ddfabda3825f',
           // 'https://matic-mainnet-full-rpc.bwarelabs.com',
           // 'https://matic-mainnet.chainstacklabs.com',
           // 'https://rpc-mainnet.maticvigil.com',
