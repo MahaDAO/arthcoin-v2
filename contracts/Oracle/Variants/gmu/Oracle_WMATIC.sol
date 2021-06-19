@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import '../UniversalGMUOracle.sol';
+import './UniversalGMUOracle.sol';
 
 contract Oracle_WMATIC is UniversalGMUOracle {
     constructor(

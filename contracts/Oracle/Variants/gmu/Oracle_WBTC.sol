@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import '../UniversalGMUOracle.sol';
+import './UniversalGMUOracle.sol';
 
-contract Oracle_USDC is UniversalGMUOracle {
+contract Oracle_WBTC is UniversalGMUOracle {
     constructor(
         address base,
         address quote,

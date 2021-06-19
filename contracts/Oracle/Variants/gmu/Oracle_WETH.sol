@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import '../UniversalGMUOracle.sol';
+import './UniversalGMUOracle.sol';
 
-contract Oracle_USDT is UniversalGMUOracle {
+contract Oracle_WETH is UniversalGMUOracle {
     constructor(
         address base,
         address quote,

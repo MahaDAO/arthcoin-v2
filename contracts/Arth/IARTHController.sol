@@ -73,8 +73,6 @@ interface IARTHController {
 
     function getRedemptionFee() external view returns (uint256);
 
-    function getETHGMUPrice() external view returns (uint256);
-
     function getGlobalCollateralRatio() external view returns (uint256);
 
     function getGlobalCollateralValue() external view returns (uint256);

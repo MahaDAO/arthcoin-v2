@@ -3,12 +3,12 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
-import {Ownable} from '../access/Ownable.sol';
-import {IERC20} from '../ERC20/IERC20.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IUniswapPairOracle} from './Variants/uniswap/IUniswapPairOracle.sol';
-import {IChainlinkOracle} from './Variants/chainlink/IChainlinkOracle.sol';
-import {IOracle} from './IOracle.sol';
+import {Ownable} from '../../../access/Ownable.sol';
+import {IERC20} from '../../../ERC20/IERC20.sol';
+import {SafeMath} from '../../../utils/math/SafeMath.sol';
+import {IUniswapPairOracle} from '../uniswap/IUniswapPairOracle.sol';
+import {IChainlinkOracle} from '../chainlink/IChainlinkOracle.sol';
+import {IOracle} from '../../IOracle.sol';
 
 // an oracle that takes a raw chainlink or uniswap oracle and spits out the GMU price
 contract UniversalGMUOracle is Ownable, IOracle {
