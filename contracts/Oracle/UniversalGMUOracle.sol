@@ -6,11 +6,12 @@ pragma experimental ABIEncoderV2;
 import {Ownable} from '../access/Ownable.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IUniswapPairOracle} from './IUniswapPairOracle.sol';
-import {IChainlinkOracle} from './IChainlinkOracle.sol';
+import {IUniswapPairOracle} from './Variants/uniswap/IUniswapPairOracle.sol';
+import {IChainlinkOracle} from './Variants/chainlink/IChainlinkOracle.sol';
 import {IOracle} from './IOracle.sol';
 
-contract Oracle is Ownable, IOracle {
+// an oracle that takes a raw chainlink or uniswap oracle and spits out the GMU price
+contract UniversalGMUOracle is Ownable, IOracle {
     using SafeMath for uint256;
 
     IUniswapPairOracle public uniswapOracle;
@@ -74,13 +75,20 @@ contract Oracle is Ownable, IOracle {
         );
     }
 
-    function getPrice() public view override returns (uint256) {
+    function getRawPrice() public view returns (uint256) {
         // If we have chainlink oracle for base set return that price.
         // NOTE: this chainlink is subject to Aggregator being in BASE/USD and USD/GMU(Simple oracle).
         if (address(chainlinkOracle) != address(0)) return getChainlinkPrice();
 
         // Else return price from uni pair.
         return getPairPrice();
+    }
+
+    function getPrice() public view override returns (uint256) {
+        uint256 price = getRawPrice();
+
+        return
+            price.mul(getGMUPrice()).div(10**GMUOracle.getDecimalPercision());
     }
 
     function getDecimalPercision() public pure override returns (uint256) {

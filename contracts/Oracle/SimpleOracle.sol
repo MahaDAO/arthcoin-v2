@@ -19,7 +19,7 @@ contract SimpleOracle is Ownable, IOracle {
     }
 
     function getDecimalPercision() public pure override returns (uint256) {
-        return 8;
+        return 6;
     }
 
     function setPrice(uint256 _price) public onlyOwner {

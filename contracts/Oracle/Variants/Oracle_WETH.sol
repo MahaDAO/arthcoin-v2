@@ -2,14 +2,14 @@
 
 pragma solidity ^0.8.0;
 
-import '../Oracle.sol';
+import '../UniversalGMUOracle.sol';
 
-contract Oracle_WETH is Oracle {
+contract Oracle_WETH is UniversalGMUOracle {
     constructor(
         address base,
         address quote,
         IUniswapPairOracle pairOracle,
         IChainlinkOracle oracle,
-        IChainlinkOracle ethGMUOracle
-    ) Oracle(base, quote, pairOracle, oracle, ethGMUOracle) {}
+        IOracle gmuOracle
+    ) UniversalGMUOracle(base, quote, pairOracle, oracle, gmuOracle) {}
 }
