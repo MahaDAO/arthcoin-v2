@@ -13,12 +13,9 @@ import {IOracle} from './IOracle.sol';
 contract Oracle is Ownable, IOracle {
     using SafeMath for uint256;
 
-    IUniswapPairOracle public pairOracle;
-
-    /// @notice Price feed for base from chainlink.
-    IChainlinkOracle public oracle;
-
-    IChainlinkOracle public ethGMUOracle;
+    IUniswapPairOracle public uniswapOracle;
+    IChainlinkOracle public chainlinkOracle;
+    IOracle public GMUOracle;
 
     address public base;
     address public quote;
@@ -32,64 +29,61 @@ contract Oracle is Ownable, IOracle {
     constructor(
         address base_,
         address quote_,
-        IUniswapPairOracle pairOracle_,
-        IChainlinkOracle oracle_,
-        IChainlinkOracle ethGMUOracle_
+        IUniswapPairOracle uniswapOracle_,
+        IChainlinkOracle chainlinkOracle_,
+        IOracle GMUOracle_
     ) {
         base = base_;
         quote = quote_;
-        pairOracle = pairOracle_;
-        ethGMUOracle = ethGMUOracle_;
-        oracle = oracle_;
+        GMUOracle = GMUOracle_;
+        chainlinkOracle = chainlinkOracle_;
+        uniswapOracle = uniswapOracle_;
 
-        ethGMUPriceFeedDecimals = ethGMUOracle.getDecimals();
-        oraclePriceFeedDecimals = address(oracle) != address(0) ? oracle.getDecimals() : 0;
+        ethGMUPriceFeedDecimals = GMUOracle.getDecimalPercision();
+        oraclePriceFeedDecimals = address(chainlinkOracle) != address(0)
+            ? chainlinkOracle.getDecimals()
+            : 0;
 
         _TOKEN_MISSING_DECIMALS = uint256(18).sub(IERC20(base).decimals());
     }
 
-    function setOracle(IChainlinkOracle oracle_) public onlyOwner {
-        oracle = oracle_;
-        oraclePriceFeedDecimals = address(oracle) != address(0) ? oracle.getDecimals() : 0;
+    function setChainlinkOracle(IChainlinkOracle oracle_) public onlyOwner {
+        chainlinkOracle = oracle_;
+        oraclePriceFeedDecimals = address(chainlinkOracle) != address(0)
+            ? chainlinkOracle.getDecimals()
+            : 0;
     }
 
-    function getETHGMUPrice() public view override returns (uint256) {
+    function getGMUPrice() public view returns (uint256) {
+        return GMUOracle.getPrice();
+    }
+
+    function getPairPrice() public view returns (uint256) {
+        return
+            uniswapOracle.consult(
+                quote,
+                _PRICE_PRECISION * (10**_TOKEN_MISSING_DECIMALS)
+            );
+    }
+
+    function getChainlinkPrice() public view returns (uint256) {
         return (
-            uint256(ethGMUOracle.getLatestPrice())
-                .mul(_PRICE_PRECISION)
-                .div(uint256(10)**ethGMUPriceFeedDecimals)
-        );
-    }
-
-    function getPairWETHPrice() public view override returns(uint256) {
-        return pairOracle.consult(
-            quote,
-            _PRICE_PRECISION * (10**_TOKEN_MISSING_DECIMALS)
-        );
-    }
-
-    function getPairPrice() public view override returns(uint256) {
-        return (
-            getETHGMUPrice()
-                .mul(_PRICE_PRECISION)
-                .div(getPairWETHPrice())
-        );
-    }
-
-    function getChainlinkPrice() public view override returns(uint256) {
-        return (
-            uint256(oracle.getLatestPrice())
-                .mul(_PRICE_PRECISION)
-                .div(uint256(10)**oraclePriceFeedDecimals)
+            uint256(chainlinkOracle.getLatestPrice()).mul(_PRICE_PRECISION).div(
+                uint256(10)**oraclePriceFeedDecimals
+            )
         );
     }
 
     function getPrice() public view override returns (uint256) {
         // If we have chainlink oracle for base set return that price.
         // NOTE: this chainlink is subject to Aggregator being in BASE/USD and USD/GMU(Simple oracle).
-        if (address(oracle) != address(0)) return getChainlinkPrice();
+        if (address(chainlinkOracle) != address(0)) return getChainlinkPrice();
 
         // Else return price from uni pair.
         return getPairPrice();
+    }
+
+    function getDecimalPercision() public pure override returns (uint256) {
+        return _PRICE_PRECISION;
     }
 }

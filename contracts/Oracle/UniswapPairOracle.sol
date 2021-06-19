@@ -82,33 +82,23 @@ contract UniswapPairOracle is IUniswapPairOracle {
      * External.
      */
 
-    function setOwner(address _ownerAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
+    function setOwner(address _ownerAddress) external onlyByOwnerOrGovernance {
         ownerAddress = _ownerAddress;
     }
 
     function setTimelock(address _timelockAddress)
         external
-        override
         onlyByOwnerOrGovernance
     {
         timelockAddress = _timelockAddress;
     }
 
-    function setPeriod(uint256 _period)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
+    function setPeriod(uint256 _period) external onlyByOwnerOrGovernance {
         PERIOD = _period;
     }
 
     function setConsultLeniency(uint256 _consult_leniency)
         external
-        override
         onlyByOwnerOrGovernance
     {
         CONSULT_LENIENCY = _consult_leniency;
@@ -116,7 +106,6 @@ contract UniswapPairOracle is IUniswapPairOracle {
 
     function setAllowStaleConsults(bool _allow_stale_consults)
         external
-        override
         onlyByOwnerOrGovernance
     {
         ALLOW_STALE_CONSULTS = _allow_stale_consults;

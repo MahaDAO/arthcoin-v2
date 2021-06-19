@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 import {Ownable} from '../access/Ownable.sol';
-import {ISimpleOracle} from './ISimpleOracle.sol';
+import {IOracle} from './IOracle.sol';
 
-contract SimpleOracle is Ownable, ISimpleOracle {
+contract SimpleOracle is Ownable, IOracle {
     string public name;
     uint256 public price = 1e6;
 
@@ -16,6 +16,10 @@ contract SimpleOracle is Ownable, ISimpleOracle {
 
     function getPrice() public view override returns (uint256) {
         return price;
+    }
+
+    function getDecimalPercision() public pure override returns (uint256) {
+        return 8;
     }
 
     function setPrice(uint256 _price) public onlyOwner {

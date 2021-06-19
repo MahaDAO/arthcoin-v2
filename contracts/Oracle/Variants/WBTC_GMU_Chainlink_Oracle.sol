@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import '../ISimpleOracle.sol';
+import '../IOracle.sol';
 import '../ChainlinkETHUSDPriceConsumer.sol';
 
 contract WBTC_GMU_Chainlink_Oracle is ChainlinkETHUSDPriceConsumer {
-    constructor(
-        address priceFeed,
-        ISimpleOracle gmuOracle
-    ) ChainlinkETHUSDPriceConsumer(priceFeed, gmuOracle) { }
+    constructor(address priceFeed, IOracle gmuOracle)
+        ChainlinkETHUSDPriceConsumer(priceFeed, gmuOracle)
+    {}
 }

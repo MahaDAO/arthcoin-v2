@@ -9,7 +9,7 @@ contract Oracle_WMATIC is Oracle {
         address base,
         address quote,
         IUniswapPairOracle pairOracle,
-        IChainlinkOracle oracle,
-        IChainlinkOracle ethGMUOracle
-    ) Oracle(base, quote, pairOracle, oracle, ethGMUOracle) {}
+        IChainlinkOracle chainlinkOracle,
+        IOracle gmuOracle
+    ) Oracle(base, quote, pairOracle, chainlinkOracle, gmuOracle) {}
 }
