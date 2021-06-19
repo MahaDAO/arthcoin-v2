@@ -16,6 +16,9 @@ const UniswapPairOracleARTHWETH = artifacts.require("Oracle/Variants/UniswapPair
 const UniswapPairOracleARTHXWETH = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTHX_WETH");
 const GenesisUSDC = artifacts.require("GenesisUSDC");
 const GenesisUSDT = artifacts.require("GenesisUSDT");
+const GenesisWBTC = artifacts.require("GenesisWBTC");
+const GenesisWMATIC = artifacts.require("GenesisWMATIC");
+const GenesisWETH = artifacts.require("GenesisWETH");
 
 module.exports = async function (deployer, network, accounts) {
   const BIG6 = new BigNumber("1e6");
@@ -23,36 +26,49 @@ module.exports = async function (deployer, network, accounts) {
 
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const arth = await ARTHStablecoin.deployed();
   const arthx = await ARTHShares.deployed();
+  const arth = await ARTHStablecoin.deployed();
+  const arthControllerInstance = await ARTHController.deployed();
+  const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
+
   const genesis_usdt = await GenesisUSDT.deployed();
   const genesis_usdc = await GenesisUSDC.deployed();
+  const genesis_wbtc = await GenesisWBTC.deployed();
+  const genesis_weth = await GenesisWETH.deployed();
+  const genesis_wmatic = await GenesisWMATIC.deployed();
+
   const pool_instance_USDC = await Pool_USDC.deployed();
   const pool_instance_USDT = await Pool_USDT.deployed();
   const pool_instance_WBTC = await Pool_WBTC.deployed();
-  const pool_instance_WMATIC = await Pool_WMATIC.deployed();
   const pool_instance_WETH = await Pool_WETH.deployed();
-  const arthControllerInstance = await ARTHController.deployed();
+  const pool_instance_WMATIC = await Pool_WMATIC.deployed();
+
   const uniswapPairOracleARTHWETH = await UniswapPairOracleARTHWETH.deployed();
   const uniswapPairOracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
   const uniswapPairOracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
-  const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
 
   console.log(chalk.yellow('\nLinking collateral pools to arth contract...'));
   await arth.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
-  await arth.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
-  await arth.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(pool_instance_WBTC.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(pool_instance_WMATIC.address, { from: DEPLOYER_ADDRESS });
   await arth.addPool(pool_instance_WETH.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(genesis_wbtc.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(genesis_weth.address, { from: DEPLOYER_ADDRESS });
+  await arth.addPool(genesis_wmatic.address, { from: DEPLOYER_ADDRESS });
+
   await arthControllerInstance.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
-  await arthControllerInstance.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
-  await arthControllerInstance.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(pool_instance_WBTC.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(pool_instance_WMATIC.address, { from: DEPLOYER_ADDRESS });
   await arthControllerInstance.addPool(pool_instance_WETH.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_wbtc.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_weth.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_wmatic.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting ARTH address within ARTHX...'));
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });
