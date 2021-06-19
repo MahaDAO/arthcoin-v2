@@ -7,7 +7,7 @@ import {IARTHPool} from '../Arth/Pools/IARTHPool.sol';
 import {IARTHX} from '../ARTHX/IARTHX.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {IWETH} from '../ERC20/IWETH.sol';
-import {ISimpleOracle} from '../Oracle/ISimpleOracle.sol';
+import {IOracle} from '../Oracle/IOracle.sol';
 import {IBoostedStaking} from '../Staking/IBoostedStaking.sol';
 import {IUniswapV2Router02} from '../Uniswap/Interfaces/IUniswapV2Router02.sol';
 
@@ -117,17 +117,22 @@ contract ArthPoolRouter {
         }
         collateral.approve(address(pool), amount);
 
-        (uint256 arthOut, uint256 arthxOut) = pool.mint(amount, arthOutMin, arthxOutMin);
+        (uint256 arthOut, uint256 arthxOut) =
+            pool.mint(amount, arthOutMin, arthxOutMin);
         arth.approve(address(stakingPool), uint256(arthOut));
         arthx.transfer(msg.sender, arthxOut);
 
         if (address(stakingPool) != address(0)) {
             if (secs != 0)
-                stakingPool.stakeLockedFor(msg.sender, address(this), arthOut, secs);
+                stakingPool.stakeLockedFor(
+                    msg.sender,
+                    address(this),
+                    arthOut,
+                    secs
+                );
             else stakingPool.stakeFor(msg.sender, address(this), arthOut);
         }
     }
-
 
     function _recollateralizeARTHAndStake(
         IARTHPool pool,
@@ -147,7 +152,12 @@ contract ArthPoolRouter {
 
         if (address(stakingPool) != address(0)) {
             if (secs != 0)
-                stakingPool.stakeLockedFor(msg.sender, address(this), arthxOut, secs);
+                stakingPool.stakeLockedFor(
+                    msg.sender,
+                    address(this),
+                    arthxOut,
+                    secs
+                );
             else stakingPool.stakeFor(msg.sender, address(this), arthxOut);
         }
     }

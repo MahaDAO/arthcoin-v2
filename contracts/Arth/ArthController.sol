@@ -25,10 +25,10 @@ contract ArthController is AccessControl, IARTHController {
 
     IERC20 public ARTH;
 
-    IChainlinkOracle public _ETHGMUPricer;
-    IUniswapPairOracle public _ARTHETHOracle;
+    IChainlinkOracle public ETHGMUPricer;
+    IUniswapPairOracle public ARTHETHOracle;
     IUniswapPairOracle public MAHAARTHOracle;
-    IUniswapPairOracle public _ARTHXETHOracle;
+    IUniswapPairOracle public ARTHXETHOracle;
     ICurve public _recollateralizeDiscountCruve;
     IBondingCurve public bondingCurve;
 
@@ -38,10 +38,7 @@ contract ArthController is AccessControl, IARTHController {
     address public creatorAddress;
     address public timelockAddress;
     address public controllerAddress;
-    address public arthETHOracleAddress;
-    address public mahaArthOracleAddress;
-    address public arthxETHOracleAddress;
-    address public ethGMUConsumerAddress;
+
     address public DEFAULT_ADMIN_ADDRESS;
 
     uint256 public globalCollateralRatio;
@@ -77,7 +74,7 @@ contract ArthController is AccessControl, IARTHController {
     bool public buyBackPaused = true;
     bool public recollateralizePaused = true;
 
-    uint8 public _ethGMUPricerDecimals;
+    uint8 public ETHGMUPricerDecimals;
     uint256 public constant _PRICE_PRECISION = 1e6;
     uint256 public stabilityFee = 0; // 1e4; // 1% in e6 precision.
 
@@ -248,17 +245,15 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        ethGMUConsumerAddress = _ethGMUConsumerAddress;
-        _ETHGMUPricer = IChainlinkOracle(ethGMUConsumerAddress);
-        _ethGMUPricerDecimals = _ETHGMUPricer.getDecimals();
+        ETHGMUPricer = IChainlinkOracle(_ethGMUConsumerAddress);
+        ETHGMUPricerDecimals = ETHGMUPricer.getDecimals();
     }
 
     function setARTHXETHOracle(
         address _arthxOracleAddress,
         address _wethAddress
     ) external override onlyByOwnerOrGovernance {
-        arthxETHOracleAddress = _arthxOracleAddress;
-        _ARTHXETHOracle = IUniswapPairOracle(_arthxOracleAddress);
+        ARTHXETHOracle = IUniswapPairOracle(_arthxOracleAddress);
         wethAddress = _wethAddress;
     }
 
@@ -267,7 +262,6 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        mahaArthOracleAddress = oracle;
         MAHAARTHOracle = IUniswapPairOracle(oracle);
     }
 
@@ -276,8 +270,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        arthETHOracleAddress = _arthOracleAddress;
-        _ARTHETHOracle = IUniswapPairOracle(_arthOracleAddress);
+        ARTHETHOracle = IUniswapPairOracle(_arthOracleAddress);
         wethAddress = _wethAddress;
     }
 
@@ -374,8 +367,8 @@ contract ArthController is AccessControl, IARTHController {
 
     function getETHGMUPrice() public view override returns (uint256) {
         return
-            uint256(_ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
-                uint256(10)**_ethGMUPricerDecimals
+            uint256(ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
+                uint256(10)**ETHGMUPricerDecimals
             );
     }
 
@@ -482,18 +475,18 @@ contract ArthController is AccessControl, IARTHController {
         returns (uint256)
     {
         uint256 eth2GMUPrice =
-            uint256(_ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
-                uint256(10)**_ethGMUPricerDecimals
+            uint256(ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
+                uint256(10)**ETHGMUPricerDecimals
             );
         uint256 priceVsETH;
 
         if (choice == PriceChoice.ARTH) {
             priceVsETH = uint256(
-                _ARTHETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTH if you put in _PRICE_PRECISION WETH ?
+                ARTHETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTH if you put in _PRICE_PRECISION WETH ?
             );
         } else if (choice == PriceChoice.ARTHX) {
             priceVsETH = uint256(
-                _ARTHXETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTHX if you put in _PRICE_PRECISION WETH ?
+                ARTHXETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTHX if you put in _PRICE_PRECISION WETH ?
             );
         } else
             revert(

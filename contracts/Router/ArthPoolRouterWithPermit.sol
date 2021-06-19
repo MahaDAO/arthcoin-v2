@@ -6,7 +6,7 @@ import {IARTH} from '../Arth/IARTH.sol';
 import {IARTHPool} from '../Arth/Pools/IARTHPool.sol';
 import {IARTHX} from '../ARTHX/IARTHX.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
-import {ISimpleOracle} from '../Oracle/ISimpleOracle.sol';
+import {IOracle} from '../Oracle/IOracle.sol';
 import {IBoostedStaking} from '../Staking/IBoostedStaking.sol';
 
 contract ArthPoolRouterWithPermit {
@@ -48,12 +48,18 @@ contract ArthPoolRouterWithPermit {
         collateral.transferFrom(msg.sender, address(this), collateralAmount);
         collateral.approve(address(pool), collateralAmount);
 
-        (uint256 arthOut, uint256 arthxOut) = pool.mint(collateralAmount, arthOutMin, arthxOutMin);
+        (uint256 arthOut, uint256 arthxOut) =
+            pool.mint(collateralAmount, arthOutMin, arthxOutMin);
         arth.approve(address(arthStakingPool), uint256(arthOut));
         arthx.transfer(msg.sender, arthxOut);
 
         if (secs != 0)
-            arthStakingPool.stakeLockedFor(msg.sender, address(this), arthOut, secs);
+            arthStakingPool.stakeLockedFor(
+                msg.sender,
+                address(this),
+                arthOut,
+                secs
+            );
         else arthStakingPool.stakeFor(msg.sender, address(this), arthOut);
     }
 
@@ -76,11 +82,17 @@ contract ArthPoolRouterWithPermit {
             s
         );
 
-        (uint256 arthOut, uint256 arthxOut) = pool.mint(collateralAmount, arthOutMin, arthxOutMin);
+        (uint256 arthOut, uint256 arthxOut) =
+            pool.mint(collateralAmount, arthOutMin, arthxOutMin);
         arthx.transfer(msg.sender, arthxOut);
 
         if (secs != 0)
-            arthStakingPool.stakeLockedFor(msg.sender, msg.sender, arthOut, secs);
+            arthStakingPool.stakeLockedFor(
+                msg.sender,
+                msg.sender,
+                arthOut,
+                secs
+            );
         else arthStakingPool.stakeFor(msg.sender, msg.sender, arthOut);
     }
 
@@ -97,7 +109,12 @@ contract ArthPoolRouterWithPermit {
         arthx.approve(address(arthxStakingPool), uint256(arthxOut));
 
         if (secs != 0)
-            arthxStakingPool.stakeLockedFor(msg.sender, address(this), arthxOut, secs);
+            arthxStakingPool.stakeLockedFor(
+                msg.sender,
+                address(this),
+                arthxOut,
+                secs
+            );
         else arthxStakingPool.stakeFor(msg.sender, address(this), arthxOut);
     }
 
@@ -123,7 +140,12 @@ contract ArthPoolRouterWithPermit {
             pool.recollateralizeARTH(collateralAmount, ARTHXOutMin);
 
         if (secs != 0)
-            arthxStakingPool.stakeLockedFor(msg.sender, msg.sender, arthxOut, secs);
+            arthxStakingPool.stakeLockedFor(
+                msg.sender,
+                msg.sender,
+                arthxOut,
+                secs
+            );
         else arthxStakingPool.stakeFor(msg.sender, msg.sender, arthxOut);
     }
 }

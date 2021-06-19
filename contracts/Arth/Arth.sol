@@ -84,41 +84,6 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         _;
     }
 
-    modifier requireCallerIsBorrowerOperations() {
-        require(
-            msg.sender == borrowerOperationsAddress,
-            'ARTH: Caller is not BorrowerOperations'
-        );
-        _;
-    }
-
-    modifier requireCallerIsBOorTroveMorSP() {
-        require(
-            msg.sender == borrowerOperationsAddress ||
-                msg.sender == troveManagerAddress ||
-                msg.sender == stabilityPoolAddress,
-            'ARTH: Caller is not BorrowerOperations'
-        );
-        _;
-    }
-
-    modifier requireCallerIsStabilityPool() {
-        require(
-            msg.sender == stabilityPoolAddress,
-            'ARTH: Caller is not the StabilityPool'
-        );
-        _;
-    }
-
-    modifier requireCallerIsTroveMorSP() {
-        require(
-            msg.sender == troveManagerAddress ||
-                msg.sender == stabilityPoolAddress,
-            'ARTH: Caller is neither TroveManager nor StabilityPool'
-        );
-        _;
-    }
-
     constructor() AnyswapV4Token(name) {
         _mint(msg.sender, genesisSupply);
     }
@@ -147,34 +112,17 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
     }
 
-    function sendToPool(
-        address _sender,
-        address _poolAddress,
-        uint256 _amount
-    ) external override requireCallerIsStabilityPool {
-        // Don't incentivize or penalize the loan pools.
-        super._transfer(_sender, _poolAddress, _amount);
-    }
-
-    function returnFromPool(
-        address _poolAddress,
-        address _receiver,
-        uint256 _amount
-    ) external override requireCallerIsTroveMorSP {
-        // Don't incentivize or penalize the loan pools.
-       super. _transfer(_poolAddress, _receiver, _amount);
-    }
-
     function transferAndCall(
         address to,
         uint256 value,
         bytes calldata data
-    ) public requireValidRecipient(to) override(IAnyswapV4Token, AnyswapV4Token) returns (bool) {
-        return super.transferAndCall(
-            to,
-            value,
-            data
-        );
+    )
+        public
+        override(IAnyswapV4Token, AnyswapV4Token)
+        requireValidRecipient(to)
+        returns (bool)
+    {
+        return super.transferAndCall(to, value, data);
     }
 
     function transferWithPermit(
@@ -185,16 +133,13 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public requireValidRecipient(to) override(IAnyswapV4Token, AnyswapV4Token) returns (bool) {
-        return super.transferWithPermit(
-            target,
-            to,
-            value,
-            deadline,
-            v,
-            r,
-            s
-        );
+    )
+        public
+        override(IAnyswapV4Token, AnyswapV4Token)
+        requireValidRecipient(to)
+        returns (bool)
+    {
+        return super.transferWithPermit(target, to, value, deadline, v, r, s);
     }
 
     function transfer(address recipient, uint256 amount)
@@ -219,11 +164,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         onlyNonBlacklisted(_msgSender())
         returns (bool)
     {
-        return super.transferFrom(
-            sender,
-            recipient,
-            amount
-        );
+        return super.transferFrom(sender, recipient, amount);
     }
 
     function rebase(int256 supplyDelta)

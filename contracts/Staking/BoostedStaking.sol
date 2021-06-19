@@ -147,8 +147,7 @@ contract BoostedStaking is
         address _rewardsToken,
         address _stakingToken,
         address arthControllerAddress,
-        address _timelockAddress,
-        uint256 _poolWeight
+        address _timelockAddress
     ) {
         ownerAddress = _owner;
         rewardsToken = IPoolToken(_rewardsToken);
