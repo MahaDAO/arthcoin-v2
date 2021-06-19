@@ -100,7 +100,7 @@ const getMahaToken = async (network, deployer, artifacts) => {
   const addr = knownContracts.MahaToken && knownContracts.MahaToken[network];
   if (addr) return IERC20.at(addr);
 
-  if (!isMainnet()) {
+  if (!isMainnet(network)) {
     if (MockMaha.isDeployed()) return MockMaha.deployed();
 
     console.log(chalk.yellow(`\nDeploying mahatoken on ${network} network...`));
@@ -400,14 +400,14 @@ const getUSDCGMUOracle = async (network, deployer, artifacts) => {
     knownContracts.USDCUSDChainlinkOracleDefault[network]
   );
 
-  if (!defaultChainlinkConsumerAddr && !isMainnet()) {
+  if (!defaultChainlinkConsumerAddr && !isMainnet(network)) {
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDCChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = mockUSDCChainlinkAggregator.address;
   }
 
-  if (!defaultChainlinkConsumerAddr && isMainnet()) {
+  if (!defaultChainlinkConsumerAddr && isMainnet(network)) {
     return null;
   }
 
@@ -435,14 +435,14 @@ const getUSDTGMUOracle = async (network, deployer, artifacts) => {
     knownContracts.USDTUSDChainlinkOracleDefault[network]
   );
 
-  if (!defaultChainlinkConsumerAddr & !isMainnet()) {
+  if (!defaultChainlinkConsumerAddr & !isMainnet(network)) {
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
   }
 
-  if (!defaultChainlinkConsumerAddr && isMainnet()) {
+  if (!defaultChainlinkConsumerAddr && isMainnet(network)) {
     return null;
   }
 
@@ -470,14 +470,14 @@ const getWBTCGMUOracle = async (network, deployer, artifacts) => {
     knownContracts.WBTCUSDChainlinkOracleDefault[network]
   );
 
-  if (!defaultChainlinkConsumerAddr && !isMainnet()) {
+  if (!defaultChainlinkConsumerAddr && !isMainnet(network)) {
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
   }
 
-  if (!defaultChainlinkConsumerAddr && isMainnet()) {
+  if (!defaultChainlinkConsumerAddr && isMainnet(network)) {
     return null;
   }
 
@@ -505,14 +505,14 @@ const getWMATICGMUOracle = async (network, deployer, artifacts) => {
     knownContracts.WMATICUSDChainlinkOracleDefault[network]
   );
 
-  if (!defaultChainlinkConsumerAddr && !isMainnet()) {
+  if (!defaultChainlinkConsumerAddr && !isMainnet(network)) {
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDTChainlinkAggregator = await MockChainlinkOracle.deployed();
     await mockUSDTChainlinkAggregator.setLatestPrice(ONEE8);
     defaultChainlinkConsumerAddr = mockUSDTChainlinkAggregator.address;
   }
 
-  if (!defaultChainlinkConsumerAddr && isMainnet()) {
+  if (!defaultChainlinkConsumerAddr && isMainnet(network)) {
     return null;
   }
 
@@ -535,7 +535,7 @@ const getETHGMUOracle = async (network, deployer, artifacts) => {
   if (ChainlinkETHUSDPriceConsumer.isDeployed()) return ChainlinkETHUSDPriceConsumer.deployed();
 
   let defaultChainlinkConsumerAddr = knownContracts.ETHUSDChainlinkOracleDefault[network];
-  if (!defaultChainlinkConsumerAddr && !isMainnet()) {
+  if (!defaultChainlinkConsumerAddr && !isMainnet(network)) {
     await deployer.deploy(MockChainlinkOracle);
     defaultChainlinkConsumerAddr = (await MockChainlinkOracle.deployed()).address;
   }

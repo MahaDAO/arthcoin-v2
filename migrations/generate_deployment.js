@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const { getUSDC, getUSDT, getWETH, getMahaToken, getUniswapFactory, getUniswapRouter, getWMATIC, getWBTC } = require('./helpers');
+const { getUSDC, getUSDT, getWETH, getMahaToken, getUniswapFactory, getUniswapRouter, getWMATIC, getWBTC, isMainnet } = require('./helpers');
 
 const knownContracts = require('./known-contracts');
 
@@ -16,7 +16,6 @@ const ARTHShares = artifacts.require('ARTHShares');
  */
 module.exports = async (callback) => {
   const network = process.argv[5];
-  const isMainnet = process.argv.includes('mainnet');
 
   const contracts = [
     { abi: 'ArthController', contract: 'ArthController' },
@@ -62,9 +61,8 @@ module.exports = async (callback) => {
   const deployments = {};
 
   try {
-    if (!isMainnet) contracts.push({ abi: 'Faucet', contract: 'Faucet' });
+    if (!isMainnet(network)) contracts.push({ abi: 'Faucet', contract: 'Faucet' });
 
-    const mahaToken = (await getMahaToken(network, null, artifacts)).address;
     const factoryInstance = (await getUniswapFactory(network, null, artifacts));
     const factory = factoryInstance.address;
     const router = (await getUniswapRouter(network, null, artifacts)).address;
