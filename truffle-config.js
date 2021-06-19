@@ -39,7 +39,11 @@ module.exports = {
       provider: function () {
         return new HDWalletProvider(
           process.env.METAMASK_WALLET_SECRET,
-          'https://rpc-mainnet.maticvigil.com'
+          'https://polygon-mainnet.infura.io/v3/1f10246c2868483e9e73ddfabda3825f',
+          // 'https://matic-mainnet-full-rpc.bwarelabs.com',
+          // 'https://matic-mainnet.chainstacklabs.com',
+          // 'https://rpc-mainnet.maticvigil.com',
+          // 'https://rpc-mainnet.matic.network
         )
       }
     }
