@@ -83,7 +83,7 @@ module.exports = async function (deployer, network, accounts) {
   ]);
 
   /* For testnet's to deploy uniswap oracle */
-  if (network != 'mainnet') {
+  if (!helpers.isMainnet(network)) {
     const usdc = await helpers.getUSDC(network, deployer, artifacts);
     const usdt = await helpers.getUSDT(network, deployer, artifacts);
     const wbtc = await helpers.getWBTC(network, deployer, artifacts);

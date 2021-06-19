@@ -33,6 +33,15 @@ module.exports = {
           'https://matic-mumbai.chainstacklabs.com'
         )
       }
+    },
+    matic: {
+      network_id: 137,
+      provider: function () {
+        return new HDWalletProvider(
+          process.env.METAMASK_WALLET_SECRET,
+          'https://rpc-mainnet.maticvigil.com'
+        )
+      }
     }
   },
   compilers: {
