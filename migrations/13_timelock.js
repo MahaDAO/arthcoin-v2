@@ -9,4 +9,4 @@ module.exports = async function (deployer, network, accounts) {
 
   timelock_admin_address = await timelockInstance.admin.call()
   console.log("NOTE: - timelock_admin [AFTER]: ", timelock_admin_address)
-}
+};

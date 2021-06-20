@@ -8,9 +8,8 @@ const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const StakeARTHMAHA = artifacts.require("Staking/Variants/StakeARTHMAHA.sol");
 const StakeARTH = artifacts.require("Staking/Variants/StakeARTH.sol");
-const StakeARTHWETH = artifacts.require("Staking/Variants/StakeARTHWETH.sol");
 const StakeARTHX = artifacts.require("Staking/Variants/StakeARTHX.sol");
-const StakeARTHXWETH = artifacts.require("Staking/Variants/StakeARTHXWETH.sol");
+const StakeARTHXARTH = artifacts.require("Staking/Variants/StakeARTHXARTH.sol");
 const PoolToken = artifacts.require("PoolToken");
 
 module.exports = async function (deployer, network, accounts) {
@@ -22,21 +21,13 @@ module.exports = async function (deployer, network, accounts) {
   const arthx = await ARTHShares.deployed();
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const uniswapFactory = await helpers.getUniswapFactory(network, deployer, artifacts);
-  const weth = await helpers.getWETH(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nGetting created uniswap pair addresses...'));
-  const pairARTHWETH = await uniswapFactory.getPair(arth.address, weth.address);
   const pairARTHMAHA = await uniswapFactory.getPair(arth.address, maha.address);
-  const pairARTHXWETH = await uniswapFactory.getPair(arthx.address, weth.address);
+  const pairARTHXWETH = await uniswapFactory.getPair(arthx.address, arth.address);
 
   console.log(chalk.yellow('\nDeploying staking contracts...'));
   await Promise.all([
-    deployer.deploy(
-      StakeARTHWETH,
-      DEPLOYER_ADDRESS,
-      poolToken.address,
-      pairARTHWETH
-    ),
     deployer.deploy(
       StakeARTHMAHA,
       DEPLOYER_ADDRESS,
@@ -44,7 +35,7 @@ module.exports = async function (deployer, network, accounts) {
       pairARTHMAHA
     ),
     deployer.deploy(
-      StakeARTHXWETH,
+      StakeARTHXARTH,
       DEPLOYER_ADDRESS,
       poolToken.address,
       pairARTHXWETH
@@ -65,27 +56,24 @@ module.exports = async function (deployer, network, accounts) {
 
   const stakeARTH = await StakeARTH.deployed();
   const stakeARTHMAHA = await StakeARTHMAHA.deployed();
-  const stakeARTHWETH = await StakeARTHWETH.deployed();
   const stakeARTHX = await StakeARTHX.deployed();
-  const stakeARTHXWETH = await StakeARTHXWETH.deployed();
+  const stakeARTHXARTH = await StakeARTHXARTH.deployed();
 
   console.log(chalk.yellow('\nTransfering Pool tokens to staking contracts...'));
 
-  const decimals = BigNumber.from(10).pow(18)
+  const decimals = BigNumber.from(10).pow(18);
   await Promise.all([
     poolToken.transfer(stakeARTH.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
-    poolToken.transfer(stakeARTHMAHA.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS }),
-    poolToken.transfer(stakeARTHWETH.address, decimals.mul(3000), { from: DEPLOYER_ADDRESS }),
+    poolToken.transfer(stakeARTHMAHA.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHX.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
-    poolToken.transfer(stakeARTHXWETH.address, decimals.mul(3000), { from: DEPLOYER_ADDRESS }),
+    poolToken.transfer(stakeARTHXARTH.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
   ]);
 
   console.log(chalk.yellow('\nAdd the staking contracts to tax whitelist'));
   await Promise.all([
     await arthx.addToTaxWhiteList(stakeARTH.address),
     await arthx.addToTaxWhiteList(stakeARTHMAHA.address),
-    await arthx.addToTaxWhiteList(stakeARTHWETH.address),
     await arthx.addToTaxWhiteList(stakeARTHX.address),
-    await arthx.addToTaxWhiteList(stakeARTHXWETH.address),
+    await arthx.addToTaxWhiteList(stakeARTHXARTH.address),
   ]);
 };

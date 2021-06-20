@@ -305,12 +305,12 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getMAHAPrice() public view override returns (uint256) {
-        return MAHAGMUOracle.consult(address(MAHA), 1e18);
+        return MAHAGMUOracle.consult(address(ARTH), 1e18);
     }
 
     function getARTHXPrice() public view override returns (uint256) {
         if (getIsGenesisActive()) return getARTHXGenesisPrice();
-        return ARTHXGMUOracle.consult(address(ARTHX), 1e18);
+        return ARTHXGMUOracle.consult(address(ARTH), 1e18);
     }
 
     function getIsGenesisActive() public view override returns (bool) {

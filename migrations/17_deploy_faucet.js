@@ -20,7 +20,7 @@ module.exports = async function (deployer, network, accounts) {
   const usdcInstance = await helpers.getUSDC(network, deployer, artifacts);
   const usdtInstance = await helpers.getUSDT(network, deployer, artifacts);
 
-  console.log('\nDeploying Faucet...')
+  console.log('\nDeploying Faucet...');
   await deployer.deploy(
     Faucet,
     [

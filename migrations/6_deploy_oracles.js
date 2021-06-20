@@ -53,7 +53,6 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nLinking ARTHX oracles...'));
   const oracleARTHXWETH = await UniswapPairOracle_ARTH_ARTHX.deployed();
-  console.log(oracleARTHXWETH.address)
   await arthController.setARTHXGMUOracle(oracleARTHXWETH.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nLinking MAHA oracles...'));
@@ -65,10 +64,10 @@ module.exports = async function (deployer, network, accounts) {
   await arthController.setBondingCurve(bondingCurve.address);
 
   // todo: need to set this to use GMU oracles
-  // console.log(chalk.yellowBright('\nDeploying collateral oracles'))
-  // await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
-  // await helpers.getUSDTOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
-  // await helpers.getWBTCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
-  // await helpers.getWMATICOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
-  // await helpers.getWETHOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  console.log(chalk.yellowBright('\nDeploying collateral oracles'))
+  await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getUSDTOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWBTCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWMATICOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWETHOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
 };

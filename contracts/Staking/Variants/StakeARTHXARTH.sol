@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import '../BasicStaking.sol';
 
-contract StakeARTHWETH is BasicStaking {
+contract StakeARTHXARTH is BasicStaking {
     constructor(
         address _rewardsDistribution,
         address _rewardsToken,

@@ -17,7 +17,7 @@ module.exports = async function (deployer, network) {
     arth.address,
     weth.address,
     routerInstance.address
-  )
+  );
 
   // TODO: deploy other routers and add them to whitelists.
 
