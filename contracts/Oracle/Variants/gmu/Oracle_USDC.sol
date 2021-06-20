@@ -2,14 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import './UniversalGMUOracle.sol';
+import './UniversalGMUOracleV2.sol';
 
-contract Oracle_USDC is UniversalGMUOracle {
+contract Oracle_USDC is UniversalGMUOracleV2 {
     constructor(
         address base,
         address quote,
         IUniswapPairOracle pairOracle,
         AggregatorV3Interface oracle,
+        AggregatorV3Interface ethUSDChainlinkFeed,
         IOracle gmuOracle
-    ) UniversalGMUOracle(base, quote, pairOracle, oracle, gmuOracle) {}
+    ) UniversalGMUOracleV2(base, quote, pairOracle, oracle, ethUSDChainlinkFeed, gmuOracle) {}
 }

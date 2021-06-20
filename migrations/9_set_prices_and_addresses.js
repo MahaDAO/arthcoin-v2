@@ -1,25 +1,24 @@
-require('dotenv').config();
 const chalk = require('chalk');
 const BigNumber = require('bignumber.js');
+
+require('dotenv').config();
 const helpers = require('./helpers');
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
+const Pool_USDC = artifacts.require("Pool_USDC");
+const Pool_USDT = artifacts.require("Pool_USDT");
+const Pool_WBTC = artifacts.require("Pool_WBTC");
+const Pool_WETH = artifacts.require("Pool_WETH");
+const ARTHShares = artifacts.require("ARTHShares");
+const Pool_WMATIC = artifacts.require("Pool_WMATIC");
 const ARTHController = artifacts.require("ArthController");
-const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
-const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
-const Pool_WBTC = artifacts.require("Arth/Pools/Pool_WBTC");
-const Pool_WMATIC = artifacts.require("Arth/Pools/Pool_WMATIC");
-const Pool_WETH = artifacts.require("Arth/Pools/Pool_WETH");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
-
-const UniswapPairOracle_MAHA_ARTH = artifacts.require("Oracle/Variants/UniswapPairOracle_MAHA_ARTH");
-const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHX");
-
+const ARTHStablecoin = artifacts.require("ARTHStablecoin");
+const UniswapPairOracle_MAHA_ARTH = artifacts.require("UniswapPairOracle_MAHA_ARTH");
+const UniswapPairOracle_ARTH_ARTHX = artifacts.require("UniswapPairOracle_ARTH_ARTHX");
 const GenesisUSDC = artifacts.require("GenesisUSDC");
 const GenesisUSDT = artifacts.require("GenesisUSDT");
 const GenesisWBTC = artifacts.require("GenesisWBTC");
-const GenesisWMATIC = artifacts.require("GenesisWMATIC");
 const GenesisWETH = artifacts.require("GenesisWETH");
+const GenesisWMATIC = artifacts.require("GenesisWMATIC");
 
 module.exports = async function (deployer, network, accounts) {
   const BIG6 = new BigNumber("1e6");
@@ -30,7 +29,7 @@ module.exports = async function (deployer, network, accounts) {
   const arthx = await ARTHShares.deployed();
   const arth = await ARTHStablecoin.deployed();
   const arthControllerInstance = await ARTHController.deployed();
-  const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  const maha = await helpers.getMahaToken(network, deployer, artifacts);
 
   const genesis_usdt = await GenesisUSDT.deployed();
   const genesis_usdc = await GenesisUSDC.deployed();
@@ -49,31 +48,30 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nLinking collateral pools to arth contract...'));
 
-  // await arthControllerInstance.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(pool_instance_WBTC.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(pool_instance_WMATIC.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(pool_instance_WETH.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(genesis_wbtc.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(genesis_weth.address, { from: DEPLOYER_ADDRESS });
-  // await arthControllerInstance.addPool(genesis_wmatic.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_USDC.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_USDT.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_WBTC.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_WMATIC.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(pool_instance_WETH.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_usdc.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_usdt.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_wbtc.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_weth.address, { from: DEPLOYER_ADDRESS });
+  await arthControllerInstance.addPool(genesis_wmatic.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting ARTH address within ARTHX...'));
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSome oracle prices are: '));
-  // const arth_price_initial = new BigNumber(await arthControllerInstance.getARTHPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
-  // const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
-  // const arthx_price_from_ARTHX_WETH = (new BigNumber(await uniswapPairOracleARTHXARTH.consult.call(arth.address, 1e6))).div(BIG6);
-  // const maha_price_initial = new BigNumber(await arthControllerInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
-  // const maha_price_from_MAHA_ARTH = (new BigNumber(await uniswapPairOracleMAHAARTH.consult.call(arth.address, 1e6))).div(BIG6);
+  const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const arthx_price_from_ARTHX_ARTH = (new BigNumber(await uniswapPairOracleARTHXARTH.consult.call(arthx.address, 1e6))).div(BIG6);
+  const maha_price_initial = new BigNumber(await arthControllerInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const maha_price_from_MAHA_ARTH = (new BigNumber(await uniswapPairOracleMAHAARTH.consult.call(maha.address, 1e6))).div(BIG6);
 
-  // console.log(" NOTE: - maha_price_initial: ", maha_price_initial.toString(), "GMU = 1 MAHA");
-  // console.log(" NOTE: - arthx_price_initial: ", arthx_price_initial.toString(), "GMU = 1 ARTHX");
-  // console.log(" NOTE: - arthx_price_from_ARTHX_ARTH: ", arthx_price_from_ARTHX_WETH.toString(), "ARTHX = 1 WETH");
-  // console.log(" NOTE: - maha_price_from_MAHA_ARTH: ", maha_price_from_MAHA_ARTH.toString(), "MAHA = 1 ARTH");
+  console.log(" NOTE: - maha_price_initial: ", maha_price_initial.toString(), "GMU = 1 MAHA");
+  console.log(" NOTE: - arthx_price_initial: ", arthx_price_initial.toString(), "GMU = 1 ARTHX");
+  console.log(" NOTE: - arthx_price_from_ARTHX_ARTH: ", arthx_price_from_ARTHX_ARTH.toString(), "ARTHX = 1 ARTH");
+  console.log(" NOTE: - maha_price_from_MAHA_ARTH: ", maha_price_from_MAHA_ARTH.toString(), "MAHA = 1 ARTH");
 
   const percentCollateralized = new BigNumber(await arthControllerInstance.getPercentCollateralized());
   const globalCollateralValue = new BigNumber(await arthControllerInstance.getGlobalCollateralValue());

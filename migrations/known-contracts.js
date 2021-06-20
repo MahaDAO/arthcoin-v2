@@ -56,23 +56,23 @@ module.exports = {
     matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',  // WETH.
   },
 
-  ETHUSDChainlinkOracleDefault: {
+  ETHUSDChainlinkOracleFeed: {
     kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331',
     maticMumbai: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada',
     matic: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0',  // MATIC/USD.
   },
-  USDTUSDChainlinkOracleDefault: {
+  USDTUSDChainlinkOracleFeed: {
     maticMumbai: '0x92C09849638959196E976289418e5973CC96d645',
     matic: '0x0A6513e40db6EB1b165753AD52E80663aeA50545',
   },
-  USDCUSDChainlinkOracleDefault: {
+  USDCUSDChainlinkOracleFeed: {
     maticMumbai: '0x572dDec9087154dC5dfBB1546Bb62713147e0Ab0',
     matic: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7',
   },
-  WBTCUSDChainlinkOracleDefault: {
+  WBTCUSDChainlinkOracleFeed: {
     matic: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6',
   },
-  WMATICUSDChainlinkOracleDefault: {
+  WMATICUSDChainlinkOracleFeed: {
     maticMumbai: '0x0715A7794a1dc8e42615F059dD6e406A6594651A',
     matic: '0xF9680D99D6C9589e2a93a78A04A279e509205945'
   },
