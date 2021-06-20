@@ -13,7 +13,6 @@ import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
-import {IUniswapPairOracle} from '../../Oracle/IUniswapPairOracle.sol';
 
 /**
  * @title  ARTHPool.
@@ -36,7 +35,6 @@ contract ArthPool is AccessControl, IARTHPool {
     IARTHController public _arthController;
     IOracle public _collateralGMUOracle;
     //ICurve public _recollateralizeDiscountCruve;
-    IUniswapPairOracle public _collateralETHOracle;
 
     uint256 public buybackCollateralBuffer = 20; // In %.
     uint256 public poolCeiling = 0; // Total units of collateral that a pool contract can hold
@@ -56,8 +54,8 @@ contract ArthPool is AccessControl, IARTHPool {
 
     uint256 private immutable _missingDeciamls;
     uint256 private constant _PRICE_PRECISION = 1e6;
-    uint256 private constant _COLLATERAL_RATIO_MAX = 2e6;  // Placeholder, need to replace this with apt. val.
-    uint256 private constant _COLLATERAL_RATIO_MIN = 1e6 + 1;  // 100.0001 in 1e6 precision.
+    uint256 private constant _COLLATERAL_RATIO_MAX = 2e6; // Placeholder, need to replace this with apt. val.
+    uint256 private constant _COLLATERAL_RATIO_MIN = 1e6 + 1; // 100.0001 in 1e6 precision.
     uint256 private constant _COLLATERAL_RATIO_PRECISION = 1e6;
 
     address private _wethAddress;
@@ -238,17 +236,9 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 collateralAmount,
         uint256 arthOutMin,
         uint256 arthxOutMin
-    )
-        external
-        override
-        notMintPaused
-        returns (
-            uint256,
-            uint256
-        )
-    {
+    ) external override notMintPaused returns (uint256, uint256) {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
-        uint256 cr =  _arthController.getGlobalCollateralRatio();
+        uint256 cr = _arthController.getGlobalCollateralRatio();
 
         require(
             cr <= _COLLATERAL_RATIO_MAX,
@@ -317,21 +307,11 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 arthAmount,
         uint256 arthxAmount,
         uint256 collateralOutMin
-    )
-        external
-        override
-        notRedeemPaused
-    {
+    ) external override notRedeemPaused {
         uint256 cr = _arthController.getGlobalCollateralRatio();
 
-        require(
-            cr <= _COLLATERAL_RATIO_MAX,
-            'Collateral ratio > MAX'
-        );
-        require(
-            cr >= _COLLATERAL_RATIO_MIN,
-            'Collateral ratio < MIN'
-        );
+        require(cr <= _COLLATERAL_RATIO_MAX, 'Collateral ratio > MAX');
+        require(cr >= _COLLATERAL_RATIO_MIN, 'Collateral ratio < MIN');
 
         // Need to adjust for decimals of collateral
         uint256 arthAmountPrecision = arthAmount.div(10**_missingDeciamls);
@@ -357,7 +337,8 @@ contract ArthPool is AccessControl, IARTHPool {
         )
             .div(1e6);
 
-        uint256 arthxInputNeededD18 = arthxInputNeeded.mul(10**_missingDeciamls);
+        uint256 arthxInputNeededD18 =
+            arthxInputNeeded.mul(10**_missingDeciamls);
         require(
             _ARTHX.balanceOf(msg.sender) >= arthxInputNeededD18,
             'ARTHPool: balance not enough'
@@ -564,7 +545,7 @@ contract ArthPool is AccessControl, IARTHPool {
                 .mul(10**_missingDeciamls)
                 .mul(collateralPrice)
                 .div(_PRICE_PRECISION)
-                // .div(10**_missingDeciamls)
+            // .div(10**_missingDeciamls)
         );
     }
 
@@ -625,9 +606,7 @@ contract ArthPool is AccessControl, IARTHPool {
 
         // ARTH is redeemed at 1$.
         return (
-            stabilityFeeInARTH
-                .mul(1e6)
-                .div(_arthController.getMAHAPrice())
+            stabilityFeeInARTH.mul(1e6).div(_arthController.getMAHAPrice())
         );
     }
 
