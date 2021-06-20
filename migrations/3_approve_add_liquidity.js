@@ -76,7 +76,7 @@ module.exports = async function (deployer, network, accounts) {
     const wmatic = await helpers.getWMATIC(network, deployer, artifacts);
 
     console.log(chalk.yellow('\nDepositing eth into weth'));
-    await weth.deposit({ value: new BigNumber(1e16).mul(4) });
+    await weth.deposit({ value: new BigNumber(4e16) });
 
     console.log(chalk.yellow('\nCreating collateral uniswap pairs....'));
     await Promise.all([
