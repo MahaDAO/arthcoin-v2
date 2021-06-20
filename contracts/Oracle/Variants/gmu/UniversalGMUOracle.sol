@@ -7,7 +7,7 @@ import {Ownable} from '../../../access/Ownable.sol';
 import {IERC20} from '../../../ERC20/IERC20.sol';
 import {SafeMath} from '../../../utils/math/SafeMath.sol';
 import {IUniswapPairOracle} from '../uniswap/IUniswapPairOracle.sol';
-import {IChainlinkOracle} from '../chainlink/IChainlinkOracle.sol';
+import {AggregatorV3Interface} from '../chainlink/AggregatorV3Interface.sol';
 import {IOracle} from '../../IOracle.sol';
 
 // an oracle that takes a raw chainlink or uniswap oracle and spits out the GMU price
@@ -15,7 +15,7 @@ contract UniversalGMUOracle is Ownable, IOracle {
     using SafeMath for uint256;
 
     IUniswapPairOracle public uniswapOracle;
-    IChainlinkOracle public chainlinkOracle;
+    AggregatorV3Interface public chainlinkFeed;
     IOracle public GMUOracle;
 
     address public base;
@@ -31,27 +31,27 @@ contract UniversalGMUOracle is Ownable, IOracle {
         address base_,
         address quote_,
         IUniswapPairOracle uniswapOracle_,
-        IChainlinkOracle chainlinkOracle_,
+        AggregatorV3Interface chainlinkFeed_,
         IOracle GMUOracle_
     ) {
         base = base_;
         quote = quote_;
         GMUOracle = GMUOracle_;
-        chainlinkOracle = chainlinkOracle_;
+        chainlinkFeed = chainlinkFeed_;
         uniswapOracle = uniswapOracle_;
 
         ethGMUPriceFeedDecimals = GMUOracle.getDecimalPercision();
-        oraclePriceFeedDecimals = address(chainlinkOracle) != address(0)
-            ? chainlinkOracle.getDecimals()
+        oraclePriceFeedDecimals = address(chainlinkFeed) != address(0)
+            ? chainlinkFeed.decimals()
             : 0;
 
         _TOKEN_MISSING_DECIMALS = uint256(18).sub(IERC20(base).decimals());
     }
 
-    function setChainlinkOracle(IChainlinkOracle oracle_) public onlyOwner {
-        chainlinkOracle = oracle_;
-        oraclePriceFeedDecimals = address(chainlinkOracle) != address(0)
-            ? chainlinkOracle.getDecimals()
+    function setchainlinkFeed(AggregatorV3Interface oracle_) public onlyOwner {
+        chainlinkFeed = oracle_;
+        oraclePriceFeedDecimals = address(chainlinkFeed) != address(0)
+            ? chainlinkFeed.decimals()
             : 0;
     }
 
@@ -68,17 +68,14 @@ contract UniversalGMUOracle is Ownable, IOracle {
     }
 
     function getChainlinkPrice() public view returns (uint256) {
-        return (
-            uint256(chainlinkOracle.getLatestPrice()).mul(_PRICE_PRECISION).div(
-                uint256(10)**oraclePriceFeedDecimals
-            )
-        );
+        (, int256 price, , , ) = chainlinkFeed.latestRoundData();
+        return uint256(price);
     }
 
     function getRawPrice() public view returns (uint256) {
         // If we have chainlink oracle for base set return that price.
         // NOTE: this chainlink is subject to Aggregator being in BASE/USD and USD/GMU(Simple oracle).
-        if (address(chainlinkOracle) != address(0)) return getChainlinkPrice();
+        if (address(chainlinkFeed) != address(0)) return getChainlinkPrice();
 
         // Else return price from uni pair.
         return getPairPrice();

@@ -35,8 +35,6 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     uint256 public taxPercent = 0; // 10e4;  // 10% 6 decimal precision.
 
-    address public ownerAddress;
-
     /// @notice Address when on the sending/receiving end the tx is not taxed.
     mapping(address => bool) public whiteListedForTax;
 
@@ -51,11 +49,6 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         _;
     }
 
-    modifier onlyByOwner() {
-        require(msg.sender == ownerAddress, 'You are not the owner');
-        _;
-    }
-
     constructor() AnyswapV4Token('ARTH Shares') {
         name = 'ARTH Shares';
         symbol = 'ARTHX';
@@ -66,7 +59,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     function setArthController(address _controller)
         external
         override
-        onlyByOwner
+        onlyOwner
     {
         controller = IARTHController(_controller);
     }
@@ -74,26 +67,26 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     function setTaxController(ITaxController newController)
         external
         override
-        onlyByOwner
+        onlyOwner
     {
         whiteListedForTax[address(taxController)] = false;
         taxController = newController;
         whiteListedForTax[address(taxController)] = true;
     }
 
-    function setTaxPercent(uint256 percent) external override onlyByOwner {
+    function setTaxPercent(uint256 percent) external override onlyOwner {
         require(taxPercent <= 1e6, 'ARTHX: tax percent > 1e6');
         taxPercent = percent;
     }
 
-    function addToTaxWhiteList(address entity) external override onlyByOwner {
+    function addToTaxWhiteList(address entity) external override onlyOwner {
         whiteListedForTax[entity] = true;
     }
 
     function removeFromTaxWhitelist(address entity)
         external
         override
-        onlyByOwner
+        onlyOwner
     {
         whiteListedForTax[entity] = false;
     }
@@ -101,13 +94,9 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     function setARTHAddress(address arthContractAddress)
         external
         override
-        onlyByOwner
+        onlyOwner
     {
         arth = IARTH(arthContractAddress);
-    }
-
-    function setOwner(address _ownerAddress) external override onlyByOwner {
-        ownerAddress = _ownerAddress;
     }
 
     function mint(address to, uint256 amount) public onlyPools {

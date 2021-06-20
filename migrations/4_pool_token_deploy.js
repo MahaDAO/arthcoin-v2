@@ -36,7 +36,7 @@ module.exports = async function (deployer, network, accounts) {
   );
   const taxController = await ARTHXTaxController.deployed();
   await taxController.setRewardsDestination(pool.address);
-  await arthx.setTaxController(taxController.address);
+  await arthx.setTaxController(taxController.address, { from: DEPLOYER_ADDRESS });
 
   console.log('\nAdd the pool token to tax whitelist');
   await arthx.addToTaxWhiteList(pool.address);

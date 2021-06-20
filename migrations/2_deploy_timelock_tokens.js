@@ -10,7 +10,7 @@ const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 module.exports = async function (deployer, network, accounts) {
-  const TIMELOCK_DELAY = 0; // 2 * 86400;
+  const TIMELOCK_DELAY =  2 * 86400;
   const DEPLOYER_ADDRESS = accounts[0];
   const MOCK_TOKEN_INITIAL_SUPPLY = new BigNumber(1000e18);
 
@@ -22,12 +22,7 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(ARTHStablecoin);
   const arth = await ARTHStablecoin.deployed();
 
-  await deployer.deploy(
-    ARTHShares,
-    DEPLOYER_ADDRESS, // Temporary address until oracle is deployed.
-    DEPLOYER_ADDRESS,
-    timelockInstance.address
-  );
+  await deployer.deploy(ARTHShares);
   const arthx = await ARTHShares.deployed();
 
   const arthx_name = await arthx.name.call();
@@ -44,6 +39,7 @@ module.exports = async function (deployer, network, accounts) {
     arth.address,
     maha.address,
     arthx.address,
+    DEPLOYER_ADDRESS,
     timelockInstance.address
   );
 
@@ -55,5 +51,6 @@ module.exports = async function (deployer, network, accounts) {
   await helpers.getUSDT(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nSetting appropriate token addresses...'));
-  await arthControllerInstance.setARTHXAddress(arthxInstance.address, { from: DEPLOYER_ADDRESS });
+  await arth.setArthController(arthControllerInstance.address, { from: DEPLOYER_ADDRESS });
+  await arthx.setArthController(arthControllerInstance.address, { from: DEPLOYER_ADDRESS });
 };

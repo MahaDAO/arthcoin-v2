@@ -129,6 +129,7 @@ contract ArthController is AccessControl, IARTHController {
         IERC20 _arth,
         IERC20 _arthx,
         IERC20 _maha,
+        address _owner,
         address _timelockAddress
     ) {
         ARTH = _arth;
@@ -150,6 +151,7 @@ contract ArthController is AccessControl, IARTHController {
         grantRole(_RECOLLATERALIZE_PAUSER, _timelockAddress);
 
         genesisTimestamp = block.timestamp;
+        ownerAddress = _owner;
     }
 
     /**

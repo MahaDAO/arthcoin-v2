@@ -18,6 +18,9 @@ import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 contract ARTHStablecoin is AnyswapV4Token, IARTH {
     using SafeMath for uint256;
 
+    // bytes32 public constant GOVERNANCE_ROLE = keccak256('GOVERNANCE_ROLE');
+    // bytes32 public constant OWNERSHIP_ROLE = keccak256('GOVERNANCE_ROLE');
+
     address public governance;
     IARTHController public controller;
 
@@ -72,7 +75,8 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     }
 
     constructor() AnyswapV4Token(name) {
-        _mint(msg.sender, genesisSupply);
+        _mint(_msgSender(), genesisSupply);
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     function transferAndCall(
@@ -232,10 +236,17 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         emit PoolMinted(msg.sender, who, amount);
     }
 
-    function setGovernance(address _governance) external override onlyOwner {
-        require(_governance != address(0), 'ARTH: address = 0');
+    // function setGovernance(address _governance) external override onlyOwner {
+    //     require(_governance != address(0), 'ARTH: address = 0');
+    //     governance = _governance;
+    // }
 
-        governance = _governance;
+    function setArthController(address _controller)
+        external
+        override
+        onlyOwner
+    {
+        controller = IARTHController(_controller);
     }
 
     function _transfer(

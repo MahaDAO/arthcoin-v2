@@ -7,11 +7,11 @@ import {IIncentiveController} from './IIncentive.sol';
 import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
 
 interface IARTH is IERC20, IAnyswapV4Token {
-    function setGovernance(address _governance) external;
-
     function poolMint(address who, uint256 amount) external;
 
     function poolBurnFrom(address who, uint256 amount) external;
+
+    function setArthController(address _controller) external;
 
     function genesisSupply() external view returns (uint256);
 }

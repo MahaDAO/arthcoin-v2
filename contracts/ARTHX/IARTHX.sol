@@ -16,8 +16,6 @@ interface IARTHX is IERC20, IAnyswapV4Token {
 
     function removeFromTaxWhitelist(address entity) external;
 
-    function setOwner(address _ownerAddress) external;
-
     function setArthController(address _controller) external;
 
     function setTaxPercent(uint256 percent) external;

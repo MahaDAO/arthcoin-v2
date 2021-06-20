@@ -9,7 +9,7 @@ contract Oracle_WMATIC is UniversalGMUOracle {
         address base,
         address quote,
         IUniswapPairOracle pairOracle,
-        IChainlinkOracle chainlinkOracle,
+        AggregatorV3Interface chainlinkOracle,
         IOracle gmuOracle
     ) UniversalGMUOracle(base, quote, pairOracle, chainlinkOracle, gmuOracle) {}
 }

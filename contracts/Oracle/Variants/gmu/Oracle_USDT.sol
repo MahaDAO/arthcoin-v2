@@ -9,7 +9,7 @@ contract Oracle_USDT is UniversalGMUOracle {
         address base,
         address quote,
         IUniswapPairOracle pairOracle,
-        IChainlinkOracle oracle,
+        AggregatorV3Interface oracle,
         IOracle gmuOracle
     ) UniversalGMUOracle(base, quote, pairOracle, oracle, gmuOracle) {}
 }
