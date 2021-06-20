@@ -57,8 +57,6 @@ interface IARTHController {
 
     function setARTHXAddress(address _arthxAddress) external;
 
-    function setETHGMUOracle(address _ethGMUConsumerAddress) external;
-
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio) external;
 
     function getARTHPrice() external view returns (uint256);

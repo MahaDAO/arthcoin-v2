@@ -32,7 +32,7 @@ contract MockUniswapPairOracle is IUniswapPairOracle {
         startTime = _startTime;
     }
 
-    function setPeriod(uint256 _period) public override {
+    function setPeriod(uint256 _period) public {
         period = _period;
     }
 
@@ -69,17 +69,6 @@ contract MockUniswapPairOracle is IUniswapPairOracle {
     ) external view returns (address lpt) {
         return UniswapV2Library.pairFor(factory, tokenA, tokenB);
     }
-
-    function setOwner(address _ownerAddress) external override {}
-
-    function setTimelock(address _timelockAddress) external override {}
-
-    function setConsultLeniency(uint256 _consultLeniency) external override {}
-
-    function setAllowStaleConsults(bool _allowStaleConsults)
-        external
-        override
-    {}
 
     function canUpdate() external pure override returns (bool) {
         return true;
