@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import '@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol';
+import '@openzeppelin/contracts/access/AccessControl.sol';
+import '@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {ILotteryRaffle} from './ILotteryRaffle.sol';
 
@@ -12,6 +12,7 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
     using SafeMath for uint256;
 
     uint256 public tokenCounter;
+    uint256 public totalTickets;
     uint256 public prizeCounter;
 
     struct Lottery {
@@ -41,12 +42,12 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
         _;
     }
 
-    constructor(address[] memory genesis)  ERC721("Maha Raffle", "LOT") {
+    constructor(address[] memory genesis) ERC721('Maha Raffle', 'LOT') {
         tokenCounter = 0;
         prizeCounter = 0;
 
         ownerByAddress[msg.sender] = true;
-        for(uint256 i = 0; i < genesis.length; i++) {
+        for (uint256 i = 0; i < genesis.length; i++) {
             ownerByAddress[genesis[i]] = true;
         }
     }
@@ -60,10 +61,20 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
         string memory image
     ) public onlyOwner {
         prizeCounter = prizeCounter.add(1);
-        prizes[_prize] = NftPrizeDetails(_description, _nftAddress, _criteria, _nftId, image, address(0));
+        prizes[_prize] = NftPrizeDetails(
+            _description,
+            _nftAddress,
+            _criteria,
+            _nftId,
+            image,
+            address(0)
+        );
     }
 
-    function setWinner(string memory _prize, uint256 _tokenId) public onlyOwner {
+    function setWinner(string memory _prize, uint256 _tokenId)
+        public
+        onlyOwner
+    {
         NftPrizeDetails memory _nftDetails = prizes[_prize];
 
         address _tokenOwner = tokenIdOwner(_tokenId);
@@ -77,20 +88,13 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
         override
         onlyOwner
     {
-        if (usersLotteries[_to] > 0) {
-            Lottery memory _lotteries = lotteries[usersLotteries[_to]];
+        tokenCounter = tokenCounter.add(1);
+        totalTickets = totalTickets.add(_amount);
 
-            _lotteries.weight = _lotteries.weight.add(_amount);
-            lotteries[usersLotteries[_to]] = _lotteries;
+        lotteries[tokenCounter] = Lottery(tokenCounter, _amount, _to);
+        usersLotteries[_to] = tokenCounter;
 
-        } else {
-            tokenCounter = tokenCounter.add(1);
-
-            lotteries[tokenCounter] = Lottery(tokenCounter, _amount, _to);
-            usersLotteries[_to] = tokenCounter;
-
-            _safeMint(_to, tokenCounter);
-        }
+        _safeMint(_to, tokenCounter);
     }
 
     function checkResult(string memory _prize) public view returns (bool) {
@@ -103,23 +107,39 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
         }
     }
 
-    function getTokenCounts() public view override returns (uint256){
+    function getTokenCounts() public view override returns (uint256) {
         return tokenCounter;
     }
 
-    function tokenIdOwner(uint256 _id) public view override returns (address){
+    function tokenIdOwner(uint256 _id) public view override returns (address) {
         return ownerOf(_id);
     }
 
-    function usersLottery(address _address) public view override returns (uint256) {
+    function usersLottery(address _address)
+        public
+        view
+        override
+        returns (uint256)
+    {
         return usersLotteries[_address];
     }
 
-    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) public virtual returns (bytes4) {
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721, AccessControl)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId);
     }
 }
