@@ -11,8 +11,12 @@ import {Math} from '../utils/math/Math.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IIncentiveController} from './IIncentive.sol';
 import {AccessControl} from '../access/AccessControl.sol';
-import {IChainlinkOracle} from '../Oracle/IChainlinkOracle.sol';
-import {IUniswapPairOracle} from '../Oracle/IUniswapPairOracle.sol';
+import {
+    IChainlinkOracle
+} from '../Oracle/Variants/chainlink/IChainlinkOracle.sol';
+import {
+    IUniswapPairOracle
+} from '../Oracle/Variants/uniswap/IUniswapPairOracle.sol';
 import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
 
 contract IncentiveController is AccessControl, IIncentiveController {
@@ -58,7 +62,7 @@ contract IncentiveController is AccessControl, IIncentiveController {
     modifier onlyARTH() {
         require(
             _msgSender() == address(ARTH),
-            "IncentiveController: FORBIDDEN"
+            'IncentiveController: FORBIDDEN'
         );
         _;
     }

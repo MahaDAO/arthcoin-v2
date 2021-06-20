@@ -27,9 +27,9 @@ contract ArthController is AccessControl, IARTHController {
 
     IERC20 public ARTH;
 
-    IOracle public ARTHETHOracle;
-    IOracle public MAHAARTHOracle;
-    IOracle public ARTHXETHOracle;
+    IOracle public ARTHGMUOracle;
+    IOracle public MAHAGMUOracle;
+    IOracle public ARTHXGMUOracle;
 
     ICurve public _recollateralizeDiscountCruve;
     IBondingCurve public bondingCurve;
@@ -246,7 +246,7 @@ contract ArthController is AccessControl, IARTHController {
         address _arthxOracleAddress,
         address _wethAddress
     ) external override onlyByOwnerOrGovernance {
-        ARTHXETHOracle = IOracle(_arthxOracleAddress);
+        ARTHXGMUOracle = IOracle(_arthxOracleAddress);
         wethAddress = _wethAddress;
     }
 
@@ -255,7 +255,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        MAHAARTHOracle = IOracle(oracle);
+        MAHAGMUOracle = IOracle(oracle);
     }
 
     function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
@@ -263,7 +263,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        ARTHETHOracle = IOracle(_arthOracleAddress);
+        ARTHGMUOracle = IOracle(_arthOracleAddress);
         wethAddress = _wethAddress;
     }
 
@@ -330,7 +330,16 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getARTHPrice() public view override returns (uint256) {
-        return _getOraclePrice(PriceChoice.ARTH);
+        return ARTHGMUOracle.getPrice();
+    }
+
+    function getMAHAPrice() public view override returns (uint256) {
+        return MAHAGMUOracle.getPrice();
+    }
+
+    function getARTHXPrice() public view override returns (uint256) {
+        if (getIsGenesisActive()) return getARTHXGenesisPrice();
+        return ARTHXGMUOracle.getPrice();
     }
 
     function getIsGenesisActive() public view override returns (bool) {
@@ -340,22 +349,6 @@ contract ArthController is AccessControl, IARTHController {
 
     function getARTHXGenesisPrice() public view override returns (uint256) {
         return bondingCurve.getY(getPercentCollateralized());
-    }
-
-    function getARTHXPrice() public view override returns (uint256) {
-        if (getIsGenesisActive()) return getARTHXGenesisPrice();
-
-        return _getOraclePrice(PriceChoice.ARTHX);
-    }
-
-    function getMAHAPrice() public view override returns (uint256) {
-        uint256 arthGmuPrice = getARTHPrice();
-        uint256 priceVsArth =
-            uint256(
-                MAHAARTHOracle.consult(address(ARTH), _PRICE_PRECISION) // How much MAHA if you put in _PRICE_PRECISION ARTH ?
-            );
-
-        return arthGmuPrice.mul(_PRICE_PRECISION).div(priceVsArth);
     }
 
     function getGlobalCollateralRatio() public view override returns (uint256) {
@@ -433,8 +426,7 @@ contract ArthController is AccessControl, IARTHController {
             uint256,
             uint256,
             uint256,
-            // u
-            int256,
+            // uint256,
             uint256
         )
     {
@@ -449,38 +441,6 @@ contract ArthController is AccessControl, IARTHController {
             // getETHGMUPrice(), // ETH/GMU price.
             buybackFee
         );
-    }
-
-    /**
-     * Internal.
-     */
-
-    /// @param choice 'ARTH' or 'ARTHX'.
-    function _getOraclePrice(PriceChoice choice)
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 eth2GMUPrice =
-            uint256(ETHGMUPricer.getLatestPrice()).mul(_PRICE_PRECISION).div(
-                uint256(10)**ETHGMUPricerDecimals
-            );
-        uint256 priceVsETH;
-
-        if (choice == PriceChoice.ARTH) {
-            priceVsETH = uint256(
-                ARTHETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTH if you put in _PRICE_PRECISION WETH ?
-            );
-        } else if (choice == PriceChoice.ARTHX) {
-            priceVsETH = uint256(
-                ARTHXETHOracle.consult(wethAddress, _PRICE_PRECISION) // How much ARTHX if you put in _PRICE_PRECISION WETH ?
-            );
-        } else
-            revert(
-                'INVALID PRICE CHOICE. Needs to be either 0 (ARTH) or 1 (ARTHX)'
-            );
-
-        return eth2GMUPrice.mul(_PRICE_PRECISION).div(priceVsETH);
     }
 
     function toggleMinting() external override {
