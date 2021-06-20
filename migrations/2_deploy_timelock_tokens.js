@@ -10,7 +10,7 @@ const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 module.exports = async function (deployer, network, accounts) {
-  const TIMELOCK_DELAY = 2 * 86400;
+  const TIMELOCK_DELAY = 0; // 2 * 86400;
   const DEPLOYER_ADDRESS = accounts[0];
   const MOCK_TOKEN_INITIAL_SUPPLY = new BigNumber(1000e18);
 
@@ -28,24 +28,27 @@ module.exports = async function (deployer, network, accounts) {
     DEPLOYER_ADDRESS,
     timelockInstance.address
   );
-  const arthxInstance = await ARTHShares.deployed()
+  const arthx = await ARTHShares.deployed();
 
-  const arthx_name = await arthxInstance.name.call();
+  const arthx_name = await arthx.name.call();
+
   console.log(` - NOTE: ARTHX name: ${arthx_name}`);
   const arth_name = await arth.name.call();
   console.log(` - NOTE: ARTH name: ${arth_name}`);
+
+  const maha = await helpers.getMahaToken(network, deployer, artifacts);
 
   console.log(chalk.yellow(`\nDeploying ARTH controller...`));
   await deployer.deploy(
     ARTHController,
     arth.address,
-    DEPLOYER_ADDRESS,
+    maha.address,
+    arthx.address,
     timelockInstance.address
   );
 
   const arthControllerInstance = await ARTHController.deployed();
 
-  await helpers.getMahaToken(network, deployer, artifacts);
   await helpers.getDAI(network, deployer, artifacts);
   await helpers.getWETH(network, deployer, artifacts);
   await helpers.getUSDC(network, deployer, artifacts);

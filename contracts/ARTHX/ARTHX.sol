@@ -7,10 +7,9 @@ import {IARTHX} from './IARTHX.sol';
 import {IARTH} from '../Arth/IARTH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {ITaxController} from "./ITaxController.sol";
+import {ITaxController} from './ITaxController.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 import {IARTHController} from '../Arth/IARTHController.sol';
-
 
 /**
  * @title  ARTHShares.
@@ -37,68 +36,37 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     uint256 public taxPercent = 0; // 10e4;  // 10% 6 decimal precision.
 
     address public ownerAddress;
-    address public oracleAddress;
-    address public timelockAddress; // Governance timelock address.
 
     /// @notice Address when on the sending/receiving end the tx is not taxed.
     mapping(address => bool) public whiteListedForTax;
 
-    event ARTHXBurned(
-        address indexed from,
-        address indexed to,
-        uint256 amount
-    );
-    event ARTHXMinted(
-        address indexed from,
-        address indexed to,
-        uint256 amount
-    );
+    event ARTHXBurned(address indexed from, address indexed to, uint256 amount);
+    event ARTHXMinted(address indexed from, address indexed to, uint256 amount);
 
     modifier onlyPools() {
         require(
-            arth.pools(msg.sender) == true,
+            controller.isPool(msg.sender) == true,
             'Only arth pools can mint new ARTH'
         );
         _;
     }
 
-    modifier onlyByOwnerOrGovernance() {
-        require(
-            msg.sender == ownerAddress || msg.sender == timelockAddress,
-            'You are not an owner or the governance timelock'
-        );
+    modifier onlyByOwner() {
+        require(msg.sender == ownerAddress, 'You are not the owner');
         _;
     }
 
-    constructor(
-        address _oracleAddress,
-        address _ownerAddress,
-        address _timelockAddress
-    ) AnyswapV4Token('ARTH Shares') {
+    constructor() AnyswapV4Token('ARTH Shares') {
         name = 'ARTH Shares';
         symbol = 'ARTHX';
-
-        ownerAddress = _ownerAddress;
-        oracleAddress = _oracleAddress;
-        timelockAddress = _timelockAddress;
-
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
-        _mint(ownerAddress, genesisSupply);
-    }
-
-    function setOracle(address newOracle)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        oracleAddress = newOracle;
+        _mint(_msgSender(), genesisSupply);
     }
 
     function setArthController(address _controller)
         external
         override
-        onlyByOwnerOrGovernance
+        onlyByOwner
     {
         controller = IARTHController(_controller);
     }
@@ -106,60 +74,39 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
     function setTaxController(ITaxController newController)
         external
         override
-        onlyByOwnerOrGovernance
+        onlyByOwner
     {
         whiteListedForTax[address(taxController)] = false;
         taxController = newController;
         whiteListedForTax[address(taxController)] = true;
     }
 
-    function setTaxPercent(uint256 percent)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
+    function setTaxPercent(uint256 percent) external override onlyByOwner {
         require(taxPercent <= 1e6, 'ARTHX: tax percent > 1e6');
-
         taxPercent = percent;
     }
 
-    function addToTaxWhiteList(address entity)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
+    function addToTaxWhiteList(address entity) external override onlyByOwner {
         whiteListedForTax[entity] = true;
     }
 
     function removeFromTaxWhitelist(address entity)
         external
         override
-        onlyByOwnerOrGovernance
+        onlyByOwner
     {
         whiteListedForTax[entity] = false;
-    }
-
-    function setTimelock(address newTimelock)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        timelockAddress = newTimelock;
     }
 
     function setARTHAddress(address arthContractAddress)
         external
         override
-        onlyByOwnerOrGovernance
+        onlyByOwner
     {
         arth = IARTH(arthContractAddress);
     }
 
-    function setOwner(address _ownerAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
+    function setOwner(address _ownerAddress) external override onlyByOwner {
         ownerAddress = _ownerAddress;
     }
 

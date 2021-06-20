@@ -7,7 +7,6 @@ import {IERC20} from '../ERC20/IERC20.sol';
 import {ITaxController} from './ITaxController.sol';
 import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
 
-
 /**
  * @title  ARTHShares.
  * @author MahaDAO.
@@ -19,15 +18,11 @@ interface IARTHX is IERC20, IAnyswapV4Token {
 
     function setOwner(address _ownerAddress) external;
 
-    function setOracle(address newOracle) external;
-
     function setArthController(address _controller) external;
 
     function setTaxPercent(uint256 percent) external;
 
     function setTaxController(ITaxController controller) external;
-
-    function setTimelock(address newTimelock) external;
 
     function setARTHAddress(address arthContractAddress) external;
 

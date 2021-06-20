@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
 import {IARTH} from './IARTH.sol';
+import {IARTHController} from './IARTHController.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
 import {ERC20Custom} from '../ERC20/ERC20Custom.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IIncentiveController} from './IIncentive.sol';
 import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
 import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 
@@ -18,9 +18,8 @@ import {AnyswapV4Token} from '../ERC20/AnyswapV4Token.sol';
 contract ARTHStablecoin is AnyswapV4Token, IARTH {
     using SafeMath for uint256;
 
-    IIncentiveController public incentiveController;
-
     address public governance;
+    IARTHController public controller;
 
     uint8 public constant override decimals = 18;
     string public constant symbol = 'ARTH';
@@ -42,12 +41,6 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     /// @notice This is to help with establishing the Uniswap pools, as they need liquidity.
     uint256 public constant override genesisSupply = 22_100_000 ether; // 22.1M ARTH (testnet) & 5k (Mainnet).
 
-    address public troveManagerAddress;
-    address public stabilityPoolAddress;
-    address public borrowerOperationsAddress;
-
-    mapping(address => bool) public override pools;
-
     event Rebase(uint256 supply);
     event PoolBurned(address indexed from, address indexed to, uint256 amount);
     event PoolMinted(address indexed from, address indexed to, uint256 amount);
@@ -58,7 +51,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     );
 
     modifier onlyPools() {
-        require(pools[msg.sender], 'ARTH: not pool');
+        require(controller.isPool(msg.sender), 'ARTH: not pool');
         _;
     }
 
@@ -75,41 +68,11 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
             _recipient != address(0) && _recipient != address(this),
             'ARTH: Cannot transfer tokens directly to the ARTH token contract or the zero address'
         );
-        require(
-            _recipient != stabilityPoolAddress &&
-                _recipient != troveManagerAddress &&
-                _recipient != borrowerOperationsAddress,
-            'ARTH: not owner or governance'
-        );
         _;
     }
 
     constructor() AnyswapV4Token(name) {
         _mint(msg.sender, genesisSupply);
-    }
-
-    function setTroveManagerAddress(address _troveManagerAddress)
-        external
-        onlyOwner
-    {
-        troveManagerAddress = _troveManagerAddress;
-        emit TroveManagerAddressChanged(_troveManagerAddress);
-    }
-
-    function setStabilityPoolAddress(address _stabilityPoolAddress)
-        external
-        onlyOwner
-    {
-        stabilityPoolAddress = _stabilityPoolAddress;
-        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
-    }
-
-    function setBorrowerOperationsAddress(address _borrowerOperationsAddress)
-        external
-        onlyOwner
-    {
-        borrowerOperationsAddress = _borrowerOperationsAddress;
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
     }
 
     function transferAndCall(
@@ -269,35 +232,10 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         emit PoolMinted(msg.sender, who, amount);
     }
 
-    /// @dev    Collateral Must be ERC20.
-    /// @notice Adds collateral addresses supported.
-    function addPool(address pool) external override onlyByOwnerOrGovernance {
-        require(!pools[pool], 'pool exists');
-        pools[pool] = true;
-    }
-
-    /// @notice Removes a pool.
-    function removePool(address pool)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        require(pools[pool], "pool doesn't exist");
-        delete pools[pool];
-    }
-
     function setGovernance(address _governance) external override onlyOwner {
         require(_governance != address(0), 'ARTH: address = 0');
 
         governance = _governance;
-    }
-
-    function setIncentiveController(IIncentiveController _incentiveController)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        incentiveController = _incentiveController;
     }
 
     function _transfer(
@@ -306,17 +244,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         uint256 amount
     ) internal override {
         uint256 fractionAmount = _convertAmountToFraction(amount);
-
         super._transfer(sender, recipient, fractionAmount);
-
-        if (address(incentiveController) != address(0)) {
-            incentiveController.incentivize(
-                sender,
-                recipient,
-                msg.sender,
-                amount
-            );
-        }
     }
 
     function _convertFractionToAmount(uint256 fraction)

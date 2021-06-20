@@ -9,8 +9,8 @@ import {IARTHPool} from './Pools/IARTHPool.sol';
 import {IARTHController} from './IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
 import {
-    IChainlinkOracle
-} from '../Oracle/Variants/chainlink/IChainlinkOracle.sol';
+    IUniswapPairOracle
+} from '../Oracle/Variants/uniswap/IUniswapPairOracle.sol';
 import {IOracle} from '../Oracle/IOracle.sol';
 import {ICurve} from '../Curves/ICurve.sol';
 import {Math} from '../utils/math/Math.sol';
@@ -26,16 +26,16 @@ contract ArthController is AccessControl, IARTHController {
     enum PriceChoice {ARTH, ARTHX}
 
     IERC20 public ARTH;
+    IERC20 public ARTHX;
+    IERC20 public MAHA;
 
-    IOracle public ARTHGMUOracle;
-    IOracle public MAHAGMUOracle;
-    IOracle public ARTHXGMUOracle;
+    IUniswapPairOracle public MAHAGMUOracle;
+    IUniswapPairOracle public ARTHXGMUOracle;
 
     ICurve public _recollateralizeDiscountCruve;
     IBondingCurve public bondingCurve;
 
     address public wethAddress;
-    address public arthxAddress;
     address public ownerAddress;
     address public creatorAddress;
     address public timelockAddress;
@@ -66,8 +66,8 @@ contract ArthController is AccessControl, IARTHController {
     bytes32 public constant _MINT_PAUSER = keccak256('MINT_PAUSER');
     bytes32 public constant _REDEEM_PAUSER = keccak256('REDEEM_PAUSER');
     bytes32 public constant _BUYBACK_PAUSER = keccak256('BUYBACK_PAUSER');
-    address[] public arthPoolsArray; // These contracts are able to mint ARTH.
 
+    address[] public arthPoolsArray; // These contracts are able to mint ARTH.
     mapping(address => bool) public override arthPools;
 
     bool public mintPaused = false;
@@ -127,18 +127,19 @@ contract ArthController is AccessControl, IARTHController {
 
     constructor(
         IERC20 _arth,
-        address _creatorAddress,
+        IERC20 _arthx,
+        IERC20 _maha,
         address _timelockAddress
     ) {
         ARTH = _arth;
-        creatorAddress = _creatorAddress;
+        MAHA = _maha;
+        ARTHX = _arthx;
+
         timelockAddress = _timelockAddress;
 
-        ownerAddress = _creatorAddress;
         DEFAULT_ADMIN_ADDRESS = _msgSender();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        grantRole(COLLATERAL_RATIO_PAUSER, creatorAddress);
         grantRole(COLLATERAL_RATIO_PAUSER, timelockAddress);
 
         globalCollateralRatio = 11e5;
@@ -214,14 +215,6 @@ contract ArthController is AccessControl, IARTHController {
         globalCollateralRatio = _globalCollateralRatio;
     }
 
-    function setARTHXAddress(address _arthxAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        arthxAddress = _arthxAddress;
-    }
-
     function setStabilityFee(uint256 percent)
         external
         override
@@ -236,7 +229,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        ARTHXGMUOracle = IOracle(_arthxOracleAddress);
+        ARTHXGMUOracle = IUniswapPairOracle(_arthxOracleAddress);
     }
 
     function setMAHAGMUOracle(address oracle)
@@ -244,15 +237,7 @@ contract ArthController is AccessControl, IARTHController {
         override
         onlyByOwnerOrGovernance
     {
-        MAHAGMUOracle = IOracle(oracle);
-    }
-
-    function setARTHGMUOracle(address _arthOracleAddress)
-        external
-        override
-        onlyByOwnerOrGovernance
-    {
-        ARTHGMUOracle = IOracle(_arthOracleAddress);
+        MAHAGMUOracle = IUniswapPairOracle(oracle);
     }
 
     function setFeesParameters(
@@ -317,18 +302,13 @@ contract ArthController is AccessControl, IARTHController {
         timelockAddress = newTimelock;
     }
 
-    function getARTHPrice() public view override returns (uint256) {
-        // TODO: need to figure out this oracle
-        return 0; // ARTHGMUOracle.getPrice();
-    }
-
     function getMAHAPrice() public view override returns (uint256) {
-        return MAHAGMUOracle.getPrice();
+        return MAHAGMUOracle.consult(address(MAHA), 1e18);
     }
 
     function getARTHXPrice() public view override returns (uint256) {
         if (getIsGenesisActive()) return getARTHXGenesisPrice();
-        return ARTHXGMUOracle.getPrice();
+        return ARTHXGMUOracle.consult(address(ARTHX), 1e18);
     }
 
     function getIsGenesisActive() public view override returns (bool) {
@@ -420,7 +400,7 @@ contract ArthController is AccessControl, IARTHController {
         )
     {
         return (
-            getARTHPrice(), // ARTH price.
+            0, // getARTHPrice(), // ARTH price.
             getARTHXPrice(), // ARTHX price.
             ARTH.totalSupply(), // ARTH total supply.
             globalCollateralRatio, // Global collateralization ratio.
@@ -473,5 +453,9 @@ contract ArthController is AccessControl, IARTHController {
     function getStabilityFee() external view override returns (uint256) {
         if (getIsGenesisActive()) return 0;
         return stabilityFee;
+    }
+
+    function isPool(address pool) external view override returns (bool) {
+        return arthPools[pool];
     }
 }

@@ -12,6 +12,8 @@ interface IARTHController {
 
     function getARTHSupply() external view returns (uint256);
 
+    function isPool(address pool) external view returns (bool);
+
     function getARTHInfo()
         external
         view
@@ -39,8 +41,6 @@ interface IARTHController {
         uint256 _redemptionFee
     ) external;
 
-    function setARTHGMUOracle(address _arthOracleAddress) external;
-
     function setRedemptionFee(uint256 fee) external;
 
     function setBuybackFee(uint256 fee) external;
@@ -49,11 +49,7 @@ interface IARTHController {
 
     function setTimelock(address newTimelock) external;
 
-    function setARTHXAddress(address _arthxAddress) external;
-
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio) external;
-
-    function getARTHPrice() external view returns (uint256);
 
     function getARTHXPrice() external view returns (uint256);
 

@@ -53,6 +53,7 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nLinking ARTHX oracles...'));
   const oracleARTHXWETH = await UniswapPairOracle_ARTH_ARTHX.deployed();
+  console.log(oracleARTHXWETH.address)
   await arthController.setARTHXGMUOracle(oracleARTHXWETH.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nLinking MAHA oracles...'));
