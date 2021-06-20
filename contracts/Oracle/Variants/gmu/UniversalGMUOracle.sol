@@ -72,20 +72,25 @@ contract UniversalGMUOracle is Ownable, IOracle {
         return uint256(price);
     }
 
-    function getRawPrice() public view returns (uint256) {
+    function getRawPrice() public view returns (uint256, uint256) {
         // If we have chainlink oracle for base set return that price.
         // NOTE: this chainlink is subject to Aggregator being in BASE/USD and USD/GMU(Simple oracle).
-        if (address(chainlinkFeed) != address(0)) return getChainlinkPrice();
+        if (address(chainlinkFeed) != address(0)) return (getChainlinkPrice(), 10 ** oraclePriceFeedDecimals);
 
         // Else return price from uni pair.
-        return getPairPrice();
+        return (getPairPrice(), _PRICE_PRECISION);
     }
 
     function getPrice() public view override returns (uint256) {
-        uint256 price = getRawPrice();
+        (uint256 price, uint256 precision) = getRawPrice();
 
-        return
-            price.mul(getGMUPrice()).div(10**GMUOracle.getDecimalPercision());
+        return (
+            price
+                .mul(getGMUPrice())
+                .mul(_PRICE_PRECISION)
+                .div(10**GMUOracle.getDecimalPercision())
+                .div(precision)
+        );
     }
 
     function getDecimalPercision() public pure override returns (uint256) {

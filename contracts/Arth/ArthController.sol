@@ -23,8 +23,6 @@ import {IBondingCurve} from '../Curves/IBondingCurve.sol';
 contract ArthController is AccessControl, IARTHController {
     using SafeMath for uint256;
 
-    enum PriceChoice {ARTH, ARTHX}
-
     IERC20 public ARTH;
     IERC20 public ARTHX;
     IERC20 public MAHA;
@@ -32,14 +30,11 @@ contract ArthController is AccessControl, IARTHController {
     IUniswapPairOracle public MAHAGMUOracle;
     IUniswapPairOracle public ARTHXGMUOracle;
 
-    ICurve public _recollateralizeDiscountCruve;
+    ICurve public recollateralizeDiscountCruve;
     IBondingCurve public bondingCurve;
 
-    address public wethAddress;
     address public ownerAddress;
-    address public creatorAddress;
     address public timelockAddress;
-
     address public DEFAULT_ADMIN_ADDRESS;
 
     uint256 public globalCollateralRatio;
@@ -75,7 +70,6 @@ contract ArthController is AccessControl, IARTHController {
     bool public buyBackPaused = true;
     bool public recollateralizePaused = true;
 
-    uint8 public ETHGMUPricerDecimals;
     uint256 public constant _PRICE_PRECISION = 1e6;
     uint256 public stabilityFee = 0; // 1e4; // 1% in e6 precision.
 
@@ -173,7 +167,7 @@ contract ArthController is AccessControl, IARTHController {
         external
         onlyByOwnerGovernanceOrPool
     {
-        _recollateralizeDiscountCruve = curve;
+        recollateralizeDiscountCruve = curve;
     }
 
     /// @notice Adds collateral addresses supported.
@@ -305,12 +299,12 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getMAHAPrice() public view override returns (uint256) {
-        return MAHAGMUOracle.consult(address(ARTH), 1e18);
+        return MAHAGMUOracle.consult(address(MAHA), _PRICE_PRECISION);
     }
 
     function getARTHXPrice() public view override returns (uint256) {
         if (getIsGenesisActive()) return getARTHXGenesisPrice();
-        return ARTHXGMUOracle.consult(address(ARTH), 1e18);
+        return ARTHXGMUOracle.consult(address(ARTHX), _PRICE_PRECISION);
     }
 
     function getIsGenesisActive() public view override returns (bool) {
@@ -377,7 +371,7 @@ contract ArthController is AccessControl, IARTHController {
     {
         return
             Math.min(
-                _recollateralizeDiscountCruve
+                recollateralizeDiscountCruve
                     .getY(getPercentCollateralized())
                     .mul(_PRICE_PRECISION)
                     .div(100),
