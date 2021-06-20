@@ -21,7 +21,7 @@ export default {
       accounts: [process.env.METAMASK_WALLET_SECRET],
     },
     rinkeby: {
-      url: `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
       accounts: [process.env.METAMASK_WALLET_SECRET],
     },
     maticMumbai: {
