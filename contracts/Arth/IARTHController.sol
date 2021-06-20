@@ -31,10 +31,7 @@ interface IARTHController {
 
     function setMAHAGMUOracle(address oracle) external;
 
-    function setARTHXGMUOracle(
-        address _arthxOracleAddress,
-        address _wethAddress
-    ) external;
+    function setARTHXGMUOracle(address _arthxOracleAddress) external;
 
     function setFeesParameters(
         uint256 _mintingFee,
@@ -42,10 +39,7 @@ interface IARTHController {
         uint256 _redemptionFee
     ) external;
 
-    function setARTHGMUOracle(address _arthOracleAddress, address _wethAddress)
-        external;
-
-    function setControllerAddress(address controller) external;
+    function setARTHGMUOracle(address _arthOracleAddress) external;
 
     function setRedemptionFee(uint256 fee) external;
 

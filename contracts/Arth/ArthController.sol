@@ -39,7 +39,6 @@ contract ArthController is AccessControl, IARTHController {
     address public ownerAddress;
     address public creatorAddress;
     address public timelockAddress;
-    address public controllerAddress;
 
     address public DEFAULT_ADMIN_ADDRESS;
 
@@ -106,9 +105,7 @@ contract ArthController is AccessControl, IARTHController {
 
     modifier onlyByOwnerOrGovernance() {
         require(
-            msg.sender == ownerAddress ||
-                msg.sender == timelockAddress ||
-                msg.sender == controllerAddress,
+            msg.sender == ownerAddress || msg.sender == timelockAddress,
             'ARTHController: FORBIDDEN'
         );
         _;
@@ -209,14 +206,6 @@ contract ArthController is AccessControl, IARTHController {
         }
     }
 
-    function setControllerAddress(address controller)
-        external
-        override
-        onlyAdmin
-    {
-        controllerAddress = controller;
-    }
-
     function setGlobalCollateralRatio(uint256 _globalCollateralRatio)
         external
         override
@@ -242,12 +231,12 @@ contract ArthController is AccessControl, IARTHController {
         stabilityFee = percent;
     }
 
-    function setARTHXGMUOracle(
-        address _arthxOracleAddress,
-        address _wethAddress
-    ) external override onlyByOwnerOrGovernance {
+    function setARTHXGMUOracle(address _arthxOracleAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
         ARTHXGMUOracle = IOracle(_arthxOracleAddress);
-        wethAddress = _wethAddress;
     }
 
     function setMAHAGMUOracle(address oracle)
@@ -258,13 +247,12 @@ contract ArthController is AccessControl, IARTHController {
         MAHAGMUOracle = IOracle(oracle);
     }
 
-    function setARTHGMUOracle(address _arthOracleAddress, address _wethAddress)
+    function setARTHGMUOracle(address _arthOracleAddress)
         external
         override
         onlyByOwnerOrGovernance
     {
         ARTHGMUOracle = IOracle(_arthOracleAddress);
-        wethAddress = _wethAddress;
     }
 
     function setFeesParameters(
@@ -330,7 +318,8 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getARTHPrice() public view override returns (uint256) {
-        return ARTHGMUOracle.getPrice();
+        // TODO: need to figure out this oracle
+        return 0; // ARTHGMUOracle.getPrice();
     }
 
     function getMAHAPrice() public view override returns (uint256) {

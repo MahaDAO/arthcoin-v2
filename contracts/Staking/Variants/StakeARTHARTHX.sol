@@ -19,4 +19,3 @@ contract StakeARTHWETH is BasicStaking {
         )
     {}
 }
-

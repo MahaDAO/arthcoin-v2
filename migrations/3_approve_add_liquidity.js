@@ -21,18 +21,16 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nDeploying SwapToPrice'));
   await deployer.deploy(SwapToPrice, uniswapFactory.address, uniswapRouter.address);
 
-  console.log(chalk.yellow('\nCreating uniswap pairs...'));
+  console.log(chalk.yellow('\nCreating ARTB uniswap pairs...'));
   await Promise.all([
-    uniswapFactory.createPair(arth.address, weth.address, { from: DEPLOYER_ADDRESS }),
+    uniswapFactory.createPair(arth.address, arthx.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactory.createPair(arth.address, maha.address, { from: DEPLOYER_ADDRESS }),
-    uniswapFactory.createPair(arthx.address, weth.address, { from: DEPLOYER_ADDRESS }),
   ])
     .catch(e => console.log('error', e))
     .then(() => console.log(chalk.green('\nDone')))
 
   console.log(chalk.yellow('\nApproving uniswap pairs....'));
   await Promise.all([
-    weth.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     maha.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     arth.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     arthx.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS })
@@ -40,30 +38,17 @@ module.exports = async function (deployer, network, accounts) {
     .catch(e => console.log('error', e))
     .then(() => console.log(chalk.green('\nDone')))
 
-  await weth.deposit({ value: new BigNumber(2e18) })
 
   console.log(chalk.yellow('\nAdding liquidity to pairs...'));
   await Promise.all([
-    // ARTH / WETH
-    uniswapRouter.addLiquidity(
-      arth.address,
-      weth.address,
-      new BigNumber(2200e16),
-      new BigNumber(1e16),
-      new BigNumber(2200e16),
-      new BigNumber(1e16),
-      DEPLOYER_ADDRESS,
-      new BigNumber(9999999999999),
-      { from: DEPLOYER_ADDRESS }
-    ),
     // ARTHX / ARTH
     uniswapRouter.addLiquidity(
       arthx.address,
-      weth.address,
-      new BigNumber(2200e16),
-      new BigNumber(1e16),
-      new BigNumber(2200e16),
-      new BigNumber(1e16),
+      arth.address,
+      new BigNumber(100e18),
+      new BigNumber(1e18),
+      new BigNumber(100e18),
+      new BigNumber(1e18),
       DEPLOYER_ADDRESS,
       new BigNumber(9999999999999),
       { from: DEPLOYER_ADDRESS }
@@ -72,10 +57,10 @@ module.exports = async function (deployer, network, accounts) {
     uniswapRouter.addLiquidity(
       arth.address,
       maha.address,
-      new BigNumber(1000e18),
-      new BigNumber(1000e18),
-      new BigNumber(1000e18),
-      new BigNumber(1000e18),
+      new BigNumber(1e18),
+      new BigNumber(10e18),
+      new BigNumber(1e18),
+      new BigNumber(10e18),
       DEPLOYER_ADDRESS,
       new BigNumber(9999999999999),
       { from: DEPLOYER_ADDRESS }
@@ -83,7 +68,7 @@ module.exports = async function (deployer, network, accounts) {
   ]);
 
   /* For testnet's to deploy uniswap oracle */
-  if (!helpers.isMainnet(network)) {
+  if (!helpers.isMainnet(network) && false) {
     const usdc = await helpers.getUSDC(network, deployer, artifacts);
     const usdt = await helpers.getUSDT(network, deployer, artifacts);
     const wbtc = await helpers.getWBTC(network, deployer, artifacts);
