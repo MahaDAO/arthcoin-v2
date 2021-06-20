@@ -11,7 +11,7 @@ import {IUniswapPairOracle} from '../uniswap/IUniswapPairOracle.sol';
 import {AggregatorV3Interface} from '../chainlink/AggregatorV3Interface.sol';
 
 // An oracle that takes a raw chainlink or uniswap oracle and spits out the GMU price.
-contract UniversalGMUOracle is Ownable, IOracle {
+contract UniversalGMUOracleV2 is Ownable, IOracle {
     using SafeMath for uint256;
 
     IOracle public GMUOracle;
@@ -68,7 +68,7 @@ contract UniversalGMUOracle is Ownable, IOracle {
         return (
             uint256(price)
                 .mul(_PRICE_PRECISION)
-                .div(ethUSDPriceFeedDecimals)
+                .div(10 ** ethUSDPriceFeedDecimals)
         );
     }
 
@@ -77,7 +77,7 @@ contract UniversalGMUOracle is Ownable, IOracle {
         return (
             GMUOracle.getPrice()
                 .mul(_PRICE_PRECISION)
-                .div(usdGMUOracleDecimals)
+                .div(10 ** usdGMUOracleDecimals)
         );
     }
 
@@ -87,7 +87,7 @@ contract UniversalGMUOracle is Ownable, IOracle {
         return
             uniswapOracle.consult(
                 quote,  // WETH.
-                _PRICE_PRECISION * (10**_TOKEN_MISSING_DECIMALS)
+                _PRICE_PRECISION * (10 **_TOKEN_MISSING_DECIMALS)
             );
     }
 
@@ -107,7 +107,7 @@ contract UniversalGMUOracle is Ownable, IOracle {
         return (
             uint256(price)
                 .mul(_PRICE_PRECISION)
-                .div(baseUSDPriceFeedDecimals)
+                .div(10 ** baseUSDPriceFeedDecimals)
         );
     }
 
