@@ -242,7 +242,7 @@ contract ArthController is AccessControl, IARTHController {
         stabilityFee = percent;
     }
 
-    function setARTHXETHOracle(
+    function setARTHXGMUOracle(
         address _arthxOracleAddress,
         address _wethAddress
     ) external override onlyByOwnerOrGovernance {
@@ -250,7 +250,7 @@ contract ArthController is AccessControl, IARTHController {
         wethAddress = _wethAddress;
     }
 
-    function setMAHARTHOracle(address oracle)
+    function setMAHAGMUOracle(address oracle)
         external
         override
         onlyByOwnerOrGovernance
@@ -258,7 +258,7 @@ contract ArthController is AccessControl, IARTHController {
         MAHAGMUOracle = IOracle(oracle);
     }
 
-    function setARTHETHOracle(address _arthOracleAddress, address _wethAddress)
+    function setARTHGMUOracle(address _arthOracleAddress, address _wethAddress)
         external
         override
         onlyByOwnerOrGovernance

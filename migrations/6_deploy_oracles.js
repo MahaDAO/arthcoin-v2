@@ -70,15 +70,15 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nSetting ARTHWETH oracle...'));
   const arthWETHOracle = await UniswapPairOracleARTHWETH.deployed();
-  await arthController.setARTHETHOracle(arthWETHOracle.address, weth.address, { from: DEPLOYER_ADDRESS });
+  await arthController.setARTHGMUOracle(arthWETHOracle.address, weth.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nLinking ARTHX oracles...'));
   const oracleARTHXWETH = await UniswapPairOracleARTHXWETH.deployed();
-  await arthController.setARTHXETHOracle(oracleARTHXWETH.address, weth.address, { from: DEPLOYER_ADDRESS });
+  await arthController.setARTHXGMUOracle(oracleARTHXWETH.address, weth.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nLinking MAHA oracles...'));
   const oracleMAHAARTH = await UniswapPairOracleMAHAARTH.deployed();
-  await arthController.setMAHARTHOracle(oracleMAHAARTH.address, { from: DEPLOYER_ADDRESS });
+  await arthController.setMAHAGMUOracle(oracleMAHAARTH.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('- Linking genesis curve'));
   const bondingCurve = await BondingCurve.deployed();

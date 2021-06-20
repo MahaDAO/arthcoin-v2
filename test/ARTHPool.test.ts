@@ -74,9 +74,7 @@ describe('ARTHPool', () => {
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     ARTHController = await ethers.getContractFactory('ArthController');
 
-    BondingCurve = await ethers.getContractFactory(
-      'BondingCurve'
-    );
+    BondingCurve = await ethers.getContractFactory('BondingCurve');
 
     MockUniswapOracle = await ethers.getContractFactory(
       'MockUniswapPairOracle'
@@ -166,199 +164,145 @@ describe('ARTHPool', () => {
     await arthx.setArthController(arthController.address);
     await arthPool.setCollatGMUOracle(oracle.address);
 
-    await arthController.setARTHETHOracle(
+    await arthController.setARTHGMUOracle(
       arthETHUniswapOracle.address,
       owner.address
     );
 
-    await arthController.setARTHXETHOracle(
+    await arthController.setARTHXGMUOracle(
       arthxETHUniswapOracle.address,
       owner.address
     );
 
-    await arthController.setMAHARTHOracle(mahaARTHUniswapOracle.address);
+    await arthController.setMAHAGMUOracle(mahaARTHUniswapOracle.address);
 
-    await arthController.setFeesParameters(
-      1000,
-      1000,
-      1000
-    );
+    await arthController.setFeesParameters(1000, 1000, 1000);
 
     await arthPool.setPoolParameters(ETH.mul(2), 1);
     await mockChainlinkAggregatorV3.setLatestPrice(ETH.div(1e10)); // Keep the price of mock chainlink oracle as 1e8 for simplicity sake.
-    await arthController.setRecollateralizationCurve(recollaterizationCurve.address);
+    await arthController.setRecollateralizationCurve(
+      recollaterizationCurve.address
+    );
   });
 
-  describe('- Some access restricted functions', async() => {
-    it(' - Should not work if not (owner || governance)', async() => {
-      await expect(arthPool.connect(attacker).setCollatGMUOracle(oracle.address))
-        .to
-        .revertedWith('ArthPool: You are not the owner or the governance timelock');
-
-      await expect(arthPool.connect(attacker).setTimelock(timelock.address))
-        .to
-        .revertedWith('ArthPool: You are not the owner or the governance timelock');
-
-      await expect(arthPool.connect(attacker).setOwner(owner.address))
-        .to
-        .revertedWith('ArthPool: You are not the owner or the governance timelock');
+  describe('- Some access restricted functions', async () => {
+    it(' - Should not work if not (owner || governance)', async () => {
+      await expect(
+        arthPool.connect(attacker).setCollatGMUOracle(oracle.address)
+      ).to.revertedWith(
+        'ArthPool: You are not the owner or the governance timelock'
+      );
 
       await expect(
-        arthPool
-          .connect(attacker)
-          .setPoolParameters(
-            ETH.mul(2),
-            1
-          )
-      )
-        .to
-        .revertedWith('ArthPool: You are not the owner or the governance timelock');
+        arthPool.connect(attacker).setTimelock(timelock.address)
+      ).to.revertedWith(
+        'ArthPool: You are not the owner or the governance timelock'
+      );
+
+      await expect(
+        arthPool.connect(attacker).setOwner(owner.address)
+      ).to.revertedWith(
+        'ArthPool: You are not the owner or the governance timelock'
+      );
+
+      await expect(
+        arthPool.connect(attacker).setPoolParameters(ETH.mul(2), 1)
+      ).to.revertedWith(
+        'ArthPool: You are not the owner or the governance timelock'
+      );
     });
 
     it(' - Should work if (owner || governance)', async () => {
       await expect(arthPool.connect(owner).setCollatGMUOracle(oracle.address))
-        .to
-        .not
-        .reverted;
-
-      await expect(arthPool.connect(timelock).setCollatGMUOracle(oracle.address))
-        .to
-        .not
-        .reverted;
-
-      await expect(arthPool.connect(owner).setTimelock(timelock.address))
-        .to
-        .not
-        .reverted;
-
-      await expect(arthPool.connect(owner).setOwner(owner.address))
-        .to
-        .not
-        .reverted;
+        .to.not.reverted;
 
       await expect(
-        arthPool
-          .connect(owner)
-          .setPoolParameters(
-            ETH.mul(2),
-            1
-          )
-      )
-        .to
-        .not
+        arthPool.connect(timelock).setCollatGMUOracle(oracle.address)
+      ).to.not.reverted;
+
+      await expect(arthPool.connect(owner).setTimelock(timelock.address)).to.not
         .reverted;
 
-      await expect(arthPool.connect(timelock).setTimelock(timelock.address))
-        .to
-        .not
+      await expect(arthPool.connect(owner).setOwner(owner.address)).to.not
         .reverted;
 
-      await expect(arthPool.connect(timelock).setOwner(owner.address))
-        .to
-        .not
+      await expect(arthPool.connect(owner).setPoolParameters(ETH.mul(2), 1)).to
+        .not.reverted;
+
+      await expect(arthPool.connect(timelock).setTimelock(timelock.address)).to
+        .not.reverted;
+
+      await expect(arthPool.connect(timelock).setOwner(owner.address)).to.not
         .reverted;
 
-      await expect(
-        arthPool
-          .connect(timelock)
-          .setPoolParameters(
-            ETH.mul(2),
-            1
-          )
-      )
-        .to
-        .not
-        .reverted;
+      await expect(arthPool.connect(timelock).setPoolParameters(ETH.mul(2), 1))
+        .to.not.reverted;
     });
 
-    it(' - Should not work if not (owner || admin || governance)', async() => {
-      await expect(arthPool.connect(attacker).setBuyBackCollateralBuffer(10))
-        .to
-        .revertedWith('ArthPool: forbidden');
+    it(' - Should not work if not (owner || admin || governance)', async () => {
+      await expect(
+        arthPool.connect(attacker).setBuyBackCollateralBuffer(10)
+      ).to.revertedWith('ArthPool: forbidden');
 
-      await expect(arthPool.connect(attacker).setARTHController(arthController.address))
-        .to
-        .revertedWith('ArthPool: forbidden');
+      await expect(
+        arthPool.connect(attacker).setARTHController(arthController.address)
+      ).to.revertedWith('ArthPool: forbidden');
     });
 
     it(' - Should work if not (owner || admin || governance)', async () => {
-      await expect(arthPool.connect(owner).setBuyBackCollateralBuffer(10))
-        .to
-        .not
-        .reverted
+      await expect(arthPool.connect(owner).setBuyBackCollateralBuffer(10)).to
+        .not.reverted;
 
-      await expect(arthPool.connect(owner).setARTHController(arthController.address))
-        .to
-        .not
-        .reverted
+      await expect(
+        arthPool.connect(owner).setARTHController(arthController.address)
+      ).to.not.reverted;
 
-      await expect(arthPool.connect(timelock).setBuyBackCollateralBuffer(10))
-        .to
-        .not
-        .reverted
+      await expect(arthPool.connect(timelock).setBuyBackCollateralBuffer(10)).to
+        .not.reverted;
 
-      await expect(arthPool.connect(timelock).setARTHController(arthController.address))
-        .to
-        .not
-        .reverted
+      await expect(
+        arthPool.connect(timelock).setARTHController(arthController.address)
+      ).to.not.reverted;
     });
   });
 
-  describe('- Getters', async() => {
-    it(' - Should get global collateral ratio properly', async() => {
+  describe('- Getters', async () => {
+    it(' - Should get global collateral ratio properly', async () => {
       await arthController.setGlobalCollateralRatio(1e6);
-      expect(await arthPool.getGlobalCR())
-        .to
-        .eq(1e6);
+      expect(await arthPool.getGlobalCR()).to.eq(1e6);
 
       await arthController.setGlobalCollateralRatio(1e3);
-      expect(await arthPool.getGlobalCR())
-        .to
-        .eq(1e3);
+      expect(await arthPool.getGlobalCR()).to.eq(1e3);
     });
 
     it(' - Should get collateral price properly using uniswap oracle', async () => {
-      expect(await arthPool.getCollateralPrice())
-        .to
-        .eq(1e6);
+      expect(await arthPool.getCollateralPrice()).to.eq(1e6);
 
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-      expect(await arthPool.getCollateralPrice())
-        .to
-        .eq(1063829);
+      expect(await arthPool.getCollateralPrice()).to.eq(1063829);
 
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-      expect(await arthPool.getCollateralPrice())
-        .to
-        .eq(943396);
+      expect(await arthPool.getCollateralPrice()).to.eq(943396);
 
       await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.getCollateralPrice())
-        .to
-        .eq(2340425531) // 2340423800); // Since we divide by weth price in this ecosystem.
+      expect(await arthPool.getCollateralPrice()).to.eq(2340425531); // 2340423800); // Since we divide by weth price in this ecosystem.
 
       await gmuOracle.setPrice(1e3);
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.getCollateralPrice())
-        .to
-        .eq(2340425); // Since we divide by weth price in this ecosystem.
+      expect(await arthPool.getCollateralPrice()).to.eq(2340425); // Since we divide by weth price in this ecosystem.
 
       await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.getCollateralPrice())
-        .to
-        .eq(2075471698); // 2075471200); // Since we divide by weth price in this ecosystem.
+      expect(await arthPool.getCollateralPrice()).to.eq(2075471698); // 2075471200); // Since we divide by weth price in this ecosystem.
 
       await gmuOracle.setPrice(1e3);
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.getCollateralPrice())
-        .to
-        .eq(2075471); // Since we divide by weth price in this ecosystem.
+      expect(await arthPool.getCollateralPrice()).to.eq(2075471); // Since we divide by weth price in this ecosystem.
     });
 
     // it(' - Should get collateral price properly using chainlink oracle', async () => {
@@ -408,107 +352,81 @@ describe('ARTHPool', () => {
     it(' - Should get collateral balance properly using uniswap oracle', async () => {
       await oracle.setOracle('0x0000000000000000000000000000000000000000');
 
-      expect(await arthPool.getCollateralGMUBalance())
-        .to
-        .eq(0);
+      expect(await arthPool.getCollateralGMUBalance()).to.eq(0);
 
       await dai.transfer(arthPool.address, ETH);
 
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-      expect(await arthPool.getCollateralGMUBalance())
-        .to
-        .eq(
-          BigNumber.from('1063829000000000000')
-        );
+      expect(await arthPool.getCollateralGMUBalance()).to.eq(
+        BigNumber.from('1063829000000000000')
+      );
 
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-      expect(await arthPool.getCollateralGMUBalance())
-        .to
-        .eq(
-          BigNumber.from('943396000000000000')
-        );
+      expect(await arthPool.getCollateralGMUBalance()).to.eq(
+        BigNumber.from('943396000000000000')
+      );
 
       await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.getCollateralGMUBalance())
-        .to
-        .eq(
-          BigNumber.from('2340425531').mul(ETH).div(1e6)
-        ); // Since we divide by weth price in this ecosystem.
+      expect(await arthPool.getCollateralGMUBalance()).to.eq(
+        BigNumber.from('2340425531').mul(ETH).div(1e6)
+      ); // Since we divide by weth price in this ecosystem.
 
       await gmuOracle.setPrice(1e3);
       await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.getCollateralGMUBalance())
-        .to
-        .eq(
-          BigNumber.from('2340425').mul(ETH).div(1e6)
-        ); // Since we divide by weth price in this ecosystem.
+      expect(await arthPool.getCollateralGMUBalance()).to.eq(
+        BigNumber.from('2340425').mul(ETH).div(1e6)
+      ); // Since we divide by weth price in this ecosystem.
 
       await gmuOracle.setPrice(1e6);
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.getCollateralGMUBalance())
-        .to
-        .eq(
-          BigNumber.from('2075471698').mul(ETH).div(1e6)
-        ); // Since we divide by weth price in this ecosystem.
+      expect(await arthPool.getCollateralGMUBalance()).to.eq(
+        BigNumber.from('2075471698').mul(ETH).div(1e6)
+      ); // Since we divide by weth price in this ecosystem.
 
       await gmuOracle.setPrice(1e3);
       await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.getCollateralGMUBalance())
-        .to
-        .eq(
-          BigNumber.from('2075471').mul(ETH).div(1e6)
-        ); // Since we divide by weth price in this ecosystem.
+      expect(await arthPool.getCollateralGMUBalance()).to.eq(
+        BigNumber.from('2075471').mul(ETH).div(1e6)
+      ); // Since we divide by weth price in this ecosystem.
     });
 
-    it(' - Should estimate MAHA stability fee properly', async() => {
-      expect(await arthPool.estimateStabilityFeeInMAHA(ETH))
-        .to
-        .eq(
-          BigNumber.from('0')
-        );
+    it(' - Should estimate MAHA stability fee properly', async () => {
+      expect(await arthPool.estimateStabilityFeeInMAHA(ETH)).to.eq(
+        BigNumber.from('0')
+      );
       await advanceTimeAndBlock(provider, 7 * 24 * 60 * 60);
 
       await mockChainlinkAggregatorV3.setLatestPrice(2200e8);
-      expect(await arthPool.estimateStabilityFeeInMAHA(ETH))
-        .to
-        .eq(
-          BigNumber.from('4545454545454')
-        );
+      expect(await arthPool.estimateStabilityFeeInMAHA(ETH)).to.eq(
+        BigNumber.from('4545454545454')
+      );
 
       await mahaARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
-      expect(await arthPool.estimateStabilityFeeInMAHA(ETH))
-        .to
-        .eq(
-          BigNumber.from('4818181818444')
-        );
+      expect(await arthPool.estimateStabilityFeeInMAHA(ETH)).to.eq(
+        BigNumber.from('4818181818444')
+      );
 
       await mahaARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
-      expect(await arthPool.estimateStabilityFeeInMAHA(ETH))
-        .to
-        .eq(
-          BigNumber.from('4272727274397')
-        );
+      expect(await arthPool.estimateStabilityFeeInMAHA(ETH)).to.eq(
+        BigNumber.from('4272727274397')
+      );
     });
 
-    it(' - Should return Target collateral value properly', async() => {
-      await arthController.connect(owner).setGlobalCollateralRatio(11e5)
-      expect(await arthPool.getTargetCollateralValue())
-        .to
-        .eq(
-          BigNumber.from('24310000000000000000000000')
-        );
+    it(' - Should return Target collateral value properly', async () => {
+      await arthController.connect(owner).setGlobalCollateralRatio(11e5);
+      expect(await arthPool.getTargetCollateralValue()).to.eq(
+        BigNumber.from('24310000000000000000000000')
+      );
 
-      await arthController.connect(owner).setGlobalCollateralRatio(12e5)
-      expect(await arthPool.getTargetCollateralValue())
-        .to
-        .eq(
-          BigNumber.from('26520000000000000000000000')
-        );
+      await arthController.connect(owner).setGlobalCollateralRatio(12e5);
+      expect(await arthPool.getTargetCollateralValue()).to.eq(
+        BigNumber.from('26520000000000000000000000')
+      );
     });
   });
 
@@ -523,62 +441,50 @@ describe('ARTHPool', () => {
     it(' - Should not mint when CR = 0 || CR = 1', async () => {
       await arthController.setGlobalCollateralRatio(0);
 
-      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0))
-        .to
-        .revertedWith(
-          'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
-        );
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
+        'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+      );
 
-      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH))
-        .to
-        .revertedWith(
-          'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
-        );
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH)).to.revertedWith(
+        'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+      );
 
       await arthController.setGlobalCollateralRatio(1e6);
 
-      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0))
-        .to
-        .revertedWith(
-          'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
-        );
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
+        'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+      );
 
-      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH))
-        .to
-        .revertedWith(
-          'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
-        );
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH)).to.revertedWith(
+        'ARTHPool: fails (.000001 <= Collateral ratio <= .999999)'
+      );
     });
 
     it(' - Should not mint when collateral > ceiling', async () => {
       await dai.transfer(arthPool.address, ETH.mul(2));
       await arthController.setGlobalCollateralRatio(1e5);
 
-      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0))
-        .to
-        .revertedWith(
-          'ARTHPool: ceiling reached.'
-        );
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, 0)).to.revertedWith(
+        'ARTHPool: ceiling reached.'
+      );
 
-      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH))
-        .to
-        .revertedWith(
-          'ARTHPool: ceiling reached.'
-        );
+      await expect(arthPool.mintFractionalARTH(ETH, ETH, ETH)).to.revertedWith(
+        'ARTHPool: ceiling reached.'
+      );
     });
 
     it(' - Should not mint when expected > minted', async () => {
       await arthController.setGlobalCollateralRatio(1e5);
 
       // Some portion of minted is taken as fee.
-      await expect(arthPool.mintFractionalARTH(ETH, ETH.mul(9), ETH.mul(11)))
-        .to
-        .revertedWith('ARTHPool: Slippage limit reached');
+      await expect(
+        arthPool.mintFractionalARTH(ETH, ETH.mul(9), ETH.mul(11))
+      ).to.revertedWith('ARTHPool: Slippage limit reached');
 
       // Clear slippage.
-      await expect(arthPool.mintFractionalARTH(ETH, ETH.mul(10), ETH.mul(11)))
-        .to
-        .revertedWith('ARTHPool: Slippage limit reached');
+      await expect(
+        arthPool.mintFractionalARTH(ETH, ETH.mul(10), ETH.mul(11))
+      ).to.revertedWith('ARTHPool: Slippage limit reached');
     });
 
     it(' - Should mint properly when all prices = 1', async () => {
@@ -850,23 +756,19 @@ describe('ARTHPool', () => {
     it(' - Should not recollateralize when paused', async () => {
       await arthController.connect(timelock).toggleRecollateralize();
 
-      await expect(arthPool.recollateralizeARTH(ETH, 0))
-        .to
-        .revertedWith(
-          'Recollateralize is paused'
-        );
+      await expect(arthPool.recollateralizeARTH(ETH, 0)).to.revertedWith(
+        'Recollateralize is paused'
+      );
 
-      await expect(arthPool.recollateralizeARTH(ETH, ETH))
-        .to
-        .revertedWith(
-          'Recollateralize is paused'
-        );
+      await expect(arthPool.recollateralizeARTH(ETH, ETH)).to.revertedWith(
+        'Recollateralize is paused'
+      );
     });
 
     it(' - Should not recollateralize when expected ARTHX > to be minted', async () => {
-      await expect(arthPool.recollateralizeARTH(ETH, ETH.mul(3)))
-        .to
-        .revertedWith('Slippage limit reached');
+      await expect(
+        arthPool.recollateralizeARTH(ETH, ETH.mul(3))
+      ).to.revertedWith('Slippage limit reached');
     });
 
     it(' - Should recollaterize properly when all prices = 1', async () => {
@@ -881,28 +783,28 @@ describe('ARTHPool', () => {
       const collateralValueBefore = await arthController.getGlobalCollateralValue();
       const targetCollateralValue = await arthPool.getTargetCollateralValue();
 
-      expect(collateralValueBefore.div(targetCollateralValue).mul(100))
-        .to
-        .eq(0);
+      expect(collateralValueBefore.div(targetCollateralValue).mul(100)).to.eq(
+        0
+      );
 
       const expectedMint = ETH.sub(ETH.div(1000));
       await arthPool.recollateralizeARTH(ETH, expectedMint);
 
-      expect(await dai.balanceOf(owner.address))
-        .to
-        .eq(collateralBalanceBefore.sub(ETH));
+      expect(await dai.balanceOf(owner.address)).to.eq(
+        collateralBalanceBefore.sub(ETH)
+      );
 
-      expect(await dai.balanceOf(arthPool.address))
-        .to
-        .eq(poolCollateralBalanceBefore.add(ETH));
+      expect(await dai.balanceOf(arthPool.address)).to.eq(
+        poolCollateralBalanceBefore.add(ETH)
+      );
 
-      expect(await arthx.balanceOf(owner.address))
-        .to
-        .eq(arthxBalanceBefore.add(expectedMint));
+      expect(await arthx.balanceOf(owner.address)).to.eq(
+        arthxBalanceBefore.add(expectedMint)
+      );
 
-      expect(await arthx.totalSupply())
-        .to
-        .eq(arthxTotalSupply.add(expectedMint));
+      expect(await arthx.totalSupply()).to.eq(
+        arthxTotalSupply.add(expectedMint)
+      );
     });
 
     it(' - Should recollaterize properly when all DAI/ETH & ARTHX/ETH > 1 && DAI/ETH = ARTHX/ETH', async () => {
