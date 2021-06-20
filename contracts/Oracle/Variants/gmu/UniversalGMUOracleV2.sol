@@ -63,7 +63,7 @@ contract UniversalGMUOracle is Ownable, IOracle {
 
     /// @notice Returns ETH/USD price from chainlink in 6 decimals precision.
     function getETHUSDPrice() public view returns (uint256) {
-        (, int256 price, , , ) = baseUSDChainlinkFeed.latestRoundData();
+        (, int256 price, , , ) = ethUSDChainlinkFeed.latestRoundData();
 
         return (
             uint256(price)
@@ -86,7 +86,7 @@ contract UniversalGMUOracle is Ownable, IOracle {
     function getPairETHPrice() public view returns (uint256) {
         return
             uniswapOracle.consult(
-                quote,
+                quote,  // WETH.
                 _PRICE_PRECISION * (10**_TOKEN_MISSING_DECIMALS)
             );
     }
