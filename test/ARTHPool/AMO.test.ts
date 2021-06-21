@@ -8,7 +8,7 @@ import deploy from './Deployments';
 
 chai.use(solidity);
 
-describe('ARTHPool General', () => {
+describe('ARTHPool AMOS', () => {
   let attacker: SignerWithAddress;
   let timelock: SignerWithAddress;
   let owner: SignerWithAddress;
