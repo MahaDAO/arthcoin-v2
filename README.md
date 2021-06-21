@@ -30,7 +30,8 @@ yarn generate-deployment development
 
 - Decimals used in oracles
 - Checks & Effects patterns
-- Flashloan vulnerabilities
+- Parameter and precondition checks
+- Flashloan vulnerabilities w/ Uniswap oracles (12hr twap)
 - Ownership & Permissions of all public methods
 - Ownership to Timelock contract to Multisig
 - Emergency actions need to be revoked
