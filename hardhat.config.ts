@@ -1,6 +1,6 @@
 import 'solidity-coverage';
 import 'hardhat-gas-reporter';
-import "@nomiclabs/hardhat-web3";
+import '@nomiclabs/hardhat-web3';
 import '@nomiclabs/hardhat-ethers';
 import '@nomiclabs/hardhat-etherscan';
 
@@ -21,7 +21,12 @@ export default {
       accounts: [process.env.METAMASK_WALLET_SECRET],
     },
     rinkeby: {
-      url: process.env.NETWORK_ENDPOINT,
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+      accounts: [process.env.METAMASK_WALLET_SECRET],
+    },
+    matic: {
+      url:
+        'https://solitary-crimson-wind.matic.quiknode.pro/d9d5c0846efe6098a99c0a8a2c7238692ca33ce0/',
       accounts: [process.env.METAMASK_WALLET_SECRET],
     },
     maticMumbai: {
