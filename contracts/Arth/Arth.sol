@@ -27,6 +27,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     uint8 public constant override decimals = 18;
     string public constant symbol = 'ARTH';
     string public constant name = 'ARTH Valuecoin';
+    bool public _revokeRebase;
 
     /// @dev Number of fractions that make up 1 ARTH.
     uint256 private _fractionsPerAmount = 1;

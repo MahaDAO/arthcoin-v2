@@ -51,14 +51,14 @@ contract ETHGenesis {
         address __collateralAddress,
         address _creatorAddress,
         address __timelockAddress,
-        IOracle __collateralGMUOracle
+        address __collateralGMUOracle
     ) {
         _COLLATERAL = IERC20(__collateralAddress);
 
         _missingDeciamls = uint256(18).sub(_COLLATERAL.decimals());
         _ownerAddress = _creatorAddress;
         _timelockAddress = __timelockAddress;
-        _collateralGMUOracle = __collateralGMUOracle;
+        _collateralGMUOracle = IOracle(__collateralGMUOracle);
     }
 
     function usersLotteriesCount(address _address) public view returns (uint256) {
