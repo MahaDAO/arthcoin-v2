@@ -11,8 +11,6 @@ import { advanceBlock, advanceTimeAndBlock } from '../utilities';
 chai.use(solidity);
 
 describe('ARTHPool Mint', () => {
-  let attacker: SignerWithAddress;
-  let timelock: SignerWithAddress;
   let owner: SignerWithAddress;
   let ETH: BigNumber;
   let provider: JsonRpcProvider;
@@ -39,8 +37,6 @@ describe('ARTHPool Mint', () => {
     ETH = deployments.ETH;
     arthPool = deployments.arthPool;
     oracle = deployments.oracle;
-    attacker = deployments.attacker;
-    timelock = deployments.timelock;
     owner = deployments.owner;
     arthController = deployments.arthController;
     gmuOracle = deployments.gmuOracle;
@@ -102,7 +98,7 @@ describe('ARTHPool Mint', () => {
     describe(' - Using collateral chainlink oracle', async () => {
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU = 1 & ARTHX/GMU = 1', async () => {
         await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -113,39 +109,24 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
-        const collateralValue = ETH.mul(1.06e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('954000000000000000');
+        const expectedARTHXMint = BigNumber.from('106000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU = 1 & ARTHX/GMU > 1', async () => {
         await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
 
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
-
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
 
@@ -155,38 +136,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const collateralValue = ETH.mul(1.06e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('954000000000000000');
+        const expectedARTHXMint = BigNumber.from('100000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU = 1 & ARTHX/GMU < 1', async () => {
         await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
 
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
-
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
 
@@ -196,34 +162,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const collateralValue = ETH.mul(1.06e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('954000000000000000');
+        const expectedARTHXMint = BigNumber.from('112765957446808510');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU > 1 & ARTHX/GMU = 1', async () => {
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(1.06e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -234,39 +189,24 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
-        await gmuOracle.setPrice(1.06e6);
+        const expectedARTHMint = BigNumber.from('1011240000000000000');
+        const expectedARTHXMint = BigNumber.from('112360000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        const collateralValue = ETH.mul(1.06e6).mul(1.06e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU > 1 & ARTHX/GMU > 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(1.06e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -277,80 +217,50 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
-        await gmuOracle.setPrice(1.06e6);
-
-        const collateralValue = ETH.mul(1.06e6).mul(1.06e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('1011240000000000000');
+        const expectedARTHXMint = BigNumber.from('106000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU > 1 & ARTHX/GMU < 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
-
-        const totalSupplyBefore = await arth.totalSupply();
-        const arthBalanceBefore = await arth.balanceOf(owner.address);
-
-        const arthxTotalSupply = await arthx.totalSupply();
-        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
-
-        const collateralBalanceBefore = await dai.balanceOf(owner.address);
-        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
-
         await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
         await gmuOracle.setPrice(1.06e6);
 
-        const collateralValue = ETH.mul(1.06e6).mul(1.06e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const expectedARTHMint = BigNumber.from('1011240000000000000');
+        const expectedARTHXMint = BigNumber.from('119531914893617021');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -361,38 +271,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
-        await gmuOracle.setPrice(0.94e6);
-        const collateralValue = ETH.mul(1.06e6).mul(0.94e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHXMint = BigNumber.from('99640000000000000');
+        const expectedARTHMint = BigNumber.from('896760000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU < 1 & ARTHX/GMU > 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -403,38 +298,24 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
-        await gmuOracle.setPrice(0.94e6);
-        const collateralValue = ETH.mul(1.06e6).mul(0.94e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('896760000000000000');
+        const expectedARTHXMint = BigNumber.from('94000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD > 1 & USD/GMU < 1 & ARTHX/GMU < 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -445,36 +326,22 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
-        await gmuOracle.setPrice(0.94e6);
-        const collateralValue = ETH.mul(1.06e6).mul(0.94e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('896760000000000000');
+        const expectedARTHXMint = BigNumber.from('106000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU = 1 & ARTHX/GMU = 1', async () => {
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -485,37 +352,22 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        const collateralValue = ETH.mul(0.94e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('846000000000000000');
+        const expectedARTHXMint = BigNumber.from('94000000000000000')
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU = 1 & ARTHX/GMU > 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -526,37 +378,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        const collateralValue = ETH.mul(0.94e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('846000000000000000');
+        const expectedARTHXMint = BigNumber.from('88679245283018867');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU = 1 & ARTHX/GMU < 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -567,35 +405,22 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        const collateralValue = ETH.mul(0.94e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
+        const expectedARTHMint = BigNumber.from('846000000000000000');
         const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHXMint = BigNumber.from('100000000000000000');
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU > 1 & ARTHX/GMU = 1', async () => {
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(1.06e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -606,38 +431,24 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        await gmuOracle.setPrice(1.06e6);
-        const collateralValue = ETH.mul(0.94e6).mul(1.06e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('896760000000000000');
+        const expectedARTHXMint = BigNumber.from('99640000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU > 1 & ARTHX/GMU > 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(1.06e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -648,38 +459,24 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        await gmuOracle.setPrice(1.06e6);
-        const collateralValue = ETH.mul(0.94e6).mul(1.06e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('896760000000000000');
+        const expectedARTHXMint = BigNumber.from('94000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU > 1 & ARTHX/GMU < 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(1.06e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -690,36 +487,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        await gmuOracle.setPrice(1.06e6);
-        const collateralValue = ETH.mul(0.94e6).mul(1.06e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('896760000000000000');
+        const expectedARTHXMint = BigNumber.from('106000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -730,38 +514,24 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        await gmuOracle.setPrice(0.96e6);
-        const collateralValue = ETH.mul(0.94e6).mul(0.96e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('795240000000000000');
+        const expectedARTHXMint = BigNumber.from('88360000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU < 1 & ARTHX/GMU > 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -772,38 +542,24 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        await gmuOracle.setPrice(0.96e6);
-        const collateralValue = ETH.mul(0.94e6).mul(0.96e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('795240000000000000');
+        const expectedARTHXMint = BigNumber.from('83358490566037735');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD < 1 & USD/GMU < 1 & ARTHX/GMU < 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -814,37 +570,21 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        await gmuOracle.setPrice(0.96e6);
-        const collateralValue = ETH.mul(0.94e6).mul(0.96e6).div(1e6).div(1e6);
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('795240000000000000');
+        const expectedARTHXMint = BigNumber.from('94000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU = 1 & ARTHX/GMU = 1', async () => {
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
-
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
 
@@ -854,36 +594,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const expectedARTHMint = ETH.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = ETH.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('900000000000000000');
+        const expectedARTHXMint = BigNumber.from('100000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU = 1 & ARTHX/GMU > 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
 
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
-
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
 
@@ -893,36 +620,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const expectedARTHMint = ETH.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = ETH.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('900000000000000000');
+        const expectedARTHXMint = BigNumber.from('94339622641509433');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU = 1 & ARTHX/GMU < 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
 
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
-
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
 
@@ -932,33 +646,22 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const expectedARTHMint = ETH.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = ETH.mul(10).div(100).mul(1e6).div(arthxPrice);
+        const expectedARTHMint = BigNumber.from('900000000000000000');
+        const expectedARTHXMint = BigNumber.from('106382978723404255');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU > 1 & ARTHX/GMU = 1', async () => {
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await gmuOracle.setPrice(1.06e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -969,38 +672,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await gmuOracle.setPrice(1.06e6);
-        const collateralValue = ETH.mul(1.06e6).div(1e6);
+        const expectedARTHMint = BigNumber.from('954000000000000000');
+        const expectedARTHXMint = BigNumber.from('106000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU > 1 & ARTHX/GMU > 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await gmuOracle.setPrice(1.06e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -1011,38 +699,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await gmuOracle.setPrice(1.06e6);
-        const collateralValue = ETH.mul(1.06e6).div(1e6);
+        const expectedARTHMint = BigNumber.from('954000000000000000');
+        const expectedARTHXMint = BigNumber.from('100000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU > 1 & ARTHX/GMU < 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await gmuOracle.setPrice(1.06e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -1053,36 +726,22 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await gmuOracle.setPrice(1.06e6);
-        const collateralValue = ETH.mul(1.06e6).div(1e6);
+        const expectedARTHMint = BigNumber.from('954000000000000000');
+        const expectedARTHXMint = BigNumber.from('112765957446808510');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -1093,38 +752,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await gmuOracle.setPrice(0.94e6);
-        const collateralValue = ETH.mul(0.94e6).div(1e6);
+        const expectedARTHMint = BigNumber.from('846000000000000000');
+        const expectedARTHXMint = BigNumber.from('94000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU < 1 & ARTHX/GMU > 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -1135,38 +779,23 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await gmuOracle.setPrice(0.94e6);
-        const collateralValue = ETH.mul(0.94e6).div(1e6);
+        const expectedARTHMint = BigNumber.from('846000000000000000');
+        const expectedARTHXMint = BigNumber.from('88679245283018867');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
 
       it('  - Should mint properly when DAI/USD = 1 & USD/GMU < 1 & ARTHX/GMU < 1', async () => {
         await arthARTHXUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await gmuOracle.setPrice(0.94e6);
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -1177,31 +806,18 @@ describe('ARTHPool Mint', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        await gmuOracle.setPrice(0.94e6);
-        const collateralValue = ETH.mul(0.94e6).div(1e6);
+        const expectedARTHMint = BigNumber.from('846000000000000000');
+        const expectedARTHXMint = BigNumber.from('100000000000000000');
+        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        const expectedARTHMint = collateralValue.mul(90).div(100);
-        const expectedARTHMintAfterFee = expectedARTHMint.mul(BigNumber.from(1e6).sub(await arthController.getMintingFee())).div(1e6);
-        const expectedARTHXMint = collateralValue.mul(10).div(100).mul(1e6).div(arthxPrice);
         await arthPool.mint(ETH, expectedARTHMintAfterFee, expectedARTHXMint);
 
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.add(ETH));
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.add(expectedARTHXMint));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.add(expectedARTHXMint));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.add(expectedARTHMintAfterFee));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.add(expectedARTHMintAfterFee));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.add(ETH));
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.add(expectedARTHXMint));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.add(expectedARTHXMint));
       });
     });
   });
