@@ -313,6 +313,15 @@ contract ArthController is AccessControl, IARTHController {
     }
 
     function getARTHXGenesisPrice() public view override returns (uint256) {
+        return 1e4;
+    }
+
+    function getARTHXGenesisDiscount()
+        external
+        view
+        override
+        returns (uint256)
+    {
         return bondingCurve.getY(getPercentCollateralized());
     }
 
