@@ -24,11 +24,5 @@ describe('ARTHController', () => {
     arth = await ARTH.deploy();
   });
 
-  describe(' - Rebase', async () => {
-    it('  - Should decrease balance by 50% if rebase 50%', async () => {
-      const arthBalanceBefore = await arth.balanceOf(owner.address);
-      await arth.rebase(1e3);
-      expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.mul(50).div(100));
-    });
-  });
+  // TODO: write test cases.
 });
