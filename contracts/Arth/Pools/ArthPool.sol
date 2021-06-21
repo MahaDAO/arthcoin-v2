@@ -50,7 +50,7 @@ contract ArthPool is AccessControl, IARTHPool {
     mapping(address => uint256) public redeemARTHXBalances;
     mapping(address => uint256) public redeemCollateralBalances;
 
-    bytes32 private constant _AMO_ROLE = keccak256('AMO_ROLE');
+    bytes32 public constant _AMO_ROLE = keccak256('AMO_ROLE');
 
     uint256 private immutable _missingDeciamls;
     uint256 private constant _PRICE_PRECISION = 1e6;

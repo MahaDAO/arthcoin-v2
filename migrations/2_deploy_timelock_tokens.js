@@ -37,8 +37,8 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(
     ARTHController,
     arth.address,
-    maha.address,
     arthx.address,
+    maha.address,
     DEPLOYER_ADDRESS,
     timelockInstance.address
   );
