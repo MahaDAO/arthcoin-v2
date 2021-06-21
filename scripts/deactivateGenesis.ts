@@ -1,5 +1,4 @@
 import { network, ethers } from 'hardhat';
-
 require('dotenv').config();
 
 async function main() {

@@ -78,6 +78,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     constructor() AnyswapV4Token(name) {
         _mint(_msgSender(), genesisSupply);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _revokeRebase = false;
     }
 
     function transferAndCall(
@@ -135,11 +136,17 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         return super.transferFrom(sender, recipient, amount);
     }
 
+    function revokeRebase(bool revokeRebase_) public onlyByOwnerOrGovernance {
+        _revokeRebase = revokeRebase_;
+    }
+
     function rebase(int256 supplyDelta)
         external
         onlyByOwnerOrGovernance
         returns (uint256)
     {
+        require(!_revokeRebase, 'Arth: Already triggered rebase');
+
         if (supplyDelta == 0) {
             emit Rebase(totalSupply());
             return totalSupply();
@@ -171,6 +178,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         deviation is guaranteed to be < 1, so we can omit this step. If the supply cap is
         ever increased, it must be re-included _totalSupply = _TOTAL_FRACTIONS.div(_fractionsPerAmount).
         */
+        _revokeRebase = true;
 
         emit Rebase(totalSupply());
         return totalSupply();
