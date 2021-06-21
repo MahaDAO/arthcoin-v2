@@ -88,13 +88,22 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
         override
         onlyOwner
     {
-        tokenCounter = tokenCounter.add(1);
         totalTickets = totalTickets.add(_amount);
 
-        lotteries[tokenCounter] = Lottery(tokenCounter, _amount, _to);
-        usersLotteries[_to] = tokenCounter;
+        if (usersLotteries[_to] > 0) {
+            Lottery memory _lotteries = lotteries[usersLotteries[_to]];
 
-        _safeMint(_to, tokenCounter);
+            _lotteries.weight = _lotteries.weight.add(_amount);
+            lotteries[usersLotteries[_to]] = _lotteries;
+
+        } else {
+            tokenCounter = tokenCounter.add(1);
+
+            lotteries[tokenCounter] = Lottery(tokenCounter, _amount, _to);
+            usersLotteries[_to] = tokenCounter;
+
+            _safeMint(_to, tokenCounter);
+        }
     }
 
     function checkResult(string memory _prize) public view returns (bool) {
