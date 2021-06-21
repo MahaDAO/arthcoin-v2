@@ -58,7 +58,7 @@ abstract contract ERC20Custom is Pausable, IERC20, Ownable {
     /**
      * @dev See {IERC20-totalSupply}.
      */
-    function totalSupply() public view override returns (uint256) {
+    function totalSupply() public view virtual override returns (uint256) {
         return _totalSupply;
     }
 
