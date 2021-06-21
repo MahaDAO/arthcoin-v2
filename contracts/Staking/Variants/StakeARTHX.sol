@@ -19,4 +19,3 @@ contract StakeARTHX is BasicStaking {
         )
     {}
 }
-

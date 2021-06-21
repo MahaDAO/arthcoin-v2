@@ -19,4 +19,3 @@ contract StakeARTHMAHA is BasicStaking {
         )
     {}
 }
-
