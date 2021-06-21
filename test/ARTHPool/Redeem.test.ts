@@ -20,13 +20,13 @@ describe('ARTHPool Redeem', () => {
   let arth: Contract;
   let arthx: Contract;
   let maha: Contract;
-  let arthPool: Contract;;
-  let oracle: Contract;;
+  let arthPool: Contract;
+  let oracle: Contract;
   let arthController: Contract;
-  let gmuOracle: Contract;;
-  let mahaARTHUniswapOracle: Contract;;
-  let daiETHUniswapOracle: Contract;;
-  let ethUSDMockChainlinkAggregatorV3: Contract;
+  let gmuOracle: Contract;
+  let mahaARTHUniswapOracle: Contract;
+  let arthxARTHUniswapOracle: Contract;
+  let daiETHUniswapOracle: Contract;
   let daiUSDMockChainlinkAggregatorV3: Contract;
 
   beforeEach(' - Get deployment', async () => {
@@ -46,8 +46,8 @@ describe('ARTHPool Redeem', () => {
     arthController = deployments.arthController;
     gmuOracle = deployments.gmuOracle;
     mahaARTHUniswapOracle = deployments.mahaARTHUniswapOracle;
+    arthxARTHUniswapOracle = deployments.arthxARTHUniswapOracle;
     daiETHUniswapOracle = deployments.daiETHUniswapOracle;
-    ethUSDMockChainlinkAggregatorV3 = deployments.ethUSDMockChainlinkAggregatorV3;
     daiUSDMockChainlinkAggregatorV3 = deployments.daiUSDMockChainlinkAggregatorV3;
   });
 
@@ -62,20 +62,15 @@ describe('ARTHPool Redeem', () => {
     it(' - Should not mint when CR = 0 || CR = 1', async () => {
       await arthController.setGlobalCollateralRatio(0);
 
-      await expect(arthPool.redeem(ETH, ETH, 0))
-        .to.revertedWith('Collateral ratio < MIN');
+      await expect(arthPool.redeem(ETH, ETH, 0)).to.revertedWith('Collateral ratio < MIN');
 
       await arthController.setGlobalCollateralRatio(2.1e6);
-      await expect(arthPool.redeem(ETH, ETH, 0))
-        .to.revertedWith('Collateral ratio > MAX');
+      await expect(arthPool.redeem(ETH, ETH, 0)).to.revertedWith('Collateral ratio > MAX');
     });
 
     describe(' - Using collateral chainlink oracle', async () => {
-      it(' - Should redeem properly when all DAI/USD = 1', async () => {
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU = 1 & ARTHX/GMU = 1', async () => {
         await dai.transfer(arthPool.address, ETH.mul(1000));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -86,49 +81,31 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('1111111111111111111');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        const expectedValueProvided = neededARTHXValue.add(ETH);
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
 
         await advanceBlock(provider);
         await advanceBlock(provider);
 
         await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
       });
 
-      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU > 1', async () => {
-        await dai.transfer(arthPool.address, ETH.mul(1000));
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU = 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
 
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
+        await dai.transfer(arthPool.address, ETH.mul(1000));
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -139,50 +116,66 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('1111111111111111111');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU = 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('1111111111111111111');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU > 1 & ARTHX/GMU = 1', async () => {
         await gmuOracle.setPrice(1.06e6);
-        const expectedValueProvided = neededARTHXValue.add(ETH).mul(1e6).div(1.06e6);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
-
-        await advanceBlock(provider);
-        await advanceBlock(provider);
-
-        await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
-      });
-
-      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU < 1', async () => {
         await dai.transfer(arthPool.address, ETH.mul(1000));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -193,50 +186,103 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('1048218029350104821');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)) .to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU > 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await gmuOracle.setPrice(1.06e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('1048218029350104821');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU > 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await gmuOracle.setPrice(1.06e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('1048218029350104821');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
         await gmuOracle.setPrice(0.94e6);
-        const expectedValueProvided = neededARTHXValue.add(ETH).mul(1e6).div(0.94e6);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
-
-        await advanceBlock(provider);
-        await advanceBlock(provider);
-
-        await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
-      });
-
-      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU = 1', async () => {
         await dai.transfer(arthPool.address, ETH.mul(1000));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -247,51 +293,104 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('1182033096926713947');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU < 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await gmuOracle.setPrice(0.94e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('1182033096926713947');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD = 1 & USD/GMU < 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await gmuOracle.setPrice(0.94e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('1182033096926713947');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU = 1 & ARTHX/GMU = 1', async () => {
         await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
         await gmuOracle.setPrice(1e6);
-        const expectedValueProvided = neededARTHXValue.add(ETH).mul(1e6).div(1.06e6);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
-
-        await advanceBlock(provider);
-        await advanceBlock(provider);
-
-        await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
-      });
-
-      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU > 1', async () => {
         await dai.transfer(arthPool.address, ETH.mul(1000));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -302,52 +401,106 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('1048218029350104821');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU = 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(1e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('1048218029350104821');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU = 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(1e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('1048218029350104821');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU > 1 & ARTHX/GMU = 1', async () => {
         await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
         await gmuOracle.setPrice(1.06e6);
-        const oraclePrice = BigNumber.from(1.06e6).mul(1.06e6).div(1e6);
-        const expectedValueProvided = neededARTHXValue.add(ETH).mul(1e6).div(oraclePrice);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
-
-        await advanceBlock(provider);
-        await advanceBlock(provider);
-
-        await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
-      });
-
-      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU < 1', async () => {
         await dai.transfer(arthPool.address, ETH.mul(1000));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -358,52 +511,106 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('988884933349155492');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU > 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(1.06e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('988884933349155492');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU > 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(1.06e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('988884933349155492');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
         await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
         await gmuOracle.setPrice(0.94e6);
-        const oraclePrice = BigNumber.from(1.06e6).mul(0.94e6).div(1e6);
-        const expectedValueProvided = neededARTHXValue.add(ETH).mul(1e6).div(oraclePrice);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
-
-        await advanceBlock(provider);
-        await advanceBlock(provider);
-
-        await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
-      });
-
-      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU = 1', async () => {
         await dai.transfer(arthPool.address, ETH.mul(1000));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -414,50 +621,105 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('1115125563138409384');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU < 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(0.94e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('1115125563138409384');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD > 1 & USD/GMU < 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(0.94e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('1115125563138409384');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU = 1 & ARTHX/GMU = 1', async () => {
         await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        const expectedValueProvided = neededARTHXValue.add(ETH).mul(1e6).div(0.94e6);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
-
-        await advanceBlock(provider);
-        await advanceBlock(provider);
-
-        await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
-      });
-
-      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU > 1', async () => {
         await dai.transfer(arthPool.address, ETH.mul(1000));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -468,52 +730,104 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('1182033096926713947');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU = 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('1182033096926713947');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU = 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('1182033096926713947');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU > 1 & ARTHX/GMU = 1', async () => {
         await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
         await gmuOracle.setPrice(1.06e6);
-        const oraclePrice = BigNumber.from(1.06e6).mul(0.94e6).div(1e6);
-        const expectedValueProvided = neededARTHXValue.add(ETH).mul(1e6).div(oraclePrice);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
-
-        await advanceBlock(provider);
-        await advanceBlock(provider);
-
-        await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
-      });
-
-      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU < 1', async () => {
         await dai.transfer(arthPool.address, ETH.mul(1000));
-
-        await arthController.setGlobalCollateralRatio(11e5);
-        const arthxPrice = await arthController.getARTHXPrice();
 
         const totalSupplyBefore = await arth.totalSupply();
         const arthBalanceBefore = await arth.balanceOf(owner.address);
@@ -524,45 +838,209 @@ describe('ARTHPool Redeem', () => {
         const collateralBalanceBefore = await dai.balanceOf(owner.address);
         const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
 
-        const totalValueToBeSupplied = ETH.mul(100).div(90);
-        const neededARTHXValue = totalValueToBeSupplied.sub(ETH);
-        const neededARTHX = neededARTHXValue.mul(1e6).div(arthxPrice);
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('1115125563138409384');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
 
-        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
-        await gmuOracle.setPrice(0.94e6);
-        const oraclePrice = BigNumber.from(0.94e6).mul(0.94e6).div(1e6);
-        const expectedValueProvided = neededARTHXValue.add(ETH).mul(1e6).div(oraclePrice);
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
 
-        const expectedCollateral = expectedValueProvided.mul(BigNumber.from(1e6).sub(await arthController.getRedemptionFee())).div(1e6);
-        await arthPool.redeem(ETH, neededARTHX, expectedCollateral);
-
-        expect(await arth.totalSupply())
-          .to.eq(totalSupplyBefore.sub(ETH));
-
-        expect(await arth.balanceOf(owner.address))
-          .to.eq(arthBalanceBefore.sub(ETH));
-
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore);
-
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore);
-
-        expect(await arthx.balanceOf(owner.address))
-          .to.eq(arthxBalanceBefore.sub(neededARTHX));
-
-        expect(await arthx.totalSupply())
-          .to.eq(arthxTotalSupply.sub(neededARTHX));
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
 
         await advanceBlock(provider);
         await advanceBlock(provider);
 
         await arthPool.collectRedemption();
-        expect(await dai.balanceOf(owner.address))
-          .to.eq(collateralBalanceBefore.add(expectedCollateral));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
 
-        expect(await dai.balanceOf(arthPool.address))
-          .to.eq(poolCollateralBalanceBefore.sub(expectedCollateral));
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU > 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(1.06e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('1115125563138409384');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU > 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(1.06e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('1115125563138409384');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(0.94e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('111111111111111111');
+        const expectedCollateral = BigNumber.from('1257482018007142497');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)) .to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU < 1 & ARTHX/GMU > 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(106).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(0.94e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('104821802935010482');
+        const expectedCollateral = BigNumber.from('1257482018007142497');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
+      });
+
+      it(' - Should redeem properly when DAI/USD < 1 & USD/GMU < 1 & ARTHX/GMU < 1', async () => {
+        await arthxARTHUniswapOracle.setPrice(ETH.mul(94).div(100));
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(0.94e6);
+
+        await dai.transfer(arthPool.address, ETH.mul(1000));
+
+        const totalSupplyBefore = await arth.totalSupply();
+        const arthBalanceBefore = await arth.balanceOf(owner.address);
+
+        const arthxTotalSupply = await arthx.totalSupply();
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const neededARTHX = BigNumber.from('118203309692671394');
+        const expectedCollateral = BigNumber.from('1257482018007142497');
+        const expectedCollateralWithoutFee = expectedCollateral.mul(BigNumber.from(1e6).sub(1000)).div(1e6);
+
+        await arthPool.redeem(ETH, neededARTHX, expectedCollateralWithoutFee);
+
+        expect(await arth.totalSupply()).to.eq(totalSupplyBefore.sub(ETH));
+        expect(await arth.balanceOf(owner.address)).to.eq(arthBalanceBefore.sub(ETH));
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore);
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore);
+        expect(await arthx.balanceOf(owner.address)).to.eq(arthxBalanceBefore.sub(neededARTHX));
+        expect(await arthx.totalSupply()).to.eq(arthxTotalSupply.sub(neededARTHX));
+
+        await advanceBlock(provider);
+        await advanceBlock(provider);
+
+        await arthPool.collectRedemption();
+        expect(await dai.balanceOf(owner.address)).to.eq(collateralBalanceBefore.add(expectedCollateralWithoutFee));
+        expect(await dai.balanceOf(arthPool.address)).to.eq(poolCollateralBalanceBefore.sub(expectedCollateralWithoutFee));
       });
     });
   });
