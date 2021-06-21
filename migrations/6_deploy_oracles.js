@@ -21,7 +21,7 @@ module.exports = async function (deployer, network, accounts) {
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts);
 
   console.log(chalk.yellow('\nDeploying uniswap oracles...'));
-  console.log(chalk.yellow(' - Starting MAHA/ARTH oracle...'));
+  console.log(chalk.yellow(' - Deploying MAHA/ARTH oracle...'));
   await Promise.all([
     deployer.deploy(
       UniswapPairOracle_MAHA_ARTH,
@@ -33,7 +33,7 @@ module.exports = async function (deployer, network, accounts) {
     )
   ]);
 
-  console.log(chalk.yellow('- Starting ARTHX/ARTH oracles...'));
+  console.log(chalk.yellow('- Deploying ARTHX/ARTH oracles...'));
   await Promise.all([
     deployer.deploy(
       UniswapPairOracle_ARTH_ARTHX,
