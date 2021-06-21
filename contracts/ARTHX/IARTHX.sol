@@ -14,6 +14,8 @@ import {IAnyswapV4Token} from '../ERC20/IAnyswapV4Token.sol';
 interface IARTHX is IERC20, IAnyswapV4Token {
     function addToTaxWhiteList(address entity) external;
 
+    function addToTaxWhiteListMultiple(address[] memory entity) external;
+
     function removeFromTaxWhitelist(address entity) external;
 
     function setArthController(address _controller) external;

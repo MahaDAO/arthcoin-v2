@@ -83,6 +83,16 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
         whiteListedForTax[entity] = true;
     }
 
+    function addToTaxWhiteListMultiple(address[] memory entity)
+        external
+        override
+        onlyOwner
+    {
+        for (uint256 index = 0; index < entity.length; index++) {
+            whiteListedForTax[entity[index]] = true;
+        }
+    }
+
     function removeFromTaxWhitelist(address entity)
         external
         override
