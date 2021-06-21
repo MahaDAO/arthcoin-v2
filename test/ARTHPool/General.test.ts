@@ -230,11 +230,11 @@ describe('ARTHPool General', () => {
     it(' - Should return Target collateral value properly', async () => {
       await arthController.connect(owner).setGlobalCollateralRatio(11e5)
       expect(await arthPool.getTargetCollateralValue())
-        .to.eq(BigNumber.from('24310000000000000000000000'));
+        .to.eq(BigNumber.from('27500000000000000000000000'));
 
       await arthController.connect(owner).setGlobalCollateralRatio(12e5)
       expect(await arthPool.getTargetCollateralValue())
-        .to.eq(BigNumber.from('26520000000000000000000000'));
+        .to.eq(BigNumber.from('22916666666666666666666666'));
     });
   });
 });

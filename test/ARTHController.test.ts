@@ -337,7 +337,7 @@ describe('ARTHController', () => {
 
       expect(arthInfo[0]).to.eq(0);
       expect(arthInfo[1]).to.eq(1e4);
-      expect(arthInfo[2]).to.eq(ETH.mul(22100000));
+      expect(arthInfo[2]).to.eq(ETH.mul(25000000));
       expect(arthInfo[3]).to.eq(11e5);
       expect(arthInfo[4]).to.eq(0);
       expect(arthInfo[5]).to.eq(1e6);
@@ -353,7 +353,7 @@ describe('ARTHController', () => {
 
       expect(arthInfo[0]).to.eq(0);
       expect(arthInfo[1]).to.eq(1e6);
-      expect(arthInfo[2]).to.eq(ETH.mul(22100000));
+      expect(arthInfo[2]).to.eq(ETH.mul(25000000));
       expect(arthInfo[3]).to.eq(11e5);
       expect(arthInfo[4]).to.eq(0);
       expect(arthInfo[5]).to.eq(1e6);
