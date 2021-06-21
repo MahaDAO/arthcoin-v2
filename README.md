@@ -21,6 +21,7 @@ Without being influenced by government-owned currencies, ARTH will be immune to 
 ```
 yarn
 yarn compile
+# setup ganache and set the private key at METAMASK_WALLET_SECRET=...
 npx truffle deploy --network development
 yarn generate-deployment development
 ```

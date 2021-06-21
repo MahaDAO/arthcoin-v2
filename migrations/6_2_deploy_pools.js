@@ -16,9 +16,13 @@ const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 module.exports = async function (deployer, network, accounts) {
-  const redemptionFee = 400;  // 0.04%
-  const mintingFee = 300;  // 0.03%
-  const buybackFee = 300;  // 0.03%
+  // const redemptionFee = 400;  // 0.04%
+  // const mintingFee = 300;  // 0.03%
+  // const buybackFee = 300;  // 0.03%
+
+  const redemptionFee = 0;  // 0.04%
+  const mintingFee = 0;  // 0.03%
+  const buybackFee = 0;  // 0.03%
 
   const DEPLOYER_ADDRESS = accounts[0];
   const TEN_MILLION = new BigNumber("1000000e6");
