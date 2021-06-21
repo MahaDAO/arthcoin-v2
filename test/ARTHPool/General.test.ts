@@ -234,7 +234,7 @@ describe('ARTHPool General', () => {
 
       await arthController.connect(owner).setGlobalCollateralRatio(12e5)
       expect(await arthPool.getTargetCollateralValue())
-        .to.eq(BigNumber.from('22916666666666666666666666'));
+        .to.eq(BigNumber.from('30000000000000000000000000'));
     });
   });
 });
