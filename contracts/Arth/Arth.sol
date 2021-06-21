@@ -30,7 +30,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     bool public _revokeRebase;
 
     /// @dev Number of fractions that make up 1 ARTH.
-    uint256 private _fractionsPerAmount = 1;
+    uint256 private _fractionsPerAmount = 1e4;
 
     uint256 private _MAX_UINT256 = type(uint256).max;
 
@@ -158,12 +158,6 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
             _totalSupply = _totalSupply.add(uint256(supplyDelta));
         }
 
-        /*
-        if (_totalSupply > MAX_SUPPLY) {
-            _totalSupply = MAX_SUPPLY;
-        }
-        */
-
         _fractionsPerAmount = _TOTAL_FRACTIONS.mul(_REBASING_PRECISION).div(
             totalSupply()
         );
@@ -178,7 +172,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         deviation is guaranteed to be < 1, so we can omit this step. If the supply cap is
         ever increased, it must be re-included _totalSupply = _TOTAL_FRACTIONS.div(_fractionsPerAmount).
         */
-        _revokeRebase = true;
+        // _revokeRebase = true;
 
         emit Rebase(totalSupply());
         return totalSupply();

@@ -91,6 +91,14 @@ abstract contract ERC20Custom is Pausable, IERC20, Ownable {
         return true;
     }
 
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
     /**
      * @dev See {IERC20-transfer}.
      *
