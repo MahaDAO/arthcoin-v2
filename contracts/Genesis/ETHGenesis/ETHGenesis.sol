@@ -126,7 +126,7 @@ contract ETHGenesis {
         );
 
         uint256 lottriesCount = getLotteryAmount(collateralAmount);
-        _collateralRaisedOnETH = collateralAmount.mul(getCollateralPrice()).add(collateralAmount);
+        _collateralRaisedOnETH = collateralAmount.mul(getCollateralPrice()).add(_collateralRaisedOnETH);
 
         if (lottriesCount > 0) {
             lottery.rewardLottery(msg.sender, lottriesCount);
@@ -208,11 +208,15 @@ contract ETHGenesis {
     }
 
     function setCollatGMUOracle(address _collateralGMUOracleAddress)
-        external
+        public
         onlyByOwnerOrGovernance
     {
         collateralGMUOracleAddress = _collateralGMUOracleAddress;
         _collateralGMUOracle = IOracle(_collateralGMUOracleAddress);
+    }
+
+    function setCollateralRaisedOnMatic(uint256 _colletaralAmount) public onlyByOwnerOrGovernance {
+        _collateralRaisedOnMatic = _colletaralAmount;
     }
 
     // Genesis getters
