@@ -64,7 +64,7 @@ module.exports = async function (deployer, network, accounts) {
   await arthController.setBondingCurve(bondingCurve.address);
 
   // todo: need to set this to use GMU oracles
-  console.log(chalk.yellowBright('\nDeploying collateral oracles'))
+  console.log(chalk.yellowBright('\nDeploying collateral oracles'));
   await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
   await helpers.getUSDTOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
   await helpers.getWBTCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
