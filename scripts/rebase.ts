@@ -10,8 +10,8 @@ async function main() {
   const deployements = require(`../output/${network.name}.json`);
   const instance = await ethers.getContractAt(
     'ARTHStablecoin',
-    '0xD2eF876A3fbCbDd3FE427390CD45405aEb460c3F'
-    // deployements.ARTHStablecoin.address
+    // '0xD2eF876A3fbCbDd3FE427390CD45405aEb460c3F'
+    deployements.ARTHStablecoin.address
   );
 
   const dec = BigNumber.from(10).pow(18);

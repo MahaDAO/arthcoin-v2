@@ -137,11 +137,6 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         returns (uint256)
     {
         require(!allowRebase, 'Arth: rebase is revoked');
-
-        _totalSupply = _totalSupply.mul(gonsPerFragment).div(
-            _newGonsPerFragment
-        );
-
         gonsPerFragment = _newGonsPerFragment;
 
         emit Rebase(totalSupply());
