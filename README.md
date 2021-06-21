@@ -25,3 +25,12 @@ yarn compile
 npx truffle deploy --network development
 yarn generate-deployment development
 ```
+
+## Bugs/Pointers to take care of
+
+- Decimals used in oracles
+- Checks & Effects patterns
+- Flashloan vulnerabilities
+- Ownership & Permissions of all public methods
+- Ownership to Timelock contract to Multisig
+- Emergency actions need to be revoked
