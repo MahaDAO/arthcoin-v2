@@ -52,10 +52,8 @@ describe('ARTHController', () => {
   let arthMAHAUniswapOracle: Contract;
   let recollaterizationCurve: Contract;
 
-  let daiGMUChainlinkOracle: Contract;
   let mockETHUSDAggregatorV3: Contract;
   let mockDAIUSDAggregatorV3: Contract;
-  let usdcGMUChainlinkOracle: Contract;
   let mockUSDCUSDAggregatorV3: Contract;
 
   before(' - Setup accounts & deploy libraries', async () => {
@@ -83,7 +81,7 @@ describe('ARTHController', () => {
 
     SimpleOracle = await ethers.getContractFactory('SimpleOracle');
     BondingCurve = await ethers.getContractFactory('BondingCurve');
-    Oracle = await ethers.getContractFactory('UniversalGMUOracleV2');
+    Oracle = await ethers.getContractFactory('UniversalGMUOracle');
 
     MockUniswapOracle = await ethers.getContractFactory(
       'MockUniswapPairOracle'
@@ -156,15 +154,16 @@ describe('ARTHController', () => {
       owner.address, // Temp address for weth in mock oracles.
       daiETHUniswapOracle.address,
       mockDAIUSDAggregatorV3.address,
-      mockUSDCUSDAggregatorV3.address,
+      // mockETHUSDAggregatorV3.address,
       gmuOracle.address
     );
+
     usdcPoolOracle = await Oracle.deploy(
       usdc.address,
       owner.address, // Temp address for weth in mock oracles.
       usdcETHUniswapOracle.address,
       mockUSDCUSDAggregatorV3.address,
-      mockETHUSDAggregatorV3.address,
+      // mockETHUSDAggregatorV3.address,
       gmuOracle.address
     );
 
@@ -291,14 +290,12 @@ describe('ARTHController', () => {
       expect(await arthController.getGlobalCollateralRatio()).to.eq(11e5);
 
       await arthController.setGlobalCollateralRatio(1e3);
-      expect(
-        await arthController.connect(owner).getGlobalCollateralRatio()
-      ).to.eq(1e3);
+      expect(await arthController.connect(owner).getGlobalCollateralRatio())
+        .to.eq(1e3);
 
       await arthController.setGlobalCollateralRatio(1e6);
-      expect(
-        await arthController.connect(owner).getGlobalCollateralRatio()
-      ).to.eq(1e6);
+      expect(await arthController.connect(owner).getGlobalCollateralRatio())
+        .to.eq(1e6);
     });
 
     it(' - Should get fees correctly', async () => {
@@ -341,7 +338,7 @@ describe('ARTHController', () => {
       const arthInfo = await arthController.getARTHInfo();
 
       expect(arthInfo[0]).to.eq(0);
-      expect(arthInfo[1]).to.eq(7e3);
+      expect(arthInfo[1]).to.eq(1e4);
       expect(arthInfo[2]).to.eq(ETH.mul(22100000));
       expect(arthInfo[3]).to.eq(11e5);
       expect(arthInfo[4]).to.eq(0);
@@ -369,7 +366,7 @@ describe('ARTHController', () => {
 
   describe('- Prices', async () => {
     it(' - Should work correctly for ARTHX price', async () => {
-      expect(await arthController.getARTHXPrice()).to.eq(7e3);
+      expect(await arthController.getARTHXPrice()).to.eq(1e4);
 
       await advanceTimeAndBlock(provider, 7 * 24 * 60 * 60);
 
@@ -403,353 +400,7 @@ describe('ARTHController', () => {
       await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
     });
 
-    describe(' - Uniswap based collateral oracles', async () => {
-      beforeEach('- Set chainlink oracle as 0x00...', async () => {
-        await daiPoolOracle.setBaseUSDChainlinkFeed(ZERO_ADDR);
-        await usdcPoolOracle.setBaseUSDChainlinkFeed(ZERO_ADDR);
-      });
-
-      it('  - Should work correctly when DAI/USD = 1) && (USDC/USD = 1) && (DAI Pool Bal. != USDC Pool Bal.) && (USD/GMU=1)', async () => {
-        expect(await arthController.getGlobalCollateralValue()).to.eq(ETH.mul(4));
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(ETH.mul(5));
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(ETH.mul(7));
-      });
-
-      it('  - Should work correctly when DAI/USD = 1) && (USDC/USD = 1) && (DAI Pool Bal. != USDC Pool Bal.) && (USD/GMU>1)', async () => {
-        await gmuOracle.setPrice(1063829);
-
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(4).mul(1063829).div(1e6));
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(5).mul(1063829).div(1e6));
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(7).mul(1063829).div(1e6));
-      });
-
-      it('  - Should work correctly when DAI/USD = 1) && (USDC/USD = 1) && (DAI Pool Bal. != USDC Pool Bal.) && (USD/GMU<1)', async () => {
-        await gmuOracle.setPrice(940000);
-
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(4).mul(940000).div(1e6));
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(5).mul(940000).div(1e6));
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(7).mul(940000).div(1e6));
-      });
-
-      it('  - Should work correctly when DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU = 1)', async () => {
-        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(1063829);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(1063829);
-
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(4).mul(1063829).div(1e6));
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(5).mul(1063829).div(1e6));
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(7).mul(1063829).div(1e6));
-      });
-
-      it('  - Should work correctly when DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU > 1)', async () => {
-        await gmuOracle.setPrice(1063829);
-        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        const expectedPrice = BigNumber.from(1063829).mul(1063829).div(1e6);
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(expectedPrice);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(expectedPrice);
-
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(4).mul(expectedPrice).div(1e6));
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(5).mul(expectedPrice).div(1e6));
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(7).mul(expectedPrice).div(1e6));
-      });
-
-      it('  - Should work correctly when DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU < 1)', async () => {
-        await gmuOracle.setPrice(940000);
-        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        const expectedPrice = BigNumber.from(1063829).mul(940000).div(1e6);
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(expectedPrice);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(expectedPrice);
-
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(4).mul(expectedPrice).div(1e6));
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(5).mul(expectedPrice).div(1e6));
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue())
-          .to.eq(ETH.mul(7).mul(expectedPrice).div(1e6));
-      });
-
-      it('  - Should work correctly when DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU=1)', async () => {
-        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(943396);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(943396);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(943396).div(1e6)
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(943396).div(1e6)
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(943396).div(1e6)
-        );
-      });
-
-      it('  - Should work correctly when DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU>1)', async () => {
-        await gmuOracle.setPrice(1063829);
-        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        const expectedPrice = BigNumber.from(943396).mul(1063829).div(1e6);
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(expectedPrice);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(expectedPrice);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(expectedPrice).div(1e6)
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(expectedPrice).div(1e6)
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(expectedPrice).div(1e6)
-        );
-      });
-
-      it('  - Should work correctly when DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU<1)', async () => {
-        await gmuOracle.setPrice(940000);
-        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        const expectedPrice = BigNumber.from(943396).mul(940000).div(1e6);
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(expectedPrice);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(expectedPrice);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(expectedPrice).div(1e6)
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(expectedPrice).div(1e6)
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(expectedPrice).div(1e6)
-        );
-      });
-
-      it('  - Should work correctly when DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU=1)', async () => {
-        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(1063829);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(943396);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(1063829).div(1e6).add(ETH.mul(2).mul(943396).div(1e6))
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(1063829).div(1e6).add(ETH.mul(2).mul(943396).div(1e6))
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(1063829).div(1e6).add(ETH.mul(4).mul(943396).div(1e6))
-        );
-      });
-
-      it('  - Should work correctly when DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU>1)', async () => {
-        await gmuOracle.setPrice(1063829);
-        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        const expectedDAIPrice = BigNumber.from(1063829).mul(1063829).div(1e6);
-        const expectedUSDCPrice = BigNumber.from(1063829).mul(943396).div(1e6);
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(expectedDAIPrice);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(expectedUSDCPrice);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(expectedDAIPrice).div(1e6)
-            .add(ETH.mul(2).mul(expectedUSDCPrice).div(1e6))
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(expectedDAIPrice).div(1e6).add(ETH.mul(2).mul(expectedUSDCPrice).div(1e6))
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(expectedDAIPrice).div(1e6).add(ETH.mul(4).mul(expectedUSDCPrice).div(1e6))
-        );
-      });
-
-      it('  - Should work correctly when DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU>1)', async () => {
-        await gmuOracle.setPrice(940000);
-        await daiETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-
-        const expectedDAIPrice = BigNumber.from(940000).mul(1063829).div(1e6);
-        const expectedUSDCPrice = BigNumber.from(940000).mul(943396).div(1e6);
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(expectedDAIPrice);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(expectedUSDCPrice);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(expectedDAIPrice).div(1e6)
-            .add(ETH.mul(2).mul(expectedUSDCPrice).div(1e6))
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(expectedDAIPrice).div(1e6).add(ETH.mul(2).mul(expectedUSDCPrice).div(1e6))
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(expectedDAIPrice).div(1e6).add(ETH.mul(4).mul(expectedUSDCPrice).div(1e6))
-        );
-      });
-
-      it('  - Should work correctly when DAI/USD < 1) && (USDC/USD > 1) && (USD/GMU=1)', async () => {
-        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(943396);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(1063829);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(943396).div(1e6).add(ETH.mul(2).mul(1063829).div(1e6))
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(943396).div(1e6).add(ETH.mul(2).mul(1063829).div(1e6))
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(943396).div(1e6).add(ETH.mul(4).mul(1063829).div(1e6))
-        );
-      });
-
-      it('  - Should work correctly when DAI/USD < 1) && (USDC/USD > 1) && (USD/GMU>1)', async () => {
-        await gmuOracle.setPrice(1063829);
-        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        const expectedDAIPrice = BigNumber.from(1063829).mul(943396).div(1e6);
-        const expectedUSDCPrice = BigNumber.from(1063829).mul(1063829).div(1e6);
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(expectedDAIPrice);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(expectedUSDCPrice);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(expectedDAIPrice).div(1e6).add(ETH.mul(2).mul(expectedUSDCPrice).div(1e6))
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(expectedDAIPrice).div(1e6).add(ETH.mul(2).mul(expectedUSDCPrice).div(1e6))
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(expectedDAIPrice).div(1e6).add(ETH.mul(4).mul(expectedUSDCPrice).div(1e6))
-        );
-      });
-
-      it('  - Should work correctly when DAI/USD < 1) && (USDC/USD > 1) && (USD/GMU<1)', async () => {
-        await gmuOracle.setPrice(940000);
-        await daiETHUniswapOracle.setPrice(ETH.mul(106).div(100));
-        await usdcETHUniswapOracle.setPrice(ETH.mul(94).div(100));
-
-        const expectedDAIPrice = BigNumber.from(940000).mul(943396).div(1e6);
-        const expectedUSDCPrice = BigNumber.from(940000).mul(1063829).div(1e6);
-
-        // Making sure that prices of collateral are set properly.
-        expect(await daiARTHPool.getCollateralPrice()).to.eq(expectedDAIPrice);
-        expect(await usdcARTHPool.getCollateralPrice()).to.eq(expectedUSDCPrice);
-
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(expectedDAIPrice).div(1e6).add(ETH.mul(2).mul(expectedUSDCPrice).div(1e6))
-        );
-
-        await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(expectedDAIPrice).div(1e6).add(ETH.mul(2).mul(expectedUSDCPrice).div(1e6))
-        );
-
-        await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(expectedDAIPrice).div(1e6).add(ETH.mul(4).mul(expectedUSDCPrice).div(1e6))
-        );
-      });
-    });
-
     describe(' - Chainlink based collateral oracles', async () => {
-      beforeEach('- Set chainlink oracle as 0x00...', async () => {
-        await daiPoolOracle.setBaseUSDChainlinkFeed(mockDAIUSDAggregatorV3.address);
-        await usdcPoolOracle.setBaseUSDChainlinkFeed(mockUSDCUSDAggregatorV3.address);
-      });
-
       it('  - Should work correctly when (DAI/USD = 1) && (USDC/USD = 1) && (USD/GMU = 1)', async () => {
         expect(await arthController.getGlobalCollateralValue())
           .to.eq(ETH.mul(4));
@@ -759,64 +410,54 @@ describe('ARTHController', () => {
           .to.eq(ETH.mul(5));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7));
       });
 
       it('  - Should work correctly when (DAI/USD = 1) && (USDC/USD = 1) && (USD/GMU > 1)', async () => {
         await gmuOracle.setPrice(1063829);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(1063829).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(4).mul(1063829).div(1e6));
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(1063829).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(5).mul(1063829).div(1e6));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(1063829).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7).mul(1063829).div(1e6));
       });
 
       it('  - Should work correctly when (DAI/USD = 1) && (USDC/USD = 1) && (USD/GMU < 1)', async () => {
         await gmuOracle.setPrice(943396);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(943396).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(4).mul(943396).div(1e6));
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(943396).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(5).mul(943396).div(1e6));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(943396).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7).mul(943396).div(1e6));
       });
 
       it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU = 1)', async () => {
         await mockDAIUSDAggregatorV3.setLatestPrice(106382900);
         await mockUSDCUSDAggregatorV3.setLatestPrice(106382900);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(1063829).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(4).mul(1063829).div(1e6));
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(1063829).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(5).mul(1063829).div(1e6));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(1063829).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7).mul(1063829).div(1e6));
       });
 
       it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU > 1)', async () => {
@@ -824,19 +465,16 @@ describe('ARTHController', () => {
         await mockUSDCUSDAggregatorV3.setLatestPrice(106382900);
         await gmuOracle.setPrice(1063829);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(1131732).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(4).mul(1131732).div(1e6));
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(1131732).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(5).mul(1131732).div(1e6));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(1131732).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7).mul(1131732).div(1e6));
       });
 
       it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD > 1) && (USD/GMU < 1)', async () => {
@@ -844,38 +482,32 @@ describe('ARTHController', () => {
         await mockUSDCUSDAggregatorV3.setLatestPrice(106382900);
         await gmuOracle.setPrice(943396);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(1003612).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(4).mul(1003612).div(1e6));
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(1003612).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(5).mul(1003612).div(1e6));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(1003612).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7).mul(1003612).div(1e6));
       });
 
       it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU = 1)', async () => {
         await mockDAIUSDAggregatorV3.setLatestPrice(94339600);
         await mockUSDCUSDAggregatorV3.setLatestPrice(94339600);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(943396).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(4).mul(943396).div(1e6));
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(943396).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(5).mul(943396).div(1e6));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(943396).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7).mul(943396).div(1e6));
       });
 
       it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU > 1)', async () => {
@@ -883,20 +515,16 @@ describe('ARTHController', () => {
         await mockUSDCUSDAggregatorV3.setLatestPrice(94339600);
         await gmuOracle.setPrice(1063829);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(1003612).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(4).mul(1003612).div(1e6));
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(1003612).div(1e6)
-        );
-        1003612;
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(5).mul(1003612).div(1e6));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(1003612).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7).mul(1003612).div(1e6));
       });
 
       it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD < 1) && (USD/GMU < 1)', async () => {
@@ -904,38 +532,38 @@ describe('ARTHController', () => {
         await mockUSDCUSDAggregatorV3.setLatestPrice(94339600);
         await gmuOracle.setPrice(943396);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(4).mul(889996).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(4).mul(889996).div(1e6));
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(5).mul(889996).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(5).mul(889996).div(1e6));
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(7).mul(889996).div(1e6)
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(ETH.mul(7).mul(889996).div(1e6));
       });
 
       it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU = 1)', async () => {
         await mockDAIUSDAggregatorV3.setLatestPrice(106382900);
         await mockUSDCUSDAggregatorV3.setLatestPrice(94339600);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(1063829).div(1e6).add(ETH.mul(2).mul(943396).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(2).mul(1063829).div(1e6).add(ETH.mul(2).mul(943396).div(1e6))
+          );
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(1063829).div(1e6).add(ETH.mul(2).mul(943396).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(3).mul(1063829).div(1e6).add(ETH.mul(2).mul(943396).div(1e6))
+          );
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(1063829).div(1e6).add(ETH.mul(4).mul(943396).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(3).mul(1063829).div(1e6).add(ETH.mul(4).mul(943396).div(1e6))
+          );
       });
 
       it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU < 1)', async () => {
@@ -943,19 +571,22 @@ describe('ARTHController', () => {
         await mockUSDCUSDAggregatorV3.setLatestPrice(94339600);
         await gmuOracle.setPrice(943396);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(1003612).div(1e6).add(ETH.mul(2).mul(889996).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(2).mul(1003612).div(1e6).add(ETH.mul(2).mul(889996).div(1e6))
+          );
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(1003612).div(1e6).add(ETH.mul(2).mul(889996).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(3).mul(1003612).div(1e6).add(ETH.mul(2).mul(889996).div(1e6))
+          );
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(1003612).div(1e6).add(ETH.mul(4).mul(889996).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(3).mul(1003612).div(1e6).add(ETH.mul(4).mul(889996).div(1e6))
+          );
       });
 
       it('  - Should work correctly when (DAI/USD > 1) && (USDC/USD < 1) && (USD/GMU > 1)', async () => {
@@ -963,28 +594,32 @@ describe('ARTHController', () => {
         await mockUSDCUSDAggregatorV3.setLatestPrice(94339600);
         await gmuOracle.setPrice(1063829);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(1131732).div(1e6).add(ETH.mul(2).mul(1003612).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(2).mul(1131732).div(1e6).add(ETH.mul(2).mul(1003612).div(1e6))
+          );
 
         await dai.transfer(daiARTHPool.address, ETH);
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(1131732).div(1e6).add(ETH.mul(2).mul(1003612).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(3).mul(1131732).div(1e6).add(ETH.mul(2).mul(1003612).div(1e6))
+          );
 
         await usdc.transfer(usdcARTHPool.address, ETH.mul(2));
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(3).mul(1131732).div(1e6).add(ETH.mul(4).mul(1003612).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(3).mul(1131732).div(1e6).add(ETH.mul(4).mul(1003612).div(1e6))
+          );
       });
 
       it('  - Should work correctly when (DAI/USD < 1) && (USDC/USD > 1) && (USD/GMU = 1)', async () => {
         await mockDAIUSDAggregatorV3.setLatestPrice(94339600);
         await mockUSDCUSDAggregatorV3.setLatestPrice(106382900);
 
-        expect(await arthController.getGlobalCollateralValue()).to.eq(
-          ETH.mul(2).mul(1063829).div(1e6).add(ETH.mul(2).mul(943396).div(1e6))
-        );
+        expect(await arthController.getGlobalCollateralValue())
+          .to.eq(
+            ETH.mul(2).mul(1063829).div(1e6).add(ETH.mul(2).mul(943396).div(1e6))
+          );
 
         await dai.transfer(daiARTHPool.address, ETH);
         expect(await arthController.getGlobalCollateralValue()).to.eq(

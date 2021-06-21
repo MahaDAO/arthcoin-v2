@@ -60,7 +60,7 @@ export default async () => {
   });
 
   SimpleOracle = await ethers.getContractFactory('SimpleOracle');
-  Oracle = await ethers.getContractFactory('UniversalGMUOracleV2');
+  Oracle = await ethers.getContractFactory('UniversalGMUOracle');
   ARTHController = await ethers.getContractFactory('ArthController');
 
   BondingCurve = await ethers.getContractFactory(
@@ -114,7 +114,7 @@ export default async () => {
     owner.address, // Temp address for weth in mock oracles.
     daiETHUniswapOracle.address,
     daiUSDMockChainlinkAggregatorV3.address,
-    ethUSDMockChainlinkAggregatorV3.address,
+    // ethUSDMockChainlinkAggregatorV3.address,
     gmuOracle.address
   );
 
