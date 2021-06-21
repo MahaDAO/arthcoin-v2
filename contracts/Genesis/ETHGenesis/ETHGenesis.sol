@@ -61,6 +61,10 @@ contract ETHGenesis {
         _collateralGMUOracle = IOracle(__collateralGMUOracle);
     }
 
+    function setOwner( address _owner ) public onlyByOwnerOrGovernance {
+        _ownerAddress = _owner;
+    }
+
     function usersLotteriesCount(address _address) public view returns (uint256) {
         return lottery.usersLottery(_address);
     }
@@ -188,7 +192,7 @@ contract ETHGenesis {
         _arthSupply = arthSupply;
     }
 
-    function setGlobalCollateralRation(uint256 _collateralRatio) public onlyByOwnerOrGovernance {
+    function setGlobalCollateralRatio(uint256 _collateralRatio) public onlyByOwnerOrGovernance {
         _getGlobalCollateralRatio = _collateralRatio;
     }
 
