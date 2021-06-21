@@ -16,7 +16,7 @@ async function main() {
 
   const dec = BigNumber.from(10).pow(18);
   const me = '0xa36d23444daC909A05EED651d840FC90afb018d4';
-  const rebaseAmount = BigNumber.from(1e6 * 80);
+  const rebaseAmount = BigNumber.from(1e6);
 
   console.log('owner', await instance.owner());
 
