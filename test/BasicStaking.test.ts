@@ -86,7 +86,6 @@ describe('Basic Staking', () => {
 
       expect(await arth.balanceOf(staking.address)).to.eq(contractARTHBalanceBefore.add(ETH));
       expect(await arth.balanceOf(owner.address)).to.eq(ownerARTHBalanceBefore.sub(ETH));
-
       expect(await staking.totalSupply()).to.eq(ETH);
       expect(await staking.balanceOf(owner.address)).to.eq(ETH);
 
@@ -124,7 +123,6 @@ describe('Basic Staking', () => {
       expect(await arth.balanceOf(staking.address)).to.eq(contractARTHBalanceBefore.add(ETH).add(ETH));
       expect(await arth.balanceOf(owner.address)).to.eq(ownerARTHBalanceBefore.sub(ETH));
       expect(await arth.balanceOf(whale.address)).to.eq(whaleARTHBalanceBefore.sub(ETH));
-
       expect(await staking.totalSupply()).to.eq(ETH.add(ETH));
       expect(await staking.balanceOf(owner.address)).to.eq(ETH);
       expect(await staking.balanceOf(whale.address)).to.eq(ETH);
@@ -141,7 +139,6 @@ describe('Basic Staking', () => {
 
       expect(await arth.balanceOf(staking.address)).to.eq(contractARTHBalanceBefore.add(ETH));
       expect(await arth.balanceOf(owner.address)).to.eq(ownerARTHBalanceBefore.sub(ETH));
-
       expect(await arth.balanceOf(whale.address)).to.eq(whaleARTHBalanceBefore);
       expect(await staking.totalSupply()).to.eq(ETH);
       expect(await staking.balanceOf(owner.address)).to.eq(ETH);
@@ -173,8 +170,8 @@ describe('Basic Staking', () => {
     });
 
     it(' - Should not withdraw for non staker', async () => {
-      await expect(staking.connect(owner).withdraw(ETH)).to.revertedWith('');
-      await expect(staking.connect(whale).withdraw(ETH)).to.revertedWith('');
+      await expect(staking.connect(owner).withdraw(ETH)).to.reverted;
+      await expect(staking.connect(whale).withdraw(ETH)).to.reverted;
     });
 
     it(' - Should not work if withdrawing > staked', async () => {
@@ -187,7 +184,7 @@ describe('Basic Staking', () => {
       expect(await staking.totalSupply()).to.eq(ETH);
       expect(await staking.balanceOf(owner.address)).to.eq(ETH);
 
-      await expect(staking.connect(owner).withdraw(ETH.mul(105).div(100))).to.revertedWith('');
+      await expect(staking.connect(owner).withdraw(ETH.mul(105).div(100))).to.reverted;
 
       expect(await staking.balanceOf(owner.address)).to.eq(ETH);
       expect(await staking.totalSupply()).to.eq(ETH);
@@ -197,9 +194,7 @@ describe('Basic Staking', () => {
 
     it(' - Should work for 1 account', async () => {
       const ownerARTHBalanceBeforeStaking = await arth.balanceOf(owner.address);
-      const contractARTHBalanceBeforeStaking = await arth.balanceOf(
-        staking.address
-      );
+      const contractARTHBalanceBeforeStaking = await arth.balanceOf(staking.address);
 
       await staking.stake(ETH);
       expect(await arth.balanceOf(owner.address)).to.eq(ownerARTHBalanceBeforeStaking.sub(ETH));
@@ -235,9 +230,7 @@ describe('Basic Staking', () => {
 
     it(' - Should work properly if non staker tries withdraw after someone has staked', async () => {
       const ownerARTHBalanceBeforeStaking = await arth.balanceOf(owner.address);
-      const contractARTHBalanceBeforeStaking = await arth.balanceOf(
-        staking.address
-      );
+      const contractARTHBalanceBeforeStaking = await arth.balanceOf(staking.address);
 
       await staking.stake(ETH);
       expect(await arth.balanceOf(owner.address)).to.eq(ownerARTHBalanceBeforeStaking.sub(ETH));
@@ -245,7 +238,9 @@ describe('Basic Staking', () => {
       expect(await staking.totalSupply()).to.eq(ETH);
       expect(await staking.balanceOf(owner.address)).to.eq(ETH);
 
-      await expect(staking.connect(whale).withdraw(HALF_ETH)).to.revertedWith('');
+      await expect(staking.connect(whale).withdraw(ETH)).to.reverted;
+      await expect(staking.connect(whale).withdraw(HALF_ETH)).to.reverted;
+      await expect(staking.connect(whale).withdraw(ETH.mul(2))).to.reverted;
 
       expect(await arth.balanceOf(owner.address)).to.eq(ownerARTHBalanceBeforeStaking.sub(ETH));
       expect(await arth.balanceOf(staking.address)).to.eq(contractARTHBalanceBeforeStaking.add(ETH));
@@ -253,6 +248,10 @@ describe('Basic Staking', () => {
       expect(await staking.balanceOf(owner.address)).to.eq(ETH);
 
       await staking.connect(owner).withdraw(HALF_ETH);
+
+      await expect(staking.connect(whale).withdraw(ETH)).to.reverted;
+      await expect(staking.connect(whale).withdraw(HALF_ETH)).to.reverted;
+      await expect(staking.connect(whale).withdraw(ETH.mul(2))).to.reverted;
 
       expect(await staking.balanceOf(owner.address)).to.eq(HALF_ETH);
       expect(await staking.totalSupply()).to.eq(HALF_ETH);
