@@ -323,7 +323,7 @@ contract ArthController is AccessControl, IARTHController {
             block.timestamp.sub(genesisTimestamp) <= maxGenesisDuration);
     }
 
-    function getARTHXGenesisPrice() public view override returns (uint256) {
+    function getARTHXGenesisPrice() public pure override returns (uint256) {
         return 1e4;
     }
 
