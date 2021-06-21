@@ -38,7 +38,7 @@ contract ArthController is AccessControl, IARTHController {
     address public DEFAULT_ADMIN_ADDRESS;
 
     uint256 public globalCollateralRatio;
-    uint256 public collateralRaisedOnOtherChain;
+    uint256 public collateralRaisedOnOtherChain = 0;
 
     uint256 public override buybackFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
     uint256 public override mintingFee;
@@ -358,7 +358,7 @@ contract ArthController is AccessControl, IARTHController {
             }
         }
 
-        return totalCollateralValueD18;
+        return totalCollateralValueD18.add(collateralRaisedOnOtherChain);
     }
 
     function getARTHSupply() public view override returns (uint256) {
@@ -383,7 +383,7 @@ contract ArthController is AccessControl, IARTHController {
 
     function getPercentCollateralized() public view override returns (uint256) {
         uint256 targetCollatValue = getTargetCollateralValue();
-        uint256 currentCollatValue = getGlobalCollateralValue().add(collateralRaisedOnOtherChain);
+        uint256 currentCollatValue = getGlobalCollateralValue();
 
         return currentCollatValue.mul(1e18).div(targetCollatValue);
     }
