@@ -7,25 +7,29 @@ import {Math} from '../utils/math/Math.sol';
 import {SafeERC20} from '../ERC20/SafeERC20.sol';
 import {IPoolToken} from '../ERC20/IPoolToken.sol';
 import {SafeMath} from '../utils/math/SafeMath.sol';
-import { IBasicStaking } from './IBasicStaking.sol';
+import {IBasicStaking} from './IBasicStaking.sol';
 import {ReentrancyGuard} from '../utils/ReentrancyGuard.sol';
-import { BasicRewardsDistributionRecipient } from  "./BasicRewardsDistributionRecipient.sol";
+import {RewardsDistributionRecipient} from './RewardsDistributionRecipient.sol';
+import {Pausable} from '../security/Pausable.sol';
 
-// forked from https://github.com/SetProtocol/index-coop-contracts/blob/master/contracts/staking/StakingRewardsV2.sol
+// forked from https://github.com/Synthetixio/synthetix/blob/develop/contracts/StakingRewards.sol
 // NOTE: V2 allows setting of rewardsDuration in constructor
-contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, ReentrancyGuard {
+contract BasicStaking is
+    IBasicStaking,
+    RewardsDistributionRecipient,
+    ReentrancyGuard,
+    Pausable
+{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
-    using SafeERC20 for IPoolToken;
 
     /* ========== STATE VARIABLES ========== */
 
-    IPoolToken public rewardsToken;
+    IERC20 public rewardsToken;
     IERC20 public stakingToken;
-
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
-    uint256 public rewardsDuration;
+    uint256 public rewardsDuration = 7 days;
     uint256 public lastUpdateTime;
     uint256 public rewardPerTokenStored;
 
@@ -38,24 +42,15 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
     /* ========== CONSTRUCTOR ========== */
 
     constructor(
+        address _owner,
         address _rewardsDistribution,
         address _rewardsToken,
-        address _stakingToken,
-        uint256 _rewardsDuration
-    ) {
-        rewardsToken = IPoolToken(_rewardsToken);
+        address _stakingToken
+    ) public {
+        rewardsToken = IERC20(_rewardsToken);
         stakingToken = IERC20(_stakingToken);
         rewardsDistribution = _rewardsDistribution;
-        rewardsDuration = _rewardsDuration;
-    }
-
-    function initializeDefault() external onlyRewardsDistribution {
-        lastUpdateTime = block.timestamp;
-        periodFinish = block.timestamp.add(rewardsDuration);
-
-        rewardRate = rewardsToken.balanceOf(address(this)).div(rewardsDuration);
-
-        emit DefaultInitialization();
+        transferOwnership(_owner);
     }
 
     /* ========== VIEWS ========== */
@@ -64,7 +59,12 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
         return _totalSupply;
     }
 
-    function balanceOf(address account) external view override returns (uint256) {
+    function balanceOf(address account)
+        external
+        view
+        override
+        returns (uint256)
+    {
         return _balances[account];
     }
 
@@ -78,12 +78,20 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
         }
         return
             rewardPerTokenStored.add(
-                lastTimeRewardApplicable().sub(lastUpdateTime).mul(rewardRate).mul(1e18).div(_totalSupply)
+                lastTimeRewardApplicable()
+                    .sub(lastUpdateTime)
+                    .mul(rewardRate)
+                    .mul(1e18)
+                    .div(_totalSupply)
             );
     }
 
     function earned(address account) public view override returns (uint256) {
-        return _balances[account].mul(rewardPerToken().sub(userRewardPerTokenPaid[account])).div(1e18).add(rewards[account]);
+        return
+            _balances[account]
+                .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
+                .div(1e18)
+                .add(rewards[account]);
     }
 
     function getRewardForDuration() external view override returns (uint256) {
@@ -92,16 +100,27 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function stake(uint256 amount) external override nonReentrant updateReward(msg.sender) {
-        require(amount > 0, "Cannot stake 0");
+    function stake(uint256 amount)
+        external
+        override
+        nonReentrant
+        whenNotPaused
+        updateReward(msg.sender)
+    {
+        require(amount > 0, 'Cannot stake 0');
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
         stakingToken.safeTransferFrom(msg.sender, address(this), amount);
         emit Staked(msg.sender, amount);
     }
 
-    function withdraw(uint256 amount) public override nonReentrant updateReward(msg.sender) {
-        require(amount > 0, "Cannot withdraw 0");
+    function withdraw(uint256 amount)
+        public
+        override
+        nonReentrant
+        updateReward(msg.sender)
+    {
+        require(amount > 0, 'Cannot withdraw 0');
         _totalSupply = _totalSupply.sub(amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
         stakingToken.safeTransfer(msg.sender, amount);
@@ -117,29 +136,18 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
         }
     }
 
-    function getRewardAndDistribute()
-        public
-        override
-        nonReentrant
-        updateReward(msg.sender)
-    {
-        uint256 reward = rewards[msg.sender];
-        require(reward > 0, 'BoostedStaking: rewards = 0');
-
-        rewards[msg.sender] = 0;
-        emit RewardPaid(msg.sender, reward);
-
-        rewardsToken.withdrawTo(reward, msg.sender);
-    }
-
-    function exit() external {
+    function exit() external override {
         withdraw(_balances[msg.sender]);
-        getRewardAndDistribute();
+        getReward();
     }
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    function notifyRewardAmount(uint256 reward) external override onlyRewardsDistribution updateReward(address(0)) {
+    function notifyRewardAmount(uint256 reward)
+        external
+        onlyRewardsDistribution
+        updateReward(address(0))
+    {
         if (block.timestamp >= periodFinish) {
             rewardRate = reward.div(rewardsDuration);
         } else {
@@ -152,21 +160,46 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
         // This keeps the reward rate in the right range, preventing overflows due to
         // very high values of rewardRate in the earned and rewardsPerToken functions;
         // Reward + leftover must be less than 2^256 / 10^18 to avoid overflow.
-        uint balance = rewardsToken.balanceOf(address(this));
-        require(rewardRate <= balance.div(rewardsDuration), "Provided reward too high");
+        uint256 balance = rewardsToken.balanceOf(address(this));
+        require(
+            rewardRate <= balance.div(rewardsDuration),
+            'Provided reward too high'
+        );
 
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(rewardsDuration);
         emit RewardAdded(reward);
     }
 
-    // Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
-    function recoverERC20(address tokenAddress, address to, uint256 tokenAmount) external onlyRewardsDistribution {
-        require(tokenAddress != address(stakingToken), "Cannot withdraw the staking token");
-        require(tokenAddress != address(rewardsToken), "Cannot withdraw the rewards token");
+    // End rewards emission earlier
+    function updatePeriodFinish(uint256 timestamp)
+        external
+        onlyOwner
+        updateReward(address(0))
+    {
+        periodFinish = timestamp;
+    }
 
-        IERC20(tokenAddress).safeTransfer(to, tokenAmount);
-        emit Recovered(tokenAddress, to, tokenAmount);
+    // Added to support recovering LP Rewards from other systems such as BAL to be distributed to holders
+    function recoverERC20(address tokenAddress, uint256 tokenAmount)
+        external
+        onlyOwner
+    {
+        require(
+            tokenAddress != address(stakingToken),
+            'Cannot withdraw the staking token'
+        );
+        IERC20(tokenAddress).safeTransfer(owner(), tokenAmount);
+        emit Recovered(tokenAddress, tokenAmount);
+    }
+
+    function setRewardsDuration(uint256 _rewardsDuration) external onlyOwner {
+        require(
+            block.timestamp > periodFinish,
+            'Previous rewards period must be complete before changing the duration for the new period'
+        );
+        rewardsDuration = _rewardsDuration;
+        emit RewardsDurationUpdated(rewardsDuration);
     }
 
     /* ========== MODIFIERS ========== */
@@ -182,10 +215,11 @@ contract BasicStaking is IBasicStaking, BasicRewardsDistributionRecipient, Reent
     }
 
     /* ========== EVENTS ========== */
-    event DefaultInitialization();
+
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
-    event Recovered(address indexed tokenAddress, address indexed to, uint256 amount);
+    event RewardsDurationUpdated(uint256 newDuration);
+    event Recovered(address token, uint256 amount);
 }
