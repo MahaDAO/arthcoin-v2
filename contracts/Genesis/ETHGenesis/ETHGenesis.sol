@@ -2,11 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import {AccessControl} from '../access/AccessControl.sol';
-import {SafeMath} from '../utils/math/SafeMath.sol';
-import {IOracle} from '../Oracle/IOracle.sol';
-import {IERC20} from '../ERC20/IERC20.sol';
-import {ILotteryRaffle} from './ILotteryRaffle.sol';
+import {AccessControl} from '../../access/AccessControl.sol';
+import {SafeMath} from '../../utils/math/SafeMath.sol';
+import {IOracle} from '../../Oracle/IOracle.sol';
+import {IERC20} from '../../ERC20/IERC20.sol';
+import {ILotteryRaffle} from '../ILotteryRaffle.sol';
+import {Math} from '../../utils/math/Math.sol';
+import {ICurve} from '../../Curves/ICurve.sol';
 
 contract ETHGenesis {
     using SafeMath for uint256;
@@ -14,10 +16,10 @@ contract ETHGenesis {
     IERC20 public _COLLATERAL;
     IOracle public _collateralGMUOracle;
     ILotteryRaffle public lottery;
+    ICurve public recollateralizeDiscountCruve;
 
     address public _ARTHX;
     address public _ARTH;
-    address public _arthpool;
 
     uint256 private constant _PRICE_PRECISION = 1e6;
     uint256 public immutable _missingDeciamls;
@@ -31,6 +33,9 @@ contract ETHGenesis {
     uint256 public _arthSupply;
     uint256 public _getGlobalCollateralRatio;
     uint256 public _getGlobalCollateralValue;
+    uint256 public maxRecollateralizeDiscount = 750000;
+    uint256 public _percentCollateralized;
+    uint256 public _collateralRaisedOnETH;
 
     mapping(address => uint256) public usersArthx;
 
@@ -111,10 +116,10 @@ contract ETHGenesis {
             collateralUnits.div(10**_missingDeciamls);
 
         // NEED to make sure that recollatFee is less than 1e6.
-        uint256 arthxPaidBack; //=
-        //     amountToRecollateralize
-        //         .mul(_arthController.getRecollateralizationDiscount().add(1e6))
-        //         .div(arthxPrice);
+        uint256 arthxPaidBack =
+            amountToRecollateralize
+                .mul(getRecollateralizationDiscount().add(1e6))
+                .div(arthxPrice);
 
         require(arthxOutMin <= arthxPaidBack, 'Genesis: Slippage limit reached');
         require(
@@ -124,13 +129,14 @@ contract ETHGenesis {
         require(
             _COLLATERAL.transferFrom(
                 msg.sender,
-                address(_arthpool),//address(this),
+                _ownerAddress,//address(this),
                 collateralUnitsPrecision
             ),
             'Genesis: transfer from failed'
         );
 
         uint256 lottriesCount = getLotteryAmount(collateralAmount);
+        _collateralRaisedOnETH = _collateralRaisedOnETH.mul(getCollateralPrice()).add(collateralAmount);
 
         if (lottriesCount > 0) {
             lottery.rewardLottery(msg.sender, lottriesCount);
@@ -140,6 +146,29 @@ contract ETHGenesis {
         //_ARTHX.poolMint(msg.sender, arthxPaidBack);
 
         return arthxPaidBack;
+    }
+
+    function getRecollateralizationDiscount()
+        public
+        view
+        returns (uint256)
+    {
+        return
+            Math.min(
+                recollateralizeDiscountCruve
+                    .getY(getPercentCollateralized())
+                    .mul(_PRICE_PRECISION)
+                    .div(100),
+                maxRecollateralizeDiscount
+            );
+    }
+
+    function getPercentCollateralized()
+        public
+        view
+        returns (uint256)
+    {
+        return _percentCollateralized;
     }
 
     function estimateAmountToRecollateralize(uint256 collateralAmount)
@@ -199,6 +228,18 @@ contract ETHGenesis {
     function setGlobalCollateralValue(uint256 _collateralValue) public onlyByOwnerOrGovernance {
         _getGlobalCollateralValue = _collateralValue;
     }
+
+    function setRecollateralizationCurve(ICurve curve)
+        external
+        onlyByOwnerOrGovernance
+    {
+        recollateralizeDiscountCruve = curve;
+    }
+
+    function setPercentCollateralized(uint256 percentCollateralized) public onlyByOwnerOrGovernance {
+        _percentCollateralized = percentCollateralized;
+    }
+
     // Genesis getters
     function getIsGenesisActive() public view returns (bool) {
         return genesisStatus;
