@@ -131,6 +131,203 @@ describe('ARTHPool', () => {
         expect(await arthx.totalSupply())
           .to.eq(arthxTotalSupply.add(expectedMint));
       });
+
+      it(' - Should recollaterize properly when DAI/USD = 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
+        await dai.transfer(arthPool.address, ETH); // Ensuring that pool has some collateral.
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        await gmuOracle.setPrice(0.94e6);
+        const collateralValue = ETH.mul(0.94e6).div(1e6);
+        const expectedMint = collateralValue.mul(BigNumber.from(1e6).add(300000)).div(1e6);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to.eq(collateralBalanceBefore.sub(ETH));
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to.eq(poolCollateralBalanceBefore.add(ETH));
+
+        expect(await arthx.balanceOf(owner.address))
+          .to.eq(arthxBalanceBefore.add(expectedMint));
+
+        expect(await arthx.totalSupply())
+          .to.eq(arthxTotalSupply.add(expectedMint));
+      });
+
+      it(' - Should recollaterize properly when DAI/USD > 1 & USD/GMU = 1 & ARTHX/GMU = 1', async () => {
+        await dai.transfer(arthPool.address, ETH); // Ensuring that pool has some collateral.
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        const collateralValue = ETH.mul(1.06e6).div(1e6);
+        const expectedMint = collateralValue.mul(BigNumber.from(1e6).add(300000)).div(1e6);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to.eq(collateralBalanceBefore.sub(ETH));
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to.eq(poolCollateralBalanceBefore.add(ETH));
+
+        expect(await arthx.balanceOf(owner.address))
+          .to.eq(arthxBalanceBefore.add(expectedMint));
+
+        expect(await arthx.totalSupply())
+          .to.eq(arthxTotalSupply.add(expectedMint));
+      });
+
+      it(' - Should recollaterize properly when DAI/USD > 1 & USD/GMU > 1 & ARTHX/GMU = 1', async () => {
+        await dai.transfer(arthPool.address, ETH); // Ensuring that pool has some collateral.
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(1.06e6);
+        const oraclePrice = BigNumber.from(1.06e6).mul(1.06e6).div(1e6);
+        const collateralValue = ETH.mul(oraclePrice).div(1e6);
+        const expectedMint = collateralValue.mul(BigNumber.from(1e6).add(300000)).div(1e6);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to.eq(collateralBalanceBefore.sub(ETH));
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to.eq(poolCollateralBalanceBefore.add(ETH));
+
+        expect(await arthx.balanceOf(owner.address))
+          .to.eq(arthxBalanceBefore.add(expectedMint));
+
+        expect(await arthx.totalSupply())
+          .to.eq(arthxTotalSupply.add(expectedMint));
+      });
+
+      it(' - Should recollaterize properly when DAI/USD > 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
+        await dai.transfer(arthPool.address, ETH); // Ensuring that pool has some collateral.
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(1.06e8);
+        await gmuOracle.setPrice(0.94e6);
+        const oraclePrice = BigNumber.from(1.06e6).mul(0.94e6).div(1e6);
+        const collateralValue = ETH.mul(oraclePrice).div(1e6);
+        const expectedMint = collateralValue.mul(BigNumber.from(1e6).add(300000)).div(1e6);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to.eq(collateralBalanceBefore.sub(ETH));
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to.eq(poolCollateralBalanceBefore.add(ETH));
+
+        expect(await arthx.balanceOf(owner.address))
+          .to.eq(arthxBalanceBefore.add(expectedMint));
+
+        expect(await arthx.totalSupply())
+          .to.eq(arthxTotalSupply.add(expectedMint));
+      });
+
+      it(' - Should recollaterize properly when DAI/USD < 1 & USD/GMU = 1 & ARTHX/GMU = 1', async () => {
+        await dai.transfer(arthPool.address, ETH); // Ensuring that pool has some collateral.
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        const collateralValue = ETH.mul(0.94e6).div(1e6);
+        const expectedMint = collateralValue.mul(BigNumber.from(1e6).add(300000)).div(1e6);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to.eq(collateralBalanceBefore.sub(ETH));
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to.eq(poolCollateralBalanceBefore.add(ETH));
+
+        expect(await arthx.balanceOf(owner.address))
+          .to.eq(arthxBalanceBefore.add(expectedMint));
+
+        expect(await arthx.totalSupply())
+          .to.eq(arthxTotalSupply.add(expectedMint));
+      });
+
+      it(' - Should recollaterize properly when DAI/USD < 1 & USD/GMU > 1 & ARTHX/GMU = 1', async () => {
+        await dai.transfer(arthPool.address, ETH); // Ensuring that pool has some collateral.
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(1.06e6);
+        const oraclePrice = BigNumber.from(0.94e6).mul(1.06e6).div(1e6);
+        const collateralValue = ETH.mul(oraclePrice).div(1e6);
+        const expectedMint = collateralValue.mul(BigNumber.from(1e6).add(300000)).div(1e6);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to.eq(collateralBalanceBefore.sub(ETH));
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to.eq(poolCollateralBalanceBefore.add(ETH));
+
+        expect(await arthx.balanceOf(owner.address))
+          .to.eq(arthxBalanceBefore.add(expectedMint));
+
+        expect(await arthx.totalSupply())
+          .to.eq(arthxTotalSupply.add(expectedMint));
+      });
+
+      it(' - Should recollaterize properly when DAI/USD < 1 & USD/GMU < 1 & ARTHX/GMU = 1', async () => {
+        await dai.transfer(arthPool.address, ETH); // Ensuring that pool has some collateral.
+
+        const collateralBalanceBefore = await dai.balanceOf(owner.address);
+        const poolCollateralBalanceBefore = await dai.balanceOf(arthPool.address);
+
+        const arthxBalanceBefore = await arthx.balanceOf(owner.address);
+        const arthxTotalSupply = await arthx.totalSupply();
+
+        await daiUSDMockChainlinkAggregatorV3.setLatestPrice(0.94e8);
+        await gmuOracle.setPrice(0.94e6);
+        const oraclePrice = BigNumber.from(0.94e6).mul(0.94e6).div(1e6);
+        const collateralValue = ETH.mul(oraclePrice).div(1e6);
+        const expectedMint = collateralValue.mul(BigNumber.from(1e6).add(300000)).div(1e6);
+        await arthPool.recollateralizeARTH(ETH, expectedMint);
+
+        expect(await dai.balanceOf(owner.address))
+          .to.eq(collateralBalanceBefore.sub(ETH));
+
+        expect(await dai.balanceOf(arthPool.address))
+          .to.eq(poolCollateralBalanceBefore.add(ETH));
+
+        expect(await arthx.balanceOf(owner.address))
+          .to.eq(arthxBalanceBefore.add(expectedMint));
+
+        expect(await arthx.totalSupply())
+          .to.eq(arthxTotalSupply.add(expectedMint));
+      });
     });
   });
 });
