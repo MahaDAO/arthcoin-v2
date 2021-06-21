@@ -18,9 +18,6 @@ contract ETHGenesis {
     ILotteryRaffle public lottery;
     ICurve public recollateralizeDiscountCruve;
 
-    address public _ARTHX;
-    address public _ARTH;
-
     uint256 private constant _PRICE_PRECISION = 1e6;
     uint256 public immutable _missingDeciamls;
     address public _ownerAddress;
@@ -35,6 +32,7 @@ contract ETHGenesis {
     uint256 public _getGlobalCollateralValue;
     uint256 public maxRecollateralizeDiscount = 750000;
     uint256 public _percentCollateralized;
+    uint256 public _collateralRaisedOnMatic;
     uint256 public _collateralRaisedOnETH;
 
     mapping(address => uint256) public usersArthx;
@@ -90,14 +88,6 @@ contract ETHGenesis {
         return lotteryAmount;
     }
 
-    function setCollatGMUOracle(address _collateralGMUOracleAddress)
-        external
-        onlyByOwnerOrGovernance
-    {
-        collateralGMUOracleAddress = _collateralGMUOracleAddress;
-        _collateralGMUOracle = IOracle(_collateralGMUOracleAddress);
-    }
-
     function recollateralizeARTH(
         uint256 collateralAmount,
         uint256 arthxOutMin
@@ -136,7 +126,7 @@ contract ETHGenesis {
         );
 
         uint256 lottriesCount = getLotteryAmount(collateralAmount);
-        _collateralRaisedOnETH = _collateralRaisedOnETH.mul(getCollateralPrice()).add(collateralAmount);
+        _collateralRaisedOnETH = collateralAmount.mul(getCollateralPrice()).add(collateralAmount);
 
         if (lottriesCount > 0) {
             lottery.rewardLottery(msg.sender, lottriesCount);
@@ -146,29 +136,6 @@ contract ETHGenesis {
         //_ARTHX.poolMint(msg.sender, arthxPaidBack);
 
         return arthxPaidBack;
-    }
-
-    function getRecollateralizationDiscount()
-        public
-        view
-        returns (uint256)
-    {
-        return
-            Math.min(
-                recollateralizeDiscountCruve
-                    .getY(getPercentCollateralized())
-                    .mul(_PRICE_PRECISION)
-                    .div(100),
-                maxRecollateralizeDiscount
-            );
-    }
-
-    function getPercentCollateralized()
-        public
-        view
-        returns (uint256)
-    {
-        return _percentCollateralized;
     }
 
     function estimateAmountToRecollateralize(uint256 collateralAmount)
@@ -240,6 +207,14 @@ contract ETHGenesis {
         _percentCollateralized = percentCollateralized;
     }
 
+    function setCollatGMUOracle(address _collateralGMUOracleAddress)
+        external
+        onlyByOwnerOrGovernance
+    {
+        collateralGMUOracleAddress = _collateralGMUOracleAddress;
+        _collateralGMUOracle = IOracle(_collateralGMUOracleAddress);
+    }
+
     // Genesis getters
     function getIsGenesisActive() public view returns (bool) {
         return genesisStatus;
@@ -260,6 +235,41 @@ contract ETHGenesis {
     function getGlobalCollateralValue() public view returns (uint256) {
         return _getGlobalCollateralValue;
     }
+
+    function getRecollateralizationDiscount()
+        public
+        view
+        returns (uint256)
+    {
+        return
+            Math.min(
+                recollateralizeDiscountCruve
+                    .getY(getPercentCollateralized())
+                    .mul(_PRICE_PRECISION)
+                    .div(100),
+                maxRecollateralizeDiscount
+            );
+    }
+
+    // function getPercentCollateralized()
+    //     public
+    //     view
+    //     returns (uint256)
+    // {
+    //     return _percentCollateralized;
+    // }
+
+    function getTargetCollateralValue() public view returns (uint256) {
+        return getArthSupply().mul(getGlobalCollateralRatio()).div(1e6);
+    }
+
+    function getPercentCollateralized() public view  returns (uint256) {
+        uint256 targetCollatValue = getTargetCollateralValue();
+        uint256 currentCollatValue = getGlobalCollateralValue().add(_collateralRaisedOnMatic);
+
+        return currentCollatValue.mul(1e18).div(targetCollatValue);
+    }
+
     // Arthpool Library
     function calcRecollateralizeARTHInner(
         uint256 collateralAmount,
