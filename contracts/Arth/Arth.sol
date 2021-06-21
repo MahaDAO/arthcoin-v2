@@ -27,30 +27,18 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     uint8 public constant override decimals = 18;
     string public constant symbol = 'ARTH';
     string public constant name = 'ARTH Valuecoin';
-    bool public _revokeRebase = false;
-
-    /// @dev Number of fractions that make up 1 ARTH.
-    // uint256 public _fractionsPerAmount = 1e6;
-
-    uint256 private _MAX_UINT256 = type(uint256).max;
+    bool public allowRebase = false;
 
     /// @dev ARTH v1 already in circulation.
     uint256 private INITIAL_AMOUNT_SUPPLY = 25_000_000 ether;
     uint256 public gonsPerFragment = 1e6;
 
-    uint256 public constant _REBASING_PRECISION = 1;
-
     event Rebase(uint256 supply);
     event PoolBurned(address indexed from, address indexed to, uint256 amount);
     event PoolMinted(address indexed from, address indexed to, uint256 amount);
-    event TroveManagerAddressChanged(address _troveManagerAddress);
-    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
-    event BorrowerOperationsAddressChanged(
-        address _newBorrowerOperationsAddress
-    );
 
     modifier onlyPools() {
-        require(controller.isPool(msg.sender), 'ARTH: not pool');
+        require(controller.isPool(msg.sender), 'ARTH: not an approved pool');
         _;
     }
 
@@ -131,7 +119,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     }
 
     function revokeRebase() public onlyByOwnerOrGovernance {
-        _revokeRebase = true;
+        allowRebase = true;
     }
 
     function totalSupply()
@@ -148,12 +136,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         onlyByOwnerOrGovernance
         returns (uint256)
     {
-        require(!_revokeRebase, 'Arth: rebase is revoked');
-
-        _totalSupply = _totalSupply.mul(gonsPerFragment).div(
-            _newGonsPerFragment
-        );
-
+        require(!allowRebase, 'Arth: rebase is revoked');
         gonsPerFragment = _newGonsPerFragment;
 
         emit Rebase(totalSupply());
@@ -218,11 +201,6 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         _mint(who, amount);
         emit PoolMinted(msg.sender, who, amount);
     }
-
-    // function setGovernance(address _governance) external override onlyOwner {
-    //     require(_governance != address(0), 'ARTH: address = 0');
-    //     governance = _governance;
-    // }
 
     function setArthController(address _controller)
         external
