@@ -27,23 +27,18 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     uint8 public constant override decimals = 18;
     string public constant symbol = 'ARTH';
     string public constant name = 'ARTH Valuecoin';
-    bool public _revokeRebase;
+    bool public _revokeRebase = false;
 
     /// @dev Number of fractions that make up 1 ARTH.
-    uint256 private _fractionsPerAmount = 1e4;
+    // uint256 public _fractionsPerAmount = 1e6;
 
     uint256 private _MAX_UINT256 = type(uint256).max;
 
     /// @dev ARTH v1 already in circulation.
-    uint256 private _INITIAL_AMOUNT_SUPPLY = 21107858507999546111302861;
+    uint256 private INITIAL_AMOUNT_SUPPLY = 25_000_000 ether;
+    uint256 public gonsPerFragment = 1e6;
 
-    uint256 private _TOTAL_FRACTIONS =
-        _MAX_UINT256 - (_MAX_UINT256 % _INITIAL_AMOUNT_SUPPLY);
-
-    uint256 private constant _REBASING_PRECISION = 1e6;
-
-    /// @notice This is to help with establishing the Uniswap pools, as they need liquidity.
-    uint256 public constant override genesisSupply = 22_100_000 ether; // 22.1M ARTH (testnet) & 5k (Mainnet).
+    uint256 public constant _REBASING_PRECISION = 1;
 
     event Rebase(uint256 supply);
     event PoolBurned(address indexed from, address indexed to, uint256 amount);
@@ -76,9 +71,8 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     }
 
     constructor() AnyswapV4Token(name) {
-        _mint(_msgSender(), genesisSupply);
+        _mint(_msgSender(), INITIAL_AMOUNT_SUPPLY);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        _revokeRebase = false;
     }
 
     function transferAndCall(
@@ -111,14 +105,14 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         return super.transferWithPermit(target, to, value, deadline, v, r, s);
     }
 
-    function transfer(address recipient, uint256 amount)
+    function transfer(address to, uint256 value)
         public
         virtual
         override(IERC20, ERC20Custom)
-        requireValidRecipient(recipient)
+        requireValidRecipient(to)
         returns (bool)
     {
-        return super.transfer(recipient, amount);
+        return super.transfer(to, value);
     }
 
     function transferFrom(
@@ -136,43 +130,31 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         return super.transferFrom(sender, recipient, amount);
     }
 
-    function revokeRebase(bool revokeRebase_) public onlyByOwnerOrGovernance {
-        _revokeRebase = revokeRebase_;
+    function revokeRebase() public onlyByOwnerOrGovernance {
+        _revokeRebase = true;
     }
 
-    function rebase(int256 supplyDelta)
+    function totalSupply()
+        public
+        view
+        override(ERC20Custom, IERC20)
+        returns (uint256)
+    {
+        return _totalSupply.div(gonsPerFragment);
+    }
+
+    function rebase(uint256 _newGonsPerFragment)
         external
         onlyByOwnerOrGovernance
         returns (uint256)
     {
-        require(!_revokeRebase, 'Arth: Already triggered rebase');
+        require(!_revokeRebase, 'Arth: rebase is revoked');
 
-        if (supplyDelta == 0) {
-            emit Rebase(totalSupply());
-            return totalSupply();
-        }
-
-        if (supplyDelta < 0) {
-            _totalSupply = _totalSupply.sub(uint256(supplyDelta * -1));
-        } else {
-            _totalSupply = _totalSupply.add(uint256(supplyDelta));
-        }
-
-        _fractionsPerAmount = _TOTAL_FRACTIONS.mul(_REBASING_PRECISION).div(
-            totalSupply()
+        _totalSupply = _totalSupply.mul(gonsPerFragment).div(
+            _newGonsPerFragment
         );
 
-        /*
-            From this point forward, _fractionsPerAmount is taken as the source of truth.
-        We recalculate a new _totalSupply to be in agreement with the _fractionsPerAmount
-        conversion rate.
-            This means our applied supplyDelta can deviate from the requested supplyDelta,
-        but this deviation is guaranteed to be < (_totalSupply^2)/(_TOTAL_FRACTIONS - _totalSupply).
-            In the case of _totalSupply <= MAX_UINT128 (our current supply cap), this
-        deviation is guaranteed to be < 1, so we can omit this step. If the supply cap is
-        ever increased, it must be re-included _totalSupply = _TOTAL_FRACTIONS.div(_fractionsPerAmount).
-        */
-        // _revokeRebase = true;
+        gonsPerFragment = _newGonsPerFragment;
 
         emit Rebase(totalSupply());
         return totalSupply();
@@ -184,7 +166,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         override(IERC20, ERC20Custom)
         returns (uint256)
     {
-        return _convertFractionToAmount(_balances[account]);
+        return _balances[account].div(gonsPerFragment);
     }
 
     function _mint(address account, uint256 amount)
@@ -194,11 +176,10 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     {
         require(account != address(0), 'ERC20: mint to the zero address');
 
-        uint256 fractionAmount = _convertAmountToFraction(amount);
-        _beforeTokenTransfer(address(0), account, amount);
+        uint256 gonValues = amount.mul(gonsPerFragment);
 
-        _totalSupply = _totalSupply.add(amount);
-        _balances[account] = _balances[account].add(fractionAmount);
+        _totalSupply = _totalSupply.add(gonValues);
+        _balances[account] = _balances[account].add(gonValues);
 
         emit Transfer(address(0), account, amount);
     }
@@ -210,15 +191,14 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     {
         require(account != address(0), 'ERC20: burn from the zero address');
 
-        uint256 fractionAmount = _convertAmountToFraction(amount);
-        _beforeTokenTransfer(account, address(0), amount);
+        uint256 gonValues = amount.mul(gonsPerFragment);
 
         _balances[account] = _balances[account].sub(
-            fractionAmount,
+            gonValues,
             'ERC20: burn amount exceeds balance'
         );
 
-        _totalSupply = _totalSupply.sub(amount);
+        _totalSupply = _totalSupply.sub(gonValues);
 
         emit Transfer(account, address(0), amount);
     }
@@ -255,25 +235,16 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     function _transfer(
         address sender,
         address recipient,
-        uint256 amount
+        uint256 value
     ) internal override {
-        uint256 fractionAmount = _convertAmountToFraction(amount);
-        super._transfer(sender, recipient, fractionAmount);
-    }
+        // get amount in underlying
+        uint256 gonValues = value.mul(gonsPerFragment);
 
-    function _convertFractionToAmount(uint256 fraction)
-        internal
-        view
-        returns (uint256)
-    {
-        return fraction.mul(_REBASING_PRECISION).div(_fractionsPerAmount);
-    }
+        // sub from balance of sender
+        _balances[sender] = _balances[sender].sub(gonValues);
 
-    function _convertAmountToFraction(uint256 amount)
-        internal
-        view
-        returns (uint256)
-    {
-        return amount.mul(_fractionsPerAmount).div(_REBASING_PRECISION);
+        // add to balance of receiver
+        _balances[recipient] = _balances[recipient].add(gonValues);
+        emit Transfer(msg.sender, recipient, value);
     }
 }

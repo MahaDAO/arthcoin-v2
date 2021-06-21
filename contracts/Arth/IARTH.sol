@@ -12,6 +12,4 @@ interface IARTH is IERC20, IAnyswapV4Token {
     function poolBurnFrom(address who, uint256 amount) external;
 
     function setArthController(address _controller) external;
-
-    function genesisSupply() external view returns (uint256);
 }
