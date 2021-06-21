@@ -47,11 +47,15 @@ describe('Basic Staking', () => {
 
   beforeEach(' - Set some contract variables', async () => {
     await staking.initializeDefault();
+    await arth.transfer(whale.address, ETH.mul(5));
+    await arth.transfer(whale2.address, ETH.mul(5));
   });
 
   describe('- Access restricted functions', async () => {
-    await expect(staking.connect(whale).initializeDefault())
-      .to.revertedWith('Caller is not RewardsDistribution contractk');
+    it (' - Should not work if not reward distribuent', async () => {
+      await expect(staking.connect(whale).initializeDefault())
+        .to.revertedWith('Caller is not RewardsDistribution contract');
+    });
   });
 
   describe('- Stake', async () => {
@@ -64,7 +68,7 @@ describe('Basic Staking', () => {
       const ownerARTHBalanceBefore = await arth.balanceOf(owner.address);
       const contractARTHBalanceBefore = await arth.balanceOf(staking.address);
 
-      await expect(staking.stake(0)).to.revertedWith('Cannot withdraw 0');
+      await expect(staking.stake(0)).to.revertedWith('Cannot stake 0');
 
       expect(await arth.balanceOf(staking.address)).to.eq(contractARTHBalanceBefore);
       expect(await arth.balanceOf(owner.address)).to.eq(ownerARTHBalanceBefore);
@@ -319,13 +323,13 @@ describe('Basic Staking', () => {
       await arth.approve(staking.address, ETH);
 
       await staking.stake(ETH);
-      await expect(staking.recoverERC20(arth.address, ETH)).to.revertedWith('Cannot withdraw the staking token');
+      await expect(staking.recoverERC20(arth.address, owner.address, ETH)).to.revertedWith('Cannot withdraw the staking token');
     });
 
     it('- Should not recover staking token', async () => {
-      await arthx.trasnfer(staking.address, ETH);
+      await arthx.transfer(staking.address, ETH);
 
-      await expect(staking.recoverERC20(arthx.address, ETH)).to.revertedWith('Cannot withdraw the rewards token');
+      await expect(staking.recoverERC20(arthx.address, owner.address, ETH)).to.revertedWith('Cannot withdraw the rewards token');
     });
   });
 });
