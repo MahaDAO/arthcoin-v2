@@ -10,8 +10,6 @@ import { advanceBlock, advanceTimeAndBlock } from '../utilities';
 
 chai.use(solidity);
 
-const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
-
 describe('ARTHPool Mint', () => {
   let attacker: SignerWithAddress;
   let timelock: SignerWithAddress;
