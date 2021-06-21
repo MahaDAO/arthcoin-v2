@@ -27,7 +27,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     uint8 public constant override decimals = 18;
     string public constant symbol = 'ARTH';
     string public constant name = 'ARTH Valuecoin';
-    bool public allowRebase = false;
+    bool public allowRebase = true;
 
     /// @dev ARTH v1 already in circulation.
     uint256 private INITIAL_AMOUNT_SUPPLY = 25_000_000 ether;
@@ -119,7 +119,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
     }
 
     function revokeRebase() public onlyByOwnerOrGovernance {
-        allowRebase = true;
+        allowRebase = false;
     }
 
     function totalSupply()
@@ -136,7 +136,7 @@ contract ARTHStablecoin is AnyswapV4Token, IARTH {
         onlyByOwnerOrGovernance
         returns (uint256)
     {
-        require(!allowRebase, 'Arth: rebase is revoked');
+        require(allowRebase, 'Arth: rebase is revoked');
         gonsPerFragment = _newGonsPerFragment;
 
         emit Rebase(totalSupply());
