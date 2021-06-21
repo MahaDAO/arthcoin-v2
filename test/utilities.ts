@@ -2,6 +2,7 @@ import { ethers } from 'hardhat';
 import { ParamType } from 'ethers/lib/utils';
 import { Block, JsonRpcProvider, Provider } from '@ethersproject/providers';
 
+export const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
 
 export function encodeParameters(
   types: Array<string | ParamType>,
@@ -11,12 +12,10 @@ export function encodeParameters(
   return abi.encode(types, values);
 }
 
-
 export async function latestBlocktime(provider: Provider): Promise<number> {
   const { timestamp } = await provider.getBlock('latest');
   return timestamp;
 }
-
 
 export async function advanceTime(
   provider: JsonRpcProvider,
@@ -25,12 +24,10 @@ export async function advanceTime(
   return provider.send('evm_increaseTime', [time]);
 }
 
-
 export async function advanceBlock(provider: JsonRpcProvider): Promise<Block> {
   await provider.send('evm_mine', []);
   return await provider.getBlock('latest');
 }
-
 
 export async function advanceTimeAndBlock(
   provider: JsonRpcProvider,
