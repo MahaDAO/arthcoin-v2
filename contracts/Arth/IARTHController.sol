@@ -8,6 +8,8 @@ interface IARTHController {
 
     function addPool(address pool_address) external;
 
+    function addPools(address[] memory poolAddress) external;
+
     function removePool(address pool_address) external;
 
     function getARTHSupply() external view returns (uint256);

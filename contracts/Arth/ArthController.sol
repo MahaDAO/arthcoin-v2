@@ -183,6 +183,17 @@ contract ArthController is AccessControl, IARTHController {
         arthPoolsArray.push(poolAddress);
     }
 
+    function addPools(address[] memory poolAddress)
+        external
+        override
+        onlyByOwnerOrGovernance
+    {
+        for (uint256 index = 0; index < poolAddress.length; index++) {
+            arthPools[poolAddress[index]] = true;
+            arthPoolsArray.push(poolAddress[index]);
+        }
+    }
+
     function removePool(address poolAddress)
         external
         override
