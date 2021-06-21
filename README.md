@@ -7,6 +7,7 @@
 📖 **Documentation** – https://docs.arthcoin.com
 
 📲 **Telegram** – https://t.me/mahadao
+
 </p>
 
 ## What is Arth?
@@ -15,3 +16,11 @@ ARTH is a new type of currency designed to not be pegged to government-owned cur
 
 Without being influenced by government-owned currencies, ARTH will be immune to inflation. Through stability, ARTH also becomes a superior choice of currency for means of trade. This is unlike Gold or Bitcoin, which are used more as a store of value rather than a medium of exchange.
 
+## Instructions
+
+```
+yarn
+yarn compile
+npx truffle deploy --network development
+yarn generate-deployment development
+```

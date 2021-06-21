@@ -17,6 +17,12 @@ const GenesisWBTC = artifacts.require("GenesisWBTC");
 const GenesisWMATIC = artifacts.require("GenesisWMATIC");
 const GenesisWETH = artifacts.require("GenesisWETH");
 
+const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
+const Pool_USDT = artifacts.require("Arth/Pools/Pool_USDT");
+const Pool_WBTC = artifacts.require("Arth/Pools/Pool_WBTC");
+const Pool_WMATIC = artifacts.require("Arth/Pools/Pool_WMATIC");
+const Pool_WETH = artifacts.require("Arth/Pools/Pool_WETH");
+
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
@@ -41,6 +47,13 @@ module.exports = async function (deployer, network, accounts) {
     GenesisWMATIC,
     GenesisWETH,
   ]);
+
+  console.log(chalk.yellow('\nGetting deployed Pool instances...'));
+  const pool_instance_USDC = await Pool_USDC.deployed();
+  const pool_instance_USDT = await Pool_USDT.deployed();
+  const pool_instance_WBTC = await Pool_WBTC.deployed();
+  const pool_instance_WMATIC = await Pool_WMATIC.deployed();
+  const pool_instance_WETH = await Pool_WETH.deployed();
 
   console.log(chalk.yellow('\nDeploying RedeemAlgorithmic Genesis...'));
   const usdcGenesis = await deployer.deploy(
