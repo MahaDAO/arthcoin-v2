@@ -38,8 +38,10 @@ module.exports = {
   },
   USDC: {
     matic: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
+    mainnet: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
   },
   USDT: {
+    mainnet: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
     matic: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
   },
   DAI: {
@@ -48,6 +50,7 @@ module.exports = {
   },
   WBTC: {
     matic: '0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6',
+    mainnet: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'
   },
   MahaToken: {
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
@@ -60,25 +63,35 @@ module.exports = {
     kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331',
     maticMumbai: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada',
     matic: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0',  // MATIC/USD.
+    rinkeby: '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
   },
   ChainlinkFeedUSDT: {
     maticMumbai: '0x92C09849638959196E976289418e5973CC96d645',
     matic: '0x0A6513e40db6EB1b165753AD52E80663aeA50545',
+    mainnet: '0x3E7d1eAB13ad0104d2750B8863b489D65364e32D',
+    rinkeby: '0xa24de01df22b63d23Ebc1882a5E3d4ec0d907bFB' // No USDT on rinkeby
   },
   ChainlinkFeedUSDC: {
     maticMumbai: '0x572dDec9087154dC5dfBB1546Bb62713147e0Ab0',
     matic: '0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7',
+    mainnet: '0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6',
+    rinkeby: '0xa24de01df22b63d23Ebc1882a5E3d4ec0d907bFB'
   },
   ChainlinkFeedWBTC: {
     matic: '0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6',
+    rinkeby: '0xECe365B379E1dD183B20fc5f022230C044d51404', // No WBTC on rinkeby
+    mainnet: '0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c', // No WBTC on mainnet
   },
   ChainlinkFeedMATIC: {
     maticMumbai: '0x0715A7794a1dc8e42615F059dD6e406A6594651A',
-    matic: '0xF9680D99D6C9589e2a93a78A04A279e509205945'
+    matic: '0xF9680D99D6C9589e2a93a78A04A279e509205945',
+    mainnet: '0x7bAC85A8a13A4BcD8abb3eB7d6b4d632c5a57676'
   },
   ChainlinkFeedDAI: {
     maticMumbai: '0x0FCAa9c899EC5A91eBc3D5Dd869De833b06fB046',
-    matic: '0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D'
+    matic: '0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D',
+    mainnet: '0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9',
+    rinkeby: '0x2bA49Aaa16E6afD2a993473cfB70Fa8559B523cF',
   },
 
   USDTETHUniswapPair: {
