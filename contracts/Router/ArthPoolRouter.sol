@@ -49,41 +49,6 @@ contract ArthPoolRouter {
         );
     }
 
-    function recollateralizeARTHAndStake(
-        IARTHPool pool,
-        IERC20 collateral,
-        uint256 amount,
-        uint256 arthxOutMin,
-        uint256 secs,
-        IBoostedStaking stakingPool
-    ) external {
-        _recollateralizeARTHAndStake(
-            pool,
-            collateral,
-            amount,
-            arthxOutMin,
-            secs,
-            stakingPool
-        );
-    }
-
-    function recollateralizeARTHAndStakeWithETH(
-        IARTHPool pool,
-        uint256 arthxOutMin,
-        uint256 secs,
-        IBoostedStaking stakingPool
-    ) external payable {
-        weth.deposit{value: msg.value}();
-        _recollateralizeARTHAndStake(
-            pool,
-            weth,
-            msg.value,
-            arthxOutMin,
-            secs,
-            stakingPool
-        );
-    }
-
     function mintAndStakeWithETH(
         IARTHPool pool,
         uint256 arthOutMin,
@@ -134,32 +99,43 @@ contract ArthPoolRouter {
         }
     }
 
-    function _recollateralizeARTHAndStake(
+    function mintWithETH(
+        IARTHPool pool,
+        uint256 arthOutMin,
+        uint256 arthxOutMin
+    ) public payable {
+        weth.deposit{value: msg.value}();
+        _mint(pool, weth, msg.value, arthOutMin, arthxOutMin);
+    }
+
+    function mint(
         IARTHPool pool,
         IERC20 collateral,
         uint256 amount,
-        uint256 arthxOutMin,
-        uint256 secs,
-        IBoostedStaking stakingPool
+        uint256 arthOutMin,
+        uint256 arthxOutMin
+    ) public {
+        _mint(pool, collateral, amount, arthOutMin, arthxOutMin);
+    }
+
+    function _mint(
+        IARTHPool pool,
+        IERC20 collateral,
+        uint256 amount,
+        uint256 arthOutMin,
+        uint256 arthxOutMin
     ) internal {
         if (address(collateral) != address(weth)) {
             collateral.transferFrom(msg.sender, address(this), amount);
         }
+
         collateral.approve(address(pool), amount);
 
-        uint256 arthxOut = pool.recollateralizeARTH(amount, arthxOutMin);
-        arthx.approve(address(stakingPool), uint256(arthxOut));
+        (uint256 arthOut, uint256 arthxOut) =
+            pool.mint(amount, arthOutMin, arthxOutMin);
 
-        if (address(stakingPool) != address(0)) {
-            if (secs != 0)
-                stakingPool.stakeLockedFor(
-                    msg.sender,
-                    address(this),
-                    arthxOut,
-                    secs
-                );
-            else stakingPool.stakeFor(msg.sender, address(this), arthxOut);
-        }
+        arth.transfer(msg.sender, arthOut);
+        arthx.transfer(msg.sender, arthxOut);
     }
 
     function _swapForARTHX(
