@@ -57,10 +57,10 @@ module.exports = async function (deployer, network, accounts) {
     uniswapRouter.addLiquidity(
       arth.address,
       maha.address,
-      new BigNumber(1e18),
       new BigNumber(10e18),
       new BigNumber(1e18),
       new BigNumber(10e18),
+      new BigNumber(1e18),
       DEPLOYER_ADDRESS,
       new BigNumber(9999999999999),
       { from: DEPLOYER_ADDRESS }

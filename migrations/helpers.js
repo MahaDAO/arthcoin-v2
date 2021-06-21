@@ -303,7 +303,7 @@ const getChainlinkOracle = async (network, deployer, artifacts, chainlinkConsume
 
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDCChainlinkAggregator = await MockChainlinkOracle.deployed();
-    await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8.mul(mockPrice));
+    await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8.multipliedBy(mockPrice));
     return mockUSDCChainlinkAggregator.address;
   }
 
