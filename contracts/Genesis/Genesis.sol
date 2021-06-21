@@ -39,7 +39,7 @@ contract Genesis {
         _;
     }
 
-    constructor (
+    constructor(
         address __arthContractAddress,
         address __arthxContractAddress,
         address __arthController,
@@ -59,7 +59,11 @@ contract Genesis {
         _timelockAddress = __timelockAddress;
     }
 
-    function usersLotteriesCount(address _address) public view returns (uint256) {
+    function usersLotteriesCount(address _address)
+        public
+        view
+        returns (uint256)
+    {
         return lottery.usersLottery(_address);
     }
 
@@ -72,7 +76,10 @@ contract Genesis {
         return owner;
     }
 
-    function setLotteryContract(address _lotterContract) public onlyByOwnerOrGovernance{
+    function setLotteryContract(address _lotterContract)
+        public
+        onlyByOwnerOrGovernance
+    {
         lottery = ILotteryRaffle(_lotterContract);
     }
 
@@ -84,14 +91,14 @@ contract Genesis {
         _collateralGMUOracle = IOracle(_collateralGMUOracleAddress);
     }
 
-    function recollateralizeARTH(
-        uint256 collateralAmount,
-        uint256 arthxOutMin
-    )
+    function recollateralizeARTH(uint256 collateralAmount, uint256 arthxOutMin)
         external
         returns (uint256)
     {
-        require(_arthController.getIsGenesisActive(), 'Genesis: Genessis is inactive');
+        require(
+            _arthController.getIsGenesisActive(),
+            'Genesis: Genessis is inactive'
+        );
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
 
@@ -107,7 +114,10 @@ contract Genesis {
                 .mul(_arthController.getRecollateralizationDiscount().add(1e6))
                 .div(arthxPrice);
 
-        require(arthxOutMin <= arthxPaidBack, 'Genesis: Slippage limit reached');
+        require(
+            arthxOutMin <= arthxPaidBack,
+            'Genesis: Slippage limit reached'
+        );
         require(
             _COLLATERAL.balanceOf(msg.sender) >= collateralUnitsPrecision,
             'Genesis: balance < required'
@@ -115,7 +125,7 @@ contract Genesis {
         require(
             _COLLATERAL.transferFrom(
                 msg.sender,
-                address(_arthpool),//address(this),
+                address(_arthpool), //address(this),
                 collateralUnitsPrecision
             ),
             'Genesis: transfer from failed'
@@ -132,11 +142,18 @@ contract Genesis {
         return arthxPaidBack;
     }
 
-    function getLotteryAmount(uint256 _collateralAmount) internal view returns (uint256) {
-        uint256 collateralValue = _arthpool.getCollateralPrice().mul(_collateralAmount).div(10 ** 6);
+    function getLotteryAmount(uint256 _collateralAmount)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 collateralValue =
+            _arthpool.getCollateralPrice().mul(_collateralAmount).div(10**6);
         uint256 lotteryAmount = 0;
-        if(collateralValue >= 10 * 10 ** _COLLATERAL.decimals() ) {
-            lotteryAmount = collateralValue.div(10 * 10 ** _COLLATERAL.decimals() );
+        if (collateralValue >= 10 * 10**_COLLATERAL.decimals()) {
+            lotteryAmount = collateralValue.div(
+                10 * 10**_COLLATERAL.decimals()
+            );
         }
 
         return lotteryAmount;
@@ -146,8 +163,14 @@ contract Genesis {
     function redeemAlgorithmicARTH(uint256 arthAmount, uint256 arthxOutMin)
         external
     {
-        require(_arthController.getIsGenesisActive(), 'Genesis 36: Genessis inactive');
-        require(_ARTH.balanceOf(msg.sender) >= arthAmount, 'Genesis 37: Insufficient arth amount');
+        require(
+            _arthController.getIsGenesisActive(),
+            'Genesis 36: Genessis inactive'
+        );
+        require(
+            _ARTH.balanceOf(msg.sender) >= arthAmount,
+            'Genesis 37: Insufficient arth amount'
+        );
 
         uint256 arthxPrice = _arthController.getARTHXPrice();
         // uint256 arthxGMUValueD18 = arthAmount;
@@ -159,8 +182,7 @@ contract Genesis {
         // )
         //     .div(_PRICE_PRECISION); // applied fees
 
-        uint256 arthxAmount =
-            arthAmount.mul(_PRICE_PRECISION).div(arthxPrice);
+        uint256 arthxAmount = arthAmount.mul(_PRICE_PRECISION).div(arthxPrice);
 
         require(arthxOutMin <= arthxAmount, 'Slippage limit reached');
 
@@ -195,11 +217,7 @@ contract Genesis {
             );
     }
 
-    function getCollateralGMUBalance()
-        external
-        pure
-        returns (uint256)
-    {
+    function getCollateralGMUBalance() external pure returns (uint256) {
         return 0;
     }
 
