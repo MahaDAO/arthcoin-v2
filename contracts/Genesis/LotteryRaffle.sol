@@ -42,7 +42,9 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
         _;
     }
 
-    constructor(address[] memory genesis) ERC721('Maha Raffle', 'LOT') {
+    constructor(address[] memory genesis)
+        ERC721('ARTH Genesis NFT Lottery Ticket', 'ARTH-GEN-LOTTERY')
+    {
         tokenCounter = 0;
         prizeCounter = 0;
 
