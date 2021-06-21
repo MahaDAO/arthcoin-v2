@@ -28,6 +28,7 @@ export default {
       url:
         'https://solitary-crimson-wind.matic.quiknode.pro/d9d5c0846efe6098a99c0a8a2c7238692ca33ce0/',
       accounts: [process.env.METAMASK_WALLET_SECRET],
+      gasPrice: 5100000000, // 5.1 gwei
     },
     maticMumbai: {
       url: 'https://matic-mumbai.chainstacklabs.com',
