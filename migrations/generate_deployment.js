@@ -25,23 +25,18 @@ module.exports = async (callback) => {
     { abi: 'PoolToken', contract: 'PoolToken' },
     { abi: 'BasicStaking', contract: 'StakeARTHMAHA' },
     { abi: 'BasicStaking', contract: 'StakeARTH' },
-    { abi: 'BasicStaking', contract: 'StakeARTHWETH' },
+    { abi: 'BasicStaking', contract: 'StakeARTHXARTH' },
     { abi: 'BasicStaking', contract: 'StakeARTHX' },
-    { abi: 'BasicStaking', contract: 'StakeARTHXWETH' },
 
-    { abi: 'Oracle', contract: 'Oracle_USDC' },
-    { abi: 'Oracle', contract: 'Oracle_USDT' },
-    { abi: 'Oracle', contract: 'Oracle_WBTC' },
-    { abi: 'Oracle', contract: 'Oracle_WMATIC' },
-    { abi: 'Oracle', contract: 'Oracle_WETH' },
+    { abi: 'UniversalGMUOracle', contract: 'Oracle_USDC' },
+    { abi: 'UniversalGMUOracle', contract: 'Oracle_USDT' },
+    { abi: 'UniversalGMUOracle', contract: 'Oracle_WBTC' },
+    { abi: 'UniversalGMUOracle', contract: 'Oracle_WMATIC' },
+    { abi: 'UniversalGMUOracle', contract: 'Oracle_WETH' },
     { abi: 'GMUOracle', contract: 'GMUOracle' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_WETH' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTHX_WETH' },
+
+    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_ARTHX' },
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_MAHA_ARTH' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_USDC_WETH' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_USDT_WETH' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_WBTC_WETH' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_WMATIC_WETH' },
 
     { abi: 'Genesis', contract: 'GenesisUSDC' },
     { abi: 'Genesis', contract: 'GenesisUSDT' },
@@ -74,10 +69,10 @@ module.exports = async (callback) => {
     const wmatic = (await getWMATIC(network, null, artifacts)).address;
 
     const arth = (await ARTHStablecoin.deployed()).address;
-    contracts.push({ abi: 'ARTHStablecoin', contract: 'ARTHStablecoin' })
+    contracts.push({ abi: 'ARTHStablecoin', contract: 'ARTHStablecoin' });
 
     const arthx = (await ARTHShares.deployed()).address;
-    contracts.push({ abi: 'ARTHShares', contract: 'ARTHShares' })
+    contracts.push({ abi: 'ARTHShares', contract: 'ARTHShares' });
 
     const mahaToken = (await getMahaToken(network, null, artifacts)).address;
     contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
@@ -91,13 +86,11 @@ module.exports = async (callback) => {
     contracts.push({ contract: 'WMATIC', address: wmatic, abi: 'IERC20' });
     contracts.push({ contract: 'MahaToken', address: mahaToken, abi: 'MahaToken' });
 
-    const arthMahaLP = await factoryInstance.getPair(arth, mahaToken)
-    const arthEthLP = await factoryInstance.getPair(arth, weth)
-    const arthxEthLP = await factoryInstance.getPair(arthx, weth)
+    const arthMahaLP = await factoryInstance.getPair(arth, mahaToken);
+    const arthArthxLP = await factoryInstance.getPair(arth, arthx);
 
     contracts.push({ contract: 'ArthMahaLP', address: arthMahaLP, abi: 'UniswapV2Pair' });
-    contracts.push({ contract: 'ArthxWethLP', address: arthxEthLP, abi: 'UniswapV2Pair' });
-    contracts.push({ contract: 'ArthWethLP', address: arthEthLP, abi: 'UniswapV2Pair' });
+    contracts.push({ contract: 'ArthArthxLP', address: arthArthxLP, abi: 'UniswapV2Pair' });
     // contracts.push({ contract: 'MahaWethLP', address: multicall, abi: 'UniswapV2Pair' });
 
     const abiDir = path.resolve(__dirname, `../output/abi`);

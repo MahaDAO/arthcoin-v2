@@ -1,4 +1,4 @@
-const helpers = require('./helpers')
+const helpers = require('./helpers');
 
 const ARTHShares = artifacts.require("ARTHShares");
 const ARTHPoolRouter = artifacts.require("ArthPoolRouter");
@@ -10,7 +10,7 @@ module.exports = async function (deployer, network) {
   const weth = await helpers.getWETH(network, deployer, artifacts);
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts);
 
-  console.log('Deploying ARTHPoolRouter vesting...')
+  console.log('Deploying ARTHPoolRouter vesting...');
   await deployer.deploy(
     ARTHPoolRouter,
     arthx.address,
@@ -26,4 +26,4 @@ module.exports = async function (deployer, network) {
   await Promise.all([
     await arthx.addToTaxWhiteList(arthPoolRouter.address)
   ]);
-}
+};
