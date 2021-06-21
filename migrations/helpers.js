@@ -46,9 +46,8 @@ const getWMATIC = async (network, deployer, artifacts) => {
 
   console.log(chalk.yellow(`\nDeploying mock wmatic on ${network} network...`));
   await deployer.deploy(MockWMATIC);
-
   return MockWMATIC.deployed();
-}
+};
 
 const getWETH = async (network, deployer, artifacts) => {
   const IWETH = artifacts.require('IWETH');
@@ -177,7 +176,7 @@ const getWBTCOracle = async (network, deployer, artifacts, ownerAddress) => {
   const chainlinkFeed = knownContracts.ChainlinkFeedWBTC && knownContracts.ChainlinkFeedWBTC[network];
 
   const gmuOracle = await getGMUOracle(network, deployer, artifacts);
-  const chainlinkFeedAddr = await getChainlinkOracle(network, deployer, artifacts, chainlinkFeed);
+  const chainlinkFeedAddr = await getChainlinkOracle(network, deployer, artifacts, chainlinkFeed, 30000);
 
   const base = await getWBTC(network, deployer, artifacts);
   const quote = await getWETH(network, deployer, artifacts);
@@ -202,7 +201,7 @@ const getWMATICOracle = async (network, deployer, artifacts, ownerAddress) => {
   const chainlinkFeed = knownContracts.ChainlinkFeedMATIC && knownContracts.ChainlinkFeedMATIC[network];
 
   const gmuOracle = await getGMUOracle(network, deployer, artifacts);
-  const chainlinkFeedAddr = await getChainlinkOracle(network, deployer, artifacts, chainlinkFeed);
+  const chainlinkFeedAddr = await getChainlinkOracle(network, deployer, artifacts, chainlinkFeed, 2);
 
   const base = await getWMATIC(network, deployer, artifacts);
   const quote = await getWETH(network, deployer, artifacts);
@@ -227,7 +226,7 @@ const getWETHOracle = async (network, deployer, artifacts, ownerAddress) => {
   const chainlinkFeed = knownContracts.ChainlinkFeedETH && knownContracts.ChainlinkFeedETH[network];
 
   const gmuOracle = await getGMUOracle(network, deployer, artifacts);
-  const chainlinkFeedAddr = await getChainlinkOracle(network, deployer, artifacts, chainlinkFeed);
+  const chainlinkFeedAddr = await getChainlinkOracle(network, deployer, artifacts, chainlinkFeed, 2000);
 
   const usdc = await getUSDC(network, deployer, artifacts);
   const weth = await getWETH(network, deployer, artifacts);
@@ -296,7 +295,7 @@ const getGMUOracle = async (network, deployer, artifacts) => {
   return GMUOracle.deployed();
 }
 
-const getChainlinkOracle = async (network, deployer, artifacts, chainlinkConsumerAddr) => {
+const getChainlinkOracle = async (network, deployer, artifacts, chainlinkConsumerAddr, mockPrice = 1) => {
   const MockChainlinkOracle = artifacts.require('MockUSDCChainlinkAggregator');
 
   if (!chainlinkConsumerAddr && !isMainnet(network)) {
@@ -304,7 +303,7 @@ const getChainlinkOracle = async (network, deployer, artifacts, chainlinkConsume
 
     await deployer.deploy(MockChainlinkOracle);
     const mockUSDCChainlinkAggregator = await MockChainlinkOracle.deployed();
-    await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8);
+    await mockUSDCChainlinkAggregator.setLatestPrice(ONEE8.mul(mockPrice));
     return mockUSDCChainlinkAggregator.address;
   }
 
