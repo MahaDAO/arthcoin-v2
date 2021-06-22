@@ -59,6 +59,10 @@ contract Genesis {
         _timelockAddress = __timelockAddress;
     }
 
+    function setOwner( address _owner ) public onlyByOwnerOrGovernance {
+        _ownerAddress = _owner;
+    }
+
     function usersLotteriesCount(address _address)
         public
         view

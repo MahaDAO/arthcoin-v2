@@ -47,6 +47,7 @@ module.exports = {
   DAI: {
     mainnet: '0x6b175474e89094c44da98b954eedeac495271d0f',
     matic: '0x8f3cf7ad23cd3cadbd9735aff958023239c6a063',
+    rinkeby: '0xc7ad46e0b8a400bb3c915120d284aafba8fc4735',
   },
   WBTC: {
     matic: '0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6',

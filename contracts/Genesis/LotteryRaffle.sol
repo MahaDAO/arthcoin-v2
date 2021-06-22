@@ -54,6 +54,10 @@ contract LotteryRaffle is ERC721URIStorage, ILotteryRaffle, AccessControl {
         }
     }
 
+    function setOwner( address _owner ) public onlyOwner {
+        ownerByAddress[_owner] = true;
+    }
+
     function setPrizes(
         string memory _prize,
         string memory _description,
