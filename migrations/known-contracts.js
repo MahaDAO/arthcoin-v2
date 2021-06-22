@@ -34,7 +34,7 @@ module.exports = {
     mainnet: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     rinkeby: '0xc778417e063141139fce010982780140aa0cd5ab',
     maticMumbai: '0x5b67676a984807a212b1c59ebfc9b3568a474f0a',
-    matic: '0x4c28f48448720e9000907bc2611f73022fdce1fa',  // WMATIC
+    matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
   },
   USDC: {
     matic: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
@@ -57,10 +57,15 @@ module.exports = {
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
   },
   WMATIC: {
-    matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',  // WETH.
+    mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
+    matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
   },
-
+  MATIC: {
+    mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
+    matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+  },
   ChainlinkFeedETH: {
+    mainnet: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
     kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331',
     maticMumbai: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada',
     matic: '0xf9680d99d6c9589e2a93a78a04a279e509205945',
@@ -85,7 +90,7 @@ module.exports = {
   },
   ChainlinkFeedMATIC: {
     maticMumbai: '0x0715A7794a1dc8e42615F059dD6e406A6594651A',
-    matic: '0xF9680D99D6C9589e2a93a78A04A279e509205945',
+    matic: '0xab594600376ec9fd91f8e885dadf0ce036862de0',
     mainnet: '0x7bAC85A8a13A4BcD8abb3eB7d6b4d632c5a57676'
   },
   ChainlinkFeedDAI: {
