@@ -57,12 +57,14 @@ module.exports = {
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
   },
   WMATIC: {
-    mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
-    matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+    mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0', // This is matic's address
+    matic: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270' // source :- https://www.coingecko.com/en/coins/wmatic
+    //matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
   },
   MATIC: {
     mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
-    matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+    matic: '0x0000000000000000000000000000000000001010',
+    //matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
   },
   ChainlinkFeedETH: {
     mainnet: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
