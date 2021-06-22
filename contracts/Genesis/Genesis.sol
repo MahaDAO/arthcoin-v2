@@ -44,7 +44,7 @@ contract Genesis {
         address __arthxContractAddress,
         address __arthController,
         address __collateralAddress,
-        address _creatorAddress,
+        address __creatorAddress,
         address __timelockAddress,
         address __arthPool
     ) {
@@ -55,11 +55,11 @@ contract Genesis {
         _arthpool = IARTHPool(__arthPool);
 
         _missingDeciamls = uint256(18).sub(_COLLATERAL.decimals());
-        _ownerAddress = _creatorAddress;
+        _ownerAddress = __creatorAddress;
         _timelockAddress = __timelockAddress;
     }
 
-    function setOwner( address _owner ) public onlyByOwnerOrGovernance {
+    function setOwner(address _owner) public onlyByOwnerOrGovernance {
         _ownerAddress = _owner;
     }
 
@@ -154,9 +154,9 @@ contract Genesis {
         uint256 collateralValue =
             _arthpool.getCollateralPrice().mul(_collateralAmount).div(10**6);
         uint256 lotteryAmount = 0;
-        if (collateralValue >= 10 * 10**_COLLATERAL.decimals()) {
+        if (collateralValue >= 1000 * 10**_COLLATERAL.decimals()) {
             lotteryAmount = collateralValue.div(
-                10 * 10**_COLLATERAL.decimals()
+                1000 * 10**_COLLATERAL.decimals()
             );
         }
 
