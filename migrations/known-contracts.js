@@ -63,7 +63,7 @@ module.exports = {
   ChainlinkFeedETH: {
     kovan: '0x9326BFA02ADD2366b30bacB125260Af641031331',
     maticMumbai: '0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada',
-    matic: '0xAB594600376Ec9fD91F8e885dADF0CE036862dE0',  // MATIC/USD.
+    matic: '0xf9680d99d6c9589e2a93a78a04a279e509205945',
     rinkeby: '0x8A753747A1Fa494EC906cE90E9f37563A8AF630e',
   },
   ChainlinkFeedUSDT: {

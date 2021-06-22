@@ -26,9 +26,9 @@ contract ETHGenesis {
 
     // ETH Genesis variables
     bool public genesisStatus;
-    uint256 public _arthxPrice;
-    uint256 public _arthSupply;
-    uint256 public _getGlobalCollateralRatio;
+    uint256 public _arthxPrice = 1e6;
+    uint256 public _arthSupply = 25_000_000 ether;
+    uint256 public _getGlobalCollateralRatio = 11e5;
     uint256 public _getGlobalCollateralValue;
     uint256 public maxRecollateralizeDiscount = 750000;
     uint256 public _percentCollateralized;
@@ -47,7 +47,7 @@ contract ETHGenesis {
         _;
     }
 
-    constructor (
+    constructor(
         address __collateralAddress,
         address _creatorAddress,
         address __timelockAddress,
@@ -61,11 +61,15 @@ contract ETHGenesis {
         _collateralGMUOracle = IOracle(__collateralGMUOracle);
     }
 
-    function setOwner( address _owner ) public onlyByOwnerOrGovernance {
+    function setOwner(address _owner) public onlyByOwnerOrGovernance {
         _ownerAddress = _owner;
     }
 
-    function usersLotteriesCount(address _address) public view returns (uint256) {
+    function usersLotteriesCount(address _address)
+        public
+        view
+        returns (uint256)
+    {
         return lottery.usersLottery(_address);
     }
 
@@ -78,24 +82,31 @@ contract ETHGenesis {
         return owner;
     }
 
-    function setLotteryContract(address _lotterContract) public onlyByOwnerOrGovernance{
+    function setLotteryContract(address _lotterContract)
+        public
+        onlyByOwnerOrGovernance
+    {
         lottery = ILotteryRaffle(_lotterContract);
     }
 
-    function getLotteryAmount(uint256 _collateralAmount) internal view returns (uint256) {
-        uint256 collateralValue = _collateralGMUOracle.getPrice().mul(_collateralAmount).div(10 ** 6);
+    function getLotteryAmount(uint256 _collateralAmount)
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 collateralValue =
+            _collateralGMUOracle.getPrice().mul(_collateralAmount).div(10**6);
         uint256 lotteryAmount = 0;
-        if(collateralValue >= 1000 * 10 ** _COLLATERAL.decimals() ) {
-            lotteryAmount = collateralValue.div(10 * 10 ** _COLLATERAL.decimals() );
+        if (collateralValue >= 1000 * 10**_COLLATERAL.decimals()) {
+            lotteryAmount = collateralValue.div(
+                1000 * 10**_COLLATERAL.decimals()
+            );
         }
 
         return lotteryAmount;
     }
 
-    function recollateralizeARTH(
-        uint256 collateralAmount,
-        uint256 arthxOutMin
-    )
+    function recollateralizeARTH(uint256 collateralAmount, uint256 arthxOutMin)
         external
         returns (uint256)
     {
@@ -115,7 +126,10 @@ contract ETHGenesis {
                 .mul(getRecollateralizationDiscount().add(1e6))
                 .div(arthxPrice);
 
-        require(arthxOutMin <= arthxPaidBack, 'Genesis: Slippage limit reached');
+        require(
+            arthxOutMin <= arthxPaidBack,
+            'Genesis: Slippage limit reached'
+        );
         require(
             _COLLATERAL.balanceOf(msg.sender) >= collateralUnitsPrecision,
             'Genesis: balance < required'
@@ -123,14 +137,16 @@ contract ETHGenesis {
         require(
             _COLLATERAL.transferFrom(
                 msg.sender,
-                _ownerAddress,//address(this),
+                _ownerAddress, //address(this),
                 collateralUnitsPrecision
             ),
             'Genesis: transfer from failed'
         );
 
         uint256 lottriesCount = getLotteryAmount(collateralAmount);
-        _collateralRaisedOnETH = collateralAmount.mul(getCollateralPrice()).add(_collateralRaisedOnETH);
+        _collateralRaisedOnETH = collateralAmount.mul(getCollateralPrice()).add(
+            _collateralRaisedOnETH
+        );
 
         if (lottriesCount > 0) {
             lottery.rewardLottery(msg.sender, lottriesCount);
@@ -153,8 +169,7 @@ contract ETHGenesis {
     {
         uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
         uint256 arthTotalSupply = getArthSupply();
-        uint256 collateralRatioForRecollateralize =
-            getGlobalCollateralRatio();
+        uint256 collateralRatioForRecollateralize = getGlobalCollateralRatio();
         uint256 globalCollatValue = getGlobalCollateralValue();
 
         return
@@ -167,11 +182,7 @@ contract ETHGenesis {
             );
     }
 
-    function getCollateralGMUBalance()
-        external
-        pure
-        returns (uint256)
-    {
+    function getCollateralGMUBalance() external pure returns (uint256) {
         return 0;
     }
 
@@ -192,11 +203,17 @@ contract ETHGenesis {
         _arthSupply = arthSupply;
     }
 
-    function setGlobalCollateralRatio(uint256 _collateralRatio) public onlyByOwnerOrGovernance {
+    function setGlobalCollateralRatio(uint256 _collateralRatio)
+        public
+        onlyByOwnerOrGovernance
+    {
         _getGlobalCollateralRatio = _collateralRatio;
     }
 
-    function setGlobalCollateralValue(uint256 _collateralValue) public onlyByOwnerOrGovernance {
+    function setGlobalCollateralValue(uint256 _collateralValue)
+        public
+        onlyByOwnerOrGovernance
+    {
         _getGlobalCollateralValue = _collateralValue;
     }
 
@@ -207,7 +224,10 @@ contract ETHGenesis {
         recollateralizeDiscountCruve = curve;
     }
 
-    function setPercentCollateralized(uint256 percentCollateralized) public onlyByOwnerOrGovernance {
+    function setPercentCollateralized(uint256 percentCollateralized)
+        public
+        onlyByOwnerOrGovernance
+    {
         _percentCollateralized = percentCollateralized;
     }
 
@@ -219,7 +239,10 @@ contract ETHGenesis {
         _collateralGMUOracle = IOracle(_collateralGMUOracleAddress);
     }
 
-    function setCollateralRaisedOnMatic(uint256 _colletaralAmount) public onlyByOwnerOrGovernance {
+    function setCollateralRaisedOnMatic(uint256 _colletaralAmount)
+        public
+        onlyByOwnerOrGovernance
+    {
         _collateralRaisedOnMatic = _colletaralAmount;
     }
 
@@ -237,18 +260,14 @@ contract ETHGenesis {
     }
 
     function getGlobalCollateralRatio() public view returns (uint256) {
-       return _getGlobalCollateralRatio;
+        return _getGlobalCollateralRatio;
     }
 
     function getGlobalCollateralValue() public view returns (uint256) {
         return _getGlobalCollateralValue;
     }
 
-    function getRecollateralizationDiscount()
-        public
-        view
-        returns (uint256)
-    {
+    function getRecollateralizationDiscount() public view returns (uint256) {
         return
             Math.min(
                 recollateralizeDiscountCruve
@@ -271,9 +290,10 @@ contract ETHGenesis {
         return getArthSupply().mul(getGlobalCollateralRatio()).div(1e6);
     }
 
-    function getPercentCollateralized() public view  returns (uint256) {
+    function getPercentCollateralized() public view returns (uint256) {
         uint256 targetCollatValue = getTargetCollateralValue();
-        uint256 currentCollatValue = getGlobalCollateralValue().add(_collateralRaisedOnMatic);
+        uint256 currentCollatValue =
+            getGlobalCollateralValue().add(_collateralRaisedOnMatic);
 
         return currentCollatValue.mul(1e18).div(targetCollatValue);
     }

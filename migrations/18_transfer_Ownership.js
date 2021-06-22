@@ -20,6 +20,7 @@ const LotteryRaffle = artifacts.require("LotteryRaffle");
 module.exports = async function (deployer, network) {
   const multiSigWallet = '0x775C72FB1C28c46F5E9976FFa08F348298fBCEC0'
 
+  return;
   // const poolDai = await Pool_DAI.deployed();
   // await poolDai.setOwner(multiSigWallet);
 

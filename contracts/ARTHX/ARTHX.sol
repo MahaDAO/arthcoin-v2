@@ -30,6 +30,7 @@ contract ARTHShares is AnyswapV4Token, IARTHX {
 
     // solhint-disable-next-line
     uint8 public constant override decimals = 18;
+
     // solhint-disable-next-line
     uint256 public constant genesisSupply = 11e4 ether; // 110k is printed upon genesis.
 
