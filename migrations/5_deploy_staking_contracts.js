@@ -13,6 +13,7 @@ const StakeARTHXARTH = artifacts.require("Staking/Variants/StakeARTHXARTH.sol");
 const PoolToken = artifacts.require("PoolToken");
 
 module.exports = async function (deployer, network, accounts) {
+  if (network === 'mainnet') return;
   const DEPLOYER_ADDRESS = accounts[0];
 
   const poolToken = await PoolToken.deployed();

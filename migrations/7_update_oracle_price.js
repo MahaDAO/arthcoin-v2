@@ -7,6 +7,8 @@ const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapP
 
 
 module.exports = async function (deployer, network, accounts) {
+  if (network === 'mainnet') return;
+
   const DEPLOYER_ADDRESS = accounts[0];
 
   const uniswapPairOracleARTHXARTH = await UniswapPairOracle_ARTH_ARTHX.deployed();

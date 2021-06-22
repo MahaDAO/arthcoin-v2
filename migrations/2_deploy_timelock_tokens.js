@@ -10,7 +10,7 @@ const ARTHController = artifacts.require("Arth/ArthController");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 module.exports = async function (deployer, network, accounts) {
-  const TIMELOCK_DELAY =  2 * 86400;
+  const TIMELOCK_DELAY = 2 * 86400;
   const DEPLOYER_ADDRESS = accounts[0];
   const MOCK_TOKEN_INITIAL_SUPPLY = new BigNumber(1000e18);
 

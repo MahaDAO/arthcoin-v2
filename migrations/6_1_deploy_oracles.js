@@ -20,6 +20,23 @@ module.exports = async function (deployer, network, accounts) {
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts);
 
+  // todo: need to set this to use GMU oracles
+  console.log(chalk.yellowBright('\nDeploying collateral oracles'));
+  await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getUSDTOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWBTCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWMATICOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+  await helpers.getWETHOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
+
+  console.log(chalk.yellow('- Linking genesis curve'));
+  const bondingCurve = await BondingCurve.deployed();
+
+  console.log(chalk.yellow('- Deploying bonding curve'));
+  await deployer.deploy(BondingCurve, new BigNumber('1300e6')); // Fixed price.
+  await arthController.setBondingCurve(bondingCurve.address);
+
+  if (network === 'mainnet') return;
+
   console.log(chalk.yellow('\nDeploying uniswap oracles...'));
   console.log(chalk.yellow(' - Deploying MAHA/ARTH oracle...'));
   await Promise.all([
@@ -46,8 +63,6 @@ module.exports = async function (deployer, network, accounts) {
   ]);
 
 
-  console.log(chalk.yellow('- Deploying bonding curve'));
-  await deployer.deploy(BondingCurve, new BigNumber('1300e6')); // Fixed price.
 
   await helpers.getGMUOracle(network, deployer, artifacts);
 
@@ -58,16 +73,4 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nLinking MAHA oracles...'));
   const oracleMAHAARTH = await UniswapPairOracle_MAHA_ARTH.deployed();
   await arthController.setMAHAGMUOracle(oracleMAHAARTH.address, { from: DEPLOYER_ADDRESS });
-
-  console.log(chalk.yellow('- Linking genesis curve'));
-  const bondingCurve = await BondingCurve.deployed();
-  await arthController.setBondingCurve(bondingCurve.address);
-
-  // todo: need to set this to use GMU oracles
-  console.log(chalk.yellowBright('\nDeploying collateral oracles'));
-  await helpers.getUSDCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
-  await helpers.getUSDTOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
-  await helpers.getWBTCOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
-  await helpers.getWMATICOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
-  await helpers.getWETHOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
 };

@@ -5,6 +5,8 @@ const ARTHPoolRouter = artifacts.require("ArthPoolRouter");
 const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 module.exports = async function (deployer, network) {
+  if (network === 'mainnet') return;
+
   const arth = await ARTHStablecoin.deployed();
   const arthx = await ARTHShares.deployed();
   const weth = await helpers.getWETH(network, deployer, artifacts);

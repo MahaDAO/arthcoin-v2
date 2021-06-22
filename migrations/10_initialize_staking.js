@@ -6,6 +6,8 @@ const StakeARTHX = artifacts.require("Staking/Variants/StakeARTHX.sol");
 const StakeARTHXARTH = artifacts.require("Staking/Variants/StakeARTHXARTH.sol");
 
 module.exports = async function (deployer, network, accounts) {
+  if (network === 'mainnet') return;
+
   const DEPLOYER_ADDRESS = accounts[0];
 
   const stakeARTH = await StakeARTH.deployed();

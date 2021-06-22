@@ -7,6 +7,7 @@ const Timelock = artifacts.require("Governance/Timelock");
 const ARTHXTaxController = artifacts.require("ARTHXTaxController");
 
 module.exports = async function (deployer, network, accounts) {
+  if (network === 'mainnet') return;
   const DEPLOYER_ADDRESS = accounts[0];
 
   const arthx = await ARTHShares.deployed();
