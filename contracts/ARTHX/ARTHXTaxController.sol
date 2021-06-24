@@ -16,8 +16,7 @@ contract ARTHXTaxController is Ownable, ITaxController {
     IUniswapV2Router02 public immutable router;
 
     uint256 public taxPercentToBurn = 50e4; // In 6 precision.
-    uint256 public taxPercentToRewards = 25e4; // In 6 precision.
-    uint256 public taxPercentToLiquidity = 25e4; // In 6 precision.
+    uint256 public taxPercentToRewards = 50e4; // In 6 precision.
 
     address public rewardsDestination;
 
@@ -27,9 +26,6 @@ contract ARTHXTaxController is Ownable, ITaxController {
         arthx = token;
         router = swapRouter;
     }
-
-    /// @dev To recieve ETH from uniswap router when swaping.
-    receive() external payable {}
 
     function setPercentToBurn(uint256 percent) external onlyOwner {
         require(percent <= 1e6, 'ARTHXController: tax percent > 1e6');
@@ -41,12 +37,6 @@ contract ARTHXTaxController is Ownable, ITaxController {
         require(percent <= 1e6, 'ARTHXController: tax percent > 1e6');
 
         taxPercentToRewards = percent; // In 6 precision.
-    }
-
-    function setPercentToLiquidity(uint256 percent) external onlyOwner {
-        require(percent <= 1e6, 'ARTHXController: tax percent > 1e6');
-
-        taxPercentToLiquidity = percent; // In 6 precision.
     }
 
     function setRewardsDestination(address destination) external onlyOwner {
@@ -68,68 +58,5 @@ contract ARTHXTaxController is Ownable, ITaxController {
             arthx.transfer(rewardsDestination, rewardsAmount);
             emit TaxCharged(address(this), rewardsDestination, rewardsAmount);
         }
-
-        uint256 liquidityAmount = balance.sub(burnAmount).sub(rewardsAmount);
-        if (liquidityAmount > 0) {
-            _swapAndAddLiquidity(liquidityAmount);
-
-            address destination =
-                (
-                    IUniswapV2Factory(router.factory()).getPair(
-                        address(arthx),
-                        router.WETH()
-                    )
-                );
-
-            emit TaxCharged(address(this), destination, liquidityAmount);
-        }
-    }
-
-    function _swapARTHXForETH(uint256 arthxAmount) internal {
-        address[] memory path = new address[](2);
-        path[0] = address(arthx);
-        path[1] = router.WETH();
-
-        require(
-            arthx.approve(address(router), arthxAmount),
-            'ARTHTaxController: approve failed'
-        );
-
-        router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            arthxAmount,
-            0, // Accept any amount of ETH.
-            path,
-            address(this),
-            block.timestamp
-        );
-    }
-
-    function _addLiquidity(uint256 arthxAmount, uint256 ethAmount) internal {
-        require(
-            arthx.approve(address(router), arthxAmount),
-            'ARTHTaxController: approve failed'
-        );
-
-        router.addLiquidityETH{value: ethAmount}(
-            address(arthx),
-            arthxAmount,
-            0, // slippage is unavoidable.
-            0, // slippage is unavoidable.
-            owner(),
-            block.timestamp
-        );
-    }
-
-    function _swapAndAddLiquidity(uint256 amount) internal {
-        uint256 ethBalanceBeforeSwap = address(this).balance;
-
-        uint256 swapHalf = amount.mul(50).div(100);
-        _swapARTHXForETH(swapHalf);
-        uint256 ethBalanceAfterSwap = address(this).balance;
-
-        _addLiquidity(
-            amount.sub(swapHalf),
-            ethBalanceAfterSwap.sub(ethBalanceBeforeSwap)
-        );
     }
 }
