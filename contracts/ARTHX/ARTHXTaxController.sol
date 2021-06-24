@@ -13,7 +13,6 @@ contract ARTHXTaxController is Ownable, ITaxController {
     IERC20Burnable public immutable arthx;
 
     uint256 public taxPercentToBurn = 50e4; // In 6 precision.
-    uint256 public taxPercentToRewards = 50e4; // In 6 precision.
 
     address public rewardsDestination;
 
@@ -30,12 +29,6 @@ contract ARTHXTaxController is Ownable, ITaxController {
         taxPercentToBurn = percent; // In 6 precision.
     }
 
-    function setPercentToRewards(uint256 percent) external onlyOwner {
-        require(percent <= 1e6, 'ARTHXController: tax percent > 1e6');
-
-        taxPercentToRewards = percent; // In 6 precision.
-    }
-
     function setRewardsDestination(address destination) external onlyOwner {
         require(rewardsDestination != owner(), 'TaxController: invalid addr');
         rewardsDestination = destination;
@@ -50,7 +43,7 @@ contract ARTHXTaxController is Ownable, ITaxController {
             emit TaxCharged(address(this), address(0), burnAmount);
         }
 
-        uint256 rewardsAmount = balance.mul(taxPercentToRewards).div(1e6);
+        uint256 rewardsAmount = balance.sub(burnAmount);
         if (rewardsAmount > 0) {
             arthx.transfer(rewardsDestination, rewardsAmount);
             emit TaxCharged(address(this), rewardsDestination, rewardsAmount);
