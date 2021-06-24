@@ -5,9 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from '../ERC20/IERC20.sol';
 import {IWETH} from '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
-import {
-    TransferHelper
-} from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import {TransferHelper} from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
@@ -37,14 +35,6 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
 
     modifier ensure(uint256 deadline) {
         require(deadline >= block.timestamp, 'UniswapLiquidityRouter: EXPIRED');
-        _;
-    }
-
-    modifier ensureOneIsArth(address tokenA, address tokenB) {
-        require(
-            tokenA == arthAddr || tokenB == arthAddr,
-            'UniswapLiquidityRouter: TOKEN != ARTH'
-        );
         _;
     }
 
@@ -95,8 +85,11 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             amountBMin
         );
 
-        address pair =
-            UniswapV2Library.pairFor(address(FACTORY), tokenA, tokenB);
+        address pair = UniswapV2Library.pairFor(
+            address(FACTORY),
+            tokenA,
+            tokenB
+        );
 
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
@@ -132,8 +125,11 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             amountETHMin
         );
 
-        address pair =
-            UniswapV2Library.pairFor(address(FACTORY), token, address(WETH));
+        address pair = UniswapV2Library.pairFor(
+            address(FACTORY),
+            token,
+            address(WETH)
+        );
 
         TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
         WETH.deposit{value: amountETH}();
@@ -158,25 +154,26 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         uint256 amountBDesired,
         uint256 amountAMin,
         uint256 amountBMin
-    )
-        internal
-        virtual
-        ensureOneIsArth(tokenA, tokenB)
-        returns (uint256 amountA, uint256 amountB)
-    {
+    ) internal virtual returns (uint256 amountA, uint256 amountB) {
         // Create the pair if it doesn't exist yet.
         if (IUniswapV2Factory(FACTORY).getPair(tokenA, tokenB) == address(0)) {
             IUniswapV2Factory(FACTORY).createPair(tokenA, tokenB);
         }
 
-        (uint256 reserveA, uint256 reserveB) =
-            UniswapV2Library.getReserves(address(FACTORY), tokenA, tokenB);
+        (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(
+            address(FACTORY),
+            tokenA,
+            tokenB
+        );
 
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
-            uint256 amountBOptimal =
-                UniswapV2Library.quote(amountADesired, reserveA, reserveB);
+            uint256 amountBOptimal = UniswapV2Library.quote(
+                amountADesired,
+                reserveA,
+                reserveB
+            );
 
             if (amountBOptimal <= amountBDesired) {
                 require(
@@ -186,8 +183,11 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
 
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
-                uint256 amountAOptimal =
-                    UniswapV2Library.quote(amountBDesired, reserveB, reserveA);
+                uint256 amountAOptimal = UniswapV2Library.quote(
+                    amountBDesired,
+                    reserveB,
+                    reserveA
+                );
 
                 assert(amountAOptimal <= amountADesired);
 
