@@ -5,12 +5,11 @@ pragma experimental ABIEncoderV2;
 
 import '../BasicStakingSpecificReward.sol';
 
-contract StakeARTHXrMAHA is BasicStakingSpecificReward {
+contract StakeARTHXRMAHA is BasicStakingSpecificReward {
     constructor(
         address _rewardsDistribution,
         address _rewardsToken,
-        address _stakingToken,
-        uint256 _rewardsDuration
+        address _stakingToken
     )
         BasicStakingSpecificReward(
             _rewardsDistribution,
