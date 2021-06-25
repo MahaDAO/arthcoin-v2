@@ -5,7 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import '../BasicStakingSpecificReward.sol';
 
-contract StakeARTHXARTH is BasicStakingSpecificReward {
+contract StakeARTHXrMAHA is BasicStakingSpecificReward {
     constructor(
         address _rewardsDistribution,
         address _rewardsToken,
