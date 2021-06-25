@@ -54,6 +54,7 @@ module.exports = {
     mainnet: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'
   },
   MahaToken: {
+    maitc: '0xedd6ca8a4202d4a36611e2fff109648c4863ae19',
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
   },
   WMATIC: {
