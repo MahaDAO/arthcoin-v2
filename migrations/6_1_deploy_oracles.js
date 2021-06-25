@@ -28,11 +28,12 @@ module.exports = async function (deployer, network, accounts) {
   await helpers.getWMATICOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
   await helpers.getWETHOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
 
+  console.log(chalk.yellow('- Deploying bonding curve'));
+  await deployer.deploy(BondingCurve, new BigNumber('1300e6')); // Fixed price.
+
   console.log(chalk.yellow('- Linking genesis curve'));
   const bondingCurve = await BondingCurve.deployed();
 
-  console.log(chalk.yellow('- Deploying bonding curve'));
-  await deployer.deploy(BondingCurve, new BigNumber('1300e6')); // Fixed price.
   await arthController.setBondingCurve(bondingCurve.address);
 
   if (network === 'mainnet') return;
