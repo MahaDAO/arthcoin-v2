@@ -3,11 +3,10 @@
 pragma solidity ^0.8.0;
 pragma experimental ABIEncoderV2;
 
+import {IWETH} from '../ERC20/IWETH.sol';
 import {IERC20} from '../ERC20/IERC20.sol';
-import {IWETH} from '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
-import {TransferHelper} from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
-
 import {SafeMath} from '../utils/math/SafeMath.sol';
+import {TransferHelper} from '../Uniswap/TransferHelper.sol';
 import {UniswapV2Library} from '../Uniswap/UniswapV2Library.sol';
 import {IUniswapLiquidityRouter} from './IUniswapLiquidityRouter.sol';
 import {IUniswapV2Pair} from '../Uniswap/Interfaces/IUniswapV2Pair.sol';
