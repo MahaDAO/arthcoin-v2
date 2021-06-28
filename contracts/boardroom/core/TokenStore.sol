@@ -63,6 +63,8 @@ contract TokenStore is ITokenStore, Operator {
     }
 
     function withdraw(uint256 amount) public override {
+        revert('Withdraw disabled');
+        require(false, 'Withdraw is disabled');
         uint256 balance = _balances[msg.sender];
         require(
             balance >= amount,
