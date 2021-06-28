@@ -27,6 +27,8 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
     IUniswapV2Factory public immutable FACTORY;
 
     address public arthAddr;
+    address public mahaAddr;
+    address public arthxAddr;
 
     /**
      * Modifier.
@@ -43,9 +45,15 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
 
     constructor(
         address arthAddr_,
+        address mahaAddr_,
+        address arthxAddr_,
         IUniswapV2Factory factory,
         IWETH weth
     ) {
+        arthAddr = arthAddr_;
+        mahaAddr = mahaAddr_;
+        arthxAddr = arthxAddr_;
+
         WETH = weth;
         FACTORY = factory;
         arthAddr = arthAddr_;
@@ -142,64 +150,6 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
     }
 
-    /**
-     * Internal.
-     */
-
-    function _addLiquidity(
-        address tokenA,
-        address tokenB,
-        uint256 amountADesired,
-        uint256 amountBDesired,
-        uint256 amountAMin,
-        uint256 amountBMin
-    ) internal virtual returns (uint256 amountA, uint256 amountB) {
-        // Create the pair if it doesn't exist yet.
-        if (IUniswapV2Factory(FACTORY).getPair(tokenA, tokenB) == address(0)) {
-            IUniswapV2Factory(FACTORY).createPair(tokenA, tokenB);
-        }
-
-        (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(
-            address(FACTORY),
-            tokenA,
-            tokenB
-        );
-
-        if (reserveA == 0 && reserveB == 0) {
-            (amountA, amountB) = (amountADesired, amountBDesired);
-        } else {
-            uint256 amountBOptimal = UniswapV2Library.quote(
-                amountADesired,
-                reserveA,
-                reserveB
-            );
-
-            if (amountBOptimal <= amountBDesired) {
-                require(
-                    amountBOptimal >= amountBMin,
-                    'UniswapLiquidityRouter: INSUFFICIENT AMOUNT B'
-                );
-
-                (amountA, amountB) = (amountADesired, amountBOptimal);
-            } else {
-                uint256 amountAOptimal = UniswapV2Library.quote(
-                    amountBDesired,
-                    reserveB,
-                    reserveA
-                );
-
-                assert(amountAOptimal <= amountADesired);
-
-                require(
-                    amountAOptimal >= amountAMin,
-                    'UniswapLiquidityRouter: INSUFFICIENT AMOUNT A'
-                );
-
-                (amountA, amountB) = (amountAOptimal, amountBDesired);
-            }
-        }
-    }
-
     function removeLiquidity(
         address tokenA,
         address tokenB,
@@ -266,5 +216,210 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         TransferHelper.safeTransfer(token, to, amountToken);
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(to, amountETH);
+    }
+
+    function buyForETH(
+        address buyToken,
+        uint256 amountOutMin,
+        address to,
+        uint256 deadline
+    ) external payable override ensure(deadline) returns (uint256 amountOut) {
+        (uint256 reservesBuy, uint256 reservesSell) = _getReserves(
+            buyToken,
+            address(WETH)
+        );
+
+        amountOut = UniswapV2Library.getAmountOut(
+            msg.value,
+            reservesSell,
+            reservesBuy
+        );
+        require(
+            amountOut >= amountOutMin,
+            'UniswapSwapRouter: INSUFFICIENT_OUTPUT_AMOUNT'
+        );
+
+        IUniswapV2Pair pair = IUniswapV2Pair(
+            FACTORY.getPair(address(WETH), buyToken)
+        );
+        require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
+
+        // Convert sent ETH to wrapped ETH and assert successful transfer to pair.
+        WETH.deposit{value: msg.value}();
+        assert(WETH.transfer(address(pair), msg.value));
+
+        // Check buyToken balance of recipient before to compare against.
+        uint256 buyTokenBalanceBefore = IERC20(buyToken).balanceOf(to);
+
+        // If weth is token0 which means we are selling token0(hence amountOut0 = 0)
+        (uint256 amount0Out, uint256 amount1Out) = (
+            address(WETH) == pair.token0()
+                ? (uint256(0), amountOut)
+                : (amountOut, uint256(0))
+        );
+
+        pair.swap(amount0Out, amount1Out, to, new bytes(0));
+
+        // Check that ARTH recipient got at least minReward on top of trade amount.
+        uint256 buyTokenBalanceAfter = IERC20(buyToken).balanceOf(to);
+        uint256 boughtAmount = buyTokenBalanceAfter.sub(buyTokenBalanceBefore);
+
+        require(
+            boughtAmount >= amountOutMin,
+            'UniswapSwapRouter: NOT_ENOUGHT_AMOUNT_OUT'
+        );
+        return boughtAmount;
+    }
+
+    function buyForERC20(
+        address buyToken,
+        address sellToken,
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address to,
+        uint256 deadline
+    ) external override ensure(deadline) returns (uint256 amountOut) {
+        require(
+            sellToken != arthAddr &&
+                sellToken != mahaAddr &&
+                sellToken != arthxAddr,
+            'Router: ONLY_BUY_POSSIBLE'
+        );
+
+        (uint256 reservesBuy, uint256 reservesSell) = _getReserves(
+            buyToken,
+            sellToken
+        );
+
+        amountOut = UniswapV2Library.getAmountOut(
+            amountIn,
+            reservesSell,
+            reservesBuy
+        );
+        require(
+            amountOut >= amountOutMin,
+            'UniswapSwapRouter: Insufficient output amount'
+        );
+
+        IUniswapV2Pair pair = IUniswapV2Pair(
+            FACTORY.getPair(buyToken, sellToken)
+        );
+        require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
+
+        require(
+            IERC20(sellToken).balanceOf(msg.sender) >= amountIn,
+            'UniswapSwapRouter: amount < required'
+        );
+        TransferHelper.safeTransferFrom(
+            sellToken,
+            msg.sender,
+            address(pair),
+            amountIn
+        );
+
+        uint256 buyTokenBalanceBefore = IERC20(buyToken).balanceOf(to);
+
+        (uint256 amount0Out, uint256 amount1Out) = sellToken == pair.token0()
+            ? (uint256(0), amountOut)
+            : (amountOut, uint256(0));
+
+        pair.swap(amount0Out, amount1Out, to, new bytes(0));
+
+        // Check that ARTH recipient got at least minReward on top of trade amount.
+        uint256 buyTokenBalanceAfter = IERC20(buyToken).balanceOf(to);
+        uint256 boughtAmount = buyTokenBalanceAfter.sub(buyTokenBalanceBefore);
+        require(
+            boughtAmount >= amountOutMin,
+            'UniswapSwapRouter: NOT_ENOUGHT_AMOUNT_OUT'
+        );
+
+        return boughtAmount;
+    }
+
+    /**
+     * Internal.
+     */
+
+    function _addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 amountADesired,
+        uint256 amountBDesired,
+        uint256 amountAMin,
+        uint256 amountBMin
+    ) internal virtual returns (uint256 amountA, uint256 amountB) {
+        // Create the pair if it doesn't exist yet.
+        if (IUniswapV2Factory(FACTORY).getPair(tokenA, tokenB) == address(0)) {
+            IUniswapV2Factory(FACTORY).createPair(tokenA, tokenB);
+        }
+
+        (uint256 reserveA, uint256 reserveB) = UniswapV2Library.getReserves(
+            address(FACTORY),
+            tokenA,
+            tokenB
+        );
+
+        if (reserveA == 0 && reserveB == 0) {
+            (amountA, amountB) = (amountADesired, amountBDesired);
+        } else {
+            uint256 amountBOptimal = UniswapV2Library.quote(
+                amountADesired,
+                reserveA,
+                reserveB
+            );
+
+            if (amountBOptimal <= amountBDesired) {
+                require(
+                    amountBOptimal >= amountBMin,
+                    'UniswapLiquidityRouter: INSUFFICIENT AMOUNT B'
+                );
+
+                (amountA, amountB) = (amountADesired, amountBOptimal);
+            } else {
+                uint256 amountAOptimal = UniswapV2Library.quote(
+                    amountBDesired,
+                    reserveB,
+                    reserveA
+                );
+
+                assert(amountAOptimal <= amountADesired);
+
+                require(
+                    amountAOptimal >= amountAMin,
+                    'UniswapLiquidityRouter: INSUFFICIENT AMOUNT A'
+                );
+
+                (amountA, amountB) = (amountAOptimal, amountBDesired);
+            }
+        }
+    }
+
+    function _getReserves(address buyToken, address sellToken)
+        internal
+        view
+        returns (uint256, uint256)
+    {
+        IUniswapV2Pair pair = IUniswapV2Pair(
+            FACTORY.getPair(buyToken, sellToken)
+        );
+        require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
+
+        // Make sure that we only buy tokens.
+        require(
+            sellToken != arthAddr &&
+                sellToken != mahaAddr &&
+                sellToken != arthxAddr,
+            'Router: ONLY_BUY_POSSIBLE'
+        );
+
+        (uint256 reserves0, uint256 reserves1, ) = pair.getReserves();
+
+        (uint256 buyTokenReserve, uint256 sellTokenReserve) = (
+            buyToken == pair.token0()
+                ? (reserves0, reserves1)
+                : (reserves1, reserves0)
+        );
+
+        return (buyTokenReserve, sellTokenReserve);
     }
 }

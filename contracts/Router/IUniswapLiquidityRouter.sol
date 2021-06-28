@@ -58,4 +58,20 @@ interface IUniswapLiquidityRouter {
         address to,
         uint256 deadline
     ) external returns (uint256 amountToken, uint256 amountETH);
+
+    function buyForETH(
+        address buyToken,
+        uint256 amountOutMin,
+        address to,
+        uint256 deadline
+    ) external payable returns (uint256 amountOut);
+
+    function buyForERC20(
+        address buyToken,
+        address sellToken,
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address to,
+        uint256 deadline
+    ) external returns (uint256 amountOut);
 }
