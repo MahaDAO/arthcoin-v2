@@ -199,4 +199,72 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             }
         }
     }
+
+    function removeLiquidity(
+        address tokenA,
+        address tokenB,
+        uint256 liquidity,
+        uint256 amountAMin,
+        uint256 amountBMin,
+        address to,
+        uint256 deadline
+    )
+        public
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256 amountA, uint256 amountB)
+    {
+        address pair = UniswapV2Library.pairFor(
+            address(FACTORY),
+            tokenA,
+            tokenB
+        );
+
+        IUniswapV2Pair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair.
+
+        (uint256 amount0, uint256 amount1) = IUniswapV2Pair(pair).burn(to);
+        (address token0, ) = UniswapV2Library.sortTokens(tokenA, tokenB);
+        (amountA, amountB) = tokenA == token0
+            ? (amount0, amount1)
+            : (amount1, amount0);
+
+        require(
+            amountA >= amountAMin,
+            'UniswapV2Router: INSUFFICIENT_A_AMOUNT'
+        );
+        require(
+            amountB >= amountBMin,
+            'UniswapV2Router: INSUFFICIENT_B_AMOUNT'
+        );
+    }
+
+    function removeLiquidityETH(
+        address token,
+        uint256 liquidity,
+        uint256 amountTokenMin,
+        uint256 amountETHMin,
+        address to,
+        uint256 deadline
+    )
+        public
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256 amountToken, uint256 amountETH)
+    {
+        (amountToken, amountETH) = removeLiquidity(
+            token,
+            address(WETH),
+            liquidity,
+            amountTokenMin,
+            amountETHMin,
+            address(this),
+            deadline
+        );
+
+        TransferHelper.safeTransfer(token, to, amountToken);
+        IWETH(WETH).withdraw(amountETH);
+        TransferHelper.safeTransferETH(to, amountETH);
+    }
 }
