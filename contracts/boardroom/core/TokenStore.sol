@@ -8,6 +8,7 @@ import {Ownable} from '../../access/Ownable.sol';
 import {Operator} from '../../access/Operator.sol';
 import {SafeERC20} from '../../ERC20/SafeERC20.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
+import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
 
 contract TokenStore is ITokenStore, Operator {
     using SafeMath for uint256;
@@ -58,6 +59,7 @@ contract TokenStore is ITokenStore, Operator {
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20Burnable(token).burn(amount);
     }
 
     function withdraw(uint256 amount) public override {

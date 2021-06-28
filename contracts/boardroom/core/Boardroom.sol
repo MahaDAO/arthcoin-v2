@@ -49,7 +49,7 @@ contract Boardroom is Operator, TokenStoreProxy {
     /// @notice Contract constructor
     /// @param _tokenStore TokenStore address
     /// @param _cash BAC address
-    constructor(address _tokenStore, address _cash) public {
+    constructor(address _tokenStore, address _cash) {
         tokenStore = _tokenStore;
         cash = _cash;
     }
