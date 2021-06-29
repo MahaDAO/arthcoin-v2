@@ -203,8 +203,8 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             'UniswapV2Router: INSUFFICIENT_B_AMOUNT'
         );
 
-        IERC20(tokenA).transfer(to, amountA);
-        IERC20(tokenA).transfer(to, amountB);
+        TransferHelper.safeTransfer(tokenA, to, amountA);
+        TransferHelper.safeTransfer(tokenB, to, amountB);
     }
 
     function removeLiquidityETH(
@@ -230,10 +230,6 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             address(this),
             deadline
         );
-
-        TransferHelper.safeTransfer(token, to, amountToken);
-        IWETH(WETH).withdraw(amountETH);
-        TransferHelper.safeTransferETH(to, amountETH);
     }
 
     function buyForETH(
