@@ -91,8 +91,21 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             tokenB
         );
 
-        TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
-        TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
+        TransferHelper.safeTransferFrom(
+            tokenA,
+            msg.sender,
+            address(this),
+            amountA
+        );
+        TransferHelper.safeTransferFrom(
+            tokenB,
+            msg.sender,
+            address(this),
+            amountB
+        );
+
+        TransferHelper.safeTransfer(tokenA, address(pair), amountA);
+        TransferHelper.safeTransfer(tokenB, address(pair), amountB);
 
         liquidity = IUniswapV2Pair(pair).mint(to);
     }
@@ -131,9 +144,15 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             address(WETH)
         );
 
-        TransferHelper.safeTransferFrom(token, msg.sender, pair, amountToken);
+        TransferHelper.safeTransferFrom(
+            token,
+            msg.sender,
+            address(this),
+            amountToken
+        );
         WETH.deposit{value: amountETH}();
 
+        TransferHelper.safeTransfer(token, address(pair), amountToken);
         assert(WETH.transfer(pair, amountETH));
 
         liquidity = IUniswapV2Pair(pair).mint(to);
@@ -164,9 +183,12 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             tokenB
         );
 
-        IUniswapV2Pair(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair.
+        IUniswapV2Pair(pair).transferFrom(msg.sender, pair, liquidity);
 
-        (uint256 amount0, uint256 amount1) = IUniswapV2Pair(pair).burn(to);
+        (uint256 amount0, uint256 amount1) = IUniswapV2Pair(pair).burn(
+            address(this)
+        );
+
         (address token0, ) = UniswapV2Library.sortTokens(tokenA, tokenB);
         (amountA, amountB) = tokenA == token0
             ? (amount0, amount1)
@@ -180,6 +202,9 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             amountB >= amountBMin,
             'UniswapV2Router: INSUFFICIENT_B_AMOUNT'
         );
+
+        IERC20(tokenA).transfer(to, amountA);
+        IERC20(tokenA).transfer(to, amountB);
     }
 
     function removeLiquidityETH(
@@ -242,7 +267,9 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         assert(WETH.transfer(address(pair), msg.value));
 
         // Check buyToken balance of recipient before to compare against.
-        uint256 buyTokenBalanceBefore = IERC20(buyToken).balanceOf(to);
+        uint256 buyTokenBalanceBefore = IERC20(buyToken).balanceOf(
+            address(this)
+        );
 
         // If weth is token0 which means we are selling token0(hence amountOut0 = 0)
         (uint256 amount0Out, uint256 amount1Out) = (
@@ -251,16 +278,21 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
                 : (amountOut, uint256(0))
         );
 
-        pair.swap(amount0Out, amount1Out, to, new bytes(0));
+        pair.swap(amount0Out, amount1Out, address(this), new bytes(0));
 
         // Check that ARTH recipient got at least minReward on top of trade amount.
-        uint256 buyTokenBalanceAfter = IERC20(buyToken).balanceOf(to);
+        uint256 buyTokenBalanceAfter = IERC20(buyToken).balanceOf(
+            address(this)
+        );
         uint256 boughtAmount = buyTokenBalanceAfter.sub(buyTokenBalanceBefore);
 
         require(
             boughtAmount >= amountOutMin,
             'UniswapSwapRouter: NOT_ENOUGHT_AMOUNT_OUT'
         );
+
+        TransferHelper.safeTransfer(buyToken, to, boughtAmount);
+
         return boughtAmount;
     }
 
@@ -305,21 +337,27 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
             amountIn
         );
 
-        uint256 buyTokenBalanceBefore = IERC20(buyToken).balanceOf(to);
+        uint256 buyTokenBalanceBefore = IERC20(buyToken).balanceOf(
+            address(this)
+        );
 
         (uint256 amount0Out, uint256 amount1Out) = sellToken == pair.token0()
             ? (uint256(0), amountOut)
             : (amountOut, uint256(0));
 
-        pair.swap(amount0Out, amount1Out, to, new bytes(0));
+        pair.swap(amount0Out, amount1Out, address(this), new bytes(0));
 
         // Check that ARTH recipient got at least minReward on top of trade amount.
-        uint256 buyTokenBalanceAfter = IERC20(buyToken).balanceOf(to);
+        uint256 buyTokenBalanceAfter = IERC20(buyToken).balanceOf(
+            address(this)
+        );
         uint256 boughtAmount = buyTokenBalanceAfter.sub(buyTokenBalanceBefore);
         require(
             boughtAmount >= amountOutMin,
             'UniswapSwapRouter: NOT_ENOUGHT_AMOUNT_OUT'
         );
+
+        TransferHelper.safeTransfer(buyToken, to, boughtAmount);
 
         return boughtAmount;
     }
