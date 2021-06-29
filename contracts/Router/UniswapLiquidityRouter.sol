@@ -351,15 +351,19 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         uint256 buyTokenBalanceAfter = IERC20(buyToken).balanceOf(
             address(this)
         );
-        uint256 boughtAmount = buyTokenBalanceAfter.sub(buyTokenBalanceBefore);
+
         require(
-            boughtAmount >= amountOutMin,
+            buyTokenBalanceAfter.sub(buyTokenBalanceBefore) >= amountOutMin,
             'UniswapSwapRouter: NOT_ENOUGHT_AMOUNT_OUT'
         );
 
-        TransferHelper.safeTransfer(buyToken, to, boughtAmount);
+        TransferHelper.safeTransfer(
+            buyToken,
+            to,
+            buyTokenBalanceAfter.sub(buyTokenBalanceBefore)
+        );
 
-        return boughtAmount;
+        return buyTokenBalanceAfter.sub(buyTokenBalanceBefore);
     }
 
     /**
