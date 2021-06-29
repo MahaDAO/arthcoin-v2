@@ -2,16 +2,16 @@
 
 pragma solidity ^0.8.0;
 
+import {TokenStore} from './TokenStore.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {Math} from '../../utils/math/Math.sol';
 import {Operator} from '../../access/Operator.sol';
 import {SafeERC20} from '../../ERC20/SafeERC20.sol';
-import {TokenStoreProxy} from './TokenStoreProxy.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 
 /// @title Boardroom contract
 /// @author Jerry Smith
-contract Boardroom is Operator, TokenStoreProxy {
+contract Boardroom is Operator, TokenStore {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -47,10 +47,9 @@ contract Boardroom is Operator, TokenStoreProxy {
     /* ========== CONSTRUCTOR ========== */
 
     /// @notice Contract constructor
-    /// @param _tokenStore TokenStore address
+    /// @param _token TokenStore address
     /// @param _cash BAC address
-    constructor(address _tokenStore, address _cash) {
-        tokenStore = _tokenStore;
+    constructor(address _token, address _cash) TokenStore(_token) {
         cash = _cash;
     }
 
