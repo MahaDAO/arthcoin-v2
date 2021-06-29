@@ -16,6 +16,8 @@ contract TokenStore is ITokenStore, Operator {
 
     /* ========== EVENTS ========== */
 
+    event StakeEnableChanged(bool newFlag, bool oldFlag);
+
     event TokenChanged(
         address indexed operator,
         address oldToken,
@@ -26,8 +28,17 @@ contract TokenStore is ITokenStore, Operator {
 
     address public token;
 
+    bool public stakeEnabled = true;
+
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
+
+    /* ========== Modifier ============== */
+
+    modifier ensureStakeIsEnabled() {
+        require(stakeEnabled, 'Store: stake is disabled');
+        _;
+    }
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -47,6 +58,11 @@ contract TokenStore is ITokenStore, Operator {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
+    function toggleStakeEnabled(bool flag) public onlyOwner {
+        stakeEnabled = flag;
+        emit StakeEnableChanged(flag, !flag);
+    }
+
     // gov
     function setToken(address newToken) public onlyOwner {
         address oldToken = token;
@@ -55,14 +71,19 @@ contract TokenStore is ITokenStore, Operator {
     }
 
     // logic
-    function stake(uint256 amount) public override {
+    function stake(uint256 amount)
+        public
+        virtual
+        override
+        ensureStakeIsEnabled
+    {
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         IERC20Burnable(token).burn(amount);
     }
 
-    function withdraw(uint256 amount) public override {
+    function withdraw(uint256 amount) public virtual override {
         revert('Withdraw disabled');
         require(false, 'Withdraw is disabled');
         uint256 balance = _balances[msg.sender];
