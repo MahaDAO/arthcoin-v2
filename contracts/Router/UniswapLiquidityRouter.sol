@@ -26,8 +26,6 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
     IWETH public immutable WETH;
     IUniswapV2Factory public immutable FACTORY;
 
-    address public arthAddr;
-    address public mahaAddr;
     address public arthxAddr;
 
     /**
@@ -44,19 +42,14 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
      */
 
     constructor(
-        address arthAddr_,
-        address mahaAddr_,
         address arthxAddr_,
         IUniswapV2Factory factory,
         IWETH weth
     ) {
-        arthAddr = arthAddr_;
-        mahaAddr = mahaAddr_;
         arthxAddr = arthxAddr_;
 
         WETH = weth;
         FACTORY = factory;
-        arthAddr = arthAddr_;
     }
 
     /**
@@ -279,12 +272,7 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         address to,
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 amountOut) {
-        require(
-            sellToken != arthAddr &&
-                sellToken != mahaAddr &&
-                sellToken != arthxAddr,
-            'Router: ONLY_BUY_POSSIBLE'
-        );
+        require(sellToken != arthxAddr, 'Router: ONLY_BUY_POSSIBLE');
 
         (uint256 reservesBuy, uint256 reservesSell) = _getReserves(
             buyToken,
@@ -405,12 +393,7 @@ contract UniswapLiquidityRouter is IUniswapLiquidityRouter {
         require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
 
         // Make sure that we only buy tokens.
-        require(
-            sellToken != arthAddr &&
-                sellToken != mahaAddr &&
-                sellToken != arthxAddr,
-            'Router: ONLY_BUY_POSSIBLE'
-        );
+        require(sellToken != arthxAddr, 'Router: ONLY_BUY_POSSIBLE');
 
         (uint256 reserves0, uint256 reserves1, ) = pair.getReserves();
 
