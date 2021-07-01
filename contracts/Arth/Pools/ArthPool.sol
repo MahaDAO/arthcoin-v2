@@ -530,10 +530,15 @@ contract ArthPool is AccessControl, IARTHPool {
                 arthxAmount
             );
 
-        uint256 collateralEquivalentD18 =
-            (ArthPoolLibrary.calcBuyBackARTHX(inputParams))
+        uint256 collateralEquivalentD18 = ArthPoolLibrary.calcBuyBackARTHX(inputParams);
+        uint256 collateralEquivalentD18BeforeFee = collateralEquivalentD18;
+        collateralEquivalentD18 = (
+            collateralEquivalentD18
                 .mul(uint256(1e6).sub(_arthController.getBuybackFee()))
-                .div(1e6);
+                .div(1e6)
+        );
+        uint256 collateralEquivalentD18AfterFee = collateralEquivalentD18;
+
         uint256 collateralPrecision =
             collateralEquivalentD18.div(10**_missingDeciamls);
 
@@ -544,6 +549,12 @@ contract ArthPool is AccessControl, IARTHPool {
 
         // Give the sender their desired collateral and burn the ARTHX
         _ARTHX.poolBurnFrom(msg.sender, arthxAmount);
+
+        _chargeTradingFee(
+            collateralEquivalentD18BeforeFee.sub(collateralEquivalentD18AfterFee),
+            'Buyback fee charged'
+        );
+
         require(
             _COLLATERAL.transfer(msg.sender, collateralPrecision),
             'ARTHPool: transfer failed'
