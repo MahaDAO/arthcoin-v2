@@ -237,7 +237,9 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 arthOutMin,
         uint256 arthxOutMin
     ) external override notMintPaused returns (uint256, uint256) {
-        uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
+        uint256 collateralAmountAfterFees = (collateralAmount.mul(uint256(1e6).sub(_arthController.getMintingFee()))).div(1e6);
+
+        uint256 collateralAmountD18 = collateralAmountAfterFees * (10**_missingDeciamls);
         uint256 cr = _arthController.getGlobalCollateralRatio();
 
         require(
@@ -251,7 +253,7 @@ contract ArthPool is AccessControl, IARTHPool {
         require(
             (_COLLATERAL.balanceOf(address(this)))
                 .sub(unclaimedPoolCollateral)
-                .add(collateralAmount) <= poolCeiling,
+                .add(collateralAmountAfterFees) <= poolCeiling,
             'ARTHPool: ceiling reached'
         );
 
@@ -267,12 +269,6 @@ contract ArthPool is AccessControl, IARTHPool {
                 _arthController.getARTHXPrice(),
                 collateralAmountD18
             );
-
-        // Remove precision at the end.
-        arthAmountD18 = (
-            arthAmountD18.mul(uint256(1e6).sub(_arthController.getMintingFee()))
-        )
-            .div(1e6);
 
         require(
             arthOutMin <= arthAmountD18,
