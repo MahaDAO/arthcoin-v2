@@ -8,7 +8,7 @@ contract Pool_WETH is ArthPool {
     /**
      * State variable.
      */
-    address public WBTC_address;
+    address public WETH_address;
 
     /**
      * Constructor.
@@ -35,6 +35,6 @@ contract Pool_WETH is ArthPool {
         )
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        WBTC_address = _collateralAddress;
+        WETH_address = _collateralAddress;
     }
 }

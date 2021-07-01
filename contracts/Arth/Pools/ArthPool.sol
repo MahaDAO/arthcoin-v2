@@ -13,6 +13,7 @@ import {ArthPoolLibrary} from './ArthPoolLibrary.sol';
 import {IARTHController} from '../IARTHController.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
 import {AccessControl} from '../../access/AccessControl.sol';
+import {ISimpleERCFund} from '../../funds/core/ISimpleERCFund.sol';
 
 /**
  * @title  ARTHPool.
@@ -34,6 +35,7 @@ contract ArthPool is AccessControl, IARTHPool {
     IERC20Burnable public _MAHA;
     IARTHController public _arthController;
     IOracle public _collateralGMUOracle;
+    ISimpleERCFund public fund;
     //ICurve public _recollateralizeDiscountCruve;
 
     uint256 public buybackCollateralBuffer = 20; // In %.
@@ -162,6 +164,10 @@ contract ArthPool is AccessControl, IARTHPool {
         _arthController = controller;
     }
 
+    function setFund(ISimpleERCFund newFund) external onlyByOwnerOrGovernance {
+        fund = newFund;
+    }
+
     function setCollatGMUOracle(address _collateralGMUOracleAddress)
         external
         override
@@ -237,7 +243,9 @@ contract ArthPool is AccessControl, IARTHPool {
         uint256 arthOutMin,
         uint256 arthxOutMin
     ) external override notMintPaused returns (uint256, uint256) {
-        uint256 collateralAmountD18 = collateralAmount * (10**_missingDeciamls);
+        uint256 collateralAmountAfterFees = (collateralAmount.mul(uint256(1e6).sub(_arthController.getMintingFee()))).div(1e6);
+
+        uint256 collateralAmountD18 = collateralAmountAfterFees * (10**_missingDeciamls);
         uint256 cr = _arthController.getGlobalCollateralRatio();
 
         require(
@@ -251,7 +259,7 @@ contract ArthPool is AccessControl, IARTHPool {
         require(
             (_COLLATERAL.balanceOf(address(this)))
                 .sub(unclaimedPoolCollateral)
-                .add(collateralAmount) <= poolCeiling,
+                .add(collateralAmountAfterFees) <= poolCeiling,
             'ARTHPool: ceiling reached'
         );
 
@@ -267,12 +275,6 @@ contract ArthPool is AccessControl, IARTHPool {
                 _arthController.getARTHXPrice(),
                 collateralAmountD18
             );
-
-        // Remove precision at the end.
-        arthAmountD18 = (
-            arthAmountD18.mul(uint256(1e6).sub(_arthController.getMintingFee()))
-        )
-            .div(1e6);
 
         require(
             arthOutMin <= arthAmountD18,
@@ -298,6 +300,11 @@ contract ArthPool is AccessControl, IARTHPool {
 
         _ARTH.poolMint(msg.sender, arthAmountD18);
         _ARTHX.poolMint(msg.sender, arthxAmountD18);
+
+        _chargeTradingFee(
+            collateralAmount.sub(collateralAmountAfterFees),
+            'Mint fee charged'
+        );
 
         return (arthAmountD18, arthxAmountD18);
     }
@@ -330,15 +337,26 @@ contract ArthPool is AccessControl, IARTHPool {
                 //, arthxAmountPrecision
             );
 
+        require(
+            collateralNeeded <=
+                _COLLATERAL.balanceOf(address(this)).sub(
+                    unclaimedPoolCollateral
+                ),
+            'ARTHPool: Not enough collateral in pool'
+        );
+
+        uint256 collateralNeededBeforeFee = collateralNeeded;
         collateralNeeded = (
             collateralNeeded.mul(
                 uint256(1e6).sub(_arthController.getRedemptionFee())
             )
         )
             .div(1e6);
+        uint256 collateralNeededAfterFee = collateralNeeded;
 
         uint256 arthxInputNeededD18 =
             arthxInputNeeded.mul(10**_missingDeciamls);
+
         require(
             _ARTHX.balanceOf(msg.sender) >= arthxInputNeededD18,
             'ARTHPool: balance not enough'
@@ -367,6 +385,10 @@ contract ArthPool is AccessControl, IARTHPool {
         lastRedeemed[msg.sender] = block.number;
 
         _chargeStabilityFee(arthAmount);
+        _chargeTradingFee(
+            collateralNeededBeforeFee.sub(collateralNeededAfterFee),
+            'Redeem fee charged'
+        );
 
         _ARTH.poolBurnFrom(msg.sender, arthAmount);
         _ARTHX.poolBurnFrom(msg.sender, arthxInputNeededD18);
@@ -508,10 +530,15 @@ contract ArthPool is AccessControl, IARTHPool {
                 arthxAmount
             );
 
-        uint256 collateralEquivalentD18 =
-            (ArthPoolLibrary.calcBuyBackARTHX(inputParams))
+        uint256 collateralEquivalentD18 = ArthPoolLibrary.calcBuyBackARTHX(inputParams);
+        uint256 collateralEquivalentD18BeforeFee = collateralEquivalentD18;
+        collateralEquivalentD18 = (
+            collateralEquivalentD18
                 .mul(uint256(1e6).sub(_arthController.getBuybackFee()))
-                .div(1e6);
+                .div(1e6)
+        );
+        uint256 collateralEquivalentD18AfterFee = collateralEquivalentD18;
+
         uint256 collateralPrecision =
             collateralEquivalentD18.div(10**_missingDeciamls);
 
@@ -522,6 +549,12 @@ contract ArthPool is AccessControl, IARTHPool {
 
         // Give the sender their desired collateral and burn the ARTHX
         _ARTHX.poolBurnFrom(msg.sender, arthxAmount);
+
+        _chargeTradingFee(
+            collateralEquivalentD18BeforeFee.sub(collateralEquivalentD18AfterFee),
+            'Buyback fee charged'
+        );
+
         require(
             _COLLATERAL.transfer(msg.sender, collateralPrecision),
             'ARTHPool: transfer failed'
@@ -608,6 +641,11 @@ contract ArthPool is AccessControl, IARTHPool {
         return (
             stabilityFeeInARTH.mul(1e6).div(_arthController.getMAHAPrice())
         );
+    }
+
+    function _chargeTradingFee(uint256 amount, string memory reason) internal {
+        _COLLATERAL.approve(address(fund), amount);
+        fund.deposit(address(_COLLATERAL), amount, reason);
     }
 
     function _chargeStabilityFee(uint256 amount) internal {
