@@ -6,23 +6,21 @@ async function main() {
   const deployments = require(`../output/${network.name}.json`);
   const [deployer] = await ethers.getSigners();
 
-  const instance = await ethers.getContractFactory(
-    "StakeARTHXRMAHA"
-  );
+  const StakeARTHXRMAHA = await ethers.getContractFactory("StakeARTHXRMAHA");
 
-
-  console.log('deploying stakearthxrmaha contract..');
-
-  const stakearthxrmaha =  await instance.deploy(
+  console.log('Deploying Genesis Staking Contract..');
+  const instance = await StakeARTHXRMAHA.deploy(
     deployer.address,
     deployments.MahaToken.address,
     deployments.ARTHShares.address
-  )
+  );
 
-  console.log('stakearthxrmaha address :-', stakearthxrmaha.address);
+  // TODO: transfer rewards tokens before initializing.
 
-  await stakearthxrmaha.initializeDefault()
+  console.log('Initializing staking');
+  await instance.initializeDefault();
 
+  console.log('Contract deployed at address :-', instance.address);
 }
 
 main()

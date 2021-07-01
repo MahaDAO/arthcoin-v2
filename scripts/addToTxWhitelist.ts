@@ -17,7 +17,7 @@ async function main() {
     '0xc8Aa935bB66D46732800C4AD04eDdA385d197f06',  // Staging Pool token.
   ];
 
-  console.log('Adding the following addresses to whitelist\n', entities);
+  console.log('Adding the following addresses to ARTHX tax whitelist\n', entities);
   await instance.addToTaxWhiteListMultiple(entities);
 }
 
