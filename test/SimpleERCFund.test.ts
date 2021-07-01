@@ -4,26 +4,19 @@ import { solidity } from 'ethereum-waffle';
 import { Provider } from '@ethersproject/providers';
 import { Contract, ContractFactory, utils } from 'ethers';
 
-import { advanceTimeAndBlock, encodeParameters } from './utilities';
+import { advanceTimeAndBlock, encodeParameters, latestBlocktime} from './utilities';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 chai.use(solidity);
 
-const DAY = 86400;
-const ETH = utils.parseEther('1');
-const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
-
-async function latestBlocktime(provider: Provider): Promise<number> {
-  const { timestamp } = await provider.getBlock('latest');
-  return timestamp;
-}
-
 describe('SimpleERCFund', () => {
+  const DAY = 86400;
+
   const { provider } = ethers;
 
   let operator: SignerWithAddress;
 
-  before('setup accounts', async () => {
+  before('Setup accounts', async () => {
     [operator] = await ethers.getSigners();
   });
 
@@ -31,7 +24,7 @@ describe('SimpleERCFund', () => {
   let MockDAI: ContractFactory;
   let Timelock: ContractFactory;
 
-  before('fetch contract factories', async () => {
+  before('Fetch contract factories', async () => {
     Fund = await ethers.getContractFactory('SimpleERCFund');
     MockDAI = await ethers.getContractFactory('MockDai');
     Timelock = await ethers.getContractFactory('Timelock');
@@ -40,12 +33,12 @@ describe('SimpleERCFund', () => {
   let fund: Contract;
   let token: Contract;
 
-  beforeEach('deploy contract', async () => {
+  beforeEach('Deploy contract', async () => {
     fund = await Fund.connect(operator).deploy();
     token = await MockDAI.connect(operator).deploy();
   });
 
-  describe('with timelock', () => {
+  describe('With timelock', () => {
     let timelock: Contract;
 
     beforeEach('deploy timelock', async () => {

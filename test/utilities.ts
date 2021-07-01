@@ -26,7 +26,6 @@ export async function wait(
   await ethers.provider.waitForTransaction(hash, confirmation);
 }
 
-
 export async function latestBlocktime(provider: Provider): Promise<number> {
   const { timestamp } = await provider.getBlock('latest');
   return timestamp;
