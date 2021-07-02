@@ -27,6 +27,7 @@ const getARTH = async (network, deployer, artifacts) => {
 
   const addr = knownContracts.ARTH && knownContracts.ARTH[network];
   if (addr) return ARTH.at(addr);
+  if (ARTH.isDeployed()) return ARTH.deployed();
 
   console.log(chalk.yellow(`\nDeploying arth on ${network} network...`));
   await deployer.deploy(ARTH);
@@ -39,6 +40,7 @@ const getARTHX = async (network, deployer, artifacts) => {
 
   const addr = knownContracts.ARTHX && knownContracts.ARTHX[network];
   if (addr) return ARTHX.at(addr);
+  if (ARTHX.isDeployed()) return ARTHX.deployed();
 
   console.log(chalk.yellow(`\nDeploying arthx on ${network} network...`));
   await deployer.deploy(ARTHX);
