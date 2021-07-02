@@ -3,11 +3,9 @@ const chalk = require('chalk');
 const BigNumber = require('bignumber.js');
 const helpers = require('./helpers');
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const ARTHController = artifacts.require("ArthController");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
-const UniswapPairOracle_MAHA_ARTH = artifacts.require("Oracle/Variants/UniswapPairOracle_MAHA_ARTH");
+const UniswapPairOracle_ARTH_MAHA = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_MAHA");
 const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHX");
 
 
@@ -19,16 +17,16 @@ module.exports = async function (deployer, network, accounts) {
 
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const arthx = await ARTHShares.deployed();
-  const arth = await ARTHStablecoin.deployed();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
+
   const arthControllerInstance = await ARTHController.deployed();
   const wethInstance = await helpers.getWETH(network, deployer, artifacts, DEPLOYER_ADDRESS);
 
   console.log(chalk.yellow('\nSetting ARTH address within ARTHX...'));
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });
 
-  console.log(chalk.yellow('\nSome oracle prices are: '));
-  // const arth_price_initial = new BigNumber(await arthControllerInstance.getARTHPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  // console.log(chalk.yellow('\nSome oracle prices are: '));
   // const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
   // const arthx_price_from_ARTHX_WETH = (new BigNumber(await uniswapPairOracleARTHXARTH.consult.call(arth.address, 1e6))).div(BIG6);
   // const maha_price_initial = new BigNumber(await arthControllerInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);

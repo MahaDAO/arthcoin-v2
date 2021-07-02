@@ -5,9 +5,7 @@ pragma experimental ABIEncoderV2;
 
 import {IERC20} from '../ERC20/IERC20.sol';
 import {IWETH} from '@uniswap/v2-periphery/contracts/interfaces/IWETH.sol';
-import {
-    TransferHelper
-} from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
+import {TransferHelper} from '@uniswap/lib/contracts/libraries/TransferHelper.sol';
 
 import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IUniswapSwapRouter} from './IUniswapSwapRouter.sol';
@@ -83,8 +81,11 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         address to,
         uint256 deadline
     ) external payable override ensure(deadline) returns (uint256 amountOut) {
-        (uint256 reservesETH, uint256 reservesOther, bool isWETHPairToken0) =
-            _getReserves(address(WETH));
+        (
+            uint256 reservesETH,
+            uint256 reservesOther,
+            bool isWETHPairToken0
+        ) = _getReserves(address(WETH));
 
         amountOut = UniswapV2Library.getAmountOut(
             msg.value,
@@ -96,8 +97,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
             'UniswapSwapRouter: INSUFFICIENT_OUTPUT_AMOUNT'
         );
 
-        IUniswapV2Pair pair =
-            IUniswapV2Pair(FACTORY.getPair(address(WETH), arthAddress));
+        IUniswapV2Pair pair = IUniswapV2Pair(
+            FACTORY.getPair(address(WETH), arthAddress)
+        );
         require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
 
         // Convert sent ETH to wrapped ETH and assert successful transfer to pair.
@@ -108,10 +110,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         // Check ARTH balance of recipient before to compare against.
         uint256 arthBalanceBefore = IERC20(arth).balanceOf(to);
 
-        (uint256 amount0Out, uint256 amount1Out) =
-            isWETHPairToken0
-                ? (uint256(0), amountOut)
-                : (amountOut, uint256(0));
+        (uint256 amount0Out, uint256 amount1Out) = isWETHPairToken0
+            ? (uint256(0), amountOut)
+            : (amountOut, uint256(0));
 
         pair.swap(amount0Out, amount1Out, to, new bytes(0));
 
@@ -139,8 +140,11 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         address to,
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 amountOut) {
-        (uint256 reservesToken, uint256 reservesOther, bool isTokenPairToken0) =
-            _getReserves(token);
+        (
+            uint256 reservesToken,
+            uint256 reservesOther,
+            bool isTokenPairToken0
+        ) = _getReserves(token);
 
         amountOut = UniswapV2Library.getAmountOut(
             amountIn,
@@ -152,8 +156,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
             'UniswapSwapRouter: Insufficient output amount'
         );
 
-        IUniswapV2Pair pair =
-            IUniswapV2Pair(FACTORY.getPair(token, arthAddress));
+        IUniswapV2Pair pair = IUniswapV2Pair(
+            FACTORY.getPair(token, arthAddress)
+        );
         require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
 
         require(
@@ -171,10 +176,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         // Check ARTH balance of recipient before to compare against.
         uint256 arthBalanceBefore = IERC20(arth).balanceOf(to);
 
-        (uint256 amount0Out, uint256 amount1Out) =
-            isTokenPairToken0
-                ? (uint256(0), amountOut)
-                : (amountOut, uint256(0));
+        (uint256 amount0Out, uint256 amount1Out) = isTokenPairToken0
+            ? (uint256(0), amountOut)
+            : (amountOut, uint256(0));
 
         pair.swap(amount0Out, amount1Out, to, new bytes(0));
 
@@ -201,11 +205,15 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         address to,
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 amountOut) {
-        (uint256 reservesETH, uint256 reservesOther, bool isWETHPairToken0) =
-            _getReserves(address(WETH));
+        (
+            uint256 reservesETH,
+            uint256 reservesOther,
+            bool isWETHPairToken0
+        ) = _getReserves(address(WETH));
 
-        IUniswapV2Pair pair =
-            IUniswapV2Pair(FACTORY.getPair(address(WETH), arthAddress));
+        IUniswapV2Pair pair = IUniswapV2Pair(
+            FACTORY.getPair(address(WETH), arthAddress)
+        );
         require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
 
         address arth = isWETHPairToken0 ? pair.token1() : pair.token0();
@@ -217,8 +225,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         IERC20(arth).transferFrom(msg.sender, address(pair), amountIn);
 
         // Figure out how much the PAIR actually received net of ARTH burn.
-        uint256 effectiveAmountIn =
-            IERC20(arth).balanceOf(address(pair)).sub(reservesOther);
+        uint256 effectiveAmountIn = IERC20(arth).balanceOf(address(pair)).sub(
+            reservesOther
+        );
 
         // Check that burned fee-on-transfer is not more than the maxPenalty
         if (effectiveAmountIn < amountIn) {
@@ -239,10 +248,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
             'UniswapSwapRouter: Insufficient output amount'
         );
 
-        (uint256 amount0Out, uint256 amount1Out) =
-            isWETHPairToken0
-                ? (amountOut, uint256(0))
-                : (uint256(0), amountOut);
+        (uint256 amount0Out, uint256 amount1Out) = isWETHPairToken0
+            ? (amountOut, uint256(0))
+            : (uint256(0), amountOut);
 
         pair.swap(amount0Out, amount1Out, address(this), new bytes(0));
 
@@ -269,11 +277,15 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         address to,
         uint256 deadline
     ) external override ensure(deadline) returns (uint256 amountOut) {
-        (uint256 reservesToken, uint256 reservesOther, bool isTokenPairToken0) =
-            _getReserves(token);
+        (
+            uint256 reservesToken,
+            uint256 reservesOther,
+            bool isTokenPairToken0
+        ) = _getReserves(token);
 
-        IUniswapV2Pair pair =
-            IUniswapV2Pair(FACTORY.getPair(token, arthAddress));
+        IUniswapV2Pair pair = IUniswapV2Pair(
+            FACTORY.getPair(token, arthAddress)
+        );
         require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
 
         address arth = isTokenPairToken0 ? pair.token1() : pair.token0();
@@ -285,8 +297,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
         IERC20(arth).transferFrom(msg.sender, address(pair), amountIn);
 
         // Figure out how much the PAIR actually received net of ARTH burn.
-        uint256 effectiveAmountIn =
-            IERC20(arth).balanceOf(address(pair)).sub(reservesOther);
+        uint256 effectiveAmountIn = IERC20(arth).balanceOf(address(pair)).sub(
+            reservesOther
+        );
 
         // Check that burned fee-on-transfer is not more than the maxPenalty
         if (effectiveAmountIn < amountIn) {
@@ -307,10 +320,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
             'UniswapSwapRouter: Insufficient output amount'
         );
 
-        (uint256 amount0Out, uint256 amount1Out) =
-            isTokenPairToken0
-                ? (amountOut, uint256(0))
-                : (uint256(0), amountOut);
+        (uint256 amount0Out, uint256 amount1Out) = isTokenPairToken0
+            ? (amountOut, uint256(0))
+            : (uint256(0), amountOut);
 
         pair.swap(amount0Out, amount1Out, to, new bytes(0));
 
@@ -330,8 +342,9 @@ contract UniswapSwapRouter is IUniswapSwapRouter {
             bool isTokenPairToken0
         )
     {
-        IUniswapV2Pair pair =
-            IUniswapV2Pair(FACTORY.getPair(token, arthAddress));
+        IUniswapV2Pair pair = IUniswapV2Pair(
+            FACTORY.getPair(token, arthAddress)
+        );
         require(address(pair) != address(0), 'UniswapSwapRouter: INVALID_PAIR');
 
         (uint256 reserves0, uint256 reserves1, ) = pair.getReserves();

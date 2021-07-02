@@ -2,23 +2,24 @@ const BigNumber = require('bignumber.js');
 const chalk = require('chalk');
 const helpers = require('./helpers');
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const ARTHController = artifacts.require("ArthController");
 const BondingCurve = artifacts.require("BondingCurve");
 const UniswapPairOracle_ARTH_ARTHX = artifacts.require("UniswapPairOracle_ARTH_ARTHX");
-const UniswapPairOracle_MAHA_ARTH = artifacts.require("UniswapPairOracle_MAHA_ARTH");
+const UniswapPairOracle_ARTH_USDC = artifacts.require("UniswapPairOracle_ARTH_USDC");
+const UniswapPairOracle_ARTH_MAHA = artifacts.require("UniswapPairOracle_ARTH_MAHA");
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const timelockInstance = await Timelock.deployed();
-  const arth = await ARTHStablecoin.deployed();
-  const arthx = await ARTHShares.deployed();
-  const arthController = await ARTHController.deployed();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
+  const usdc = await helpers.getUSDC(network, deployer, artifacts);
+
+  const timelockInstance = await Timelock.deployed();
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts);
+  const arthController = await ARTHController.deployed();
 
   // todo: need to set this to use GMU oracles
   console.log(chalk.yellowBright('\nDeploying collateral oracles'));
@@ -36,22 +37,20 @@ module.exports = async function (deployer, network, accounts) {
 
   await arthController.setBondingCurve(bondingCurve.address);
 
-  if (network === 'mainnet') return;
-
   console.log(chalk.yellow('\nDeploying uniswap oracles...'));
-  console.log(chalk.yellow(' - Deploying MAHA/ARTH oracle...'));
+  console.log(chalk.yellow(' - Deploying ARTH/MAHA oracle...'));
   await Promise.all([
     deployer.deploy(
-      UniswapPairOracle_MAHA_ARTH,
+      UniswapPairOracle_ARTH_MAHA,
       uniswapFactoryInstance.address,
-      arth.address,
       maha.address,
+      arth.address,
       DEPLOYER_ADDRESS,
       timelockInstance.address
     )
   ]);
 
-  console.log(chalk.yellow('- Deploying ARTHX/ARTH oracles...'));
+  console.log(chalk.yellow('- Deploying ARTH/ARTHX oracles...'));
   await Promise.all([
     deployer.deploy(
       UniswapPairOracle_ARTH_ARTHX,
@@ -63,7 +62,17 @@ module.exports = async function (deployer, network, accounts) {
     )
   ]);
 
-
+  console.log(chalk.yellow('- Deploying ARTH/USDC oracles...'));
+  await Promise.all([
+    deployer.deploy(
+      UniswapPairOracle_ARTH_USDC,
+      uniswapFactoryInstance.address,
+      arth.address,
+      usdc.address,
+      DEPLOYER_ADDRESS,
+      timelockInstance.address
+    )
+  ]);
 
   await helpers.getGMUOracle(network, deployer, artifacts);
 
@@ -72,6 +81,6 @@ module.exports = async function (deployer, network, accounts) {
   await arthController.setARTHXGMUOracle(oracleARTHXWETH.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nLinking MAHA oracles...'));
-  const oracleMAHAARTH = await UniswapPairOracle_MAHA_ARTH.deployed();
+  const oracleMAHAARTH = await UniswapPairOracle_ARTH_MAHA.deployed();
   await arthController.setMAHAGMUOracle(oracleMAHAARTH.address, { from: DEPLOYER_ADDRESS });
 };
