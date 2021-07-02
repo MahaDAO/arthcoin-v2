@@ -1,10 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const { getUSDC, getUSDT, getARTH, getARTHX, getWETH, getMahaToken, getUniswapFactory, getUniswapRouter, getWMATIC, getWBTC, isMainnet } = require('./helpers');
 
-const knownContracts = require('./known-contracts');
-
+const helpers = require('./helpers');
 const writeFile = util.promisify(fs.writeFile);
 const mkdir = util.promisify(fs.mkdir);
 const Multicall = artifacts.require('Multicall');
@@ -28,11 +26,7 @@ module.exports = async (callback) => {
     { abi: 'BasicStaking', contract: 'StakeARTHXARTH' },
     { abi: 'BasicStaking', contract: 'StakeMAHA' },
 
-    { abi: 'UniversalGMUOracle', contract: 'Oracle_USDC' },
-    { abi: 'UniversalGMUOracle', contract: 'Oracle_USDT' },
-    { abi: 'UniversalGMUOracle', contract: 'Oracle_WBTC' },
-    { abi: 'UniversalGMUOracle', contract: 'Oracle_WMATIC' },
-    { abi: 'UniversalGMUOracle', contract: 'Oracle_WETH' },
+
     { abi: 'GMUOracle', contract: 'GMUOracle' },
 
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_ARTHX' },
@@ -57,20 +51,26 @@ module.exports = async (callback) => {
   const deployments = {};
 
   try {
-    if (!isMainnet(network)) contracts.push({ abi: 'Faucet', contract: 'Faucet' });
+    if (!helpers.isMainnet(network)) contracts.push({ abi: 'Faucet', contract: 'Faucet' });
 
-    const factoryInstance = (await getUniswapFactory(network, null, artifacts));
+    const factoryInstance = (await helpers.getUniswapFactory(network, null, artifacts));
     const factory = factoryInstance.address;
-    const router = (await getUniswapRouter(network, null, artifacts)).address;
+    const router = (await helpers.getUniswapRouter(network, null, artifacts)).address;
 
-    const arth = (await getARTH(network, null, artifacts)).address;
-    const arthx = (await getARTHX(network, null, artifacts)).address;
-    const maha = (await getMahaToken(network, null, artifacts)).address;
-    const usdc = (await getUSDC(network, null, artifacts)).address;
-    const usdt = (await getUSDT(network, null, artifacts)).address;
-    const wbtc = (await getWBTC(network, null, artifacts)).address;
-    const weth = (await getWETH(network, null, artifacts)).address;
-    const wmatic = (await getWMATIC(network, null, artifacts)).address;
+    const arth = (await helpers.getARTH(network, null, artifacts)).address;
+    const arthx = (await helpers.getARTHX(network, null, artifacts)).address;
+    const maha = (await helpers.getMahaToken(network, null, artifacts)).address;
+    const usdc = (await helpers.getUSDC(network, null, artifacts)).address;
+    const usdt = (await helpers.getUSDT(network, null, artifacts)).address;
+    const wbtc = (await helpers.getWBTC(network, null, artifacts)).address;
+    const weth = (await helpers.getWETH(network, null, artifacts)).address;
+    const wmatic = (await helpers.getWMATIC(network, null, artifacts)).address;
+
+    const oracleMATIC= (await helpers.getUSDCOracle(network, null, artifacts)).address;
+    const oracleUSDC= (await helpers.getUSDTOracle(network, null, artifacts)).address;
+    const oracleUSDT= (await helpers.getWBTCOracle(network, null, artifacts)).address;
+    const oracleWBTC= (await helpers.getWMATICOracle(network, null, artifacts)).address;
+    const oracleWETH= (await helpers.getWETHOracle(network, null, artifacts)).address;
 
     contracts.push({ contract: 'ARTHShares', abi: 'ARTHShares', address: arthx });
     contracts.push({ contract: 'ARTHStablecoin', abi: 'ARTHStablecoin', address: arth });
@@ -83,6 +83,18 @@ module.exports = async (callback) => {
     contracts.push({ contract: 'WBTC', address: wbtc, abi: 'IERC20' });
     contracts.push({ contract: 'WETH', address: weth, abi: 'IWETH' });
     contracts.push({ contract: 'WMATIC', address: wmatic, abi: 'IERC20' });
+
+    contracts.push({ contract: 'Oracle_USDC', address: oracleUSDC, abi: 'UniversalGMUOracle' });
+    contracts.push({ contract: 'Oracle_USDT', address: oracleUSDT, abi: 'UniversalGMUOracle' });
+    contracts.push({ contract: 'Oracle_WBTC', address: oracleWBTC, abi: 'UniversalGMUOracle' });
+    contracts.push({ contract: 'Oracle_WMATIC', address: oracleMATIC, abi: 'UniversalGMUOracle' });
+    contracts.push({ contract: 'Oracle_WETH', address: oracleWETH, abi: 'UniversalGMUOracle' });
+
+        // { abi: 'UniversalGMUOracle', contract: 'Oracle_USDC' },
+    // { abi: 'UniversalGMUOracle', contract: 'Oracle_USDT' },
+    // { abi: 'UniversalGMUOracle', contract: 'Oracle_WBTC' },
+    // { abi: 'UniversalGMUOracle', contract: 'Oracle_WMATIC' },
+    // { abi: 'UniversalGMUOracle', contract: 'Oracle_WETH' },
 
     const arthMahaLP = await factoryInstance.getPair(arth, maha);
     const arthArthxLP = await factoryInstance.getPair(arth, arthx);

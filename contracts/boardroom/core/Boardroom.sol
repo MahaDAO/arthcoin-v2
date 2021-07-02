@@ -39,7 +39,7 @@ contract Boardroom is ReentrancyGuard, TokenStore {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(IERC20 _cash, IERC20 _token) public TokenStore(_token) {
+    constructor(IERC20 _cash, IERC20 _token) TokenStore(_token) {
         cash = _cash;
 
         BoardSnapshot memory genesisSnapshot = BoardSnapshot({
