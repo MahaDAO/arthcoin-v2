@@ -37,7 +37,7 @@ module.exports = {
     },
     matic: {
       network_id: 137,
-      gasPrice: 50100000000,  // 1.1 gwei
+      gasPrice: 50 * 1000000000,  // 1.1 gwei
       provider: function () {
         return new HDWalletProvider(
           process.env.METAMASK_WALLET_SECRET,

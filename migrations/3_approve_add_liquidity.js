@@ -5,6 +5,7 @@ const SwapToPrice = artifacts.require("Uniswap/SwapToPrice");
 
 
 module.exports = async function (deployer, network, accounts) {
+  return
   const DEPLOYER_ADDRESS = accounts[0];
 
   const arth = await helpers.getARTH(network, deployer, artifacts);
@@ -40,43 +41,43 @@ module.exports = async function (deployer, network, accounts) {
 
 
   console.log(chalk.yellow('\nAdding liquidity to pairs...'));
-  // await Promise.all([
-  //   // ARTHX / ARTH
-  //   uniswapRouter.addLiquidity(
-  //     arthx.address,
-  //     arth.address,
-  //     new BigNumber(100e18),
-  //     new BigNumber(1e18),
-  //     new BigNumber(100e18),
-  //     new BigNumber(1e18),
-  //     DEPLOYER_ADDRESS,
-  //     new BigNumber(9999999999999),
-  //     { from: DEPLOYER_ADDRESS }
-  //   ),
-  //   // ARTH / MAHA
-  //   uniswapRouter.addLiquidity(
-  //     arth.address,
-  //     maha.address,
-  //     new BigNumber(10e18),
-  //     new BigNumber(1e18),
-  //     new BigNumber(10e18),
-  //     new BigNumber(1e18),
-  //     DEPLOYER_ADDRESS,
-  //     new BigNumber(9999999999999),
-  //     { from: DEPLOYER_ADDRESS }
-  //   ),
-  //   uniswapRouter.addLiquidity(
-  //     arth.address,
-  //     usdc.address,
-  //     new BigNumber(1e18),
-  //     new BigNumber(2e6),
-  //     new BigNumber(1e18),
-  //     new BigNumber(2e6),
-  //     DEPLOYER_ADDRESS,
-  //     new BigNumber(9999999999999),
-  //     { from: DEPLOYER_ADDRESS }
-  //   )
-  // ]);
+  await Promise.all([
+    // ARTHX / ARTH
+    uniswapRouter.addLiquidity(
+      arthx.address,
+      arth.address,
+      new BigNumber(100e18),
+      new BigNumber(1e18),
+      new BigNumber(100e18),
+      new BigNumber(1e18),
+      DEPLOYER_ADDRESS,
+      new BigNumber(9999999999999),
+      { from: DEPLOYER_ADDRESS }
+    ),
+    // ARTH / MAHA
+    uniswapRouter.addLiquidity(
+      arth.address,
+      maha.address,
+      new BigNumber(10e18),
+      new BigNumber(1e18),
+      new BigNumber(10e18),
+      new BigNumber(1e18),
+      DEPLOYER_ADDRESS,
+      new BigNumber(9999999999999),
+      { from: DEPLOYER_ADDRESS }
+    ),
+    uniswapRouter.addLiquidity(
+      arth.address,
+      usdc.address,
+      new BigNumber(1e18),
+      new BigNumber(2e6),
+      new BigNumber(1e18),
+      new BigNumber(2e6),
+      DEPLOYER_ADDRESS,
+      new BigNumber(9999999999999),
+      { from: DEPLOYER_ADDRESS }
+    )
+  ]);
 
   /* For testnet's to deploy uniswap oracle */
   if (!helpers.isMainnet(network) && false) {

@@ -62,6 +62,24 @@ module.exports = {
     matic: '0xedd6ca8a4202d4a36611e2fff109648c4863ae19',
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
   },
+  GMUOracle: {
+    matic: '0xBe5514E856a4eb971653BcC74475B26b56763FD0'
+  },
+  Oracle_USDT: {
+    matic: '0xD74F644064360FaCe0A46788587FA7065AbA16b4'
+  },
+  Oracle_WETH: {
+    matic: '0x0a06b65046F06363449EBf00348e9EF9C13C66e4'
+  },
+  Oracle_WMATIC: {
+    matic: '0x8CD79F049C8d4d52c01ba12bC586bCCA0dC9cf9c'
+  },
+  Oracle_WBTC: {
+    matic: '0xB4c42119729A299481aD3D06708ED465Fe49b533'
+  },
+  Oracle_USDC: {
+    matic: '0x9073779F951C929BB3641E8379A66E0B77F8E4aF'
+  },
   WMATIC: {
     mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0', // This is matic's address
     matic: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270' // source :- https://www.coingecko.com/en/coins/wmatic

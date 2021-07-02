@@ -40,13 +40,13 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nDeploying uniswap oracles...'));
   console.log(chalk.yellow(' - Deploying ARTH/MAHA oracle...'));
   await deployer.deploy(
-      UniswapPairOracle_ARTH_MAHA,
-      uniswapFactoryInstance.address,
-      maha.address,
-      arth.address,
-      DEPLOYER_ADDRESS,
-      timelockInstance.address
-    );
+    UniswapPairOracle_ARTH_MAHA,
+    uniswapFactoryInstance.address,
+    maha.address,
+    arth.address,
+    DEPLOYER_ADDRESS,
+    timelockInstance.address
+  );
 
 
   console.log(chalk.yellow('- Deploying ARTH/ARTHX oracles...'));

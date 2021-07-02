@@ -36,19 +36,22 @@ module.exports = async function (deployer, network, accounts) {
     DEPLOYER_ADDRESS,
     poolToken.address,
     pairARTHMAHA
-  )
+  );
+
   await deployer.deploy(
     StakeARTHXARTH,
     DEPLOYER_ADDRESS,
     poolToken.address,
     pairARTHXARTH
-  )
+  );
+
   await deployer.deploy(
     StakeARTH,
     DEPLOYER_ADDRESS,
     poolToken.address,
     arth.address
-  )
+  );
+
   await deployer.deploy(
     StakeARTHX,
     DEPLOYER_ADDRESS,
@@ -81,12 +84,12 @@ module.exports = async function (deployer, network, accounts) {
 
   const decimals = BigNumber.from(10).pow(18);
 
-  await poolToken.transfer(stakeARTH.address, decimals.mul(500), { from: DEPLOYER_ADDRESS })
-  await poolToken.transfer(stakeARTHMAHA.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS })
-  await poolToken.transfer(stakeARTHUSDC.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS })
-  await poolToken.transfer(stakeARTHX.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS })
-  await poolToken.transfer(stakeARTHXARTH.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS })
-  await poolToken.transfer(stakeMAHA.address, decimals.mul(500), { from: DEPLOYER_ADDRESS })
+  await poolToken.transfer(stakeARTH.address, decimals.mul(500), { from: DEPLOYER_ADDRESS });
+  await poolToken.transfer(stakeARTHMAHA.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS });
+  await poolToken.transfer(stakeARTHUSDC.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS });
+  await poolToken.transfer(stakeARTHX.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
+  await poolToken.transfer(stakeARTHXARTH.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS });
+  await poolToken.transfer(stakeMAHA.address, decimals.mul(500), { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nAdd the staking contracts to tax whitelist'));
 

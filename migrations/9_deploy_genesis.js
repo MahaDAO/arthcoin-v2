@@ -21,7 +21,8 @@ const Pool_WMATIC = artifacts.require("Arth/Pools/Pool_WMATIC");
 const Pool_WETH = artifacts.require("Arth/Pools/Pool_WETH");
 
 module.exports = async function (deployer, network, accounts) {
-  return
+  return;
+
   const DEPLOYER_ADDRESS = accounts[0];
 
   const timelockInstance = await Timelock.deployed();
@@ -137,11 +138,10 @@ module.exports = async function (deployer, network, accounts) {
   const weth_oracle_instance = await helpers.getWETHOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
 
   console.log(chalk.yellow('\nLinking Collateral oracles...'));
-  await Promise.all([
-    usdcGenesis.setCollatGMUOracle(usdc_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
-    usdtGenesis.setCollatGMUOracle(usdt_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
-    wbtcGenesis.setCollatGMUOracle(wbtc_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
-    wmaticGenesis.setCollatGMUOracle(wmatic_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
-    wethGenesis.setCollatGMUOracle(weth_oracle_instance.address, { from: DEPLOYER_ADDRESS })
-  ]);
+
+  await usdcGenesis.setCollatGMUOracle(usdc_oracle_instance.address, { from: DEPLOYER_ADDRESS });
+  await usdtGenesis.setCollatGMUOracle(usdt_oracle_instance.address, { from: DEPLOYER_ADDRESS });
+  await wbtcGenesis.setCollatGMUOracle(wbtc_oracle_instance.address, { from: DEPLOYER_ADDRESS });
+  await wmaticGenesis.setCollatGMUOracle(wmatic_oracle_instance.address, { from: DEPLOYER_ADDRESS });
+  await wethGenesis.setCollatGMUOracle(weth_oracle_instance.address, { from: DEPLOYER_ADDRESS });
 };

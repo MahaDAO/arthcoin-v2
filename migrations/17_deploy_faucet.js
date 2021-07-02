@@ -37,13 +37,12 @@ module.exports = async function (deployer, network, accounts) {
   arthx.addToTaxWhiteList(faucet.address);
 
   console.log('\Transfering some tokens to faucet done\n');
-  await Promise.all([
-    arth.transfer(faucet.address, new BigNumber(10000e18), { from: DEPLOYER_ADDRESS }),
-    maha.transfer(faucet.address, new BigNumber(10000e18), { from: DEPLOYER_ADDRESS }),
-    arthx.transfer(faucet.address, new BigNumber(10000e18), { from: DEPLOYER_ADDRESS }),
-    usdc.transfer(faucet.address, new BigNumber(10000e6), { from: DEPLOYER_ADDRESS }),
-    usdt.transfer(faucet.address, new BigNumber(10000e6), { from: DEPLOYER_ADDRESS }),
-  ]);
+
+  await arth.transfer(faucet.address, new BigNumber(10000e18), { from: DEPLOYER_ADDRESS });
+  await maha.transfer(faucet.address, new BigNumber(10000e18), { from: DEPLOYER_ADDRESS });
+  await arthx.transfer(faucet.address, new BigNumber(10000e18), { from: DEPLOYER_ADDRESS });
+  await usdc.transfer(faucet.address, new BigNumber(10000e6), { from: DEPLOYER_ADDRESS });
+  await usdt.transfer(faucet.address, new BigNumber(10000e6), { from: DEPLOYER_ADDRESS });
 
   console.log('\nDeployments done\n');
 };
