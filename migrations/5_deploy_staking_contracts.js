@@ -14,8 +14,8 @@ module.exports = async function (deployer, network, accounts) {
 
   const poolToken = await PoolToken.deployed();
 
-  const arth = await helpers.getARTH();
-  const arthx = await helpers.getARTHX();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
 
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const uniswapFactory = await helpers.getUniswapFactory(network, deployer, artifacts);

@@ -5,8 +5,8 @@ const ARTHPoolRouter = artifacts.require("ArthPoolRouter");
 module.exports = async function (deployer, network) {
   if (network === 'mainnet') return;
 
-  const arth = await helpers.getARTH();
-  const arthx = await helpers.getARTHX();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
 
   const weth = await helpers.getWETH(network, deployer, artifacts);
   const routerInstance = await helpers.getUniswapRouter(network, deployer, artifacts);

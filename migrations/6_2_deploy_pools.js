@@ -21,8 +21,8 @@ module.exports = async function (deployer, network, accounts) {
   const TEN_MILLION = new BigNumber("1000000e6");
 
   const timelockInstance = await Timelock.deployed();
-  const arth = await helpers.getARTH();
-  const arthx = await helpers.getARTHX();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
 
   const arthControllerInstance = await ARTHController.deployed();
   const mahaTokenInstance = await helpers.getMahaToken(network, deployer, artifacts);

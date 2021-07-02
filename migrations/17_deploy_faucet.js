@@ -12,8 +12,8 @@ module.exports = async function (deployer, network, accounts) {
     return;
   }
 
-  const arth = await helpers.getARTH();
-  const arthx = await helpers.getARTHX();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const usdc = await helpers.getUSDC(network, deployer, artifacts);
   const usdt = await helpers.getUSDT(network, deployer, artifacts);

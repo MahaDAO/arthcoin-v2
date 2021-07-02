@@ -24,8 +24,8 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
   const timelockInstance = await Timelock.deployed();
-  const arth = await helpers.getARTH();
-  const arthx = await helpers.getARTHX();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
 
   const arthControllerInstance = await ARTHController.deployed();
 

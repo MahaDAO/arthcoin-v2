@@ -9,7 +9,7 @@ module.exports = async function (deployer, network, accounts) {
   if (network === 'mainnet') return;
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const arthx = await helpers.getARTHX();
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
   const timelockInstance = await Timelock.deployed();
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
 

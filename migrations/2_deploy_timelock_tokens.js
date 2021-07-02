@@ -13,8 +13,8 @@ module.exports = async function (deployer, network, accounts) {
   const timelockInstance = await Timelock.deployed();
 
   console.log(chalk.yellow('\nDeploying tokens...'));
-  const arth = await helpers.getARTH();
-  const arthx = await helpers.getARTHX();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
 
   console.log(` - NOTE: ARTH name: ${await arth.name.call()}`);
   console.log(` - NOTE: ARTHX name: ${await arthx.name.call()}`);

@@ -7,8 +7,8 @@ const SwapToPrice = artifacts.require("Uniswap/SwapToPrice");
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const arth = await helpers.getARTH();
-  const arthx = await helpers.getARTHX();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
 
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const weth = await helpers.getWETH(network, deployer, artifacts);
