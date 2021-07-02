@@ -69,9 +69,9 @@ module.exports = async function (deployer, network, accounts) {
       arth.address,
       usdc.address,
       new BigNumber(1e18),
-      new BigNumber(2e18),
+      new BigNumber(2e6),
       new BigNumber(1e18),
-      new BigNumber(2e18),
+      new BigNumber(2e6),
       DEPLOYER_ADDRESS,
       new BigNumber(9999999999999),
       { from: DEPLOYER_ADDRESS }

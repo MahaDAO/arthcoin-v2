@@ -140,11 +140,11 @@ module.exports = async function (deployer, network, accounts) {
   ]);
 
   console.log(chalk.yellow('\nAdd the pools to tax whitelist'));
-  await Promise.all([
-    await arthx.addToTaxWhiteList(pool_instance_USDC.address),
-    await arthx.addToTaxWhiteList(pool_instance_USDT.address),
-    await arthx.addToTaxWhiteList(pool_instance_WBTC.address),
-    await arthx.addToTaxWhiteList(pool_instance_WMATIC.address),
-    await arthx.addToTaxWhiteList(pool_instance_WETH.address)
-  ]);
+  await arthx.addToTaxWhiteListMultiple([
+    pool_instance_USDC.address,
+    pool_instance_USDT.address,
+    pool_instance_WBTC.address,
+    pool_instance_WMATIC.address,
+    pool_instance_WETH.address,
+  ])
 };
