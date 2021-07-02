@@ -23,7 +23,7 @@
     "migrate:rinkeby": "truffle migrate --network rinkeby",
     "migrate:maticmumbai": "truffle migrate --network maticMumbai",
     "migrate:matic": "truffle migrate --network matic",
-    "verify-deployment": "truffle run verify  ARTHStablecoin ARTHShare MahaToken UniswapV2Factory UniswapV2Router02 USDT USDC WETH WBTC WMATIC MahaToken ArthMahaLP ArthArthxLP  ArthController LotteryRaffle ArthPoolRouter PoolToken StakeARTHMAHA StakeARTH StakeARTHXARTH StakeARTHX Oracle_USDC Oracle_USDT Oracle_WBTC Oracle_WMATIC Oracle_WETH GMUOracle UniswapPairOracle_ARTH_ARTHX UniswapPairOracle_MAHA_ARTH GenesisUSDC GenesisUSDT GenesisWBTC GenesisWMATIC GenesisWETH ArthPoolLibrary Pool_USDC Pool_USDT Pool_WBTC Pool_WMATIC Pool_WETH --network",
+    "verify-deployment": "truffle run verify  ARTHStablecoin ARTHShare MahaToken UniswapV2Factory UniswapV2Router02 USDT USDC WETH WBTC WMATIC MahaToken ArthMahaLP ArthArthxLP  ArthController LotteryRaffle ArthPoolRouter PoolToken StakeARTHMAHA StakeARTH StakeARTHXARTH StakeARTHX Oracle_USDC Oracle_USDT Oracle_WBTC Oracle_WMATIC Oracle_WETH GMUOracle UniswapPairOracle_ARTH_ARTHX UniswapPairOracle_ARTH_MAHA GenesisUSDC GenesisUSDT GenesisWBTC GenesisWMATIC GenesisWETH ArthPoolLibrary Pool_USDC Pool_USDT Pool_WBTC Pool_WMATIC Pool_WETH --network",
     "generate-deployment": "rimraf output/ && truffle exec migrations/generate_deployment.js --network"
   },
   "devDependencies": {

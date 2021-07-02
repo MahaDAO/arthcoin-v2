@@ -5,7 +5,7 @@ const helpers = require('./helpers');
 
 const ARTHController = artifacts.require("ArthController");
 
-const UniswapPairOracle_MAHA_ARTH = artifacts.require("Oracle/Variants/UniswapPairOracle_MAHA_ARTH");
+const UniswapPairOracle_ARTH_MAHA = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_MAHA");
 const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHX");
 
 

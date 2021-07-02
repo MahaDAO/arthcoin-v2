@@ -2,7 +2,7 @@ require('dotenv').config();
 const chalk = require('chalk');
 const { time } = require('@openzeppelin/test-helpers');
 
-const UniswapPairOracle_MAHA_ARTH = artifacts.require("Oracle/Variants/UniswapPairOracle_MAHA_ARTH");
+const UniswapPairOracle_ARTH_MAHA = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_MAHA");
 const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapPairOracle_ARTH_ARTHX");
 
 
@@ -12,7 +12,7 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
   const uniswapPairOracleARTHXARTH = await UniswapPairOracle_ARTH_ARTHX.deployed();
-  const uniswapPairOracleARTHMAHA = await UniswapPairOracle_MAHA_ARTH.deployed();
+  const uniswapPairOracleARTHMAHA = await UniswapPairOracle_ARTH_MAHA.deployed();
 
   console.log(chalk.yellow(' - Setting period to 1 sec temporarily'));
   await Promise.all([

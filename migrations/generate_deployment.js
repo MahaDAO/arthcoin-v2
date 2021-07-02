@@ -36,7 +36,7 @@ module.exports = async (callback) => {
     { abi: 'GMUOracle', contract: 'GMUOracle' },
 
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_ARTHX' },
-    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_MAHA_ARTH' },
+    { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_MAHA' },
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_USDC' },
 
     { abi: 'Genesis', contract: 'GenesisUSDC' },
