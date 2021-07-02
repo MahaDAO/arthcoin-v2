@@ -81,17 +81,20 @@ module.exports = async function (deployer, network, accounts) {
   await Promise.all([
     poolToken.transfer(stakeARTH.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHMAHA.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS }),
+    poolToken.transfer(stakeARTHUSDC.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHX.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHXARTH.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS }),
-    poolToken.transfer(stakeARTHUSDC.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
-    poolToken.transfer(StakeMAHA.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
+    poolToken.transfer(stakeMAHA.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
   ]);
 
   console.log(chalk.yellow('\nAdd the staking contracts to tax whitelist'));
-  await Promise.all([
-    await arthx.addToTaxWhiteList(stakeARTH.address),
-    await arthx.addToTaxWhiteList(stakeARTHMAHA.address),
-    await arthx.addToTaxWhiteList(stakeARTHX.address),
-    await arthx.addToTaxWhiteList(stakeARTHXARTH.address),
-  ]);
+
+  await arthx.addToTaxWhiteListMultiple([
+    stakeARTH.address,
+    stakeARTHMAHA.address,
+    stakeARTHUSDC.address,
+    stakeARTHX.address,
+    stakeARTHXARTH.address,
+    stakeMAHA.address,
+  ])
 };
