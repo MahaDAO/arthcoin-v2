@@ -90,11 +90,7 @@ module.exports = async function (deployer, network, accounts) {
   console.log(chalk.yellow('\nAdd the staking contracts to tax whitelist'));
 
   await arthx.addToTaxWhiteListMultiple([
-    stakeARTH.address,
-    stakeARTHMAHA.address,
-    stakeARTHUSDC.address,
     stakeARTHX.address,
     stakeARTHXARTH.address,
-    stakeMAHA.address,
   ])
 };
