@@ -27,16 +27,15 @@ module.exports = async function (deployer, network, accounts) {
   await arthx.setARTHAddress(arth.address, { from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSome oracle prices are: '));
-  // const arth_price_initial = new BigNumber(await arthControllerInstance.getARTHPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
-  // const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
-  // const arthx_price_from_ARTHX_WETH = (new BigNumber(await uniswapPairOracleARTHXARTH.consult.call(arth.address, 1e6))).div(BIG6);
-  // const maha_price_initial = new BigNumber(await arthControllerInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
-  // const maha_price_from_MAHA_ARTH = (new BigNumber(await uniswapPairOracleMAHAARTH.consult.call(arth.address, 1e6))).div(BIG6);
+  const arthx_price_initial = new BigNumber(await arthControllerInstance.getARTHXPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const arthx_price_from_ARTHX_WETH = (new BigNumber(await uniswapPairOracleARTHXARTH.consult.call(arth.address, 1e6))).div(BIG6);
+  const maha_price_initial = new BigNumber(await arthControllerInstance.getMAHAPrice({ from: DEPLOYER_ADDRESS })).div(BIG6);
+  const maha_price_from_MAHA_ARTH = (new BigNumber(await uniswapPairOracleMAHAARTH.consult.call(arth.address, 1e6))).div(BIG6);
 
-  // console.log(" NOTE: - maha_price_initial: ", maha_price_initial.toString(), "GMU = 1 MAHA");
-  // console.log(" NOTE: - arthx_price_initial: ", arthx_price_initial.toString(), "GMU = 1 ARTHX");
-  // console.log(" NOTE: - arthx_price_from_ARTHX_ARTH: ", arthx_price_from_ARTHX_WETH.toString(), "ARTHX = 1 WETH");
-  // console.log(" NOTE: - maha_price_from_MAHA_ARTH: ", maha_price_from_MAHA_ARTH.toString(), "MAHA = 1 ARTH");
+  console.log(" NOTE: - maha_price_initial: ", maha_price_initial.toString(), "GMU = 1 MAHA");
+  console.log(" NOTE: - arthx_price_initial: ", arthx_price_initial.toString(), "GMU = 1 ARTHX");
+  console.log(" NOTE: - arthx_price_from_ARTHX_ARTH: ", arthx_price_from_ARTHX_WETH.toString(), "ARTHX = 1 WETH");
+  console.log(" NOTE: - maha_price_from_MAHA_ARTH: ", maha_price_from_MAHA_ARTH.toString(), "MAHA = 1 ARTH");
 
   const percentCollateralized = new BigNumber(await arthControllerInstance.getPercentCollateralized());
   const globalCollateralValue = new BigNumber(await arthControllerInstance.getGlobalCollateralValue());

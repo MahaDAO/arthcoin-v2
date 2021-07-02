@@ -13,10 +13,6 @@ const Pool_WETH = artifacts.require("Arth/Pools/Pool_WETH");
 const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
 
 module.exports = async function (deployer, network, accounts) {
-  const redemptionFee = 0;  // 0.04%
-  const mintingFee = 0;  // 0.03%
-  const buybackFee = 0;  // 0.03%
-
   const DEPLOYER_ADDRESS = accounts[0];
   const TEN_MILLION = new BigNumber("1000000e6");
 
@@ -108,11 +104,6 @@ module.exports = async function (deployer, network, accounts) {
   const pool_instance_WBTC = await Pool_WBTC.deployed();
   const pool_instance_WMATIC = await Pool_WMATIC.deployed();
   const pool_instance_WETH = await Pool_WETH.deployed();
-
-  console.log(chalk.yellow('\nSetting minting and redemtion fee...'));
-  await Promise.all([
-    arthControllerInstance.setFeesParameters(mintingFee, buybackFee, redemptionFee, { from: DEPLOYER_ADDRESS })
-  ]);
 
   console.log(chalk.yellow('\nRefreshing pool params...'));
   await Promise.all([
