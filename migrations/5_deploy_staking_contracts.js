@@ -69,8 +69,8 @@ module.exports = async function (deployer, network, accounts) {
   await deployer.deploy(
     StakeMAHA,
     DEPLOYER_ADDRESS,
-    maha.address,
-    pairARTHUSDC
+    poolToken.address,
+    maha.address
   );
 
   const stakeARTH = await StakeARTH.deployed();
