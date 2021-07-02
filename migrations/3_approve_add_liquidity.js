@@ -1,20 +1,15 @@
 const chalk = require('chalk');
 const BigNumber = require('bignumber.js');
-
-require('dotenv').config();
 const helpers = require('./helpers');
-
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const SwapToPrice = artifacts.require("Uniswap/SwapToPrice");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+
 
 module.exports = async function (deployer, network, accounts) {
-  if (network === 'mainnet') return;
-
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const arth = await ARTHStablecoin.deployed();
-  const arthx = await ARTHShares.deployed();
+  const arth = await helpers.getARTH();
+  const arthx = await helpers.getARTHX();
+
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const weth = await helpers.getWETH(network, deployer, artifacts);
   const uniswapRouter = await helpers.getUniswapRouter(network, deployer, artifacts);

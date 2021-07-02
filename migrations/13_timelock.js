@@ -1,7 +1,3 @@
-const chalk = require('chalk');
-
-require('dotenv').config();
-
 const Timelock = artifacts.require("Governance/Timelock")
 
 module.exports = async function (deployer, network, accounts) {

@@ -22,6 +22,30 @@ const getDAI = async (network, deployer, artifacts) => {
   return MockDai.deployed();
 }
 
+const getARTH = async (network, deployer, artifacts) => {
+  const ARTH = artifacts.require('Arth/ARTHStablecoin');
+
+  const addr = knownContracts.ARTH && knownContracts.ARTH[network];
+  if (addr) return ARTH.at(addr);
+
+  console.log(chalk.yellow(`\nDeploying arth on ${network} network...`));
+  await deployer.deploy(ARTH);
+
+  return ARTH.deployed();
+}
+
+const getARTHX = async (network, deployer, artifacts) => {
+  const ARTHX = artifacts.require('ARTHX/ARTHShares');
+
+  const addr = knownContracts.ARTHX && knownContracts.ARTHX[network];
+  if (addr) return ARTHX.at(addr);
+
+  console.log(chalk.yellow(`\nDeploying arthx on ${network} network...`));
+  await deployer.deploy(ARTHX);
+
+  return ARTHX.deployed();
+}
+
 const getWBTC = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
   const MockWBTC = artifacts.require('MockWBTC');
@@ -317,21 +341,23 @@ const getChainlinkOracle = async (network, deployer, artifacts, chainlinkConsume
 
 module.exports = {
   isMainnet,
-  getPairAddress,
-  getDAI,
-  getWETH,
-  getWBTC,
-  getWMATIC,
-  getUSDCOracle,
-  getUSDTOracle,
-  getUSDC,
-  getUSDT,
-  getMahaToken,
   approveIfNot,
+  getARTH,
+  getARTHX,
+  getDAI,
+  getGMUOracle,
+  getMahaToken,
+  getPairAddress,
   getUniswapFactory,
   getUniswapRouter,
-  getGMUOracle,
+  getUSDC,
+  getUSDCOracle,
+  getUSDT,
+  getUSDTOracle,
+  getWBTC,
   getWBTCOracle,
+  getWETH,
+  getWETHOracle,
+  getWMATIC,
   getWMATICOracle,
-  getWETHOracle
 }

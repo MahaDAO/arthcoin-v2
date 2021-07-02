@@ -1,11 +1,7 @@
 const { BigNumber } = require('@ethersproject/bignumber');
 const chalk = require('chalk');
-
-require('dotenv').config();
 const helpers = require('./helpers');
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const StakeARTHMAHA = artifacts.require("Staking/Variants/StakeARTHMAHA.sol");
 const StakeARTH = artifacts.require("Staking/Variants/StakeARTH.sol");
 const StakeARTHX = artifacts.require("Staking/Variants/StakeARTHX.sol");
@@ -18,8 +14,9 @@ module.exports = async function (deployer, network, accounts) {
 
   const poolToken = await PoolToken.deployed();
 
-  const arth = await ARTHStablecoin.deployed();
-  const arthx = await ARTHShares.deployed();
+  const arth = await helpers.getARTH();
+  const arthx = await helpers.getARTHX();
+
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const uniswapFactory = await helpers.getUniswapFactory(network, deployer, artifacts);
 

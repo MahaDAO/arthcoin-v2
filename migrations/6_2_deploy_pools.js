@@ -1,10 +1,8 @@
-require('dotenv').config();
 const chalk = require('chalk');
 const BigNumber = require('bignumber.js');
 
 const helpers = require('./helpers');
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const ARTHController = artifacts.require("ArthController");
 const Timelock = artifacts.require("Governance/Timelock");
 const Pool_USDC = artifacts.require("Arth/Pools/Pool_USDC");
@@ -13,13 +11,8 @@ const Pool_WBTC = artifacts.require("Arth/Pools/Pool_WBTC");
 const Pool_WMATIC = artifacts.require("Arth/Pools/Pool_WMATIC");
 const Pool_WETH = artifacts.require("Arth/Pools/Pool_WETH");
 const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 
 module.exports = async function (deployer, network, accounts) {
-  // const redemptionFee = 400;  // 0.04%
-  // const mintingFee = 300;  // 0.03%
-  // const buybackFee = 300;  // 0.03%
-
   const redemptionFee = 0;  // 0.04%
   const mintingFee = 0;  // 0.03%
   const buybackFee = 0;  // 0.03%
@@ -28,8 +21,9 @@ module.exports = async function (deployer, network, accounts) {
   const TEN_MILLION = new BigNumber("1000000e6");
 
   const timelockInstance = await Timelock.deployed();
-  const arth = await ARTHStablecoin.deployed();
-  const arthx = await ARTHShares.deployed();
+  const arth = await helpers.getARTH();
+  const arthx = await helpers.getARTHX();
+
   const arthControllerInstance = await ARTHController.deployed();
   const mahaTokenInstance = await helpers.getMahaToken(network, deployer, artifacts);
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts);

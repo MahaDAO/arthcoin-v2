@@ -2,9 +2,7 @@ const BigNumber = require('bignumber.js');
 const chalk = require('chalk');
 const helpers = require('./helpers');
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const Timelock = artifacts.require("Governance/Timelock");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const ARTHController = artifacts.require("ArthController");
 const BondingCurve = artifacts.require("BondingCurve");
 const UniswapPairOracle_ARTH_ARTHX = artifacts.require("UniswapPairOracle_ARTH_ARTHX");
@@ -14,8 +12,9 @@ module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
 
   const timelockInstance = await Timelock.deployed();
-  const arth = await ARTHStablecoin.deployed();
-  const arthx = await ARTHShares.deployed();
+  const arth = await helpers.getARTH();
+  const arthx = await helpers.getARTHX();
+
   const arthController = await ARTHController.deployed();
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const uniswapFactoryInstance = await helpers.getUniswapFactory(network, deployer, artifacts);
