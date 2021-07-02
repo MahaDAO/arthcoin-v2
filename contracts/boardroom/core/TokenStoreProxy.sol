@@ -44,11 +44,4 @@ abstract contract TokenStoreProxy is ITokenStore {
         );
         require(success, string(reason));
     }
-
-    function withdraw(uint256 amount) public virtual override {
-        (bool success, bytes memory reason) = tokenStore.delegatecall(
-            abi.encodeWithSignature('withdraw(uint256)', amount)
-        );
-        require(success, string(reason));
-    }
 }
