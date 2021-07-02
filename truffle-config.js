@@ -37,14 +37,14 @@ module.exports = {
     },
     matic: {
       network_id: 137,
-      gasPrice: 5100000000,  // 1.1 gwei
+      gasPrice: 50100000000,  // 1.1 gwei
       provider: function () {
         return new HDWalletProvider(
           process.env.METAMASK_WALLET_SECRET,
-          //'https://solitary-crimson-wind.matic.quiknode.pro/d9d5c0846efe6098a99c0a8a2c7238692ca33ce0/',
+          'https://summer-quiet-dust.matic.quiknode.pro/b1470518b1d4ac638e7b010090de0e9e0df1d656/',
           // 'https://polygon-mainnet.infura.io/v3/1f10246c2868483e9e73ddfabda3825f',
           // 'https://matic-mainnet-full-rpc.bwarelabs.com',
-          'https://matic-mainnet.chainstacklabs.com',
+          // 'https://apis.ankr.com/0aa7b5a6761f4b87ae97c6b718d900ff/0a39ba8bf2c40d99b20fea4372ebaa68/polygon/full/main',
           // 'https://rpc-mainnet.maticvigil.com',
           // 'https://rpc-mainnet.matic.network
         );

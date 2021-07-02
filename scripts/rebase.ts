@@ -10,13 +10,12 @@ async function main() {
   const deployements = require(`../output/${network.name}.json`);
   const instance = await ethers.getContractAt(
     'ARTHStablecoin',
-    // '0xD2eF876A3fbCbDd3FE427390CD45405aEb460c3F'
     deployements.ARTHStablecoin.address
   );
 
   const dec = BigNumber.from(10).pow(18);
-  const me = '0xa36d23444daC909A05EED651d840FC90afb018d4';
-  const rebaseAmount = BigNumber.from(1e6);
+  const me = '0xaefb39d1bc9f5f506730005ec96ff10b4ded8dda';
+  const rebaseAmount = BigNumber.from(108e5);
 
   console.log('owner', await instance.owner());
 

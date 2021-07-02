@@ -31,11 +31,9 @@ module.exports = async function (deployer, network, accounts) {
     console.log(chalk.red.bold('\nYou need to wait atleast 1 sec here.'));
   }
 
-  await Promise.all([
-    uniswapPairOracleARTHXARTH.update({ from: DEPLOYER_ADDRESS }),
-    uniswapPairOracleARTHMAHA.update({ from: DEPLOYER_ADDRESS }),
-    uniswapPairOracleARTHUSDC.update({ from: DEPLOYER_ADDRESS })
-  ]);
+  await uniswapPairOracleARTHXARTH.update({ from: DEPLOYER_ADDRESS });
+  await uniswapPairOracleARTHMAHA.update({ from: DEPLOYER_ADDRESS });
+  await uniswapPairOracleARTHUSDC.update({ from: DEPLOYER_ADDRESS });
 
   console.log(chalk.yellow('\nSetting the oracle period back to 24 hrs...'));
   if (process.env.MIGRATION_MODE == 'ganache') {
@@ -45,9 +43,7 @@ module.exports = async function (deployer, network, accounts) {
     console.log(chalk.red.bold('You need to wait atleast 1 second here.'));
   }
 
-  await Promise.all([
-    uniswapPairOracleARTHXARTH.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    uniswapPairOracleARTHMAHA.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-    uniswapPairOracleARTHUSDC.setPeriod(3600, { from: DEPLOYER_ADDRESS }),
-  ]);
+  await uniswapPairOracleARTHXARTH.setPeriod(3600, { from: DEPLOYER_ADDRESS });
+  await uniswapPairOracleARTHMAHA.setPeriod(3600, { from: DEPLOYER_ADDRESS });
+  await uniswapPairOracleARTHUSDC.setPeriod(3600, { from: DEPLOYER_ADDRESS });
 };

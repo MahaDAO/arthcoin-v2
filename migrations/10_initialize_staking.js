@@ -20,12 +20,11 @@ module.exports = async function (deployer, network, accounts) {
   const stakeMAHA = await StakeMAHA.deployed();
 
   console.log(chalk.yellow.bold('\nInitializing the staking rewards...'));
-  await Promise.all([
-    stakeARTH.initializeDefault({ from: DEPLOYER_ADDRESS }),
-    stakeARTHX.initializeDefault({ from: DEPLOYER_ADDRESS }),
-    stakeMAHA.initializeDefault({ from: DEPLOYER_ADDRESS }),
-    stakeARTHMAHA.initializeDefault({ from: DEPLOYER_ADDRESS }),
-    stakeARTHXARTH.initializeDefault({ from: DEPLOYER_ADDRESS }),
-    stakeARTHUSDC.initializeDefault({ from: DEPLOYER_ADDRESS }),
-  ]);
+
+  await stakeARTH.initializeDefault({ from: DEPLOYER_ADDRESS });
+  await stakeARTHX.initializeDefault({ from: DEPLOYER_ADDRESS });
+  await stakeMAHA.initializeDefault({ from: DEPLOYER_ADDRESS });
+  await stakeARTHMAHA.initializeDefault({ from: DEPLOYER_ADDRESS });
+  await stakeARTHXARTH.initializeDefault({ from: DEPLOYER_ADDRESS });
+  await stakeARTHUSDC.initializeDefault({ from: DEPLOYER_ADDRESS });
 };

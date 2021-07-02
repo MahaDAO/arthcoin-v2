@@ -8,8 +8,6 @@ const knownContracts = require('./known-contracts');
 const writeFile = util.promisify(fs.writeFile);
 const mkdir = util.promisify(fs.mkdir);
 const Multicall = artifacts.require('Multicall');
-const ARTHStablecoin = artifacts.require('ARTHStablecoin');
-const ARTHShares = artifacts.require('ARTHShares');
 
 /**
  * Main migrations
@@ -19,7 +17,7 @@ module.exports = async (callback) => {
 
   const contracts = [
     { abi: 'ArthController', contract: 'ArthController' },
-    { abi: 'LotteryRaffle', contract: 'LotteryRaffle' },
+    // { abi: 'LotteryRaffle', contract: 'LotteryRaffle' },
     { abi: 'ArthPoolRouter', contract: 'ArthPoolRouter' },
 
     { abi: 'PoolToken', contract: 'PoolToken' },
@@ -41,11 +39,11 @@ module.exports = async (callback) => {
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_MAHA' },
     { abi: 'UniswapPairOracle', contract: 'UniswapPairOracle_ARTH_USDC' },
 
-    { abi: 'Genesis', contract: 'GenesisUSDC' },
-    { abi: 'Genesis', contract: 'GenesisUSDT' },
-    { abi: 'Genesis', contract: 'GenesisWBTC' },
-    { abi: 'Genesis', contract: 'GenesisWMATIC' },
-    { abi: 'Genesis', contract: 'GenesisWETH' },
+    // { abi: 'Genesis', contract: 'GenesisUSDC' },
+    // { abi: 'Genesis', contract: 'GenesisUSDT' },
+    // { abi: 'Genesis', contract: 'GenesisWBTC' },
+    // { abi: 'Genesis', contract: 'GenesisWMATIC' },
+    // { abi: 'Genesis', contract: 'GenesisWETH' },
 
     { abi: 'ArthPoolLibrary', contract: 'ArthPoolLibrary' },
 
@@ -74,8 +72,8 @@ module.exports = async (callback) => {
     const weth = (await getWETH(network, null, artifacts)).address;
     const wmatic = (await getWMATIC(network, null, artifacts)).address;
 
-    contracts.push({ contract: 'ARTHShares', abi: 'ARTHShares', address: arthx.address });
-    contracts.push({ contract: 'ARTHStablecoin', abi: 'ARTHStablecoin', address: arth.address });
+    contracts.push({ contract: 'ARTHShares', abi: 'ARTHShares', address: arthx });
+    contracts.push({ contract: 'ARTHStablecoin', abi: 'ARTHStablecoin', address: arth });
     contracts.push({ contract: 'MahaToken', address: maha, abi: 'MahaToken' });
     contracts.push({ contract: 'MahaToken', address: maha, abi: 'MahaToken' });
     contracts.push({ contract: 'UniswapV2Factory', address: factory, abi: 'UniswapV2Factory' });

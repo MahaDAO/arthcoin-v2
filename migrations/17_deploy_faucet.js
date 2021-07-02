@@ -5,6 +5,7 @@ const Faucet = artifacts.require('Faucet');
 
 module.exports = async function (deployer, network, accounts) {
   const DEPLOYER_ADDRESS = accounts[0];
+  process.exit();
 
   if (helpers.isMainnet(network)) {
     console.log('\nNot deploying faucet since mainnet\n');

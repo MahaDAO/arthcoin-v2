@@ -29,7 +29,12 @@ module.exports = {
     kovan: '0x2cc8688c5f75e365aaeeb4ea8d6a480405a48d2a',
     goerli: '0x77dca2c955b15e9de4dbbcf1246b4b85b651e50e',
   },
-
+  ARTH: {
+    matic: '0xe52509181feb30eb4979e29ec70d50fd5c44d590',
+  },
+  ARTHX: {
+    matic: '0xd354d56dae3588f1145dd664bc5094437b889d6f',
+  },
   WETH: {
     mainnet: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     rinkeby: '0xc778417e063141139fce010982780140aa0cd5ab',
@@ -54,7 +59,7 @@ module.exports = {
     mainnet: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'
   },
   MahaToken: {
-    maitc: '0xedd6ca8a4202d4a36611e2fff109648c4863ae19',
+    matic: '0xedd6ca8a4202d4a36611e2fff109648c4863ae19',
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
   },
   WMATIC: {

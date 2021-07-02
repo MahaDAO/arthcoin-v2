@@ -25,18 +25,18 @@ module.exports = async function (deployer, network, accounts) {
   let pool = await PoolToken.deployed();
   const decimals = BigNumber.from(10).pow(18);
 
-  await arthx.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
-  await maha.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
+  // await arthx.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
+  // await maha.transfer(pool.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS });
 
   console.log(`\nDeploying arthx tax controller...`);
-  await deployer.deploy(
-    ARTHXTaxController,
-    arthx.address,
-    (await helpers.getUniswapRouter(network, deployer, artifacts)).address
-  );
-  const taxController = await ARTHXTaxController.deployed();
-  await taxController.setRewardsDestination(pool.address);
-  await arthx.setTaxController(taxController.address, { from: DEPLOYER_ADDRESS });
+  // await deployer.deploy(
+  //   ARTHXTaxController,
+  //   arthx.address,
+  //   (await helpers.getUniswapRouter(network, deployer, artifacts)).address
+  // );
+  // const taxController = await ARTHXTaxController.deployed();
+  // await taxController.setRewardsDestination(pool.address);
+  // await arthx.setTaxController(taxController.address, { from: DEPLOYER_ADDRESS });
 
   console.log('\nAdd the pool token to tax whitelist');
   await arthx.addToTaxWhiteList(pool.address);

@@ -39,40 +39,35 @@ module.exports = async function (deployer, network, accounts) {
 
   console.log(chalk.yellow('\nDeploying uniswap oracles...'));
   console.log(chalk.yellow(' - Deploying ARTH/MAHA oracle...'));
-  await Promise.all([
-    deployer.deploy(
+  await deployer.deploy(
       UniswapPairOracle_ARTH_MAHA,
       uniswapFactoryInstance.address,
       maha.address,
       arth.address,
       DEPLOYER_ADDRESS,
       timelockInstance.address
-    )
-  ]);
+    );
+
 
   console.log(chalk.yellow('- Deploying ARTH/ARTHX oracles...'));
-  await Promise.all([
-    deployer.deploy(
-      UniswapPairOracle_ARTH_ARTHX,
-      uniswapFactoryInstance.address,
-      arth.address,
-      arthx.address,
-      DEPLOYER_ADDRESS,
-      timelockInstance.address
-    )
-  ]);
+  await deployer.deploy(
+    UniswapPairOracle_ARTH_ARTHX,
+    uniswapFactoryInstance.address,
+    arth.address,
+    arthx.address,
+    DEPLOYER_ADDRESS,
+    timelockInstance.address
+  );
 
   console.log(chalk.yellow('- Deploying ARTH/USDC oracles...'));
-  await Promise.all([
-    deployer.deploy(
-      UniswapPairOracle_ARTH_USDC,
-      uniswapFactoryInstance.address,
-      arth.address,
-      usdc.address,
-      DEPLOYER_ADDRESS,
-      timelockInstance.address
-    )
-  ]);
+  await deployer.deploy(
+    UniswapPairOracle_ARTH_USDC,
+    uniswapFactoryInstance.address,
+    arth.address,
+    usdc.address,
+    DEPLOYER_ADDRESS,
+    timelockInstance.address
+  );
 
   await helpers.getGMUOracle(network, deployer, artifacts);
 

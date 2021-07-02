@@ -10,7 +10,7 @@ const UniswapPairOracle_ARTH_ARTHX = artifacts.require("Oracle/Variants/UniswapP
 
 
 module.exports = async function (deployer, network, accounts) {
-  if (network === 'mainnet') return;
+  return;
 
   const BIG6 = new BigNumber("1e6");
   const BIG18 = new BigNumber("1e18");
