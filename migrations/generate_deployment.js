@@ -27,6 +27,8 @@ module.exports = async (callback) => {
     { abi: 'BasicStaking', contract: 'StakeARTH' },
     { abi: 'BasicStaking', contract: 'StakeARTHXARTH' },
     { abi: 'BasicStaking', contract: 'StakeARTHX' },
+    { abi: 'BasicStaking', contract: 'StakeARTHUSDC' },
+    { abi: 'BasicStaking', contract: 'StakeMAHA' },
 
     { abi: 'UniversalGMUOracle', contract: 'Oracle_USDC' },
     { abi: 'UniversalGMUOracle', contract: 'Oracle_USDT' },

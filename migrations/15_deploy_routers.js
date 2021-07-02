@@ -24,7 +24,5 @@ module.exports = async function (deployer, network) {
 
   const arthPoolRouter = await ARTHPoolRouter.deployed();
   console.log('\nAdd the routers to tax whitelist');
-  await Promise.all([
-    await arthx.addToTaxWhiteList(arthPoolRouter.address)
-  ]);
+  await arthx.addToTaxWhiteList(arthPoolRouter.address);
 };

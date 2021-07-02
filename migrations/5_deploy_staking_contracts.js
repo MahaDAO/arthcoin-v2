@@ -7,6 +7,8 @@ const StakeARTH = artifacts.require("Staking/Variants/StakeARTH.sol");
 const StakeARTHX = artifacts.require("Staking/Variants/StakeARTHX.sol");
 const StakeARTHXARTH = artifacts.require("Staking/Variants/StakeARTHXARTH.sol");
 const StakeARTHUSDC = artifacts.require("Staking/Variants/StakeARTHUSDC.sol");
+const StakeMAHA = artifacts.require("Staking/Variants/StakeMAHA.sol");
+
 const PoolToken = artifacts.require("PoolToken");
 
 module.exports = async function (deployer, network, accounts) {
@@ -58,7 +60,13 @@ module.exports = async function (deployer, network, accounts) {
       DEPLOYER_ADDRESS,
       poolToken.address,
       pairARTHUSDC
-    )
+    ),
+    deployer.deploy(
+      StakeMAHA,
+      DEPLOYER_ADDRESS,
+      maha,
+      pairARTHUSDC
+    ),
   ]);
 
   const stakeARTH = await StakeARTH.deployed();
@@ -76,6 +84,7 @@ module.exports = async function (deployer, network, accounts) {
     poolToken.transfer(stakeARTHX.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHXARTH.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHUSDC.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
+    poolToken.transfer(StakeMAHA.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
   ]);
 
   console.log(chalk.yellow('\nAdd the staking contracts to tax whitelist'));
