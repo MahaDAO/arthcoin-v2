@@ -5,6 +5,7 @@ const StakeARTH = artifacts.require("Staking/Variants/StakeARTH.sol");
 const StakeARTHX = artifacts.require("Staking/Variants/StakeARTHX.sol");
 const StakeARTHXARTH = artifacts.require("Staking/Variants/StakeARTHXARTH.sol");
 const StakeARTHUSDC = artifacts.require("Staking/Variants/StakeARTHUSDC.sol");
+const StakeMAHA = artifacts.require("Staking/Variants/StakeMAHA.sol");
 
 module.exports = async function (deployer, network, accounts) {
   if (network === 'mainnet') return;

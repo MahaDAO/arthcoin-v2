@@ -316,7 +316,7 @@ const getGMUOracle = async (network, deployer, artifacts) => {
   if (GMUOracle.isDeployed()) return GMUOracle.deployed();
 
   console.log(chalk.yellow(`\nDeploying GMU/USD oracle...`));
-  await deployer.deploy(GMUOracle, 'GMU/USD', ONEE6.mul(2));
+  await deployer.deploy(GMUOracle, 'GMU/USD', ONEE6.multipliedBy(2));
 
   return GMUOracle.deployed();
 }

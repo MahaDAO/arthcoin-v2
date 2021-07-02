@@ -23,11 +23,11 @@ module.exports = async (callback) => {
     { abi: 'ArthPoolRouter', contract: 'ArthPoolRouter' },
 
     { abi: 'PoolToken', contract: 'PoolToken' },
-    { abi: 'BasicStaking', contract: 'StakeARTHMAHA' },
     { abi: 'BasicStaking', contract: 'StakeARTH' },
-    { abi: 'BasicStaking', contract: 'StakeARTHXARTH' },
-    { abi: 'BasicStaking', contract: 'StakeARTHX' },
+    { abi: 'BasicStaking', contract: 'StakeARTHMAHA' },
     { abi: 'BasicStaking', contract: 'StakeARTHUSDC' },
+    { abi: 'BasicStaking', contract: 'StakeARTHX' },
+    { abi: 'BasicStaking', contract: 'StakeARTHXARTH' },
     { abi: 'BasicStaking', contract: 'StakeMAHA' },
 
     { abi: 'UniversalGMUOracle', contract: 'Oracle_USDC' },

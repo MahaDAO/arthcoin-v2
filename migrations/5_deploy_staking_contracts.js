@@ -64,7 +64,7 @@ module.exports = async function (deployer, network, accounts) {
     deployer.deploy(
       StakeMAHA,
       DEPLOYER_ADDRESS,
-      maha,
+      maha.address,
       pairARTHUSDC
     ),
   ]);
@@ -74,17 +74,18 @@ module.exports = async function (deployer, network, accounts) {
   const stakeARTHX = await StakeARTHX.deployed();
   const stakeARTHXARTH = await StakeARTHXARTH.deployed();
   const stakeARTHUSDC = await StakeARTHUSDC.deployed();
+  const stakeMAHA = await StakeMAHA.deployed();
 
   console.log(chalk.yellow('\nTransfering Pool tokens to staking contracts...'));
 
   const decimals = BigNumber.from(10).pow(18);
   await Promise.all([
-    poolToken.transfer(stakeARTH.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
+    poolToken.transfer(stakeARTH.address, decimals.mul(500), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHMAHA.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHUSDC.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHX.address, decimals.mul(1000), { from: DEPLOYER_ADDRESS }),
     poolToken.transfer(stakeARTHXARTH.address, decimals.mul(2000), { from: DEPLOYER_ADDRESS }),
-    poolToken.transfer(stakeMAHA.address, decimals.mul(4000), { from: DEPLOYER_ADDRESS }),
+    poolToken.transfer(stakeMAHA.address, decimals.mul(500), { from: DEPLOYER_ADDRESS }),
   ]);
 
   console.log(chalk.yellow('\nAdd the staking contracts to tax whitelist'));
