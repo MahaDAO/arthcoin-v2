@@ -8,9 +8,7 @@ import {SafeMath} from '../utils/math/SafeMath.sol';
 import {IARTHPool} from './Pools/IARTHPool.sol';
 import {IARTHController} from './IARTHController.sol';
 import {AccessControl} from '../access/AccessControl.sol';
-import {
-    IUniswapPairOracle
-} from '../Oracle/Variants/uniswap/IUniswapPairOracle.sol';
+import {IUniswapPairOracle} from '../Oracle/Variants/uniswap/IUniswapPairOracle.sol';
 import {IOracle} from '../Oracle/IOracle.sol';
 import {ICurve} from '../Curves/ICurve.sol';
 import {Math} from '../utils/math/Math.sol';
@@ -40,9 +38,10 @@ contract ArthController is AccessControl, IARTHController {
     uint256 public globalCollateralRatio;
     uint256 public collateralRaisedOnOtherChain = 0;
 
-    uint256 public override buybackFee; // 6 decimals of precision, divide by 1000000 in calculations for fee.
-    uint256 public override mintingFee;
-    uint256 public override redemptionFee;
+    uint256 public override buybackFee = 500000; // 6 decimals of precision, divide by a in calculations for fee.
+    uint256 public override mintingFee = 500000;
+    uint256 public override redemptionFee = 500000;
+    uint256 public stabilityFee = 0; // 1e4; // 1% in e6 precision.
 
     uint256 public maxRecollateralizeDiscount = 750000; // In 1e6 precision.
 
@@ -72,7 +71,6 @@ contract ArthController is AccessControl, IARTHController {
     bool public recollateralizePaused = true;
 
     uint256 public constant _PRICE_PRECISION = 1e6;
-    uint256 public stabilityFee = 0; // 1e4; // 1% in e6 precision.
 
     event TargetPriceChanged(uint256 old, uint256 current);
     event RedemptionFeeChanged(uint256 old, uint256 current);
@@ -302,7 +300,10 @@ contract ArthController is AccessControl, IARTHController {
         ownerAddress = _ownerAddress;
     }
 
-    function setGlobalColletaralValue(uint256 _collateralRaised) public onlyAdmin {
+    function setGlobalColletaralValue(uint256 _collateralRaised)
+        public
+        onlyAdmin
+    {
         collateralRaisedOnOtherChain = _collateralRaised;
     }
 

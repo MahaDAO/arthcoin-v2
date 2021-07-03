@@ -75,7 +75,8 @@ contract UniversalGMUOracle is Ownable, IOracle {
     function getRawPrice() public view returns (uint256, uint256) {
         // If we have chainlink oracle for base set return that price.
         // NOTE: this chainlink is subject to Aggregator being in BASE/USD and USD/GMU(Simple oracle).
-        if (address(chainlinkFeed) != address(0)) return (getChainlinkPrice(), 10 ** oraclePriceFeedDecimals);
+        if (address(chainlinkFeed) != address(0))
+            return (getChainlinkPrice(), 10**oraclePriceFeedDecimals);
 
         // Else return price from uni pair.
         return (getPairPrice(), _PRICE_PRECISION);
@@ -86,9 +87,9 @@ contract UniversalGMUOracle is Ownable, IOracle {
 
         return (
             price
-                .mul(getGMUPrice())
                 .mul(_PRICE_PRECISION)
-                .div(10**GMUOracle.getDecimalPercision())
+                .mul(10**GMUOracle.getDecimalPercision())
+                .div(getGMUPrice())
                 .div(precision)
         );
     }

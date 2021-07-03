@@ -26,9 +26,9 @@ export default {
     },
     matic: {
       url:
-        'https://solitary-crimson-wind.matic.quiknode.pro/d9d5c0846efe6098a99c0a8a2c7238692ca33ce0/',
+        'https://apis.ankr.com/0aa7b5a6761f4b87ae97c6b718d900ff/0a39ba8bf2c40d99b20fea4372ebaa68/polygon/full/main',
       accounts: [process.env.METAMASK_WALLET_SECRET],
-      gasPrice: 5100000000, // 5.1 gwei
+      gasPrice: 50 * 1000000000, // 5.1 gwei
     },
     maticMumbai: {
       url: 'https://matic-mumbai.chainstacklabs.com',

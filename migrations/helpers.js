@@ -22,6 +22,32 @@ const getDAI = async (network, deployer, artifacts) => {
   return MockDai.deployed();
 }
 
+const getARTH = async (network, deployer, artifacts) => {
+  const ARTH = artifacts.require('Arth/ARTHStablecoin');
+
+  const addr = knownContracts.ARTH && knownContracts.ARTH[network];
+  if (addr) return ARTH.at(addr);
+  if (ARTH.isDeployed()) return ARTH.deployed();
+
+  console.log(chalk.yellow(`\nDeploying arth on ${network} network...`));
+  await deployer.deploy(ARTH);
+
+  return ARTH.deployed();
+}
+
+const getARTHX = async (network, deployer, artifacts) => {
+  const ARTHX = artifacts.require('ARTHX/ARTHShares');
+
+  const addr = knownContracts.ARTHX && knownContracts.ARTHX[network];
+  if (addr) return ARTHX.at(addr);
+  if (ARTHX.isDeployed()) return ARTHX.deployed();
+
+  console.log(chalk.yellow(`\nDeploying arthx on ${network} network...`));
+  await deployer.deploy(ARTHX);
+
+  return ARTHX.deployed();
+}
+
 const getWBTC = async (network, deployer, artifacts) => {
   const IERC20 = artifacts.require('IERC20');
   const MockWBTC = artifacts.require('MockWBTC');
@@ -148,6 +174,9 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   const UniversalGMUOracle = artifacts.require('Oracle_USDC');
   if (UniversalGMUOracle.isDeployed()) return UniversalGMUOracle.deployed();
 
+  const addr = knownContracts.Oracle_USDC && knownContracts.Oracle_USDC[network];
+  if (addr) return UniversalGMUOracle.at(addr);
+
   const chainlinkFeed = knownContracts.ChainlinkFeedUSDC && knownContracts.ChainlinkFeedUSDC[network];
 
   const gmuOracle = await getGMUOracle(network, deployer, artifacts);
@@ -169,9 +198,12 @@ const getUSDCOracle = async (network, deployer, artifacts, ownerAddress) => {
   return UniversalGMUOracle.deployed();
 };
 
-const getWBTCOracle = async (network, deployer, artifacts, ownerAddress) => {
+const getWBTCOracle = async (network, deployer, artifacts) => {
   const UniversalGMUOracle = artifacts.require('Oracle_WBTC');
   if (UniversalGMUOracle.isDeployed()) return UniversalGMUOracle.deployed();
+
+  const addr = knownContracts.Oracle_WBTC && knownContracts.Oracle_WBTC[network];
+  if (addr) return UniversalGMUOracle.at(addr);
 
   const chainlinkFeed = knownContracts.ChainlinkFeedWBTC && knownContracts.ChainlinkFeedWBTC[network];
 
@@ -194,9 +226,12 @@ const getWBTCOracle = async (network, deployer, artifacts, ownerAddress) => {
   return UniversalGMUOracle.deployed();
 };
 
-const getWMATICOracle = async (network, deployer, artifacts, ownerAddress) => {
+const getWMATICOracle = async (network, deployer, artifacts) => {
   const UniversalGMUOracle = artifacts.require('Oracle_WMATIC');
   if (UniversalGMUOracle.isDeployed()) return UniversalGMUOracle.deployed();
+
+  const addr = knownContracts.Oracle_WMATIC && knownContracts.Oracle_WMATIC[network];
+  if (addr) return UniversalGMUOracle.at(addr);
 
   const chainlinkFeed = knownContracts.ChainlinkFeedMATIC && knownContracts.ChainlinkFeedMATIC[network];
 
@@ -223,6 +258,9 @@ const getWETHOracle = async (network, deployer, artifacts, ownerAddress) => {
   const UniversalGMUOracle = artifacts.require('Oracle_WETH');
   if (UniversalGMUOracle.isDeployed()) return UniversalGMUOracle.deployed();
 
+  const addr = knownContracts.Oracle_WETH && knownContracts.Oracle_WETH[network];
+  if (addr) return UniversalGMUOracle.at(addr);
+
   const chainlinkFeed = knownContracts.ChainlinkFeedETH && knownContracts.ChainlinkFeedETH[network];
 
   const gmuOracle = await getGMUOracle(network, deployer, artifacts);
@@ -247,6 +285,9 @@ const getWETHOracle = async (network, deployer, artifacts, ownerAddress) => {
 const getUSDTOracle = async (network, deployer, artifacts, ownerAddress) => {
   const UniversalGMUOracle = artifacts.require('Oracle_USDT');
   if (UniversalGMUOracle.isDeployed()) return UniversalGMUOracle.deployed();
+
+  const addr = knownContracts.Oracle_USDT && knownContracts.Oracle_USDT[network];
+  if (addr) return UniversalGMUOracle.at(addr);
 
   const chainlinkFeed = knownContracts.ChainlinkFeedUSDT && knownContracts.ChainlinkFeedUSDT[network];
 
@@ -290,7 +331,7 @@ const getGMUOracle = async (network, deployer, artifacts) => {
   if (GMUOracle.isDeployed()) return GMUOracle.deployed();
 
   console.log(chalk.yellow(`\nDeploying GMU/USD oracle...`));
-  await deployer.deploy(GMUOracle, 'GMU/USD', ONEE6);
+  await deployer.deploy(GMUOracle, 'GMU/USD', ONEE6.multipliedBy(2));
 
   return GMUOracle.deployed();
 }
@@ -317,21 +358,23 @@ const getChainlinkOracle = async (network, deployer, artifacts, chainlinkConsume
 
 module.exports = {
   isMainnet,
-  getPairAddress,
-  getDAI,
-  getWETH,
-  getWBTC,
-  getWMATIC,
-  getUSDCOracle,
-  getUSDTOracle,
-  getUSDC,
-  getUSDT,
-  getMahaToken,
   approveIfNot,
+  getARTH,
+  getARTHX,
+  getDAI,
+  getGMUOracle,
+  getMahaToken,
+  getPairAddress,
   getUniswapFactory,
   getUniswapRouter,
-  getGMUOracle,
+  getUSDC,
+  getUSDCOracle,
+  getUSDT,
+  getUSDTOracle,
+  getWBTC,
   getWBTCOracle,
+  getWETH,
+  getWETHOracle,
+  getWMATIC,
   getWMATICOracle,
-  getWETHOracle
 }

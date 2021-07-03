@@ -5,8 +5,6 @@ const Pool_USDT = artifacts.require("Pool_USDT");
 const Pool_WBTC = artifacts.require("Pool_WBTC");
 const Pool_WETH = artifacts.require("Pool_WETH");
 const Pool_WMATIC = artifacts.require("Pool_WMATIC");
-const ArthController = artifacts.require("ArthController");
-const ARTHShares = artifacts.require("ARTHShares");
 // const ETHGenesisUSDC = artifacts.require("ETHGenesisUSDC");
 // const ETHGenesisUSDT = artifacts.require("ETHGenesisUSDT");
 // const ETHGenesisWBTC = artifacts.require("ETHGenesisWBTC");
@@ -18,9 +16,9 @@ const GenesisWETH = artifacts.require("GenesisWETH");
 const LotteryRaffle = artifacts.require("LotteryRaffle");
 
 module.exports = async function (deployer, network) {
-  const multiSigWallet = '0x775C72FB1C28c46F5E9976FFa08F348298fBCEC0'
-
+  const multiSigWallet = process.env.MULTISIG_WALLET;
   return;
+
   // const poolDai = await Pool_DAI.deployed();
   // await poolDai.setOwner(multiSigWallet);
 

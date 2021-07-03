@@ -42,8 +42,8 @@ contract TokenStore is ITokenStore, Operator {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _token) {
-        token = _token;
+    constructor(IERC20 _token) {
+        token = address(_token);
     }
 
     /* ========== VIEW FUNCTIONS ========== */
@@ -79,20 +79,6 @@ contract TokenStore is ITokenStore, Operator {
     {
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        IERC20Burnable(token).burn(amount);
-    }
-
-    function withdraw(uint256 amount) public virtual override {
-        revert('Withdraw disabled');
-        require(false, 'Withdraw is disabled');
-        uint256 balance = _balances[msg.sender];
-        require(
-            balance >= amount,
-            'TokenStore: withdraw request greater than staked amount'
-        );
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[msg.sender] = balance.sub(amount);
-        IERC20(token).safeTransfer(msg.sender, amount);
+        IERC20Burnable(token).burnFrom(msg.sender, amount);
     }
 }

@@ -1,15 +1,12 @@
-require('dotenv').config();
+
 const chalk = require('chalk');
-const BigNumber = require('bignumber.js');
 
 const helpers = require('./helpers');
 
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const ARTHController = artifacts.require("ArthController");
 const Timelock = artifacts.require("Governance/Timelock");
 
 const ArthPoolLibrary = artifacts.require("ArthPoolLibrary");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
 const LotteryRaffle = artifacts.require("LotteryRaffle");
 const GenesisUSDC = artifacts.require("GenesisUSDC");
 const GenesisUSDT = artifacts.require("GenesisUSDT");
@@ -24,11 +21,14 @@ const Pool_WMATIC = artifacts.require("Arth/Pools/Pool_WMATIC");
 const Pool_WETH = artifacts.require("Arth/Pools/Pool_WETH");
 
 module.exports = async function (deployer, network, accounts) {
+  return;
+
   const DEPLOYER_ADDRESS = accounts[0];
 
   const timelockInstance = await Timelock.deployed();
-  const arth = await ARTHStablecoin.deployed();
-  const arthx = await ARTHShares.deployed();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
+
   const arthControllerInstance = await ARTHController.deployed();
 
   const col_instance_USDC = await helpers.getUSDC(network, deployer, artifacts);
@@ -138,11 +138,10 @@ module.exports = async function (deployer, network, accounts) {
   const weth_oracle_instance = await helpers.getWETHOracle(network, deployer, artifacts, DEPLOYER_ADDRESS);
 
   console.log(chalk.yellow('\nLinking Collateral oracles...'));
-  await Promise.all([
-    usdcGenesis.setCollatGMUOracle(usdc_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
-    usdtGenesis.setCollatGMUOracle(usdt_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
-    wbtcGenesis.setCollatGMUOracle(wbtc_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
-    wmaticGenesis.setCollatGMUOracle(wmatic_oracle_instance.address, { from: DEPLOYER_ADDRESS }),
-    wethGenesis.setCollatGMUOracle(weth_oracle_instance.address, { from: DEPLOYER_ADDRESS })
-  ]);
+
+  await usdcGenesis.setCollatGMUOracle(usdc_oracle_instance.address, { from: DEPLOYER_ADDRESS });
+  await usdtGenesis.setCollatGMUOracle(usdt_oracle_instance.address, { from: DEPLOYER_ADDRESS });
+  await wbtcGenesis.setCollatGMUOracle(wbtc_oracle_instance.address, { from: DEPLOYER_ADDRESS });
+  await wmaticGenesis.setCollatGMUOracle(wmatic_oracle_instance.address, { from: DEPLOYER_ADDRESS });
+  await wethGenesis.setCollatGMUOracle(weth_oracle_instance.address, { from: DEPLOYER_ADDRESS });
 };

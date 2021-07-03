@@ -1,20 +1,17 @@
 const chalk = require('chalk');
 const BigNumber = require('bignumber.js');
-
-require('dotenv').config();
 const helpers = require('./helpers');
-
-const ARTHShares = artifacts.require("ARTHX/ARTHShares");
 const SwapToPrice = artifacts.require("Uniswap/SwapToPrice");
-const ARTHStablecoin = artifacts.require("Arth/ARTHStablecoin");
+
 
 module.exports = async function (deployer, network, accounts) {
-  if (network === 'mainnet') return;
-
+  return
   const DEPLOYER_ADDRESS = accounts[0];
 
-  const arth = await ARTHStablecoin.deployed();
-  const arthx = await ARTHShares.deployed();
+  const arth = await helpers.getARTH(network, deployer, artifacts);
+  const arthx = await helpers.getARTHX(network, deployer, artifacts);
+  const usdc = await helpers.getUSDC(network, deployer, artifacts);
+
   const maha = await helpers.getMahaToken(network, deployer, artifacts);
   const weth = await helpers.getWETH(network, deployer, artifacts);
   const uniswapRouter = await helpers.getUniswapRouter(network, deployer, artifacts);
@@ -27,6 +24,7 @@ module.exports = async function (deployer, network, accounts) {
   await Promise.all([
     uniswapFactory.createPair(arth.address, arthx.address, { from: DEPLOYER_ADDRESS }),
     uniswapFactory.createPair(arth.address, maha.address, { from: DEPLOYER_ADDRESS }),
+    uniswapFactory.createPair(arth.address, usdc.address, { from: DEPLOYER_ADDRESS }),
   ])
     .catch(e => console.log('error', e))
     .then(() => console.log(chalk.green('\nDone')))
@@ -35,7 +33,8 @@ module.exports = async function (deployer, network, accounts) {
   await Promise.all([
     maha.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
     arth.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
-    arthx.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS })
+    arthx.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS }),
+    usdc.approve(uniswapRouter.address, new BigNumber(2000000e18), { from: DEPLOYER_ADDRESS })
   ])
     .catch(e => console.log('error', e))
     .then(() => console.log(chalk.green('\nDone')))
@@ -63,6 +62,17 @@ module.exports = async function (deployer, network, accounts) {
       new BigNumber(1e18),
       new BigNumber(10e18),
       new BigNumber(1e18),
+      DEPLOYER_ADDRESS,
+      new BigNumber(9999999999999),
+      { from: DEPLOYER_ADDRESS }
+    ),
+    uniswapRouter.addLiquidity(
+      arth.address,
+      usdc.address,
+      new BigNumber(1e18),
+      new BigNumber(2e6),
+      new BigNumber(1e18),
+      new BigNumber(2e6),
       DEPLOYER_ADDRESS,
       new BigNumber(9999999999999),
       { from: DEPLOYER_ADDRESS }
