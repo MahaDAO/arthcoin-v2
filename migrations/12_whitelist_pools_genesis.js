@@ -18,11 +18,11 @@ module.exports = async function (deployer, network, accounts) {
 
   const arthControllerInstance = await ARTHController.deployed();
 
-  const genesis_usdt = await GenesisUSDT.deployed();
-  const genesis_usdc = await GenesisUSDC.deployed();
-  const genesis_wbtc = await GenesisWBTC.deployed();
-  const genesis_weth = await GenesisWETH.deployed();
-  const genesis_wmatic = await GenesisWMATIC.deployed();
+  // const genesis_usdt = await GenesisUSDT.deployed();
+  // const genesis_usdc = await GenesisUSDC.deployed();
+  // const genesis_wbtc = await GenesisWBTC.deployed();
+  // const genesis_weth = await GenesisWETH.deployed();
+  // const genesis_wmatic = await GenesisWMATIC.deployed();
 
   const pool_instance_USDC = await Pool_USDC.deployed();
   const pool_instance_USDT = await Pool_USDT.deployed();
@@ -38,10 +38,10 @@ module.exports = async function (deployer, network, accounts) {
     pool_instance_WBTC.address,
     pool_instance_WMATIC.address,
     pool_instance_WETH.address,
-    genesis_usdc.address,
-    genesis_usdt.address,
-    genesis_wbtc.address,
-    genesis_weth.address,
-    genesis_wmatic.address,
+    // genesis_usdc.address,
+    // genesis_usdt.address,
+    // genesis_wbtc.address,
+    // genesis_weth.address,
+    // genesis_wmatic.address,
   ], { from: DEPLOYER_ADDRESS });
 };

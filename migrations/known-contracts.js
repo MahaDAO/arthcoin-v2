@@ -29,7 +29,12 @@ module.exports = {
     kovan: '0x2cc8688c5f75e365aaeeb4ea8d6a480405a48d2a',
     goerli: '0x77dca2c955b15e9de4dbbcf1246b4b85b651e50e',
   },
-
+  ARTH: {
+    matic: '0xe52509181feb30eb4979e29ec70d50fd5c44d590',
+  },
+  ARTHX: {
+    matic: '0xd354d56dae3588f1145dd664bc5094437b889d6f',
+  },
   WETH: {
     mainnet: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     rinkeby: '0xc778417e063141139fce010982780140aa0cd5ab',
@@ -54,15 +59,36 @@ module.exports = {
     mainnet: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599'
   },
   MahaToken: {
+    matic: '0xedd6ca8a4202d4a36611e2fff109648c4863ae19',
     mainnet: '0xb4d930279552397bba2ee473229f89ec245bc365',
   },
+  GMUOracle: {
+    matic: '0xBe5514E856a4eb971653BcC74475B26b56763FD0'
+  },
+  Oracle_USDT: {
+    matic: '0xD74F644064360FaCe0A46788587FA7065AbA16b4'
+  },
+  Oracle_WETH: {
+    matic: '0x0a06b65046F06363449EBf00348e9EF9C13C66e4'
+  },
+  Oracle_WMATIC: {
+    matic: '0x8CD79F049C8d4d52c01ba12bC586bCCA0dC9cf9c'
+  },
+  Oracle_WBTC: {
+    matic: '0xB4c42119729A299481aD3D06708ED465Fe49b533'
+  },
+  Oracle_USDC: {
+    matic: '0x9073779F951C929BB3641E8379A66E0B77F8E4aF'
+  },
   WMATIC: {
-    mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
-    matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+    mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0', // This is matic's address
+    matic: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270' // source :- https://www.coingecko.com/en/coins/wmatic
+    //matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
   },
   MATIC: {
     mainnet: '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0',
-    matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+    matic: '0x0000000000000000000000000000000000001010',
+    //matic: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
   },
   ChainlinkFeedETH: {
     mainnet: '0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419',
