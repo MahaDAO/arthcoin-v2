@@ -7,7 +7,7 @@ import {IUniswapPairOracle} from './IUniswapPairOracle.sol';
 contract OracleUpdater {
     IUniswapPairOracle[] public oracles;
 
-    event OracleUpdated(address oracle);
+    event OracleUpdated(address indexed oracle);
 
     constructor(IUniswapPairOracle[] memory _oracles) {
         oracles = _oracles;
