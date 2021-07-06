@@ -20,6 +20,8 @@ contract FeeRouter is Ownable {
 
     uint256 public totalSwapped = 0;
 
+    event AllocateToBoardroom(address indexed boardroom, uint256 amount);
+
     constructor(
         IERC20 usdc,
         IBoardroom boardroomARTH,
@@ -75,7 +77,16 @@ contract FeeRouter is Ownable {
         USDC.approve(address(BoardroomARTHX), amountToARTHXBoardroom);
 
         BoardroomARTH.allocateSeigniorage(amountToARTHBoardroom);
-        BoardroomARTHX.allocateSeigniorage(amountToARTHBoardroom);
+        BoardroomARTHX.allocateSeigniorage(amountToARTHXBoardroom);
+
+        emit AllocateToBoardroom(
+            address(BoardroomARTH),
+            amountToARTHBoardroom
+        );
+        emit AllocateToBoardroom(
+            address(BoardroomARTHX),
+            amountToARTHXBoardroom
+        );
     }
 
     function _swapForUSDC(
