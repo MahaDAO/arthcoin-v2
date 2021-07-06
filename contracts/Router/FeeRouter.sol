@@ -15,21 +15,38 @@ contract FeeRouter is Ownable {
     using SafeMath for uint256;
 
     IERC20 public immutable USDC;
+    IBoardroom public BoardroomARTH;
+    IBoardroom public BoardroomARTHX;
 
     uint256 public totalSwapped = 0;
 
     constructor(
-        IERC20 usdc
+        IERC20 usdc,
+        IBoardroom boardroomARTH,
+        IBoardroom boardroomARTHX
     ) {
         USDC = usdc;
+        BoardroomARTH = boardroomARTH;
+        BoardroomARTHX = boardroomARTHX;
+    }
+
+    function setBoardrooms(IBoardroom boardroomARTH, IBoardroom boardroomARTHX)
+        external
+        onlyOwner
+    {
+        BoardroomARTH = boardroomARTH;
+        BoardroomARTHX = boardroomARTHX;
     }
 
     function swap(
         IERC20 token,
         uint256 amount,
-        IBoardroom boardroom,
         IUniswapV2Router02 router
-    ) external payable onlyOwner returns (uint256) {
+    )
+        external
+        payable
+        onlyOwner
+        returns (uint256) {
         // Swap intput tokens for output tokens.
         uint256 usdcRecievedAfterSwap = _swapForUSDC(
             token,
@@ -40,20 +57,35 @@ contract FeeRouter is Ownable {
         // Update the counter to keep track of swapped tokens.
         totalSwapped = totalSwapped.add(usdcRecievedAfterSwap);
 
-        // Approve the boardroom to use these tokens.
-        USDC.approve(address(boardroom), usdcRecievedAfterSwap);
-
-        // NOTE: this router needs to be operator of boardroom.
-        boardroom.allocateSeigniorage(usdcRecievedAfterSwap);
+        // Distribute the USDC to boardrooms.
+        _distributeToBoardrooms(usdcRecievedAfterSwap);
 
         return usdcRecievedAfterSwap;
+    }
+
+    function _distributeToBoardrooms(
+        uint256 amount
+    )
+        internal
+    {
+        uint256 amountToARTHBoardroom = amount.mul(50).div(100);
+        uint256 amountToARTHXBoardroom = amount.sub(amountToARTHBoardroom);
+
+        USDC.approve(address(BoardroomARTH), amountToARTHBoardroom);
+        USDC.approve(address(BoardroomARTHX), amountToARTHXBoardroom);
+
+        BoardroomARTH.allocateSeigniorage(amountToARTHBoardroom);
+        BoardroomARTHX.allocateSeigniorage(amountToARTHBoardroom);
     }
 
     function _swapForUSDC(
         IERC20 token,
         uint256 amountIn,
         IUniswapV2Router02 router
-    ) internal returns (uint256) {
+    )
+        internal
+        returns (uint256)
+    {
         // Get the amount from the owner.
         token.transferFrom(msg.sender, address(this), amountIn);
         token.approve(address(router), amountIn);
