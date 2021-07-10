@@ -17,7 +17,6 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     using SafeMath for uint256;
 
     /* ========== DATA STRUCTURES ========== */
-
     struct Boardseat {
         uint256 lastSnapshotIndex;
         uint256 rewardEarned;
@@ -30,7 +29,6 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     }
 
     /* ========== STATE VARIABLES ========== */
-
     address public token;
     BoardSnapshot[] public boardHistory;
     bool public stakeEnabled = true;
@@ -40,11 +38,9 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     uint256 private _totalSupply;
 
     /* ========== CONSTRUCTOR ========== */
-
     constructor(IERC20 _cash, IERC20 _token) {
         cash = _cash;
         token = address(_token);
-
         BoardSnapshot memory genesisSnapshot = BoardSnapshot({
             time: block.number,
             rewardReceived: 0,
@@ -78,9 +74,6 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
     }
 
     /* ========== VIEW FUNCTIONS ========== */
-
-    // =========== Snapshot getters
-
     function totalSupply() public view returns (uint256) {
         return _totalSupply;
     }
