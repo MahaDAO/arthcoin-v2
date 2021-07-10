@@ -222,14 +222,14 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator {
         _token.transfer(msg.sender, amount);
     }
 
-    event Staked(address indexed user, uint256 amount);
-    event Withdrawn(address indexed user, uint256 amount);
-    event RewardPaid(address indexed user, uint256 reward);
     event RewardAdded(address indexed user, uint256 reward);
+    event RewardPaid(address indexed user, uint256 reward);
+    event Staked(address indexed user, uint256 amount);
     event StakeEnableChanged(bool newFlag, bool oldFlag);
     event TokenChanged(
         address indexed operator,
         address oldToken,
         address newToken
     );
+    event Withdrawn(address indexed user, uint256 amount);
 }
