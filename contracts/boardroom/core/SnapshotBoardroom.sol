@@ -5,16 +5,15 @@ pragma solidity ^0.8.0;
 import {Address} from '../../utils/Address.sol';
 import {IERC20} from '../../ERC20/IERC20.sol';
 import {IERC20Burnable} from '../../ERC20/IERC20Burnable.sol';
-import {ITokenStore} from './ITokenStore.sol';
 import {Math} from '../../utils/math/Math.sol';
 import {Operator} from '../../access/Operator.sol';
 import {ReentrancyGuard} from '../../utils/ReentrancyGuard.sol';
 import {SafeERC20} from '../../ERC20/SafeERC20.sol';
 import {SafeMath} from '../../utils/math/SafeMath.sol';
 
-contract SnapshotBoardroom is ReentrancyGuard, Operator, ITokenStore {
-    using SafeERC20 for IERC20;
+contract SnapshotBoardroom is ReentrancyGuard, Operator {
     using Address for address;
+    using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
     /* ========== DATA STRUCTURES ========== */
@@ -25,22 +24,20 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator, ITokenStore {
     }
 
     struct BoardSnapshot {
-        uint256 time;
-        uint256 rewardReceived;
         uint256 rewardPerShare;
+        uint256 rewardReceived;
+        uint256 time;
     }
 
     /* ========== STATE VARIABLES ========== */
 
-    IERC20 public cash;
     address public token;
-
-    bool public stakeEnabled = true;
-
-    uint256 private _totalSupply;
-    mapping(address => uint256) private _balances;
-    mapping(address => Boardseat) public directors;
     BoardSnapshot[] public boardHistory;
+    bool public stakeEnabled = true;
+    IERC20 public cash;
+    mapping(address => Boardseat) public directors;
+    mapping(address => uint256) private _balances;
+    uint256 private _totalSupply;
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -84,11 +81,11 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator, ITokenStore {
 
     // =========== Snapshot getters
 
-    function totalSupply() public view override returns (uint256) {
+    function totalSupply() public view returns (uint256) {
         return _totalSupply;
     }
 
-    function balanceOf(address account) public view override returns (uint256) {
+    function balanceOf(address account) public view returns (uint256) {
         return _balances[account];
     }
 
@@ -207,7 +204,6 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator, ITokenStore {
             'Boardroom: Cannot allocate when totalSupply is 0'
         );
 
-        // Create & add new snapshot
         uint256 prevRPS = getLatestSnapshot().rewardPerShare;
         uint256 nextRPS = prevRPS.add(amount.mul(1e18).div(totalSupply()));
 
@@ -220,6 +216,10 @@ contract SnapshotBoardroom is ReentrancyGuard, Operator, ITokenStore {
 
         cash.safeTransferFrom(msg.sender, address(this), amount);
         emit RewardAdded(msg.sender, amount);
+    }
+
+    function withdrawERC20(IERC20 _token, uint256 amount) external onlyOwner {
+        _token.transfer(msg.sender, amount);
     }
 
     event Staked(address indexed user, uint256 amount);
